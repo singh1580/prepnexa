@@ -6,7 +6,6 @@ on:
 permissions:
   contents: read
 env:
-  NODE_ENV: production
   NEXT_PUBLIC_APP_NAME: PrepNexa
   NEXT_PUBLIC_APP_URL: http://localhost:3000
   DATABASE_URL: postgresql://ci:ci@localhost/ci
