@@ -1,0 +1,6 @@
+ALTER TABLE "entitlements" ADD CONSTRAINT "entitlements_window_check" CHECK ("entitlements"."expires_at" > "entitlements"."starts_at");--> statement-breakpoint
+ALTER TABLE "orders" ADD CONSTRAINT "orders_amounts_check" CHECK ("orders"."subtotal_paise" >= 0 and "orders"."discount_paise" >= 0 and "orders"."total_paise" >= 0 and "orders"."total_paise" = "orders"."subtotal_paise" - "orders"."discount_paise");--> statement-breakpoint
+ALTER TABLE "payments" ADD CONSTRAINT "payments_amount_check" CHECK ("payments"."amount_paise" > 0);--> statement-breakpoint
+ALTER TABLE "products" ADD CONSTRAINT "products_price_access_check" CHECK ("products"."price_paise" >= 0 and "products"."access_days" > 0);--> statement-breakpoint
+ALTER TABLE "questions" ADD CONSTRAINT "questions_marks_check" CHECK ("questions"."marks" > 0 and "questions"."negative_marks" >= 0);--> statement-breakpoint
+ALTER TABLE "tests" ADD CONSTRAINT "tests_duration_attempts_check" CHECK ("tests"."duration_minutes" > 0 and "tests"."max_attempts" > 0);
