@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginInputSchema, registerInputSchema } from "../../src/features/auth/validation";
+import { loginInputSchema, registerInputSchema, resetPasswordInputSchema } from "../../src/features/auth/validation";
 
 describe("auth validation", () => {
   it("normalizes an email during registration", () => {
@@ -9,5 +9,9 @@ describe("auth validation", () => {
 
   it("rejects short passwords", () => {
     expect(() => loginInputSchema.parse({ email: "user@example.com", password: "short" })).toThrow();
+  });
+
+  it("requires an opaque reset token", () => {
+    expect(() => resetPasswordInputSchema.parse({ token: "short", password: "a-secure-password" })).toThrow();
   });
 });

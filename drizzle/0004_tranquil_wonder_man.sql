@@ -1,0 +1,1 @@
+CREATE INDEX "verification_tokens_user_purpose_idx" ON "verification_tokens" USING btree ("user_id","purpose","created_at");
