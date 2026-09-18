@@ -23,6 +23,7 @@ Rule: route -> feature service -> repository -> database. Routes must not contai
 - `docs/ENGINEERING_STANDARDS.md` — enforced module, HTTP, error, logging, and testing rules
 - `docs/DATABASE_DESIGN.md` — Phase 2 schema modules and integrity decisions
 - `docs/AUTHENTICATION.md` — session, verification, reset, RBAC, and email-delivery rules
+- `docs/PHASE_5_SCOPE.md` — admin content slices, authorization, branch policy, and acceptance gates
 
 ## Local setup
 
