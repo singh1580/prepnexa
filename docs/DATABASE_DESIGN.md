@@ -32,3 +32,5 @@ The migration runs only on the isolated Neon `phase-2-schema` branch first. That
 - The obsolete `user_role` enum.
 
 Production remains untouched until the isolated migration, seed, constraints, integration checks, and SQL review all pass.
+
+`src/db/verification/phase-two.sql` is the repeatable isolated-branch smoke test for table count, RBAC seed, removed provisional columns, provider-neutral payment structure, and a real database constraint rejection.
