@@ -1,0 +1,6 @@
+import Link from "next/link";
+import { listPublishedExams } from "@/features/catalog/repository";
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Exams" };
+export default async function Page() { const rows = await listPublishedExams(); return <main className="public-main"><header className="listing-heading"><span className="eyebrow">EXAM CATALOGUE</span><h1>What are you preparing for?</h1><p>Choose an exam to see its published subjects and available tests.</p></header>{rows.length ? <div className="catalog-grid">{rows.map((exam, index) => <Link className="exam-card" href={`/exams/${exam.slug}`} key={exam.id}><span className="card-number">{String(index + 1).padStart(2, "0")}</span><div><h2>{exam.name}</h2><p>{exam.description || "Preparation details will be available here."}</p></div><span className="card-meta">{exam.subjectCount} {exam.subjectCount === 1 ? "subject" : "subjects"} <b aria-hidden="true">→</b></span></Link>)}</div> : <section className="panel empty-state"><span className="eyebrow">CATALOGUE UPDATE</span><h2>No exams are published yet</h2><p>Published exams will appear here automatically. No draft content is shown publicly.</p></section>}</main>; }
+

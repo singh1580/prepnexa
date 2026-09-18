@@ -8,6 +8,10 @@ export function findUserByEmail(email: string) {
   return db.query.users.findFirst({ where: eq(users.email, email) });
 }
 
+export async function updateProfileName(userId: string, name: string) {
+  await db.update(users).set({ name, updatedAt: new Date() }).where(eq(users.id, userId));
+}
+
 export async function createUserWithVerification(input: { name: string; email: string; passwordHash: string; tokenHash: string; expiresAt: Date }) {
   const role = await db.query.roles.findFirst({ where: eq(roles.key, "STUDENT"), columns: { id: true } });
   if (!role) throw new Error("STUDENT role is not seeded");
@@ -32,7 +36,7 @@ export async function consumeEmailVerification(tokenHash: string) {
   const result = await db.execute<{ user_id: string }>(sql`
     with consumed as (
       update ${verificationTokens}
-      set ${verificationTokens.consumedAt} = now()
+      set "consumed_at" = now()
       where ${verificationTokens.tokenHash} = ${tokenHash}
         and ${verificationTokens.purpose} = 'EMAIL_VERIFICATION'
         and ${verificationTokens.consumedAt} is null
@@ -40,7 +44,7 @@ export async function consumeEmailVerification(tokenHash: string) {
       returning ${verificationTokens.userId}
     )
     update ${users}
-    set ${users.status} = 'ACTIVE', ${users.emailVerifiedAt} = now(), ${users.updatedAt} = now()
+    set "status" = 'ACTIVE', "email_verified_at" = now(), "updated_at" = now()
     where ${users.id} in (select user_id from consumed)
     returning ${users.id} as user_id
   `);
@@ -51,7 +55,7 @@ export async function consumePasswordReset(tokenHash: string, passwordHash: stri
   const result = await db.execute<{ user_id: string }>(sql`
     with consumed as (
       update ${verificationTokens}
-      set ${verificationTokens.consumedAt} = now()
+      set "consumed_at" = now()
       where ${verificationTokens.tokenHash} = ${tokenHash}
         and ${verificationTokens.purpose} = 'PASSWORD_RESET'
         and ${verificationTokens.consumedAt} is null
@@ -59,12 +63,12 @@ export async function consumePasswordReset(tokenHash: string, passwordHash: stri
       returning ${verificationTokens.userId}
     ), updated_user as (
       update ${users}
-      set ${users.passwordHash} = ${passwordHash}, ${users.updatedAt} = now()
+      set "password_hash" = ${passwordHash}, "updated_at" = now()
       where ${users.id} in (select user_id from consumed)
       returning ${users.id}
     ), revoked_sessions as (
       update ${sessions}
-      set ${sessions.revokedAt} = now()
+      set "revoked_at" = now()
       where ${sessions.userId} in (select id from updated_user) and ${sessions.revokedAt} is null
     )
     select id as user_id from updated_user
@@ -83,7 +87,7 @@ export async function createSession(input: typeof sessions.$inferInsert) {
 export function findActiveSession(tokenHash: string) {
   return db.select({
     sessionId: sessions.id, expiresAt: sessions.expiresAt,
-    userId: users.id, userName: users.name, userEmail: users.email, userStatus: users.status,
+    userId: users.id, userName: users.name, userEmail: users.email, userStatus: users.status, emailVerifiedAt: users.emailVerifiedAt,
   }).from(sessions).innerJoin(users, eq(sessions.userId, users.id)).where(
     and(eq(sessions.tokenHash, tokenHash), isNull(sessions.revokedAt), gt(sessions.expiresAt, new Date())),
   ).limit(1).then((rows) => rows[0]);
@@ -124,12 +128,12 @@ export async function confirmTotpFactor(userId: string, factorId: string, codeHa
   const values = sql.join(codeHashes.map((codeHash) => sql`(${codeHash})`), sql`, `);
   const result = await db.execute<{ id: string }>(sql`
     with confirmed as (
-      update ${mfaFactors} set ${mfaFactors.verifiedAt} = now()
+      update ${mfaFactors} set "verified_at" = now()
       where ${mfaFactors.id} = ${factorId} and ${mfaFactors.userId} = ${userId}
         and ${mfaFactors.verifiedAt} is null and ${mfaFactors.disabledAt} is null
       returning ${mfaFactors.id}, ${mfaFactors.userId}
     ), disabled_old_factors as (
-      update ${mfaFactors} set ${mfaFactors.disabledAt} = now()
+      update ${mfaFactors} set "disabled_at" = now()
       where ${mfaFactors.userId} in (select user_id from confirmed) and ${mfaFactors.id} <> ${factorId} and ${mfaFactors.disabledAt} is null
     ), deleted_codes as (
       delete from ${recoveryCodes} where ${recoveryCodes.userId} in (select user_id from confirmed)
