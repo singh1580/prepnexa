@@ -7,11 +7,13 @@ const reviewerId = randomUUID();
 const slug = `integration-${randomUUID()}`;
 let examId: string | undefined;
 let questionId: string | undefined;
+let testId: string | undefined;
 
 describe.skipIf(!run)("admin content database flow", () => {
   afterAll(async () => {
-    const [{ eq, inArray }, { db }, { auditLogs, exams, questions, users }] = await Promise.all([import("drizzle-orm"), import("../../src/db/client"), import("../../src/db/schema")]);
+    const [{ eq, inArray }, { db }, { auditLogs, exams, questions, tests, users }] = await Promise.all([import("drizzle-orm"), import("../../src/db/client"), import("../../src/db/schema")]);
     await db.delete(auditLogs).where(inArray(auditLogs.actorUserId, [actorId, reviewerId]));
+    if (testId) await db.delete(tests).where(inArray(tests.id, [testId]));
     if (questionId) await db.delete(questions).where(inArray(questions.id, [questionId]));
     if (examId) await db.delete(exams).where(eq(exams.id, examId));
     await db.delete(users).where(inArray(users.id, [actorId, reviewerId]));
@@ -37,6 +39,15 @@ describe.skipIf(!run)("admin content database flow", () => {
     await service.reviewQuestion(questionId, "APPROVE", { userId: reviewerId, requestId: randomUUID() });
     await service.publishQuestion(questionId, actor);
     expect(await service.getManagedQuestion(questionId)).toMatchObject({ status: "PUBLISHED", reviewedBy: reviewerId });
+
+    const testService = await import("../../src/features/admin-tests/service");
+    testId = (await testService.createTest({ examId, title: "Integration live test", mode: "LIVE", durationMinutes: 60, instructions: "Integration only", maxAttempts: 1, shuffleQuestions: true, shuffleOptions: true }, actor)).id;
+    const sectionId = (await testService.createSection(testId, { title: "Aptitude", durationMinutes: 60, sortOrder: 0 }, actor)).id;
+    await testService.assignQuestion(sectionId, questionId, 0, actor);
+    await testService.publishTest(testId, actor);
+    await testService.createSchedule(testId, { startsAt: "2030-01-01T10:00:00.000Z", endsAt: "2030-01-01T11:00:00.000Z", lateJoinMinutes: 15, resultReleaseAt: "2030-01-01T12:00:00.000Z", rankingEnabled: true, cohortKey: "integration" }, actor);
+    expect(await testService.getManagedTest(testId)).toMatchObject({ status: "PUBLISHED" });
+
     await service.archiveQuestion(questionId, actor);
     expect(await service.getManagedQuestion(questionId)).toMatchObject({ status: "ARCHIVED", reviewedBy: reviewerId });
   }, 30_000);

@@ -37,3 +37,6 @@ Phase 5 implements permission-checked content operations without starting test e
 - Draft questions can be edited, submitted, returned, separately approved and published.
 - Creators cannot approve their own questions; publishing requires an approved current revision.
 - Question state changes and revision writes are audited in the same database batch.
+- Draft tests support sections, published-question assignment, timing, shuffle and attempt limits.
+- Only live-mode tests accept validated schedules; test execution and attempt creation remain outside Phase 5.
+- A test cannot publish until it contains at least one section with a published question.
