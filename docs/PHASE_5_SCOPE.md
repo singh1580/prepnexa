@@ -33,3 +33,7 @@ Phase 5 implements permission-checked content operations without starting test e
 - Duplicate slugs/names return a stable conflict response.
 - Mutations and their audit entries execute in the same database batch.
 - Mobile and keyboard-accessible forms pass lint, type and UI review.
+- Choice, numeric and text questions create immutable revisions and remain private as drafts.
+- Draft questions can be edited, submitted, returned, separately approved and published.
+- Creators cannot approve their own questions; publishing requires an approved current revision.
+- Question state changes and revision writes are audited in the same database batch.

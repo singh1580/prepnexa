@@ -1,10 +1,13 @@
 import { AppError } from "@/lib/errors/app-error";
 
-export const contentNotFound = (entity: "Exam" | "Subject" | "Topic") =>
+export const contentNotFound = (entity: "Exam" | "Subject" | "Topic" | "Question") =>
   new AppError("CONTENT_NOT_FOUND", `${entity} was not found.`, 404);
 
 export const contentConflict = (message: string) =>
   new AppError("CONTENT_CONFLICT", message, 409);
+
+export const invalidContentState = (message: string) =>
+  new AppError("INVALID_CONTENT_STATE", message, 409);
 
 export function isUniqueViolation(error: unknown) {
   let current: unknown = error;
