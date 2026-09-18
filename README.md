@@ -20,6 +20,7 @@ Rule: route -> feature service -> repository -> database. Routes must not contai
 - `docs/DELIVERY_PLAN.md` — phase order and completion gates
 - `docs/PAYMENT_ARCHITECTURE.md` — provider-neutral payment boundary
 - `docs/ARCHITECTURE.md` — technical architecture decisions
+- `docs/ENGINEERING_STANDARDS.md` — enforced module, HTTP, error, logging, and testing rules
 
 ## Local setup
 
