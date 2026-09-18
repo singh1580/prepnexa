@@ -21,6 +21,7 @@ Rule: route -> feature service -> repository -> database. Routes must not contai
 - `docs/PAYMENT_ARCHITECTURE.md` — provider-neutral payment boundary
 - `docs/ARCHITECTURE.md` — technical architecture decisions
 - `docs/ENGINEERING_STANDARDS.md` — enforced module, HTTP, error, logging, and testing rules
+- `docs/DATABASE_DESIGN.md` — Phase 2 schema modules and integrity decisions
 
 ## Local setup
 
