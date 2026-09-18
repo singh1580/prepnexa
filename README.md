@@ -22,13 +22,14 @@ Rule: route -> feature service -> repository -> database. Routes must not contai
 - `docs/ARCHITECTURE.md` — technical architecture decisions
 - `docs/ENGINEERING_STANDARDS.md` — enforced module, HTTP, error, logging, and testing rules
 - `docs/DATABASE_DESIGN.md` — Phase 2 schema modules and integrity decisions
+- `docs/AUTHENTICATION.md` — session, verification, reset, RBAC, and email-delivery rules
 
 ## Local setup
 
-1. Copy `.env.example` to `.env.local` and use the Neon `development` branch URLs.
-2. Run `npm install`.
-3. Run `npm run db:generate` and inspect the SQL migration.
-4. Run `npm run db:migrate` only against the direct development URL.
+1. Copy `.env.example` to `.env.local` and use the Neon branch matching the current Git feature branch.
+2. Run `npm ci`.
+3. Run `npm run db:generate` only after changing the schema, then inspect the SQL migration.
+4. Run `npm run db:migrate` only against that feature branch's direct Neon URL.
 5. Run `npm run dev`.
 
 Never commit `.env*`, gateway secrets, database credentials or real student data.

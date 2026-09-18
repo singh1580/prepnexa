@@ -5,6 +5,14 @@ on:
     branches: [main, develop]
 permissions:
   contents: read
+env:
+  NEXT_PUBLIC_APP_NAME: PrepNexa
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  DATABASE_URL: postgresql://ci:ci@localhost/ci
+  DATABASE_URL_UNPOOLED: postgresql://ci:ci@localhost/ci
+  AUTH_SECRET: ci-auth-secret-123456789012345678901234
+  PASSWORD_PEPPER: ci-password-pepper-1234567890
+  MFA_ENCRYPTION_KEY: ci-mfa-encryption-key-123456789012345
 jobs:
   quality:
     runs-on: ubuntu-latest
