@@ -34,6 +34,12 @@ export async function login(input: LoginInput, context: { ip?: string; userAgent
   }
   if (user.status !== "ACTIVE") {
     await recordLoginAttempt({ emailHash, ipHash, succeeded: false, failureReason: user.status });
+    if (user.status === "PENDING_VERIFICATION") {
+      throw new AppError("EMAIL_NOT_VERIFIED", "Verify your email before signing in. You can request a new verification link below.", 403);
+    }
+    if (user.status === "SUSPENDED") {
+      throw new AppError("ACCOUNT_SUSPENDED", "This account is suspended. Contact support if you believe this is a mistake.", 403);
+    }
     throw new AppError("ACCOUNT_NOT_ACTIVE", "This account is not active.", 403);
   }
 
