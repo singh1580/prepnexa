@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginInputSchema, mfaLoginInputSchema, registerInputSchema, resetPasswordInputSchema } from "../../src/features/auth/validation";
+import { loginInputSchema, mfaEnrollmentConfirmSchema, mfaLoginInputSchema, profileInputSchema, registerInputSchema, resetPasswordInputSchema } from "../../src/features/auth/validation";
 
 describe("auth validation", () => {
   it("normalizes an email during registration", () => {
@@ -19,5 +19,13 @@ describe("auth validation", () => {
     const challengeToken = "x".repeat(43);
     expect(mfaLoginInputSchema.parse({ challengeToken, code: "123456" }).code).toBe("123456");
     expect(() => mfaLoginInputSchema.parse({ challengeToken, code: "123456", recoveryCode: "ABCDEF-123456" })).toThrow();
+  });
+
+  it("validates restricted MFA enrollment and profile updates", () => {
+    const challengeToken = "x".repeat(43);
+    expect(mfaEnrollmentConfirmSchema.parse({ challengeToken, code: "123456" }).code).toBe("123456");
+    expect(() => mfaEnrollmentConfirmSchema.parse({ challengeToken, code: "12345" })).toThrow();
+    expect(profileInputSchema.parse({ name: "  Learner Name  " }).name).toBe("Learner Name");
+    expect(() => profileInputSchema.parse({ name: "x" })).toThrow();
   });
 });

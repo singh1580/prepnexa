@@ -1,0 +1,7 @@
+import Link from "next/link";
+import { listPublishedProducts } from "@/features/catalog/repository";
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Packages" };
+const formatPrice = (paise: number) => paise === 0 ? "Free" : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paise / 100);
+export default async function Page() { const rows = await listPublishedProducts(); return <main className="public-main"><header className="listing-heading"><span className="eyebrow">PREPARATION PACKAGES</span><h1>Choose access that fits your plan</h1><p>Compare published packages by included tests, access duration and current price.</p></header>{rows.length ? <div className="catalog-grid">{rows.map((product, index) => <Link className="exam-card" href={`/packages/${product.slug}`} key={product.id}><span className="card-number">{String(index + 1).padStart(2, "0")}</span><div><span className="package-price">{formatPrice(product.pricePaise)}</span><h2>{product.name}</h2><p>{product.description || "Package details and included content."}</p></div><span className="card-meta">{product.testCount} {product.testCount === 1 ? "test" : "tests"} · {product.accessDays} days <b aria-hidden="true">→</b></span></Link>)}</div> : <section className="panel empty-state"><span className="eyebrow">PACKAGE UPDATE</span><h2>No packages are published yet</h2><p>Published packages will appear here automatically. Draft pricing is never shown publicly.</p></section>}</main>; }
+

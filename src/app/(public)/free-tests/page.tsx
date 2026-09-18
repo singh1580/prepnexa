@@ -1,0 +1,6 @@
+import Link from "next/link";
+import { listFreePublishedTests } from "@/features/catalog/repository";
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Free tests" };
+export default async function Page() { const rows = await listFreePublishedTests(); return <main className="public-main"><header className="listing-heading"><span className="eyebrow">START FREE</span><h1>Try a test before choosing a package</h1><p>These tests are linked to a published free product. Sign in is required so your attempt can be saved securely.</p></header>{rows.length ? <div className="test-list">{rows.map(test => <article key={test.id}><div><Link className="exam-link" href={`/exams/${test.examSlug}`}>{test.examName}</Link><h2>{test.title}</h2><p>{test.mode.toLowerCase()} · {test.durationMinutes} minutes</p></div><Link className="button" href={`/login?next=${encodeURIComponent(`/tests/${test.id}`)}`}>Sign in to start</Link></article>)}</div> : <section className="panel empty-state"><span className="eyebrow">FREE TESTS</span><h2>No free tests are published yet</h2><p>When a published test is included in a published ₹0 product, it will appear here automatically.</p><Link className="button secondary" href="/exams">Browse exams</Link></section>}</main>; }
+

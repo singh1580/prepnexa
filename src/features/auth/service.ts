@@ -39,11 +39,11 @@ export async function login(input: LoginInput, context: { ip?: string; userAgent
 
   const roles = await findRoleKeysForUser(user.id);
   if (roles.some((role) => ADMIN_ROLE_KEYS.has(role))) {
-    if (!await findActiveTotpFactor(user.id)) throw new AppError("MFA_SETUP_REQUIRED", "Two-factor authentication must be configured for this administrator account.", 403);
+    const mfaSetupRequired = !await findActiveTotpFactor(user.id);
     const challenge = createOpaqueToken();
     const expiresAt = new Date(Date.now() + env.MFA_CHALLENGE_TTL_MINUTES * 60_000);
     await replaceVerificationToken({ userId: user.id, purpose: TOKEN_PURPOSE.MFA_LOGIN, tokenHash: challenge.tokenHash, expiresAt });
-    return { mfaRequired: true as const, challengeToken: challenge.token, expiresAt, user: { id: user.id, name: user.name, email: user.email } };
+    return { mfaRequired: true as const, mfaSetupRequired, challengeToken: challenge.token, expiresAt, user: { id: user.id, name: user.name, email: user.email } };
   }
 
   const { token, tokenHash } = createOpaqueToken();

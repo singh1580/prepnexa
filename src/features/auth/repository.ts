@@ -8,6 +8,10 @@ export function findUserByEmail(email: string) {
   return db.query.users.findFirst({ where: eq(users.email, email) });
 }
 
+export async function updateProfileName(userId: string, name: string) {
+  await db.update(users).set({ name, updatedAt: new Date() }).where(eq(users.id, userId));
+}
+
 export async function createUserWithVerification(input: { name: string; email: string; passwordHash: string; tokenHash: string; expiresAt: Date }) {
   const role = await db.query.roles.findFirst({ where: eq(roles.key, "STUDENT"), columns: { id: true } });
   if (!role) throw new Error("STUDENT role is not seeded");
@@ -83,7 +87,7 @@ export async function createSession(input: typeof sessions.$inferInsert) {
 export function findActiveSession(tokenHash: string) {
   return db.select({
     sessionId: sessions.id, expiresAt: sessions.expiresAt,
-    userId: users.id, userName: users.name, userEmail: users.email, userStatus: users.status,
+    userId: users.id, userName: users.name, userEmail: users.email, userStatus: users.status, emailVerifiedAt: users.emailVerifiedAt,
   }).from(sessions).innerJoin(users, eq(sessions.userId, users.id)).where(
     and(eq(sessions.tokenHash, tokenHash), isNull(sessions.revokedAt), gt(sessions.expiresAt, new Date())),
   ).limit(1).then((rows) => rows[0]);
