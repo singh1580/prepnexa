@@ -11,7 +11,8 @@ export async function POST(request: Request) {
       ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
       userAgent: request.headers.get("user-agent") ?? undefined,
     });
+    if (result.mfaRequired) return successResponse({ mfaRequired: true, challengeToken: result.challengeToken, expiresAt: result.expiresAt.toISOString(), user: result.user }, requestId);
     await setSessionCookie(result.token, result.expiresAt);
-    return successResponse({ user: result.user, expiresAt: result.expiresAt.toISOString() }, requestId);
+    return successResponse({ mfaRequired: false, user: result.user, expiresAt: result.expiresAt.toISOString() }, requestId);
   });
 }

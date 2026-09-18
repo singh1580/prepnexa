@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, count, eq, gt, gte, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { loginAttempts, permissions, rolePermissions, roles, sessions, userRoles, users, verificationTokens } from "@/db/schema";
+import { loginAttempts, mfaFactors, permissions, recoveryCodes, rolePermissions, roles, sessions, userRoles, users, verificationTokens } from "@/db/schema";
 import type { TokenPurpose } from "./constants";
 
 export function findUserByEmail(email: string) {
@@ -96,6 +96,72 @@ export async function findAuthorizationForUser(userId: string) {
     .leftJoin(rolePermissions, eq(roles.id, rolePermissions.roleId))
     .leftJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
     .where(eq(userRoles.userId, userId));
+}
+
+export async function findRoleKeysForUser(userId: string) {
+  const rows = await db.select({ role: roles.key }).from(userRoles).innerJoin(roles, eq(userRoles.roleId, roles.id)).where(eq(userRoles.userId, userId));
+  return rows.map((row) => row.role);
+}
+
+export function findActiveTotpFactor(userId: string, verifiedOnly = true) {
+  return db.query.mfaFactors.findFirst({
+    where: and(eq(mfaFactors.userId, userId), eq(mfaFactors.type, "TOTP"), isNull(mfaFactors.disabledAt), ...(verifiedOnly ? [sql`${mfaFactors.verifiedAt} is not null`] : [])),
+    orderBy: (factor, { desc }) => [desc(factor.createdAt)],
+  });
+}
+
+export async function replacePendingTotpFactor(userId: string, secretCiphertext: string) {
+  const now = new Date();
+  const factorId = randomUUID();
+  await db.batch([
+    db.update(mfaFactors).set({ disabledAt: now }).where(and(eq(mfaFactors.userId, userId), eq(mfaFactors.type, "TOTP"), isNull(mfaFactors.verifiedAt), isNull(mfaFactors.disabledAt))),
+    db.insert(mfaFactors).values({ id: factorId, userId, type: "TOTP", label: "Authenticator app", secretCiphertext }),
+  ]);
+  return factorId;
+}
+
+export async function confirmTotpFactor(userId: string, factorId: string, codeHashes: string[]) {
+  const values = sql.join(codeHashes.map((codeHash) => sql`(${codeHash})`), sql`, `);
+  const result = await db.execute<{ id: string }>(sql`
+    with confirmed as (
+      update ${mfaFactors} set ${mfaFactors.verifiedAt} = now()
+      where ${mfaFactors.id} = ${factorId} and ${mfaFactors.userId} = ${userId}
+        and ${mfaFactors.verifiedAt} is null and ${mfaFactors.disabledAt} is null
+      returning ${mfaFactors.id}, ${mfaFactors.userId}
+    ), disabled_old_factors as (
+      update ${mfaFactors} set ${mfaFactors.disabledAt} = now()
+      where ${mfaFactors.userId} in (select user_id from confirmed) and ${mfaFactors.id} <> ${factorId} and ${mfaFactors.disabledAt} is null
+    ), deleted_codes as (
+      delete from ${recoveryCodes} where ${recoveryCodes.userId} in (select user_id from confirmed)
+    ), inserted_codes as (
+      insert into ${recoveryCodes} (${recoveryCodes.userId}, ${recoveryCodes.codeHash})
+      select confirmed.user_id, codes.code_hash from confirmed cross join (values ${values}) as codes(code_hash)
+    )
+    select id from confirmed
+  `);
+  return result.rows[0]?.id;
+}
+
+export async function findValidMfaChallenge(tokenHash: string) {
+  return db.select({ userId: verificationTokens.userId, email: users.email, name: users.name, status: users.status })
+    .from(verificationTokens).innerJoin(users, eq(verificationTokens.userId, users.id))
+    .where(and(eq(verificationTokens.tokenHash, tokenHash), eq(verificationTokens.purpose, "MFA_LOGIN"), isNull(verificationTokens.consumedAt), gt(verificationTokens.expiresAt, new Date())))
+    .limit(1).then((rows) => rows[0]);
+}
+
+export async function consumeMfaChallenge(tokenHash: string, userId: string) {
+  const [row] = await db.update(verificationTokens).set({ consumedAt: new Date() }).where(and(eq(verificationTokens.tokenHash, tokenHash), eq(verificationTokens.userId, userId), eq(verificationTokens.purpose, "MFA_LOGIN"), isNull(verificationTokens.consumedAt), gt(verificationTokens.expiresAt, new Date()))).returning({ id: verificationTokens.id });
+  return row?.id;
+}
+
+export async function consumeRecoveryCode(userId: string, codeHash: string) {
+  const [row] = await db.update(recoveryCodes).set({ usedAt: new Date() }).where(and(eq(recoveryCodes.userId, userId), eq(recoveryCodes.codeHash, codeHash), isNull(recoveryCodes.usedAt))).returning({ id: recoveryCodes.id });
+  return row?.id;
+}
+
+export async function consumeTotpStep(factorId: string, step: number) {
+  const [row] = await db.update(mfaFactors).set({ lastUsedStep: step }).where(and(eq(mfaFactors.id, factorId), isNull(mfaFactors.disabledAt), sql`(${mfaFactors.lastUsedStep} is null or ${mfaFactors.lastUsedStep} < ${step})`)).returning({ id: mfaFactors.id });
+  return row?.id;
 }
 
 export async function revokeSession(tokenHash: string) {

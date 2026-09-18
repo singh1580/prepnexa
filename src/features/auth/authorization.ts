@@ -2,6 +2,7 @@ import { AppError } from "@/lib/errors/app-error";
 import { hashIdentifier } from "./crypto";
 import { findActiveSession, findAuthorizationForUser } from "./repository";
 import { readSessionCookie } from "./session-cookie";
+import { ADMIN_ROLE_KEYS } from "./constants";
 
 export async function getCurrentAuth() {
   const token = await readSessionCookie();
@@ -27,5 +28,11 @@ export async function requireAuthenticated() {
 export async function requirePermission(permission: string) {
   const auth = await requireAuthenticated();
   if (!auth.permissions.includes(permission)) throw new AppError("FORBIDDEN", "You do not have permission to perform this action.", 403);
+  return auth;
+}
+
+export async function requireAdmin() {
+  const auth = await requireAuthenticated();
+  if (!auth.roles.some((role) => ADMIN_ROLE_KEYS.has(role))) throw new AppError("FORBIDDEN", "Administrator access is required.", 403);
   return auth;
 }

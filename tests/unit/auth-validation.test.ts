@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginInputSchema, registerInputSchema, resetPasswordInputSchema } from "../../src/features/auth/validation";
+import { loginInputSchema, mfaLoginInputSchema, registerInputSchema, resetPasswordInputSchema } from "../../src/features/auth/validation";
 
 describe("auth validation", () => {
   it("normalizes an email during registration", () => {
@@ -13,5 +13,11 @@ describe("auth validation", () => {
 
   it("requires an opaque reset token", () => {
     expect(() => resetPasswordInputSchema.parse({ token: "short", password: "a-secure-password" })).toThrow();
+  });
+
+  it("accepts exactly one MFA proof", () => {
+    const challengeToken = "x".repeat(43);
+    expect(mfaLoginInputSchema.parse({ challengeToken, code: "123456" }).code).toBe("123456");
+    expect(() => mfaLoginInputSchema.parse({ challengeToken, code: "123456", recoveryCode: "ABCDEF-123456" })).toThrow();
   });
 });

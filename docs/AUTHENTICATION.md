@@ -25,6 +25,13 @@ PrepNexa owns its authentication data so sessions and RBAC remain explicit and a
 | GET | `/api/auth/me` | Return current user, roles, permissions, and expiry |
 | POST | `/api/auth/request-password-reset` | Issue reset email with enumeration-safe response |
 | POST | `/api/auth/reset-password` | Replace password and revoke all sessions |
+| POST | `/api/auth/mfa/setup` | Generate an encrypted TOTP factor for a signed-in admin |
+| POST | `/api/auth/mfa/confirm` | Confirm TOTP and return recovery codes once |
+| POST | `/api/auth/mfa/verify-login` | Complete an admin login challenge |
+
+## Administrator 2FA
+
+Every non-student system role is treated as administrative. Password login for these roles creates a five-minute, single-use challenge instead of a session. The challenge is completed with either a six-digit TOTP code or a one-time recovery code. TOTP secrets are encrypted with AES-256-GCM using `MFA_ENCRYPTION_KEY`; recovery codes are HMAC-hashed and never retrievable after setup. The last accepted TOTP time-step is persisted so the same code cannot be replayed.
 
 ## Email adapter
 

@@ -2,8 +2,8 @@ import { AppError } from "@/lib/errors/app-error";
 import { env } from "@/config/env";
 import { createOpaqueToken, hashIdentifier, hashPassword, normalizeEmail, verifyPassword } from "./crypto";
 import { authNotifier } from "./notifier";
-import { TOKEN_PURPOSE } from "./constants";
-import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findUserByEmail, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin } from "./repository";
+import { ADMIN_ROLE_KEYS, TOKEN_PURPOSE } from "./constants";
+import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin } from "./repository";
 import type { EmailInput, LoginInput, RegisterInput, ResetPasswordInput } from "./validation";
 
 const genericCredentialsError = () => new AppError("INVALID_CREDENTIALS", "Email or password is incorrect.", 401);
@@ -37,11 +37,20 @@ export async function login(input: LoginInput, context: { ip?: string; userAgent
     throw new AppError("ACCOUNT_NOT_ACTIVE", "This account is not active.", 403);
   }
 
+  const roles = await findRoleKeysForUser(user.id);
+  if (roles.some((role) => ADMIN_ROLE_KEYS.has(role))) {
+    if (!await findActiveTotpFactor(user.id)) throw new AppError("MFA_SETUP_REQUIRED", "Two-factor authentication must be configured for this administrator account.", 403);
+    const challenge = createOpaqueToken();
+    const expiresAt = new Date(Date.now() + env.MFA_CHALLENGE_TTL_MINUTES * 60_000);
+    await replaceVerificationToken({ userId: user.id, purpose: TOKEN_PURPOSE.MFA_LOGIN, tokenHash: challenge.tokenHash, expiresAt });
+    return { mfaRequired: true as const, challengeToken: challenge.token, expiresAt, user: { id: user.id, name: user.name, email: user.email } };
+  }
+
   const { token, tokenHash } = createOpaqueToken();
   const expiresAt = new Date(Date.now() + env.SESSION_TTL_DAYS * 86_400_000);
   await createSession({ userId: user.id, tokenHash, ipHash, userAgent: context.userAgent?.slice(0, 1000), expiresAt });
   await Promise.all([touchLastLogin(user.id), recordLoginAttempt({ emailHash, ipHash, succeeded: true })]);
-  return { token, expiresAt, user: { id: user.id, name: user.name, email: user.email } };
+  return { mfaRequired: false as const, token, expiresAt, user: { id: user.id, name: user.name, email: user.email } };
 }
 
 export async function logout(token: string | undefined) {
