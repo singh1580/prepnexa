@@ -18,7 +18,7 @@ export async function executeRoute(request: Request, handler: Handler) {
       logger.warn({ requestId, module: "http", action: "application_error", code: error.code, status: error.status }, error.message);
       return errorResponse(error.code, error.message, error.status, requestId, error.details);
     }
-    logger.error({ requestId, module: "http", action: "unhandled_error", error }, "Unhandled route error");
+    logger.error({ requestId, module: "http", action: "unhandled_error", errorType: error instanceof Error ? error.name : "UnknownError" }, "Unhandled route error");
     return errorResponse("INTERNAL_ERROR", "Something went wrong.", 500, requestId);
   }
 }

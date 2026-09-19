@@ -9,10 +9,10 @@ Work moves to the next phase only after the current phase's checks pass. Product
 | 2 | Final database model | Migration, constraints, seeds, and integration tests pass on Neon development |
 | 3 | Authentication and RBAC | Session, reset, verification, authorization, and admin 2FA tests pass |
 | 4 | Public catalogue | Responsive exam/package pages and free-test entry complete |
-| 5 | Admin content management | Draft/review/publish and bulk-import flows pass permission tests |
+| 5 | Admin content management | Single-admin draft/preview/publish and bulk-import flows pass permission tests |
 | 6 | Test engine | Timer, autosave, reconnect, snapshots, and auto-submit pass concurrency tests |
 | 7 | Results and analytics | Scoring, release, rank, percentile, and recalculation are reproducible |
-| 8 | Provider-neutral commerce | Mock provider plus selected adapter pass webhook/refund/idempotency tests |
+| 8 | Provider-neutral commerce | Coupons, mock provider and selected adapter pass checkout/webhook/refund/idempotency tests |
 | 9 | Protected materials | Entitlement checks, signed access, watermarking, and audit trail work |
 | 10 | Dashboards and support | Student/admin workflows, notifications, and tickets complete |
 | 11 | Release readiness | Security, accessibility, load, backup/restore, monitoring, and beta checks pass |
@@ -34,3 +34,11 @@ Work moves to the next phase only after the current phase's checks pass. Product
 - Database queries have required indexes and ownership filters.
 - Mobile and keyboard behavior is checked when UI is involved.
 - Documentation and environment examples are updated.
+
+Current evidence and outstanding work: see PROJECT_STATUS.md. A table or permission definition alone does not complete a feature.
+
+
+## Mock-first scope update
+Live tests and standalone practice-mode creation are deferred by the owner. Existing database modes/schedules remain for compatibility. Current test creation is MOCK only; free diagnostic and paid mock packages remain. Students start a prepared test on demand and its timer begins at attempt creation (Phase 6). Live scheduling is not part of current acceptance.
+
+This update hides schedule controls, rejects non-mock creation/publication, fixes async form reset, adds draft question/empty-section removal and prevents publishing papers with empty sections. Actual student attempts, autosave/resume and results remain pending.

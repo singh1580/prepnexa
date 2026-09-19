@@ -138,7 +138,7 @@ export async function confirmTotpFactor(userId: string, factorId: string, codeHa
     ), deleted_codes as (
       delete from ${recoveryCodes} where ${recoveryCodes.userId} in (select user_id from confirmed)
     ), inserted_codes as (
-      insert into ${recoveryCodes} (${recoveryCodes.userId}, ${recoveryCodes.codeHash})
+      insert into ${recoveryCodes} ("user_id", "code_hash")
       select confirmed.user_id, codes.code_hash from confirmed cross join (values ${values}) as codes(code_hash)
     )
     select id from confirmed
