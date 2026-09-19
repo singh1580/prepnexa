@@ -1,21 +1,17 @@
 # PrepNexa MVP Product Requirements
 
-Status: Phase 0 baseline
+Status: Revised for the approved single-admin workflow
 
 PrepNexa is a mobile-first placement-exam preparation platform for India. The first catalogue targets TCS-style placement preparation, while the data model and navigation must allow additional company exams without code duplication. PrepNexa is an independent preparation service and must not imply affiliation with an employer or examination body.
 
 ## 1. Users and roles
 
-The initial public audience is students aged 18 or older. Supported internal roles are:
+The product has exactly two workspaces: Student and Admin. One owner can operate every admin module without another staff member's approval.
 
-- `STUDENT`: purchase packages, access entitled content, take tests, and view personal results.
-- `CONTENT_REVIEWER`: review questions and materials but cannot publish, manage users, or view payment secrets.
-- `CONTENT_ADMIN`: manage exams, questions, tests, schedules, packages, and materials.
-- `SUPPORT_AGENT`: view the minimum student/order information required to resolve support cases.
-- `FINANCE_ADMIN`: review payments, reconciliation, invoices, and refunds without content permissions.
-- `SUPER_ADMIN`: manage roles, permissions, system settings, and other admins.
-
-Permissions are server-enforced. Hiding a menu item is never authorization.
+- Student: browse, purchase, take tests, use materials, view results and contact support.
+- Admin: manage content, students, coupons, orders, payments, support and settings within one dashboard.
+- Existing database role keys remain for compatibility; they do not imply separate dashboards or required staff. The current CONTENT_ADMIN account can operate existing content tools. Owner-wide permissions must be provisioned explicitly before commerce/support management launches; never auto-promote reviewer/support accounts.
+- Server permissions and administrator MFA remain enforced.
 
 ## 2. MVP catalogue
 
@@ -102,6 +98,10 @@ Rank calculations include only eligible, evaluated, non-void attempts in the con
 
 Payment providers are replaceable adapters. No order, entitlement, UI, or result code may depend directly on Razorpay, Cashfree, PhonePe, or another provider.
 
+### Coupons (Phase 8)
+
+Keep fixed/percentage discounts, start/end dates, minimum order, maximum discount, total/per-student usage limits, eligible packages and enable/disable controls. Existing coupon tables are only a schema foundation: admin screens, checkout validation and race-safe redemption remain to implement. All controls live in the common Admin dashboard.
+
 ## 8. Protected materials
 
 - Paid files are never placed in the public application directory.
@@ -114,9 +114,9 @@ Payment providers are replaceable adapters. No order, entitlement, UI, or result
 
 ## 9. Admin content workflow
 
-Questions and materials follow `DRAFT -> IN_REVIEW -> PUBLISHED -> ARCHIVED`.
+Questions and materials use draft, preview, direct publish and archive. No separate reviewer is required. Legacy IN_REVIEW questions can be directly published by an authorized admin.
 
-- Authors cannot mark their own work reviewed when separation of duties is enabled.
+- The same admin can create and publish their own content.
 - Publishing records the actor and timestamp.
 - Editing published content creates a revision instead of silently changing history.
 - Active or completed test attempts retain their original snapshots.

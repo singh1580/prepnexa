@@ -75,19 +75,26 @@ export function QuestionForm({ topics, question }: { topics: TopicOption[]; ques
   </form>;
 }
 
-export function QuestionWorkflowActions({ questionId, status, createdBy, reviewedBy, actorUserId, permissions }: { questionId: string; status: string; createdBy: string; reviewedBy: string | null; actorUserId: string; permissions: readonly string[] }) {
-  const router = useRouter(); const [busy, setBusy] = useState(""); const [error, setError] = useState("");
-  const canCreate = permissions.includes("question.create"); const canReview = permissions.includes("question.review"); const canPublish = permissions.includes("question.publish");
-  async function action(path: string, body: Record<string, unknown>, label: string) {
-    setBusy(label); setError("");
-    try { await adminContentRequest(`questions/${questionId}/${path}`, "POST", body); router.refresh(); }
-    catch (cause) { setError(errorMessage(cause)); } finally { setBusy(""); }
+export function QuestionWorkflowActions({ questionId, status, permissions }: { questionId: string; status: string; permissions: readonly string[] }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const canPublish = permissions.includes("question.publish");
+  async function action(path: "publish" | "archive") {
+    setBusy(true); setError("");
+    try { await adminContentRequest(`questions/${questionId}/${path}`, "POST", {}); router.refresh(); }
+    catch (cause) { setError(errorMessage(cause)); }
+    finally { setBusy(false); }
   }
-  return <section className="panel workflow-panel"><span className="eyebrow">WORKFLOW</span><h2>Review controls</h2><p className="muted">Draft → review → approval → publish. Every transition is audited.</p><div className="workflow-actions">
-    {status === "DRAFT" && canCreate && <button type="button" className="button" disabled={Boolean(busy)} onClick={() => action("submit", {}, "submit")}>{busy === "submit" ? "Submitting…" : "Submit for review"}</button>}
-    {status === "IN_REVIEW" && canReview && createdBy !== actorUserId && !reviewedBy && <button type="button" className="button" disabled={Boolean(busy)} onClick={() => action("review", { action: "APPROVE" }, "approve")}>{busy === "approve" ? "Approving…" : "Approve"}</button>}
-    {status === "IN_REVIEW" && canReview && createdBy !== actorUserId && <button type="button" className="button secondary" disabled={Boolean(busy)} onClick={() => action("review", { action: "RETURN" }, "return")}>{busy === "return" ? "Returning…" : "Return to draft"}</button>}
-    {status === "IN_REVIEW" && canPublish && Boolean(reviewedBy) && <button type="button" className="button" disabled={Boolean(busy)} onClick={() => action("publish", {}, "publish")}>{busy === "publish" ? "Publishing…" : "Publish question"}</button>}
-    {status === "PUBLISHED" && canPublish && <button type="button" className="button secondary" disabled={Boolean(busy)} onClick={() => action("archive", {}, "archive")}>{busy === "archive" ? "Archiving…" : "Archive question"}</button>}
-  </div>{status === "IN_REVIEW" && createdBy === actorUserId && <p className="notice">A different administrator must review this question.</p>}{status === "IN_REVIEW" && reviewedBy && <p className="notice success">Approved by a separate reviewer. Ready to publish.</p>}{status === "PUBLISHED" && <p className="notice success">This revision is published and locked.</p>}{status === "ARCHIVED" && <p className="notice">This question is archived and unavailable for new tests.</p>}{error && <p className="notice danger" role="alert">{error}</p>}</section>;
+  return <section className="panel workflow-panel">
+    <h2>Publication</h2>
+    <p className="muted">Check the question and answer, then publish when ready.</p>
+    <div className="workflow-actions">
+      {(status === "DRAFT" || status === "IN_REVIEW") && canPublish && <button type="button" className="button" disabled={busy} onClick={() => action("publish")}>{busy ? "Publishing…" : "Publish question"}</button>}
+      {status === "PUBLISHED" && canPublish && <button type="button" className="button secondary" disabled={busy} onClick={() => action("archive")}>{busy ? "Archiving…" : "Archive question"}</button>}
+    </div>
+    {status === "PUBLISHED" && <p className="notice success">This question is published.</p>}
+    {status === "ARCHIVED" && <p className="notice">This question is archived and unavailable for new tests.</p>}
+    {error && <p className="notice danger" role="alert">{error}</p>}
+  </section>;
 }

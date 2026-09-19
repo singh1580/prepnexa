@@ -80,23 +80,18 @@ export async function updateQuestion(id: string, input: QuestionInput, actor: Ac
   return write("question_update", actor, () => patchQuestion(before, input, { actorUserId: actor.userId, requestId: actor.requestId }), "This question was updated elsewhere. Refresh and try again.");
 }
 
-export async function submitQuestion(id: string, actor: Actor) {
-  const before = await getManagedQuestion(id);
-  if (before.status !== "DRAFT") throw invalidContentState("Only draft questions can be submitted for review.");
-  return write("question_submit", actor, () => setQuestionReviewState(before, "SUBMIT", { actorUserId: actor.userId, requestId: actor.requestId }), "The question state changed. Refresh and try again.");
+// Kept for older clients; the current admin publishes directly.
+export async function submitQuestion(): Promise<never> {
+  throw new AppError("REVIEW_WORKFLOW_REMOVED", "Publish the question directly from its preview.", 410);
 }
 
-export async function reviewQuestion(id: string, action: "APPROVE" | "RETURN", actor: Actor) {
-  const before = await getManagedQuestion(id);
-  if (before.status !== "IN_REVIEW") throw invalidContentState("Only questions in review can be reviewed.");
-  if (before.createdBy === actor.userId) throw new AppError("REVIEWER_SEPARATION_REQUIRED", "A question must be reviewed by someone other than its creator.", 403);
-  if (action === "APPROVE" && before.reviewedBy) throw invalidContentState("This question is already approved and ready to publish.");
-  return write(`question_${action.toLowerCase()}`, actor, () => setQuestionReviewState(before, action, { actorUserId: actor.userId, requestId: actor.requestId }), "The question state changed. Refresh and try again.");
+export async function reviewQuestion(): Promise<never> {
+  throw new AppError("REVIEW_WORKFLOW_REMOVED", "Separate approval is no longer required. Publish from the question preview.", 410);
 }
 
 export async function publishQuestion(id: string, actor: Actor) {
   const before = await getManagedQuestion(id);
-  if (before.status !== "IN_REVIEW" || !before.reviewedBy) throw invalidContentState("A separate reviewer must approve this question before publishing.");
+  if (before.status !== "DRAFT" && before.status !== "IN_REVIEW") throw invalidContentState("Only unpublished questions can be published.");
   return write("question_publish", actor, () => setQuestionReviewState(before, "PUBLISH", { actorUserId: actor.userId, requestId: actor.requestId }), "The question state changed. Refresh and try again.");
 }
 

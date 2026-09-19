@@ -46,11 +46,8 @@ describe.skipIf(!run)("admin content database flow", () => {
     expect(imported).toMatchObject({ status: "IMPORTED", importedRows: 1 });
 
     questionId = (await service.createQuestion({ topicId, type: "SINGLE_CHOICE", stem: "What percentage is one half?", explanation: "One half multiplied by 100 is 50 percent.", marks: 1, negativeMarks: 0.25, difficulty: "EASY", options: [{ stableKey: "A", body: "25%", isCorrect: false, sortOrder: 0 }, { stableKey: "B", body: "50%", isCorrect: true, sortOrder: 1 }], numericAnswer: null, numericTolerance: 0, acceptedAnswers: [], caseSensitive: false }, actor)).id;
-    await service.submitQuestion(questionId, actor);
-    await expect(service.reviewQuestion(questionId, "APPROVE", actor)).rejects.toMatchObject({ code: "REVIEWER_SEPARATION_REQUIRED", status: 403 });
-    await service.reviewQuestion(questionId, "APPROVE", { userId: reviewerId, requestId: randomUUID() });
     await service.publishQuestion(questionId, actor);
-    expect(await service.getManagedQuestion(questionId)).toMatchObject({ status: "PUBLISHED", reviewedBy: reviewerId });
+    expect(await service.getManagedQuestion(questionId)).toMatchObject({ status: "PUBLISHED", reviewedBy: null });
 
     const testService = await import("../../src/features/admin-tests/service");
     testId = (await testService.createTest({ examId, title: "Integration live test", mode: "LIVE", durationMinutes: 60, instructions: "Integration only", maxAttempts: 1, shuffleQuestions: true, shuffleOptions: true }, actor)).id;

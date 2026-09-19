@@ -197,7 +197,7 @@ export async function setQuestionReviewState(before: NonNullable<Awaited<ReturnT
     : action === "PUBLISH" ? { publishedAt: now }
       : action === "SUBMIT" || action === "RETURN" ? { reviewedBy: null, publishedAt: null } : {};
   const revisionId = before.revision?.id;
-  const updateRevision = revisionId ? db.update(questionRevisions).set(revisionState).where(and(eq(questionRevisions.id, revisionId), eq(questionRevisions.questionId, before.id))) : undefined;
+  const updateRevision = revisionId && Object.keys(revisionState).length ? db.update(questionRevisions).set(revisionState).where(and(eq(questionRevisions.id, revisionId), eq(questionRevisions.questionId, before.id))) : undefined;
   const auditRow = db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: `question.${action.toLowerCase()}`, entityType: "question", entityId: before.id, requestId: audit.requestId, before: { status: before.status, reviewedBy: before.reviewedBy }, after: state });
   const updateQuestion = db.update(questions).set({ ...state, updatedAt: now }).where(eq(questions.id, before.id));
   if (updateRevision) await db.batch([updateQuestion, updateRevision, auditRow]); else await db.batch([updateQuestion, auditRow]);
