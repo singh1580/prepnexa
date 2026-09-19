@@ -50,11 +50,18 @@ describe.skipIf(!run)("admin content database flow", () => {
     expect(await service.getManagedQuestion(questionId)).toMatchObject({ status: "PUBLISHED", reviewedBy: null });
 
     const testService = await import("../../src/features/admin-tests/service");
-    testId = (await testService.createTest({ examId, title: "Integration live test", mode: "LIVE", durationMinutes: 60, instructions: "Integration only", maxAttempts: 1, shuffleQuestions: true, shuffleOptions: true }, actor)).id;
+    testId = (await testService.createTest({ examId, title: "Integration mock test", mode: "MOCK", durationMinutes: 60, instructions: "Integration only", maxAttempts: 1, shuffleQuestions: true, shuffleOptions: true }, actor)).id;
     const sectionId = (await testService.createSection(testId, { title: "Aptitude", durationMinutes: 60, sortOrder: 0 }, actor)).id;
     await testService.assignQuestion(sectionId, questionId, 0, actor);
+    await testService.removeTestItem(sectionId, questionId, actor);
+    expect((await testService.getManagedTest(testId)).sections[0]?.questions).toHaveLength(0);
+    await expect(testService.publishTest(testId, actor)).rejects.toMatchObject({ status: 409 });
+    await testService.assignQuestion(sectionId, questionId, 0, actor);
+    const emptySection = (await testService.createSection(testId, { title: "Temporary", durationMinutes: null, sortOrder: 1 }, actor)).id;
+    await expect(testService.publishTest(testId, actor)).rejects.toMatchObject({ status: 409 });
+    await testService.removeTestItem(emptySection, null, actor);
     await testService.publishTest(testId, actor);
-    await testService.createSchedule(testId, { startsAt: "2030-01-01T10:00:00.000Z", endsAt: "2030-01-01T11:00:00.000Z", lateJoinMinutes: 15, resultReleaseAt: "2030-01-01T12:00:00.000Z", rankingEnabled: true, cohortKey: "integration" }, actor);
+    await expect(testService.removeTestItem(sectionId, questionId, actor)).rejects.toMatchObject({ status: 409 });
     expect(await testService.getManagedTest(testId)).toMatchObject({ status: "PUBLISHED" });
 
     const catalogService = await import("../../src/features/admin-catalog/service");

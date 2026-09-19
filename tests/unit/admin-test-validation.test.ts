@@ -8,6 +8,10 @@ describe("admin test validation", () => {
     expect(sectionInputSchema.safeParse({ title: "A", durationMinutes: 0, sortOrder: -1 }).success).toBe(false);
   });
 
+  it.each(["LIVE", "PRACTICE"])("defers %s creation", (mode) => {
+    expect(testInputSchema.safeParse({ examId: crypto.randomUUID(), title: "Test", mode, durationMinutes: 60, maxAttempts: 1 }).success).toBe(false);
+  });
+
   it("rejects inverted live windows and early result release", () => {
     const base = { startsAt: "2030-01-01T10:00:00.000Z", endsAt: "2030-01-01T11:00:00.000Z", lateJoinMinutes: 15, resultReleaseAt: null, rankingEnabled: false, cohortKey: "" };
     expect(scheduleInputSchema.safeParse(base).success).toBe(true);

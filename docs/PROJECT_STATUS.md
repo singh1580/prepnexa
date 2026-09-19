@@ -46,3 +46,9 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 6. Release readiness.
 
 Do not claim Phase 5 complete or merge draft PR #4 until acceptance. Existing published revisions and future attempt snapshots must be preserved when edit workflows are implemented.
+
+
+## Mock-first scope update
+Live tests and standalone practice-mode creation are deferred by the owner. Existing database modes/schedules remain for compatibility. Current test creation is MOCK only; free diagnostic and paid mock packages remain. Students start a prepared test on demand and its timer begins at attempt creation (Phase 6). Live scheduling is not part of current acceptance.
+
+This update hides schedule controls, rejects non-mock creation/publication, fixes async form reset, adds draft question/empty-section removal and prevents publishing papers with empty sections. Actual student attempts, autosave/resume and results remain pending.

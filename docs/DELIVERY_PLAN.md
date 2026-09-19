@@ -36,3 +36,9 @@ Work moves to the next phase only after the current phase's checks pass. Product
 - Documentation and environment examples are updated.
 
 Current evidence and outstanding work: see PROJECT_STATUS.md. A table or permission definition alone does not complete a feature.
+
+
+## Mock-first scope update
+Live tests and standalone practice-mode creation are deferred by the owner. Existing database modes/schedules remain for compatibility. Current test creation is MOCK only; free diagnostic and paid mock packages remain. Students start a prepared test on demand and its timer begins at attempt creation (Phase 6). Live scheduling is not part of current acceptance.
+
+This update hides schedule controls, rejects non-mock creation/publication, fixes async form reset, adds draft question/empty-section removal and prevents publishing papers with empty sections. Actual student attempts, autosave/resume and results remain pending.

@@ -21,7 +21,7 @@ The first release supports:
 - Paid packages containing tests, study materials, or both.
 - Topic-wise practice tests.
 - Full mock tests.
-- Scheduled live tests.
+- Scheduled live tests: deferred; not part of the current mock-first release.
 - Articles, private PDFs, videos, and downloadable resources.
 
 Every product stores its own price, currency, access duration, included resources, publication status, and refund-policy reference. The default access duration is 90 days, but it is configurable per product.
@@ -37,7 +37,7 @@ Every product stores its own price, currency, access duration, included resource
 
 ## 4. Test modes
 
-### Practice
+### Practice (standalone mode deferred; topic-focused mock papers remain possible)
 
 - Attempts are configurable; the default is unlimited.
 - Results and explanations are released immediately unless explicitly delayed.
@@ -50,7 +50,7 @@ Every product stores its own price, currency, access duration, included resource
 - Results are immediate unless the test has a configured release time.
 - Ranking may be enabled for a defined cohort.
 
-### Live
+### Live (deferred)
 
 - The test has an authoritative server start and end time.
 - Default late-join window is 15 minutes and is configurable per schedule.

@@ -48,3 +48,9 @@ Phase 5 implements permission-checked content operations without starting test e
 ## Remaining acceptance work
 
 See PROJECT_STATUS.md. Phase 5 is not fully accepted merely because lint/build pass. Published-content revision editing, complete maintenance controls and live database/browser acceptance remain open. File upload and delivery are not complete.
+
+
+## Mock-first scope update
+Live tests and standalone practice-mode creation are deferred by the owner. Existing database modes/schedules remain for compatibility. Current test creation is MOCK only; free diagnostic and paid mock packages remain. Students start a prepared test on demand and its timer begins at attempt creation (Phase 6). Live scheduling is not part of current acceptance.
+
+This update hides schedule controls, rejects non-mock creation/publication, fixes async form reset, adds draft question/empty-section removal and prevents publishing papers with empty sections. Actual student attempts, autosave/resume and results remain pending.

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, countDistinct, desc, eq, ne } from "drizzle-orm";
+import { and, asc, countDistinct, desc, eq, ne, sql } from "drizzle-orm";
+import { testStateConflict } from "./errors";
 import { db } from "@/db/client";
 import { auditLogs, exams, questions, subjects, testQuestions, testSchedules, testSections, tests, topics } from "@/db/schema";
 
@@ -50,5 +51,43 @@ export async function insertSchedule(testId: string, input: ScheduleInput, audit
   await db.batch([db.insert(testSchedules).values(values), db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test_schedule.created", entityType: "test_schedule", entityId: id, requestId: audit.requestId, after: values })]); return { id };
 }
 export async function publishTestRecord(before: NonNullable<Awaited<ReturnType<typeof findManagedTest>>>, audit: Audit) {
-  const now = new Date(); await db.batch([db.update(tests).set({ status: "PUBLISHED", updatedAt: now }).where(eq(tests.id, before.id)), db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test.published", entityType: "test", entityId: before.id, requestId: audit.requestId, before: { status: before.status }, after: { status: "PUBLISHED" } })]); return { id: before.id, status: "PUBLISHED" as const };
+  const result = await db.execute(sql`
+    with locked_test as (
+      select id from ${tests} where id = ${before.id} and status = 'DRAFT' and mode = 'MOCK' for update
+    ), published as (
+      update ${tests} set status = 'PUBLISHED', updated_at = now()
+      where id in (select id from locked_test)
+        and exists (select 1 from ${testSections} where test_id = ${before.id})
+        and not exists (
+          select 1 from ${testSections} s where s.test_id = ${before.id}
+          and not exists (select 1 from ${testQuestions} q where q.section_id = s.id)
+        )
+      returning id
+    )
+    insert into ${auditLogs} ("actor_user_id", "action", "entity_type", "entity_id", "request_id", "after")
+    select ${audit.actorUserId}, 'test.published', 'test', id::text, ${audit.requestId},
+      '{"status":"PUBLISHED"}'::jsonb from published returning entity_id
+  `);
+  if (!result.rows.length) throw testStateConflict("The test changed before publishing. Refresh and try again.");
+  return { id: before.id, status: "PUBLISHED" as const };
+}
+
+// Lock the parent test so removing content cannot race a cooperating publisher.
+export async function removeDraftItem(sectionId: string, questionId: string | null, audit: Audit) {
+  const removal = questionId
+    ? sql`delete from ${testQuestions} where section_id = ${sectionId} and question_id = ${questionId} and test_id in (select id from locked_test) returning test_id`
+    : sql`delete from ${testSections} where id = ${sectionId} and test_id in (select id from locked_test)
+        and not exists (select 1 from ${testQuestions} where section_id = ${sectionId}) returning test_id`;
+  const result = await db.execute(sql`
+    with locked_test as (
+      select id from ${tests} where id = (select test_id from ${testSections} where id = ${sectionId})
+        and status = 'DRAFT' and mode = 'MOCK' for update
+    ), removed as (${removal})
+    insert into ${auditLogs} ("actor_user_id", "action", "entity_type", "entity_id", "request_id", "after")
+    select ${audit.actorUserId}, ${questionId ? "test_question.removed" : "test_section.removed"},
+      'test', test_id::text, ${audit.requestId},
+      jsonb_build_object('sectionId', ${sectionId}::text, 'questionId', ${questionId}::text)
+    from removed returning entity_id
+  `);
+  return result.rows.length > 0;
 }
