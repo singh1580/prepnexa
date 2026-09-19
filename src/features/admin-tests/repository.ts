@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, countDistinct, desc, eq } from "drizzle-orm";
+import { and, asc, countDistinct, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db/client";
 import { auditLogs, exams, questions, subjects, testQuestions, testSchedules, testSections, tests, topics } from "@/db/schema";
 
@@ -8,7 +8,7 @@ export type TestInput = { examId: string; title: string; mode: "PRACTICE" | "MOC
 export type SectionInput = { title: string; durationMinutes: number | null; sortOrder: number };
 export type ScheduleInput = { startsAt: string; endsAt: string; lateJoinMinutes: number; resultReleaseAt: string | null; rankingEnabled: boolean; cohortKey: string };
 
-export const listTestExams = () => db.select({ id: exams.id, name: exams.name }).from(exams).orderBy(asc(exams.name));
+export const listTestExams = () => db.select({ id: exams.id, name: exams.name }).from(exams).where(ne(exams.status, "ARCHIVED")).orderBy(asc(exams.name));
 export function listManagedTests() {
   return db.select({ id: tests.id, title: tests.title, mode: tests.mode, status: tests.status, durationMinutes: tests.durationMinutes, examName: exams.name, sectionCount: countDistinct(testSections.id), questionCount: countDistinct(testQuestions.questionId) }).from(tests)
     .innerJoin(exams, eq(tests.examId, exams.id)).leftJoin(testSections, eq(testSections.testId, tests.id)).leftJoin(testQuestions, eq(testQuestions.testId, tests.id))

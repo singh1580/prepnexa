@@ -29,6 +29,7 @@ Phase 5 implements permission-checked content operations without starting test e
 
 - Only users with `exam.manage` can open or mutate exam taxonomy.
 - Exams begin as private drafts.
+- Exams publish only after a subject/topic exists; published taxonomy is locked and dependency-aware archiving prevents broken catalog links.
 - Exam, subject and topic names/order can be maintained without physical deletion.
 - Duplicate slugs/names return a stable conflict response.
 - Mutations and their audit entries execute in the same database batch.
@@ -40,3 +41,6 @@ Phase 5 implements permission-checked content operations without starting test e
 - Draft tests support sections, published-question assignment, timing, shuffle and attempt limits.
 - Only live-mode tests accept validated schedules; test execution and attempt creation remain outside Phase 5.
 - A test cannot publish until it contains at least one section with a published question.
+- Package metadata stays payment-provider neutral and can link only published tests/materials.
+- Material version 1 and its audit record are created atomically; protected delivery is intentionally deferred.
+- CSV imports validate every row and every topic first, then import all draft questions in one database batch or none.

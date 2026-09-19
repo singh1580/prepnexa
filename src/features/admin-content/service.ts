@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger";
 import { AppError } from "@/lib/errors/app-error";
 import { contentConflict, contentNotFound, invalidContentState, isUniqueViolation } from "./errors";
-import { findExam, findExamTree, findQuestion, findSubject, findTopic, insertExam, insertQuestion, insertSubject, insertTopic, listExams, listQuestions, listQuestionTopics, patchExam, patchQuestion, patchSubject, patchTopic, setQuestionReviewState, type QuestionInput } from "./repository";
+import { examHasPublishedDependencies, findExam, findExamTree, findQuestion, findSubject, findTopic, insertExam, insertQuestion, insertSubject, insertTopic, listExams, listQuestions, listQuestionTopics, patchExam, patchQuestion, patchSubject, patchTopic, questionHasPublishedTest, setExamStatus, setQuestionReviewState, type QuestionInput } from "./repository";
 
 type Actor = { userId: string; requestId: string };
 type ExamInput = { name: string; slug: string; description: string };
@@ -31,26 +31,31 @@ export function createExam(input: ExamInput, actor: Actor) {
 export async function updateExam(id: string, input: ExamInput, actor: Actor) {
   const before = await findExam(id);
   if (!before) throw contentNotFound("Exam");
+  if (before.status !== "DRAFT") throw invalidContentState("Only draft exams can be edited.");
   await write("exam_update", actor, () => patchExam(before, input, { actorUserId: actor.userId, requestId: actor.requestId }), "An exam with this slug already exists.");
   return { id };
 }
+export async function publishExam(id: string, actor: Actor) { const before = await getManagedExam(id); if (before.status !== "DRAFT") throw invalidContentState("Only draft exams can be published."); if (!before.subjects.length || !before.subjects.some((subject) => subject.topics.length)) throw invalidContentState("Add at least one subject and topic before publishing."); return write("exam_publish", actor, () => setExamStatus(before, "PUBLISHED", { actorUserId: actor.userId, requestId: actor.requestId }), "The exam state changed. Refresh and try again."); }
+export async function archiveExam(id: string, actor: Actor) { const before = await getManagedExam(id); if (before.status !== "PUBLISHED") throw invalidContentState("Only published exams can be archived."); if (await examHasPublishedDependencies(id)) throw invalidContentState("Archive or replace published tests and materials before archiving this exam."); return write("exam_archive", actor, () => setExamStatus(before, "ARCHIVED", { actorUserId: actor.userId, requestId: actor.requestId }), "The exam state changed. Refresh and try again."); }
 export async function createSubject(examId: string, input: TaxonomyInput, actor: Actor) {
-  if (!await findExam(examId)) throw contentNotFound("Exam");
+  const exam = await findExam(examId); if (!exam) throw contentNotFound("Exam"); if (exam.status !== "DRAFT") throw invalidContentState("Only draft exams can be restructured.");
   return write("subject_create", actor, () => insertSubject(examId, input, { actorUserId: actor.userId, requestId: actor.requestId }), "This exam already has a subject with that name.");
 }
 export async function updateSubject(id: string, input: TaxonomyInput, actor: Actor) {
   const before = await findSubject(id);
   if (!before) throw contentNotFound("Subject");
+  const exam = await findExam(before.examId); if (!exam) throw contentNotFound("Exam"); if (exam.status !== "DRAFT") throw invalidContentState("Only draft exams can be restructured.");
   await write("subject_update", actor, () => patchSubject(before, input, { actorUserId: actor.userId, requestId: actor.requestId }), "This exam already has a subject with that name.");
   return { id };
 }
 export async function createTopic(subjectId: string, input: TaxonomyInput, actor: Actor) {
-  if (!await findSubject(subjectId)) throw contentNotFound("Subject");
+  const subject = await findSubject(subjectId); if (!subject) throw contentNotFound("Subject"); const exam = await findExam(subject.examId); if (!exam) throw contentNotFound("Exam"); if (exam.status !== "DRAFT") throw invalidContentState("Only draft exams can be restructured.");
   return write("topic_create", actor, () => insertTopic(subjectId, input, { actorUserId: actor.userId, requestId: actor.requestId }), "This subject already has a topic with that name.");
 }
 export async function updateTopic(id: string, input: TaxonomyInput, actor: Actor) {
   const before = await findTopic(id);
   if (!before) throw contentNotFound("Topic");
+  const subject = await findSubject(before.subjectId); if (!subject) throw contentNotFound("Subject"); const exam = await findExam(subject.examId); if (!exam) throw contentNotFound("Exam"); if (exam.status !== "DRAFT") throw invalidContentState("Only draft exams can be restructured.");
   await write("topic_update", actor, () => patchTopic(before, input, { actorUserId: actor.userId, requestId: actor.requestId }), "This subject already has a topic with that name.");
   return { id };
 }
@@ -98,5 +103,6 @@ export async function publishQuestion(id: string, actor: Actor) {
 export async function archiveQuestion(id: string, actor: Actor) {
   const before = await getManagedQuestion(id);
   if (before.status !== "PUBLISHED") throw invalidContentState("Only published questions can be archived.");
+  if (await questionHasPublishedTest(id)) throw invalidContentState("This question belongs to a published test and cannot be archived.");
   return write("question_archive", actor, () => setQuestionReviewState(before, "ARCHIVE", { actorUserId: actor.userId, requestId: actor.requestId }), "The question state changed. Refresh and try again.");
 }

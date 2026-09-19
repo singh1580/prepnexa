@@ -1,6 +1,6 @@
 import { AppError } from "@/lib/errors/app-error";
 
-export const contentNotFound = (entity: "Exam" | "Subject" | "Topic" | "Question") =>
+export const contentNotFound = (entity: "Exam" | "Subject" | "Topic" | "Question" | "Product" | "Material") =>
   new AppError("CONTENT_NOT_FOUND", `${entity} was not found.`, 404);
 
 export const contentConflict = (message: string) =>

@@ -63,3 +63,9 @@ export function SubjectEditor({ subject }: { subject: Subject }) {
     {success && <p className="notice success" role="status">{success}</p>}{error && <p className="notice danger" role="alert">{error}</p>}
   </article>;
 }
+
+export function ExamWorkflowActions({ id, status }: { id: string; status: string }) {
+  const router = useRouter(); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  async function transition(action: "publish" | "archive") { setBusy(true); setError(""); try { await adminContentRequest(`exams/${id}/${action}`, "POST", {}); router.refresh(); } catch (cause) { setError(message(cause)); } finally { setBusy(false); } }
+  return <section className="panel"><span className="eyebrow">VISIBILITY</span><h2>Catalogue status</h2><p className="muted">Publish after the curriculum map is ready. Archiving removes the exam from the public catalogue.</p>{status === "DRAFT" ? <button type="button" className="button" disabled={busy} onClick={() => transition("publish")}>{busy ? "Publishing…" : "Publish exam"}</button> : status === "PUBLISHED" ? <button type="button" className="button secondary" disabled={busy} onClick={() => transition("archive")}>{busy ? "Archiving…" : "Archive exam"}</button> : <p className="notice">This exam is archived.</p>}{error && <p className="notice danger" role="alert">{error}</p>}</section>;
+}

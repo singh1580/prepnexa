@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, countDistinct, desc, eq } from "drizzle-orm";
+import { and, asc, countDistinct, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db/client";
-import { auditLogs, exams, questionOptions, questionRevisionOptions, questionRevisions, questions, subjects, topics } from "@/db/schema";
+import { auditLogs, exams, materials, questionOptions, questionRevisionOptions, questionRevisions, questions, subjects, testQuestions, tests, topics } from "@/db/schema";
 
 type AuditContext = { actorUserId: string; requestId: string };
 type ExamInput = { name: string; slug: string; description: string };
@@ -63,6 +63,10 @@ export async function patchExam(before: NonNullable<Awaited<ReturnType<typeof fi
   ]);
 }
 
+export async function setExamStatus(before: NonNullable<Awaited<ReturnType<typeof findExam>>>, status: "PUBLISHED" | "ARCHIVED", audit: AuditContext) {
+  const now = new Date(); await db.batch([db.update(exams).set({ status, updatedAt: now }).where(eq(exams.id, before.id)), db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: `exam.${status.toLowerCase()}`, entityType: "exam", entityId: before.id, requestId: audit.requestId, before: { status: before.status }, after: { status } })]); return { id: before.id, status };
+}
+
 export async function insertSubject(examId: string, input: TaxonomyInput, audit: AuditContext) {
   const id = randomUUID();
   await db.batch([
@@ -101,6 +105,7 @@ export function listQuestionTopics() {
   }).from(topics)
     .innerJoin(subjects, eq(topics.subjectId, subjects.id))
     .innerJoin(exams, eq(subjects.examId, exams.id))
+    .where(ne(exams.status, "ARCHIVED"))
     .orderBy(asc(exams.name), asc(subjects.sortOrder), asc(topics.sortOrder));
 }
 
@@ -198,3 +203,6 @@ export async function setQuestionReviewState(before: NonNullable<Awaited<ReturnT
   if (updateRevision) await db.batch([updateQuestion, updateRevision, auditRow]); else await db.batch([updateQuestion, auditRow]);
   return { id: before.id, status: state.status };
 }
+
+export async function questionHasPublishedTest(id: string) { const [row] = await db.select({ id: tests.id }).from(testQuestions).innerJoin(tests, eq(testQuestions.testId, tests.id)).where(and(eq(testQuestions.questionId, id), eq(tests.status, "PUBLISHED"))).limit(1); return Boolean(row); }
+export async function examHasPublishedDependencies(id: string) { const [test, material] = await Promise.all([db.select({ id: tests.id }).from(tests).where(and(eq(tests.examId, id), eq(tests.status, "PUBLISHED"))).limit(1), db.select({ id: materials.id }).from(materials).where(and(eq(materials.examId, id), eq(materials.status, "PUBLISHED"))).limit(1)]); return Boolean(test[0] || material[0]); }
