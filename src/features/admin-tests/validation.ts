@@ -12,3 +12,5 @@ export const scheduleInputSchema = z.object({ startsAt: z.iso.datetime(), endsAt
   if (new Date(value.endsAt) <= new Date(value.startsAt)) context.addIssue({ code: "custom", path: ["endsAt"], message: "End time must be after start time." });
   if (value.resultReleaseAt && new Date(value.resultReleaseAt) < new Date(value.endsAt)) context.addIssue({ code: "custom", path: ["resultReleaseAt"], message: "Results cannot release before the test ends." });
 });
+
+export const questionOrderSchema = z.object({ questionIds: z.array(z.uuid()).min(1).max(1000) }).strict();

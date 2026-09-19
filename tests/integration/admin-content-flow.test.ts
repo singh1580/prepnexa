@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 
 const run = process.env.RUN_INTEGRATION_TESTS === "true";
+const integrationTimeout = Number(process.env.INTEGRATION_TIMEOUT_MS ?? 30_000);
 const actorId = randomUUID();
 const reviewerId = randomUUID();
 const slug = `integration-${randomUUID()}`;
@@ -14,15 +15,17 @@ let productId: string | undefined;
 describe.skipIf(!run)("admin content database flow", () => {
   afterAll(async () => {
     const [{ eq, inArray }, { db }, { auditLogs, contentImportJobs, exams, materials, products, questions, tests, users }] = await Promise.all([import("drizzle-orm"), import("../../src/db/client"), import("../../src/db/schema")]);
-    await db.delete(auditLogs).where(inArray(auditLogs.actorUserId, [actorId, reviewerId]));
     if (productId) await db.delete(products).where(inArray(products.id, [productId]));
     if (materialId) await db.delete(materials).where(inArray(materials.id, [materialId]));
     if (testId) await db.delete(tests).where(inArray(tests.id, [testId]));
     await db.delete(questions).where(eq(questions.createdBy, actorId));
     await db.delete(contentImportJobs).where(eq(contentImportJobs.requestedBy, actorId));
     if (examId) await db.delete(exams).where(eq(exams.id, examId));
+    // Delete audit records last so a timed-out mutation cannot recreate a user reference
+    // after the first cleanup statement has already completed.
+    await db.delete(auditLogs).where(inArray(auditLogs.actorUserId, [actorId, reviewerId]));
     await db.delete(users).where(inArray(users.id, [actorId, reviewerId]));
-  }, 30_000);
+  }, integrationTimeout);
 
   it("creates and edits an audited exam taxonomy", async () => {
     const [{ eq }, { db }, { auditLogs, users }, service] = await Promise.all([import("drizzle-orm"), import("../../src/db/client"), import("../../src/db/schema"), import("../../src/features/admin-content/service")]);
@@ -36,7 +39,7 @@ describe.skipIf(!run)("admin content database flow", () => {
     const exam = await service.getManagedExam(examId);
     expect(exam.subjects[0]?.topics[0]).toMatchObject({ id: topicId, name: "Percentage problems", sortOrder: 1 });
     await service.publishExam(examId, actor);
-    await expect(service.updateTopic(topicId, { name: "Unsafe published edit", sortOrder: 2 }, actor)).rejects.toMatchObject({ code: "INVALID_CONTENT_STATE", status: 409 });
+    await service.updateTopic(topicId, { name: "Updated published taxonomy", sortOrder: 2 }, actor);
     const logs = await db.select().from(auditLogs).where(eq(auditLogs.actorUserId, actorId));
     expect(logs.map((entry) => entry.action)).toEqual(expect.arrayContaining(["exam.created", "subject.created", "topic.created", "topic.updated"]));
 
@@ -60,20 +63,28 @@ describe.skipIf(!run)("admin content database flow", () => {
     const emptySection = (await testService.createSection(testId, { title: "Temporary", durationMinutes: null, sortOrder: 1 }, actor)).id;
     await expect(testService.publishTest(testId, actor)).rejects.toMatchObject({ status: 409 });
     await testService.removeTestItem(emptySection, null, actor);
+    await testService.updateSection(sectionId, { title: "Edited section", durationMinutes: 60, sortOrder: 0 }, actor);
+    await testService.reorderQuestions(sectionId, [questionId], actor);
     await testService.publishTest(testId, actor);
     await expect(testService.removeTestItem(sectionId, questionId, actor)).rejects.toMatchObject({ status: 409 });
     expect(await testService.getManagedTest(testId)).toMatchObject({ status: "PUBLISHED" });
 
     const catalogService = await import("../../src/features/admin-catalog/service");
     materialId = (await catalogService.createMaterial({ examId, title: "Integration article", type: "ARTICLE", body: "Integration content", privateObjectKey: "" }, actor)).id;
+    await catalogService.updateMaterial(materialId, { examId, title: "Updated article", type: "ARTICLE", body: "Revised integration content", privateObjectKey: "" }, actor);
     await catalogService.publishMaterial(materialId, actor);
     productId = (await catalogService.createProduct({ name: "Integration package", slug: `package-${slug}`, description: "Integration only", pricePaise: 100, accessDays: 30 }, actor)).id;
+    await catalogService.updateProduct(productId, { name: "Edited package", slug: `package-${slug}`, description: "Edited", pricePaise: 200, accessDays: 90 }, actor);
+    await catalogService.linkProduct(productId, "TEST", testId, actor);
+    await catalogService.unlinkProduct(productId, "TEST", testId, actor);
     await catalogService.linkProduct(productId, "TEST", testId, actor);
     await catalogService.linkProduct(productId, "MATERIAL", materialId, actor);
     await catalogService.publishProduct(productId, actor);
     expect(await catalogService.getProduct(productId)).toMatchObject({ status: "PUBLISHED" });
 
+    await expect(testService.archiveTest(testId, actor)).rejects.toMatchObject({ status: 409 });
+    await expect(catalogService.archiveCatalog(materialId, "material", actor)).rejects.toMatchObject({ status: 409 });
     await expect(service.archiveQuestion(questionId, actor)).rejects.toMatchObject({ code: "INVALID_CONTENT_STATE", status: 409 });
     await expect(service.archiveExam(examId, actor)).rejects.toMatchObject({ code: "INVALID_CONTENT_STATE", status: 409 });
-  }, 30_000);
+  }, integrationTimeout * 2);
 });

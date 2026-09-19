@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, asc, countDistinct, desc, eq, ne, sql } from "drizzle-orm";
 import { testStateConflict } from "./errors";
 import { db } from "@/db/client";
-import { auditLogs, exams, questions, subjects, testQuestions, testSchedules, testSections, tests, topics } from "@/db/schema";
+import { auditLogs, products, productTests, exams, questions, subjects, testQuestions, testSchedules, testSections, tests, topics } from "@/db/schema";
 
 type Audit = { actorUserId: string; requestId: string };
 export type TestInput = { examId: string; title: string; mode: "PRACTICE" | "MOCK" | "LIVE"; durationMinutes: number; instructions: string; maxAttempts: number; shuffleQuestions: boolean; shuffleOptions: boolean };
@@ -90,4 +90,45 @@ export async function removeDraftItem(sectionId: string, questionId: string | nu
     from removed returning entity_id
   `);
   return result.rows.length > 0;
+}
+
+export async function patchSection(id: string, input: SectionInput, audit: Audit) {
+  await db.batch([
+    db.update(testSections).set(input).where(eq(testSections.id, id)),
+    db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test_section.updated", entityType: "test_section", entityId: id, requestId: audit.requestId, after: input }),
+  ]);
+  return { id };
+}
+export async function replaceQuestionOrder(testId: string, sectionId: string, questionIds: string[], audit: Audit) {
+  await db.batch([
+    db.delete(testQuestions).where(and(eq(testQuestions.testId, testId), eq(testQuestions.sectionId, sectionId))),
+    db.insert(testQuestions).values(questionIds.map((questionId, sortOrder) => ({ testId, sectionId, questionId, sortOrder }))),
+    db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test_questions.reordered", entityType: "test", entityId: testId, requestId: audit.requestId, after: { sectionId, questionIds } }),
+  ]);
+  return { id: testId };
+}
+export async function testHasPublishedPackage(id: string) {
+  const rows = await db.select({ id: products.id }).from(productTests).innerJoin(products, eq(productTests.productId, products.id)).where(and(eq(productTests.testId, id), eq(products.status, "PUBLISHED"))).limit(1);
+  return rows.length > 0;
+}
+export async function archiveTestRecord(id: string, audit: Audit) {
+  await db.batch([
+    db.update(tests).set({ status: "ARCHIVED", updatedAt: new Date() }).where(eq(tests.id, id)),
+    db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test.archived", entityType: "test", entityId: id, requestId: audit.requestId, after: { status: "ARCHIVED" } }),
+  ]);
+  return { id };
+}
+export async function copyTestRecord(before: NonNullable<Awaited<ReturnType<typeof findManagedTest>>>, audit: Audit) {
+  const id = randomUUID();
+  const sectionCopies = before.sections.map(section => ({ ...section, newId: randomUUID() }));
+  const create = db.insert(tests).values({ id, examId: before.examId, title: before.title.slice(0, 190) + " (copy)", mode: "MOCK", durationMinutes: before.durationMinutes, instructions: before.instructions, maxAttempts: before.maxAttempts, shuffleQuestions: before.shuffleQuestions, shuffleOptions: before.shuffleOptions, status: "DRAFT" });
+  const auditEntry = db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test.copied", entityType: "test", entityId: id, requestId: audit.requestId, after: { sourceTestId: before.id } });
+  const assignments = sectionCopies.flatMap(section => section.questions.map(question => ({ testId: id, sectionId: section.newId, questionId: question.questionId, sortOrder: question.sortOrder })));
+  if (!sectionCopies.length) await db.batch([create, auditEntry]);
+  else {
+    const createSections = db.insert(testSections).values(sectionCopies.map(section => ({ id: section.newId, testId: id, title: section.title, durationMinutes: section.durationMinutes, sortOrder: section.sortOrder })));
+    if (assignments.length) await db.batch([create, createSections, db.insert(testQuestions).values(assignments), auditEntry]);
+    else await db.batch([create, createSections, auditEntry]);
+  }
+  return { id };
 }

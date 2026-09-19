@@ -86,10 +86,16 @@ export function QuestionWorkflowActions({ questionId, status, permissions }: { q
     catch (cause) { setError(errorMessage(cause)); }
     finally { setBusy(false); }
   }
+  async function duplicate() {
+    setBusy(true); setError("");
+    try { const result = await adminContentRequest<{ id: string }>(`questions/${questionId}/duplicate`, "POST", {}); router.push(`/admin/questions/${result.id}`); router.refresh(); }
+    catch (cause) { setError(errorMessage(cause)); }
+    finally { setBusy(false); }
+  }
   return <section className="panel workflow-panel">
     <h2>Publication</h2>
-    <p className="muted">Check the question and answer, then publish when ready.</p>
-    <div className="workflow-actions">
+    <p className="muted">Save any edits, check the question and answer, then publish.</p>
+    <div className="workflow-actions">{status !== "DRAFT" && permissions.includes("question.create") && <button type="button" className="button secondary" disabled={busy} onClick={duplicate}>Create editable copy</button>}
       {(status === "DRAFT" || status === "IN_REVIEW") && canPublish && <button type="button" className="button" disabled={busy} onClick={() => action("publish")}>{busy ? "Publishing…" : "Publish question"}</button>}
       {status === "PUBLISHED" && canPublish && <button type="button" className="button secondary" disabled={busy} onClick={() => action("archive")}>{busy ? "Archiving…" : "Archive question"}</button>}
     </div>

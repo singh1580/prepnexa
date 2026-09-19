@@ -7,15 +7,15 @@ Phase 5 implements permission-checked content operations without starting test e
 1. Admin content foundation and exam taxonomy: exams, subjects, topics, responsive UI, audit trail.
 2. Question bank and immutable revisions: authoring, options, marks, explanations, preview.
 3. Single-admin publishing: draft, preview, publish and archive with server permission checks.
-4. Test builder and live schedules: sections, question assignment and configuration only; execution remains Phase 6.
+4. Mock-test builder: sections, question assignment and configuration only; execution remains Phase 6.
 5. Package/material metadata and question bulk import with atomic validation.
 
 ## Authorization
 
 - Navigation is derived from the authenticated user's permissions.
 - Every page and mutation independently enforces its required permission on the server.
-- `CONTENT_REVIEWER` cannot create or publish questions.
-- A content author with publishing permission can publish directly; no reviewer dependency.
+- The Admin account can create and publish directly. No second staff member or reviewer is required.
+- Legacy role keys stay in the database for compatibility; they do not create extra dashboards or approval steps.
 - Every successful content mutation creates an `audit_logs` record with the actor, request ID and before/after state.
 
 ## Data and branch policy
@@ -29,7 +29,7 @@ Phase 5 implements permission-checked content operations without starting test e
 
 - Only users with `exam.manage` can open or mutate exam taxonomy.
 - Exams begin as private drafts.
-- Exams publish only after a subject/topic exists; published taxonomy is locked and dependency-aware archiving prevents broken catalog links.
+- Exams publish only after a subject/topic exists; published taxonomy remains editable without replacing identifiers and dependency-aware archiving prevents broken catalog links.
 - Exam, subject and topic names/order can be maintained without physical deletion.
 - Duplicate slugs/names return a stable conflict response.
 - Mutations and their audit entries execute in the same database batch.
@@ -39,7 +39,7 @@ Phase 5 implements permission-checked content operations without starting test e
 - Creators can publish their own questions. Legacy submit/review endpoints return 410 with guidance to publish directly.
 - Question state changes and revision writes are audited in the same database batch.
 - Draft tests support sections, published-question assignment, timing, shuffle and attempt limits.
-- Only live-mode tests accept validated schedules; test execution and attempt creation remain outside Phase 5.
+- Current admin creation and publishing accepts mock tests only. Legacy live schedule data remains compatible but its controls are outside current acceptance.
 - A test cannot publish until it contains at least one section with a published question.
 - Package metadata stays payment-provider neutral and can link only published tests/materials.
 - Material version 1 and its audit record are created atomically; protected delivery is intentionally deferred.
@@ -47,7 +47,7 @@ Phase 5 implements permission-checked content operations without starting test e
 
 ## Remaining acceptance work
 
-See PROJECT_STATUS.md. Phase 5 is not fully accepted merely because lint/build pass. Published-content revision editing, complete maintenance controls and live database/browser acceptance remain open. File upload and delivery are not complete.
+See PROJECT_STATUS.md. Phase 5 is not fully accepted merely because lint/build pass. Draft editing, published-content copies and maintenance controls are now implemented. Live database/browser acceptance is tracked in PROJECT_STATUS.md. File upload and delivery are not complete.
 
 
 ## Mock-first scope update

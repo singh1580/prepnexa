@@ -18,3 +18,58 @@ export async function insertMaterial(input: MaterialInput, audit: Audit) { const
 export async function publishMaterialRecord(before: NonNullable<Awaited<ReturnType<typeof findMaterial>>>, audit: Audit) { const [latest] = await db.select({ id: materialVersions.id }).from(materialVersions).where(eq(materialVersions.materialId, before.id)).orderBy(desc(materialVersions.version)).limit(1); if (!latest) throw new Error("Material version invariant failed."); const now = new Date(); await db.batch([db.update(materials).set({ status: "PUBLISHED", updatedAt: now }).where(eq(materials.id, before.id)), db.update(materialVersions).set({ publishedAt: now }).where(eq(materialVersions.id, latest.id)), db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "material.published", entityType: "material", entityId: before.id, requestId: audit.requestId, before: { status: before.status }, after: { status: "PUBLISHED", versionId: latest.id } })]); return { id: before.id, status: "PUBLISHED" as const }; }
 export async function insertProductLink(productId: string, kind: "TEST" | "MATERIAL", targetId: string, audit: Audit) { const link = kind === "TEST" ? db.insert(productTests).values({ productId, testId: targetId }) : db.insert(productMaterials).values({ productId, materialId: targetId }); await db.batch([link, db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: `product.${kind.toLowerCase()}_linked`, entityType: "product", entityId: productId, requestId: audit.requestId, after: { kind, targetId } })]); return { productId, kind, targetId }; }
 export async function publishProductRecord(before: NonNullable<Awaited<ReturnType<typeof findProductBundle>>>, audit: Audit) { const now = new Date(); await db.batch([db.update(products).set({ status: "PUBLISHED", updatedAt: now }).where(eq(products.id, before.id)), db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "product.published", entityType: "product", entityId: before.id, requestId: audit.requestId, before: { status: before.status }, after: { status: "PUBLISHED" } })]); return { id: before.id, status: "PUBLISHED" as const }; }
+
+export async function patchProduct(before: NonNullable<Awaited<ReturnType<typeof findProduct>>>, input: ProductInput, audit: Audit) {
+  await db.batch([
+    db.update(products).set({ ...input, updatedAt: new Date() }).where(and(eq(products.id, before.id), eq(products.status, "DRAFT"))),
+    db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "product.updated", entityType: "product", entityId: before.id, requestId: audit.requestId, before, after: input }),
+  ]);
+  return { id: before.id };
+}
+
+export async function patchMaterial(before: NonNullable<Awaited<ReturnType<typeof findMaterial>>>, input: MaterialInput, audit: Audit) {
+  const [latest] = await db.select({ version: materialVersions.version }).from(materialVersions).where(eq(materialVersions.materialId, before.id)).orderBy(desc(materialVersions.version)).limit(1);
+  const version = (latest?.version ?? 0) + 1;
+  await db.batch([
+    db.update(materials).set({ ...input, updatedAt: new Date() }).where(and(eq(materials.id, before.id), eq(materials.status, "DRAFT"))),
+    db.insert(materialVersions).values({ materialId: before.id, version, title: input.title, body: input.body || null, privateObjectKey: input.privateObjectKey || null, createdBy: audit.actorUserId }),
+    db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "material.updated", entityType: "material", entityId: before.id, requestId: audit.requestId, before, after: { ...input, version } }),
+  ]);
+  return { id: before.id };
+}
+
+export async function unlinkProductRecord(productId: string, kind: "TEST" | "MATERIAL", targetId: string, audit: Audit) {
+  const remove = kind === "TEST"
+    ? db.delete(productTests).where(and(eq(productTests.productId, productId), eq(productTests.testId, targetId)))
+    : db.delete(productMaterials).where(and(eq(productMaterials.productId, productId), eq(productMaterials.materialId, targetId)));
+  await db.batch([remove, db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "product.item_unlinked", entityType: "product", entityId: productId, requestId: audit.requestId, after: { kind, targetId } })]);
+  return { id: productId };
+}
+
+export async function materialHasPublishedPackage(id: string) {
+  const rows = await db.select({ id: products.id }).from(productMaterials).innerJoin(products, eq(productMaterials.productId, products.id)).where(and(eq(productMaterials.materialId, id), eq(products.status, "PUBLISHED"))).limit(1);
+  return rows.length > 0;
+}
+
+export async function archiveCatalogRecord(id: string, kind: "product" | "material", audit: Audit) {
+  const table = kind === "product" ? products : materials;
+  await db.batch([
+    db.update(table).set({ status: "ARCHIVED", updatedAt: new Date() }).where(eq(table.id, id)),
+    db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: `${kind}.archived`, entityType: kind, entityId: id, requestId: audit.requestId, after: { status: "ARCHIVED" } }),
+  ]);
+  return { id, status: "ARCHIVED" };
+}
+
+export async function copyProductRecord(before: NonNullable<Awaited<ReturnType<typeof findProductBundle>>>, audit: Audit) {
+  const id = randomUUID();
+  const values = { id, name: before.name.slice(0, 170) + " (copy)", slug: before.slug.slice(0, 145) + "-copy-" + id.slice(0, 8), description: before.description, pricePaise: before.pricePaise, accessDays: before.accessDays, status: "DRAFT" as const };
+  const create = db.insert(products).values(values);
+  const auditEntry = db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "product.copied", entityType: "product", entityId: id, requestId: audit.requestId, after: { sourceProductId: before.id } });
+  const testRows = before.linkedTests.filter(test => test.status === "PUBLISHED").map(test => ({ productId: id, testId: test.id }));
+  const materialRows = before.linkedMaterials.filter(material => material.status === "PUBLISHED").map(material => ({ productId: id, materialId: material.id }));
+  if (testRows.length && materialRows.length) await db.batch([create, db.insert(productTests).values(testRows), db.insert(productMaterials).values(materialRows), auditEntry]);
+  else if (testRows.length) await db.batch([create, db.insert(productTests).values(testRows), auditEntry]);
+  else if (materialRows.length) await db.batch([create, db.insert(productMaterials).values(materialRows), auditEntry]);
+  else await db.batch([create, auditEntry]);
+  return { id };
+}

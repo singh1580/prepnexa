@@ -118,7 +118,7 @@ Questions and materials use draft, preview, direct publish and archive. No separ
 
 - The same admin can create and publish their own content.
 - Publishing records the actor and timestamp.
-- Editing published content creates a revision instead of silently changing history.
+- Editing published content uses an explicit draft copy; existing linked records remain unchanged. Draft material/question edits retain revision history.
 - Active or completed test attempts retain their original snapshots.
 - Bulk imports produce row-level validation errors and never partially publish invalid content.
 

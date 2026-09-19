@@ -41,8 +41,8 @@ export function SubjectCreateForm({ examId, nextOrder }: { examId: string; nextO
   const router = useRouter();
   const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError("");
-    try { await adminContentRequest(`exams/${examId}/subjects`, "POST", Object.fromEntries(new FormData(event.currentTarget))); event.currentTarget.reset(); router.refresh(); }
+    event.preventDefault(); const form = event.currentTarget; setBusy(true); setError("");
+    try { await adminContentRequest(`exams/${examId}/subjects`, "POST", Object.fromEntries(new FormData(form))); form.reset(); router.refresh(); }
     catch (cause) { setError(message(cause)); } finally { setBusy(false); }
   }
   return <form className="inline-admin-form" onSubmit={submit}><fieldset disabled={busy}><Field id="new-subject-name" label="Subject name" name="name" required minLength={2} maxLength={160} placeholder="Quantitative aptitude" /><Field id="new-subject-order" label="Display order" name="sortOrder" type="number" min={0} max={10000} defaultValue={nextOrder} required /><button className="button" type="submit">{busy ? "Adding…" : "Add subject"}</button></fieldset>{error && <p className="notice danger" role="alert">{error}</p>}</form>;
@@ -52,8 +52,8 @@ export function SubjectEditor({ subject }: { subject: Subject }) {
   const router = useRouter();
   const [busy, setBusy] = useState(""); const [error, setError] = useState(""); const [success, setSuccess] = useState("");
   async function mutate(event: FormEvent<HTMLFormElement>, path: string, method: "POST" | "PATCH", key: string) {
-    event.preventDefault(); setBusy(key); setError(""); setSuccess("");
-    try { await adminContentRequest(path, method, Object.fromEntries(new FormData(event.currentTarget))); if (method === "POST") event.currentTarget.reset(); setSuccess(method === "POST" ? "Topic added." : "Changes saved."); router.refresh(); }
+    event.preventDefault(); const form = event.currentTarget; setBusy(key); setError(""); setSuccess("");
+    try { await adminContentRequest(path, method, Object.fromEntries(new FormData(form))); if (method === "POST") form.reset(); setSuccess(method === "POST" ? "Topic added." : "Changes saved."); router.refresh(); }
     catch (cause) { setError(message(cause)); } finally { setBusy(""); }
   }
   return <article className="taxonomy-card">

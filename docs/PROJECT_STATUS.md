@@ -14,12 +14,12 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 | Admin MFA | Enroll/confirm/login implemented; user confirmed success after SQL fix | Regression and broader security acceptance |
 | Public catalogue | Landing, exam/package details and free-test discovery exist; user visited successfully | Published dataset acceptance; test start/checkout not yet delivered |
 | Two workspace shells | Student/Admin routes exist, no specialist dashboard routes | Student purchased-content/results experience and admin operational metrics |
-| Exams/subjects/topics | Create/edit/publish/archive code; user creation confirmed | Maintenance of published taxonomy is currently locked; simplify safely |
-| Question bank | Four types, validation, revisions, preview/import and publication | Same-admin publication added in this update; live acceptance, published revision editing remain |
-| Test builder/schedules | Create, section/question assignment, publish and live schedule code | Complete remove/reorder/edit/archive controls; full browser/DB acceptance |
-| Packages | Create, bundle links, price/validity, publish code | Editing/unlinking/archive and complete acceptance |
-| Materials | Article/file metadata, version 1 and direct publish | Actual PDF/file upload, video input UX, edit/archive, reader/download and access protection |
-| CSV | Parsing, row errors and atomic draft import code; invalid job observed | Valid import and rollback acceptance against live DB; file picker UX |
+| Exams/subjects/topics | Create/edit/publish/archive code; user creation confirmed | Published taxonomy names/order and additions are now editable; IDs and links are preserved |
+| Question bank | Four types, validation, revisions, preview/import and publication | Direct publication and editable draft copies implemented; original published question stays unchanged |
+| Test builder/schedules | Create, section/question assignment, publish and live schedule code | Section edit, question removal/reordering, duplicate/archive controls implemented; integration/browser acceptance required |
+| Packages | Create, bundle links, price/validity, publish code | Draft editing/unlinking, editable package copies and archive implemented; acceptance required |
+| Materials | Article/file metadata, version 1 and direct publish | Draft edit, HTTPS video validation, copy and guarded archive implemented. Actual PDF/file upload, reader/download and access protection remain Phase 9 |
+| CSV | Parsing, row errors and atomic draft import code; invalid job observed | CSV file picker implemented; valid import/rollback live acceptance required |
 | Student test engine — Phase 6 | Tables/design only | Timer, attempts, snapshots, autosave, resume, submission, device/concurrency rules |
 | Results — Phase 7 | Schema/design only | Scoring, release, explanations, breakdowns, rank/percentile, corrections |
 | Coupons — Phase 8 | Coupon/product/redemption schema and permission only | Admin controls, validation, limits, checkout, concurrent redemption |
@@ -35,6 +35,10 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 - Retire submit/review API actions with explicit 410 guidance.
 - Replace reviewer-dependent UI with publish/archive actions.
 - Fix archiving's empty revision update (Drizzle cannot update with an empty SET).
+- Complete draft package/material editing, bundle unlink, content copies and dependency-aware archives.
+- Complete section edits, question order/removal, test copies and test archives.
+- Fix taxonomy async form reset and redact raw database errors.
+- Published content changes use explicit draft copies so existing tests/packages keep their original linked records.
 - Update requirements and phase plan; retain coupons and every original product module.
 
 ## Remaining order
@@ -52,3 +56,9 @@ Do not claim Phase 5 complete or merge draft PR #4 until acceptance. Existing pu
 Live tests and standalone practice-mode creation are deferred by the owner. Existing database modes/schedules remain for compatibility. Current test creation is MOCK only; free diagnostic and paid mock packages remain. Students start a prepared test on demand and its timer begins at attempt creation (Phase 6). Live scheduling is not part of current acceptance.
 
 This update hides schedule controls, rejects non-mock creation/publication, fixes async form reset, adds draft question/empty-section removal and prevents publishing papers with empty sections. Actual student attempts, autosave/resume and results remain pending.
+
+
+## Consolidated maintenance acceptance
+The current batch targets Phase 5 content maintenance, not the remaining entire product. Live tests remain deferred. Phase 6 student attempts/timer/autosave/submission, Phase 7 results, Phase 8 coupons/payments, Phase 9 actual storage upload/protected delivery and Phase 10 operations remain separate.
+
+QA uses the isolated Neon branch `phase-5-acceptance`. The complete auth/MFA database flow passed. The admin database flow successfully exercised taxonomy creation and published editing, CSV import, direct question publication, mock-test remove/reorder/publish, material version editing, and package edit/link/unlink/publish. The runner then hit its 20-minute limit while executing final dependency assertions, so the full admin suite is not recorded as passed; those guards also have passing unit coverage. The integration timeout is configurable because this runner's Neon requests take roughly 20–50 seconds each. Browser acceptance should cover create/edit/copy/publish/archive and failed dependency checks.
