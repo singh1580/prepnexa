@@ -12,7 +12,7 @@ export async function executeRoute(request: Request, handler: Handler) {
   } catch (error) {
     if (error instanceof ZodError) {
       logger.warn({ requestId, module: "http", action: "validation_failed", issues: error.issues }, "Request validation failed");
-      return errorResponse("VALIDATION_ERROR", "The request contains invalid data.", 400, requestId, error.flatten());
+      return errorResponse("VALIDATION_ERROR", error.issues[0]?.message ?? "The request contains invalid data.", 400, requestId, error.flatten());
     }
     if (error instanceof AppError) {
       logger.warn({ requestId, module: "http", action: "application_error", code: error.code, status: error.status }, error.message);

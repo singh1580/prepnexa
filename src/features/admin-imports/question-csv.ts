@@ -38,4 +38,8 @@ export function parseQuestionCsv(csv: string): { questions: QuestionInput[]; iss
   return { questions, issues, totalRows: rows.length - 1 };
 }
 
-export const QUESTION_CSV_TEMPLATE = `${QUESTION_CSV_HEADERS.join(",")}\n00000000-0000-4000-8000-000000000000,SINGLE_CHOICE,"What is 2 + 2?","Two plus two equals four.",1,0,EASY,3,4,5,6,B,,, ,false`;
+const placeholderTopicId = "00000000-0000-4000-8000-000000000000";
+export function questionCsvTemplate(topicId = placeholderTopicId) {
+  return `${QUESTION_CSV_HEADERS.join(",")}\n${topicId},SINGLE_CHOICE,"What is 2 + 2?","Two plus two equals four.",1,0,EASY,3,4,5,6,B,,,,false`;
+}
+export const QUESTION_CSV_TEMPLATE = questionCsvTemplate();

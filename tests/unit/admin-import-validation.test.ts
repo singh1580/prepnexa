@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { parseQuestionCsv, QUESTION_CSV_HEADERS } from "../../src/features/admin-imports/question-csv";
+import { parseQuestionCsv, questionCsvTemplate, QUESTION_CSV_HEADERS } from "../../src/features/admin-imports/question-csv";
 
 const topicId = crypto.randomUUID();
 function csv(row: string) { return `${QUESTION_CSV_HEADERS.join(",")}\n${row}`; }
 describe("question CSV import validation", () => {
+  it("generates a valid starter row for an existing topic", () => {
+    const result = parseQuestionCsv(questionCsvTemplate(topicId));
+    expect(result.issues).toEqual([]);
+    expect(result.questions[0]).toMatchObject({ topicId, type: "SINGLE_CHOICE" });
+  });
   it("parses quoted choice questions and correct option keys", () => {
     const result = parseQuestionCsv(csv(`${topicId},SINGLE_CHOICE,"What is 2, plus 2?",Explanation,1,0,EASY,3,4,5,6,B,,,,false`));
     expect(result.issues).toEqual([]); expect(result.questions[0]).toMatchObject({ topicId, type: "SINGLE_CHOICE", stem: "What is 2, plus 2?" }); expect(result.questions[0]?.options).toHaveLength(4); expect(result.questions[0]?.options[1]).toMatchObject({ stableKey: "B", body: "4", isCorrect: true });
