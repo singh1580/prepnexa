@@ -6,7 +6,8 @@ The owner approved implementation after the research/planning review. There are 
 
 Implemented in this branch:
 
-- Exam workspace links to that exam's filtered test list and preselected create form.
+- Exam workspace links to that exam's filtered test list and preselected create form. Test lists can be searched by name and filtered by exam/status.
+- Edit in this test opens a contextual editor. Saving attaches a new question/answer copy at the same position so other papers retain the original. A stale edit rejects without saving orphan questions.
 - A new prepared mock/practice set starts with one Questions section. Add more sections when needed.
 - Manual questions are saved directly into a section. The separate question bank is optional reuse tooling.
 - Test CSV uses a selected subject/topic; no spreadsheet topic UUID is required. All rows in an import use the selected topic, including legacy CSVs that carry a topicId column.
@@ -21,7 +22,7 @@ This delivery does not implement payment or student entitlements. Creating a pro
 
 ## Remaining stages
 
-1. Finish authoring usability: browser acceptance, richer exam/subject/topic filters, edit-within-paper flows, import retry/idempotency, bulk content selection search, and durable test-category labels. Current on-demand papers use existing MOCK mode; topic/subject scope comes from their chosen questions.
+1. Finish authoring usability: browser acceptance, richer subject/topic filters, import retry/idempotency, bulk content selection search, and durable test-category labels. Current on-demand papers use existing MOCK mode; topic/subject scope comes from their chosen questions.
 2. Student test engine: free entry, server-authoritative start/deadline, question snapshots, autosave, resume, submission, scoring and result review. Coding execution is a separate capability, not implemented by TEXT questions.
 3. Materials: actual private upload, PDF/article/file organisation, previews and protected delivery. Existing PDF/file forms only hold metadata; they are not the final upload experience.
 4. Commerce: standalone resources, topic sets, subject packs, series and mixed bundles; coupons; replaceable payment adapter; verified webhook unlock; order/content/price/validity snapshots.

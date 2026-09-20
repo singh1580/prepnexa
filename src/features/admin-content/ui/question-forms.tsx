@@ -19,7 +19,7 @@ function errorMessage(error: unknown) {
 
 const blankOptions = () => ["A", "B", "C", "D"].map((stableKey, sortOrder) => ({ stableKey, body: "", isCorrect: false, sortOrder }));
 
-export function QuestionForm({ topics, question, sectionId, onAdded, onCancel }: { topics: TopicOption[]; question?: EditableQuestion; sectionId?: string; onAdded?: () => void; onCancel?: () => void }) {
+export function QuestionForm({ topics, question, sectionId, onAdded, onCancel, returnTo }: { topics: TopicOption[]; question?: EditableQuestion; sectionId?: string; onAdded?: () => void; onCancel?: () => void; returnTo?: string }) {
   const router = useRouter(); const formId = useId();
   const [type, setType] = useState<QuestionType>(question?.type ?? "SINGLE_CHOICE");
   const [options, setOptions] = useState<Option[]>(question?.options.length ? question.options : blankOptions());
@@ -58,12 +58,12 @@ export function QuestionForm({ topics, question, sectionId, onAdded, onCancel }:
     };
     try {
       if (sectionId) {
-        const response = await fetch(`/api/admin/tests/sections/${sectionId}/new-question`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+        const response = await fetch(`/api/admin/tests/sections/${sectionId}/${question ? `questions/${question.id}` : "new-question"}`, {
+          method: question ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
         });
         const result = await response.json();
         if (!response.ok || result.error) throw new AdminContentApiError(result.error?.code ?? "REQUEST_FAILED", result.error?.message ?? "Could not add this question.");
-        onAdded?.(); router.refresh(); setBusy(false); return;
+        onAdded?.(); if (returnTo) router.push(returnTo); router.refresh(); setBusy(false); return;
       }
       const result = await adminContentRequest<{ id: string }>(question ? `questions/${question.id}` : "questions", question ? "PATCH" : "POST", payload);
       router.push(`/admin/questions/${result.id}`); router.refresh();
@@ -82,7 +82,7 @@ export function QuestionForm({ topics, question, sectionId, onAdded, onCancel }:
       {type === "NUMERIC" && <div className="question-grid"><Field id={`${formId}-numeric-answer`} label="Accepted answer" name="numericAnswer" type="number" step="any" defaultValue={numericValue} required /><Field id={`${formId}-numeric-tolerance`} label="Allowed tolerance (±)" name="numericTolerance" type="number" step="any" min={0} max={1000} defaultValue={tolerance} required /></div>}
       {type === "TEXT" && <><label className="field"><span>Accepted answers</span><textarea name="acceptedAnswers" defaultValue={accepted} required rows={4} placeholder="One accepted answer per line" /></label><label className="check-row"><input name="caseSensitive" type="checkbox" defaultChecked={answer.caseSensitive === true} /> Answers are case-sensitive</label></>}
       <label className="field"><span>Explanation</span><textarea name="explanation" defaultValue={question?.explanation ?? ""} maxLength={20000} rows={5} placeholder="Explain why the answer is correct." /></label>
-      <div className="form-actions"><button className="button" type="submit">{busy ? "Saving…" : question ? "Save new revision" : sectionId ? "Add question to this test" : "Create draft question"}</button><button className="button secondary" type="button" onClick={() => sectionId ? onCancel?.() : router.push(question ? `/admin/questions/${question.id}` : "/admin/questions")}>Cancel</button></div>
+      <div className="form-actions"><button className="button" type="submit">{busy ? "Saving…" : question ? (sectionId ? "Save changes to this test" : "Save new revision") : sectionId ? "Add question to this test" : "Create draft question"}</button><button className="button secondary" type="button" onClick={() => returnTo ? router.push(returnTo) : sectionId ? onCancel?.() : router.push(question ? `/admin/questions/${question.id}` : "/admin/questions")}>Cancel</button></div>
     </fieldset>{error && <p className="notice danger" role="alert">{error}</p>}
   </form>;
 }

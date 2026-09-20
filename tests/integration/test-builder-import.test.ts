@@ -12,6 +12,7 @@ describe.skipIf(process.env.RUN_BUILDER_INTEGRATION !== "true")("test-centred qu
     const actor = { userId: randomUUID(), requestId: randomUUID() };
     const examId = randomUUID(), otherExamId = randomUUID(), subjectId = randomUUID(), topicId = randomUUID();
     const materialId = randomUUID();
+    const copiedTestIds: string[] = [];
     const productIds: string[] = [];
     const testId = randomUUID(), sectionId = randomUUID(), otherTestId = randomUUID(), otherSectionId = randomUUID();
     try {
@@ -42,6 +43,24 @@ describe.skipIf(process.env.RUN_BUILDER_INTEGRATION !== "true")("test-centred qu
       await expect(importer.importTestCsv(sectionId, topicId, template, actor)).rejects.toMatchObject({ status: 409 });
       const options = await db.execute(sql`select count(*)::int as total from question_options where question_id in (select id from questions where created_by = ${actor.userId}::uuid)`);
       expect(options.rows[0].total).toBe(8);
+      const copied = await repository.copyTestRecord(paper!, { actorUserId: actor.userId, requestId: actor.requestId });
+      copiedTestIds.push(copied.id);
+      const copy = await repository.findManagedTest(copied.id);
+      const oldQuestion = copy!.sections[0].questions[0];
+      const { parseQuestionCsv } = await import("../../src/features/admin-imports/question-csv");
+      const editedInput = { ...parseQuestionCsv(template, topicId).questions[0], stem: "What is four minus zero?" };
+      await expect(importer.addTestQuestions(copy!.sections[0].id, [{ ...editedInput, topicId: randomUUID() }], actor, oldQuestion.questionId)).rejects.toMatchObject({ status: 409 });
+      await importer.addTestQuestions(copy!.sections[0].id, [editedInput], actor, oldQuestion.questionId);
+      await expect(importer.addTestQuestions(copy!.sections[0].id, [editedInput], actor, oldQuestion.questionId)).rejects.toMatchObject({ status: 409 });
+      const [editedPaper, originalPaper, allQuestions] = await Promise.all([
+        repository.findManagedTest(copied.id), repository.findManagedTest(testId),
+        db.select().from(schema.questions).where(eq(schema.questions.createdBy, actor.userId)),
+      ]);
+      expect(editedPaper!.sections[0].questions[0]).toMatchObject({ stem: editedInput.stem, sortOrder: oldQuestion.sortOrder, status: "DRAFT" });
+      expect(editedPaper!.sections[0].questions[0].questionId).not.toBe(oldQuestion.questionId);
+      expect(originalPaper!.sections[0].questions[0]).toMatchObject({ questionId: oldQuestion.questionId, stem: "What is 2 + 2?", status: "PUBLISHED" });
+      expect(allQuestions).toHaveLength(3);
+
       const catalog = await import("../../src/features/admin-catalog/repository");
       await db.batch([
         db.update(schema.exams).set({ status: "PUBLISHED" }).where(eq(schema.exams.id, examId)),
@@ -64,7 +83,7 @@ describe.skipIf(process.env.RUN_BUILDER_INTEGRATION !== "true")("test-centred qu
       await db.batch([
         db.delete(schema.products).where(sql`${schema.products.id} in (select jsonb_array_elements_text(${JSON.stringify(productIds)}::jsonb)::uuid)`),
         db.delete(schema.materials).where(eq(schema.materials.id, materialId)),
-        db.delete(schema.tests).where(sql`${schema.tests.id} in (${testId}::uuid, ${otherTestId}::uuid)`),
+        db.delete(schema.tests).where(sql`${schema.tests.id} in (select jsonb_array_elements_text(${JSON.stringify([testId, otherTestId, ...copiedTestIds])}::jsonb)::uuid)`),
         db.delete(schema.questions).where(eq(schema.questions.createdBy, actor.userId)),
         db.delete(schema.contentImportJobs).where(eq(schema.contentImportJobs.requestedBy, actor.userId)),
         db.delete(schema.exams).where(sql`${schema.exams.id} in (${examId}::uuid, ${otherExamId}::uuid)`),

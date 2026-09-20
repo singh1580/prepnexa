@@ -5,7 +5,7 @@ Evidence: inspected requirements, delivery plan, source routes/services/schema a
 ## Agreed product
 Exactly two dashboards: Student and Admin. One admin creates and publishes without staff approval. Existing public catalogue remains. Coupons, commerce, materials, results and support remain in scope. No new specialist dashboards. Current CONTENT_ADMIN grants cover existing content modules; explicit owner permission provisioning remains before operational modules launch.
 
-## Inventory
+## Historical inventory — see the current checkpoint below
 | Area | Evidence/status | Remaining |
 | --- | --- | --- |
 | Architecture/CI | Modular source, validation/service/repository, migrations, GitHub CI exist | Release/security/load and restore verification |
@@ -66,3 +66,12 @@ QA uses the isolated Neon branch `phase-5-acceptance`. The complete auth/MFA dat
 
 ## Approved test-centred simplification
 See [ADMIN_SIMPLIFICATION.md](ADMIN_SIMPLIFICATION.md) for the approved scope, delivered test/import/product-assembly changes, verification evidence and remaining student/material/commerce work. This supersedes the earlier question-bank-first authoring flow; prepared topic and subject practice sets remain in scope, while live scheduling stays deferred. Phase 5 browser acceptance is still pending.
+
+
+## Current checkpoint: consolidated scope and Admin usability
+
+The current implementation is documented in ADMIN_SIMPLIFICATION.md; the historical inventory above is not a second competing plan. Product requirements and Phase 5 acceptance now match paper-level publication, prepared topic/subject practice sets and standalone/bundle assembly. Live reminders follow deferred live scheduling.
+
+This batch adds test-name/exam/status filters and a contextual Edit in this test screen. Saving creates an isolated question/answer copy and replaces that paper's assignment atomically, keeping its position and preserving the original for other papers. Missing/stale assignments, wrong-exam topics and non-draft papers reject edits.
+
+Remaining Admin work: durable full-mock/subject/topic categories, richer subject/topic and bundle-content search, import retry protection, and combined browser acceptance. Then deliver student test execution/results, real protected materials/library, commerce/coupons, operations and release checks. No separate staff dashboards are introduced.

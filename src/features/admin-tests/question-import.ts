@@ -15,7 +15,8 @@ export async function importTestCsv(sectionId: string, topicId: string, csv: str
 
 // A single statement inserts the paper questions, answers and section assignments.
 // A rejected destination writes nothing; a database error rolls back every CTE.
-export async function addTestQuestions(sectionId: string, inputs: QuestionInput[], actor: Actor) {
+export async function addTestQuestions(sectionId: string, inputs: QuestionInput[], actor: Actor, replacesQuestionId?: string) {
+  if (replacesQuestionId && inputs.length !== 1) throw testStateConflict("Edit one question at a time.");
   if (!inputs.length) throw testStateConflict("Add at least one question.");
   const records = inputs.map((input, position) => ({
     ...input, position, id: randomUUID(), revisionId: randomUUID(),
@@ -35,8 +36,12 @@ export async function addTestQuestions(sectionId: string, inputs: QuestionInput[
       select t.id, t.exam_id from tests t join test_sections s on s.test_id = t.id
       where s.id = ${sectionId}::uuid and t.status = 'DRAFT' and t.mode = 'MOCK'
       for update of t
+    ), locked_assignment as (
+      select a.* from test_questions a join locked_test t on t.id = a.test_id
+      where a.section_id = ${sectionId}::uuid and a.question_id = ${replacesQuestionId ?? null}::uuid
+      for update of a
     ), destination as (
-      select t.* from locked_test t where not exists (
+      select t.* from locked_test t where (${replacesQuestionId ?? null}::uuid is null or exists (select 1 from locked_assignment)) and not exists (
         select 1 from source r where not exists (
           select 1 from topics p join subjects s on s.id = p.subject_id
           where p.id = r."topicId" and s.exam_id = t.exam_id
@@ -60,22 +65,30 @@ export async function addTestQuestions(sectionId: string, inputs: QuestionInput[
       select r."revisionId", o->>'stableKey', o->>'body', (o->>'isCorrect')::boolean, (o->>'sortOrder')::integer
       from source r join new_revisions v on v.id = r."revisionId" cross join lateral jsonb_array_elements(r.options) o
     ), assignments as (
-      insert into test_questions (test_id, section_id, question_id, sort_order)
-      select d.id, ${sectionId}::uuid, r.id,
-        coalesce((select max(sort_order) + 1 from test_questions where section_id = ${sectionId}::uuid), 0) + r.position
-      from source r join new_questions q on q.id = r.id cross join destination d returning test_id
+      ${replacesQuestionId ? sql`
+        update test_questions a set question_id = (select id from new_questions)
+        where a.section_id = ${sectionId}::uuid and a.question_id = ${replacesQuestionId}::uuid
+          and a.test_id in (select id from destination)
+          and exists (select 1 from new_questions)
+        returning a.test_id
+      ` : sql`
+        insert into test_questions (test_id, section_id, question_id, sort_order)
+        select d.id, ${sectionId}::uuid, r.id,
+          coalesce((select max(sort_order) + 1 from test_questions where section_id = ${sectionId}::uuid), 0) + r.position
+        from source r join new_questions q on q.id = r.id cross join destination d returning test_id
+      `}
     ), import_job as (
       insert into content_import_jobs (id, type, status, object_key, total_rows, valid_rows, invalid_rows, requested_by, completed_at)
-      select ${jobId}::uuid, 'TEST_QUESTIONS', 'IMPORTED', ${`inline-sha256:${fingerprint}`},
+      select ${jobId}::uuid, ${replacesQuestionId ? 'TEST_QUESTION_EDIT' : 'TEST_QUESTIONS'}, 'IMPORTED', ${`inline-sha256:${fingerprint}`},
         ${inputs.length}, ${inputs.length}, 0, ${actor.userId}::uuid, now()
       from destination where exists (select 1 from assignments) returning id
     )
     insert into audit_logs (actor_user_id, action, entity_type, entity_id, request_id, "after")
-    select ${actor.userId}::uuid, 'test.questions_added', 'test', d.id::text, ${actor.requestId},
-      jsonb_build_object('sectionId', ${sectionId}::text, 'importJobId', j.id::text, 'questionIds',
+    select ${actor.userId}::uuid, ${replacesQuestionId ? 'test.question_edited' : 'test.questions_added'}, 'test', d.id::text, ${actor.requestId},
+      jsonb_build_object('replacesQuestionId', ${replacesQuestionId ?? null}::text, 'sectionId', ${sectionId}::text, 'importJobId', j.id::text, 'questionIds',
         (select jsonb_agg(id) from new_questions))
     from destination d cross join import_job j returning entity_id
   `);
-  if (!result.rows.length) throw testStateConflict("Choose a topic from this exam and a section in a draft mock test. Refresh if the test changed.");
+  if (!result.rows.length) throw testStateConflict(replacesQuestionId ? "This question or test changed, or the selected topic belongs to another exam. Return to the test and refresh before editing." : "Choose a topic from this exam and a section in a draft mock test. Refresh if the test changed.");
   return { id: jobId, status: "IMPORTED" as const, totalRows: inputs.length, importedRows: inputs.length, issues: [] };
 }

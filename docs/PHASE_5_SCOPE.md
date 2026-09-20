@@ -5,9 +5,9 @@ Phase 5 implements permission-checked content operations without starting test e
 ## Delivery slices
 
 1. Admin content foundation and exam taxonomy: exams, subjects, topics, responsive UI, audit trail.
-2. Question bank and immutable revisions: authoring, options, marks, explanations, preview.
+2. Test-centred authoring: write/import questions inside a paper; the question bank is optional reuse tooling.
 3. Single-admin publishing: draft, preview, publish and archive with server permission checks.
-4. Mock-test builder: sections, question assignment and configuration only; execution remains Phase 6.
+4. Prepared-test builder: sections, direct question creation/import/edit, optional bank reuse and paper publication; execution remains Phase 6.
 5. Package/material metadata and question bulk import with atomic validation.
 
 ## Authorization
@@ -38,10 +38,10 @@ Phase 5 implements permission-checked content operations without starting test e
 - Draft questions can be edited and directly published. Existing IN_REVIEW questions can also be directly published.
 - Creators can publish their own questions. Legacy submit/review endpoints return 410 with guidance to publish directly.
 - Question state changes and revision writes are audited in the same database batch.
-- Draft tests support sections, published-question assignment, timing, shuffle and attempt limits.
+- Draft tests support sections, direct draft questions, optional published-question reuse, timing, shuffle and attempt limits. Editing inside a paper attaches a private copy without altering other papers.
 - Current admin creation and publishing accepts mock tests only. Legacy live schedule data remains compatible but its controls are outside current acceptance.
-- A test cannot publish until it contains at least one section with a published question.
-- Package metadata stays payment-provider neutral and can link only published tests/materials.
+- A test cannot publish without sections and a question in every section. Paper publication also publishes its draft questions and latest answer revisions; no separate question approval is needed.
+- A standalone product selects one published resource; a bundle selects multiple published tests/materials. Each has its own price and validity. Checkout/payment remains Phase 8.
 - Material version 1 and its audit record are created atomically; protected delivery is intentionally deferred.
 - CSV imports validate every row and every topic first, then import all draft questions in one database batch or none.
 

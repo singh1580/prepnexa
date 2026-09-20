@@ -37,9 +37,9 @@ Every product stores its own price, currency, access duration, included resource
 
 ## 4. Test modes
 
-### Practice (standalone mode deferred; topic-focused mock papers remain possible)
+### Prepared topic and subject practice sets
 
-- Attempts are configurable; the default is unlimited.
+- Practice target: configurable attempts, including unlimited practice. Current prepared papers use MOCK execution mode with limits of 1–100 and a default of one; unlimited practice remains pending. Saved full-mock/subject/topic category labels remain an authoring task.
 - Results and explanations are released immediately unless explicitly delayed.
 - Ranking is normally disabled.
 
@@ -114,7 +114,7 @@ Keep fixed/percentage discounts, start/end dates, minimum order, maximum discoun
 
 ## 9. Admin content workflow
 
-Questions and materials use draft, preview, direct publish and archive. No separate reviewer is required. Legacy IN_REVIEW questions can be directly published by an authorized admin.
+The primary test workflow is exam → draft paper → write/import/edit questions in its sections → preview → publish. Questions and materials use draft, preview, direct publish and archive. No separate reviewer is required. Legacy IN_REVIEW questions can be directly published by an authorized admin.
 
 - The same admin can create and publish their own content.
 - Publishing records the actor and timestamp.
@@ -124,7 +124,7 @@ Questions and materials use draft, preview, direct publish and archive. No separ
 
 ## 10. Notifications and support
 
-The MVP supports in-app and email notifications for verification, password reset, purchase confirmation, payment failure, live-test reminders, result publication, suspicious login, and support-ticket updates.
+The MVP supports in-app and email notifications for verification, password reset, purchase confirmation, payment failure, result publication, suspicious login, and support-ticket updates.
 
 Notification failure does not roll back a successful payment or test submission. Failed deliveries are recorded for retry.
 
