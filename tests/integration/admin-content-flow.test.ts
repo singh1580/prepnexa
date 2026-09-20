@@ -54,7 +54,8 @@ describe.skipIf(!run)("admin content database flow", () => {
 
     const testService = await import("../../src/features/admin-tests/service");
     testId = (await testService.createTest({ examId, title: "Integration mock test", mode: "MOCK", durationMinutes: 60, instructions: "Integration only", maxAttempts: 1, shuffleQuestions: true, shuffleOptions: true }, actor)).id;
-    const sectionId = (await testService.createSection(testId, { title: "Aptitude", durationMinutes: 60, sortOrder: 0 }, actor)).id;
+    const sectionId = (await testService.getManagedTest(testId)).sections[0].id;
+    await testService.updateSection(sectionId, { title: "Aptitude", durationMinutes: 60, sortOrder: 0 }, actor);
     await testService.assignQuestion(sectionId, questionId, 0, actor);
     await testService.removeTestItem(sectionId, questionId, actor);
     expect((await testService.getManagedTest(testId)).sections[0]?.questions).toHaveLength(0);

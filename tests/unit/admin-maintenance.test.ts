@@ -45,8 +45,13 @@ describe("admin maintenance safeguards", () => {
     await reorderQuestions("section", ["q2", "q1"], actor);
     expect(testRepo.replaceQuestionOrder).toHaveBeenCalledWith("test", "section", ["q2", "q1"], expect.any(Object));
   });
+  it("publishes a test's valid draft questions without separate approvals", async () => {
+    vi.mocked(testRepo.findManagedTest).mockResolvedValue({ id: "test", mode: "MOCK", status: "DRAFT", durationMinutes: 30, sections: [{ id: "section", durationMinutes: null, questions: [{ questionId: "draft-question", status: "DRAFT" }] }], availableQuestions: [] } as unknown as NonNullable<Awaited<ReturnType<typeof testRepo.findManagedTest>>>);
+    await publishTest("test", actor);
+    expect(testRepo.publishTestRecord).toHaveBeenCalledOnce();
+  });
   it("does not publish a copied paper containing an unavailable question", async () => {
-    vi.mocked(testRepo.findManagedTest).mockResolvedValue({ id: "test", mode: "MOCK", status: "DRAFT", sections: [{ id: "section", questions: [{ questionId: "archived-question" }] }], availableQuestions: [] } as unknown as NonNullable<Awaited<ReturnType<typeof testRepo.findManagedTest>>>);
+    vi.mocked(testRepo.findManagedTest).mockResolvedValue({ id: "test", mode: "MOCK", status: "DRAFT", sections: [{ id: "section", questions: [{ questionId: "archived-question", status: "ARCHIVED" }] }], availableQuestions: [] } as unknown as NonNullable<Awaited<ReturnType<typeof testRepo.findManagedTest>>>);
     await expect(publishTest("test", actor)).rejects.toMatchObject({ status: 409 });
     expect(testRepo.publishTestRecord).not.toHaveBeenCalled();
   });

@@ -9,10 +9,10 @@ export function WorkspaceShell({ admin, name, permissions = [], section, childre
     { key: "overview", href: base, label: "Overview", icon: "◈" },
     ...(admin && hasAnyContentPermission(permissions) ? [{ key: "content", href: "/admin/content", label: "Content", icon: "▤" }] : []),
     ...(admin && permissions.includes(CONTENT_PERMISSIONS.manageExams) ? [{ key: "exams", href: "/admin/exams", label: "Exams", icon: "◎" }] : []),
-    ...(admin && [CONTENT_PERMISSIONS.createQuestions, CONTENT_PERMISSIONS.reviewQuestions, CONTENT_PERMISSIONS.publishQuestions].some((permission) => permissions.includes(permission)) ? [{ key: "questions", href: "/admin/questions", label: "Questions", icon: "?" }] : []),
-    ...(admin && [CONTENT_PERMISSIONS.manageTests, CONTENT_PERMISSIONS.manageSchedules].some((permission) => permissions.includes(permission)) ? [{ key: "tests", href: "/admin/tests", label: "Tests", icon: "▣" }] : []),
-    ...(admin && permissions.includes(CONTENT_PERMISSIONS.createQuestions) ? [{ key: "imports", href: "/admin/imports", label: "Imports", icon: "⇧" }] : []),
-    ...(admin && [CONTENT_PERMISSIONS.manageProducts, CONTENT_PERMISSIONS.manageMaterials].some((permission) => permissions.includes(permission)) ? [{ key: "packages", href: "/admin/packages", label: "Packages", icon: "◇" }] : []),
+    ...(admin && [CONTENT_PERMISSIONS.createQuestions, CONTENT_PERMISSIONS.reviewQuestions, CONTENT_PERMISSIONS.publishQuestions].some((permission) => permissions.includes(permission)) ? [{ key: "questions", href: "/admin/questions", label: "Question bank", icon: "?" }] : []),
+    ...(admin && [CONTENT_PERMISSIONS.manageTests, CONTENT_PERMISSIONS.manageSchedules].some((permission) => permissions.includes(permission)) ? [{ key: "tests", href: "/admin/tests", label: "Tests & practice sets", icon: "▣" }] : []),
+
+    ...(admin && [CONTENT_PERMISSIONS.manageProducts, CONTENT_PERMISSIONS.manageMaterials].some((permission) => permissions.includes(permission)) ? [{ key: "packages", href: "/admin/packages", label: "Store & materials", icon: "◇" }] : []),
     { key: "profile", href: "/account/profile", label: "My profile", icon: "○" },
     { key: "security", href: "/account/security", label: "Account security", icon: "◇" },
   ];

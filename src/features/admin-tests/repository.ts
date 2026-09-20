@@ -11,7 +11,7 @@ export type ScheduleInput = { startsAt: string; endsAt: string; lateJoinMinutes:
 
 export const listTestExams = () => db.select({ id: exams.id, name: exams.name }).from(exams).where(ne(exams.status, "ARCHIVED")).orderBy(asc(exams.name));
 export function listManagedTests() {
-  return db.select({ id: tests.id, title: tests.title, mode: tests.mode, status: tests.status, durationMinutes: tests.durationMinutes, examName: exams.name, sectionCount: countDistinct(testSections.id), questionCount: countDistinct(testQuestions.questionId) }).from(tests)
+  return db.select({ id: tests.id, examId: tests.examId, title: tests.title, mode: tests.mode, status: tests.status, durationMinutes: tests.durationMinutes, examName: exams.name, sectionCount: countDistinct(testSections.id), questionCount: countDistinct(testQuestions.questionId) }).from(tests)
     .innerJoin(exams, eq(tests.examId, exams.id)).leftJoin(testSections, eq(testSections.testId, tests.id)).leftJoin(testQuestions, eq(testQuestions.testId, tests.id))
     .groupBy(tests.id, exams.name).orderBy(desc(tests.updatedAt));
 }
@@ -20,7 +20,11 @@ export async function findManagedTest(id: string) {
   if (!test) return undefined;
   const [sections, assignments, schedules, availableQuestions] = await Promise.all([
     db.select().from(testSections).where(eq(testSections.testId, id)).orderBy(asc(testSections.sortOrder)),
-    db.select({ testId: testQuestions.testId, sectionId: testQuestions.sectionId, questionId: testQuestions.questionId, sortOrder: testQuestions.sortOrder, stem: questions.stem, type: questions.type }).from(testQuestions).innerJoin(questions, eq(testQuestions.questionId, questions.id)).where(eq(testQuestions.testId, id)).orderBy(asc(testQuestions.sortOrder)),
+    db.select({ testId: testQuestions.testId, sectionId: testQuestions.sectionId, questionId: testQuestions.questionId, sortOrder: testQuestions.sortOrder, stem: questions.stem, type: questions.type, status: questions.status, explanation: questions.explanation,
+      marks: questions.marks, negativeMarks: questions.negativeMarks,
+      options: sql<{ body: string; correct: boolean }[]>`coalesce((select jsonb_agg(jsonb_build_object('body', o.body, 'correct', o.is_correct) order by o.sort_order) from question_options o where o.question_id = ${questions.id}), '[]'::jsonb)`,
+      answerConfig: sql<Record<string, unknown>>`(select r.answer_config from question_revisions r where r.question_id = ${questions.id} order by r.version desc limit 1)`
+    }).from(testQuestions).innerJoin(questions, eq(testQuestions.questionId, questions.id)).where(eq(testQuestions.testId, id)).orderBy(asc(testQuestions.sortOrder)),
     db.select().from(testSchedules).where(eq(testSchedules.testId, id)).orderBy(desc(testSchedules.startsAt)),
     db.select({ id: questions.id, stem: questions.stem, topicName: topics.name, subjectName: subjects.name }).from(questions).innerJoin(topics, eq(questions.topicId, topics.id)).innerJoin(subjects, eq(topics.subjectId, subjects.id)).where(and(eq(subjects.examId, test.examId), eq(questions.status, "PUBLISHED"))).orderBy(asc(subjects.name), asc(topics.name)),
   ]);
@@ -35,7 +39,7 @@ export async function findPublishedQuestionForExam(id: string, examId: string) {
 
 export async function insertTest(input: TestInput, audit: Audit) {
   const id = randomUUID(); const now = new Date();
-  await db.batch([db.insert(tests).values({ id, ...input, instructions: input.instructions || null, status: "DRAFT", createdAt: now, updatedAt: now }), db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test.created", entityType: "test", entityId: id, requestId: audit.requestId, after: { ...input, status: "DRAFT" } })]); return { id };
+  await db.batch([db.insert(tests).values({ id, ...input, instructions: input.instructions || null, status: "DRAFT", createdAt: now, updatedAt: now }), db.insert(testSections).values({ id: randomUUID(), testId: id, title: "Questions", sortOrder: 0 }), db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test.created", entityType: "test", entityId: id, requestId: audit.requestId, after: { ...input, status: "DRAFT" } })]); return { id };
 }
 export async function patchTest(before: NonNullable<Awaited<ReturnType<typeof findTest>>>, input: TestInput, audit: Audit) {
   const now = new Date(); await db.batch([db.update(tests).set({ ...input, instructions: input.instructions || null, updatedAt: now }).where(eq(tests.id, before.id)), db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test.updated", entityType: "test", entityId: before.id, requestId: audit.requestId, before, after: { ...before, ...input, updatedAt: now } })]); return { id: before.id };
@@ -59,9 +63,27 @@ export async function publishTestRecord(before: NonNullable<Awaited<ReturnType<t
       where id in (select id from locked_test)
         and exists (select 1 from ${testSections} where test_id = ${before.id})
         and not exists (
+          select 1 from test_questions tq join questions q on q.id = tq.question_id
+          join topics p on p.id = q.topic_id join subjects su on su.id = p.subject_id
+          where tq.test_id = ${before.id} and (q.status = 'ARCHIVED' or su.exam_id <> ${before.examId}::uuid
+            or not exists (select 1 from question_revisions r where r.question_id = q.id))
+        )
+        and coalesce((select sum(duration_minutes) from test_sections where test_id = ${before.id}), 0)
+          <= (select duration_minutes from tests where id = ${before.id})
+        and not exists (
           select 1 from ${testSections} s where s.test_id = ${before.id}
           and not exists (select 1 from ${testQuestions} q where q.section_id = s.id)
         )
+      returning id
+    ), published_questions as (
+      update questions set status = 'PUBLISHED', published_at = now(), updated_at = now()
+      where status in ('DRAFT', 'IN_REVIEW') and id in (
+        select question_id from test_questions where test_id in (select id from published)
+      ) returning id
+    ), published_revisions as (
+      update question_revisions r set published_at = now()
+      where r.question_id in (select id from published_questions)
+        and r.version = (select max(v.version) from question_revisions v where v.question_id = r.question_id)
       returning id
     )
     insert into ${auditLogs} ("actor_user_id", "action", "entity_type", "entity_id", "request_id", "after")
@@ -131,4 +153,10 @@ export async function copyTestRecord(before: NonNullable<Awaited<ReturnType<type
     else await db.batch([create, createSections, auditEntry]);
   }
   return { id };
+}
+
+export function listTopicsForTest(examId: string) {
+  return db.select({ id: topics.id, topicName: topics.name, subjectName: subjects.name, examName: exams.name })
+    .from(topics).innerJoin(subjects, eq(topics.subjectId, subjects.id)).innerJoin(exams, eq(subjects.examId, exams.id))
+    .where(eq(exams.id, examId)).orderBy(asc(subjects.name), asc(topics.name));
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Field } from "@/features/auth/ui/field";
 import { adminContentRequest, AdminContentApiError } from "./api";
@@ -19,8 +19,8 @@ function errorMessage(error: unknown) {
 
 const blankOptions = () => ["A", "B", "C", "D"].map((stableKey, sortOrder) => ({ stableKey, body: "", isCorrect: false, sortOrder }));
 
-export function QuestionForm({ topics, question }: { topics: TopicOption[]; question?: EditableQuestion }) {
-  const router = useRouter();
+export function QuestionForm({ topics, question, sectionId, onAdded, onCancel }: { topics: TopicOption[]; question?: EditableQuestion; sectionId?: string; onAdded?: () => void; onCancel?: () => void }) {
+  const router = useRouter(); const formId = useId();
   const [type, setType] = useState<QuestionType>(question?.type ?? "SINGLE_CHOICE");
   const [options, setOptions] = useState<Option[]>(question?.options.length ? question.options : blankOptions());
   const [busy, setBusy] = useState(false); const [error, setError] = useState("");
@@ -57,6 +57,14 @@ export function QuestionForm({ topics, question }: { topics: TopicOption[]; ques
       caseSensitive: type === "TEXT" && data.get("caseSensitive") === "on",
     };
     try {
+      if (sectionId) {
+        const response = await fetch(`/api/admin/tests/sections/${sectionId}/new-question`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (!response.ok || result.error) throw new AdminContentApiError(result.error?.code ?? "REQUEST_FAILED", result.error?.message ?? "Could not add this question.");
+        onAdded?.(); router.refresh(); setBusy(false); return;
+      }
       const result = await adminContentRequest<{ id: string }>(question ? `questions/${question.id}` : "questions", question ? "PATCH" : "POST", payload);
       router.push(`/admin/questions/${result.id}`); router.refresh();
     } catch (cause) { setError(errorMessage(cause)); setBusy(false); }
@@ -69,12 +77,12 @@ export function QuestionForm({ topics, question }: { topics: TopicOption[]; ques
     <fieldset disabled={busy}>
       <div className="question-grid"><label className="field"><span>Topic</span><select name="topicId" defaultValue={question?.topicId} required>{topics.map((topic) => <option value={topic.id} key={topic.id}>{topic.examName} · {topic.subjectName} · {topic.topicName}</option>)}</select></label><label className="field"><span>Question type</span><select value={type} onChange={(event) => { setType(event.target.value as QuestionType); setOptions((current) => current.map((option) => ({ ...option, isCorrect: false }))); }}><option value="SINGLE_CHOICE">Single choice</option><option value="MULTIPLE_CHOICE">Multiple choice</option><option value="NUMERIC">Numeric answer</option><option value="TEXT">Text answer</option></select></label></div>
       <label className="field"><span>Question</span><textarea name="stem" defaultValue={question?.stem} required minLength={10} maxLength={20000} rows={6} placeholder="Write a complete, unambiguous question." /></label>
-      <div className="question-grid three"><Field id="question-marks" label="Marks" name="marks" type="number" min={0.01} step="0.01" max={1000} defaultValue={question?.marks ?? "1"} required /><Field id="question-negative" label="Negative marks" name="negativeMarks" type="number" min={0} step="0.01" max={1000} defaultValue={question?.negativeMarks ?? "0"} required /><label className="field"><span>Difficulty</span><select name="difficulty" defaultValue={question?.difficulty ?? "MEDIUM"}><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option></select></label></div>
+      <div className="question-grid three"><Field id={`${formId}-question-marks`} label="Marks" name="marks" type="number" min={0.01} step="0.01" max={1000} defaultValue={question?.marks ?? "1"} required /><Field id={`${formId}-question-negative`} label="Negative marks" name="negativeMarks" type="number" min={0} step="0.01" max={1000} defaultValue={question?.negativeMarks ?? "0"} required /><label className="field"><span>Difficulty</span><select name="difficulty" defaultValue={question?.difficulty ?? "MEDIUM"}><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option></select></label></div>
       {(type === "SINGLE_CHOICE" || type === "MULTIPLE_CHOICE") && <section className="answer-builder"><div className="section-heading"><div><span className="eyebrow">ANSWER OPTIONS</span><h2>Mark the correct answer</h2><p className="muted">{type === "SINGLE_CHOICE" ? "Select one correct answer." : "Select every correct answer (at least two)."}</p></div>{options.length < 8 && <button className="button secondary" type="button" onClick={addOption}>Add option</button>}</div>{options.map((option, index) => <div className="option-editor" key={option.stableKey}><label className="correct-control"><input type={type === "SINGLE_CHOICE" ? "radio" : "checkbox"} name="correct-option" checked={option.isCorrect} onChange={(event) => changeOption(index, { isCorrect: event.target.checked })} /><span>{option.stableKey} · Correct</span></label><label className="field"><span>Option {option.stableKey}</span><input value={option.body} onChange={(event) => changeOption(index, { body: event.target.value })} required maxLength={4000} /></label>{options.length > 2 && <button className="text-button danger-text" type="button" onClick={() => removeOption(index)}>Remove</button>}</div>)}</section>}
-      {type === "NUMERIC" && <div className="question-grid"><Field id="numeric-answer" label="Accepted answer" name="numericAnswer" type="number" step="any" defaultValue={numericValue} required /><Field id="numeric-tolerance" label="Allowed tolerance (±)" name="numericTolerance" type="number" step="any" min={0} max={1000} defaultValue={tolerance} required /></div>}
+      {type === "NUMERIC" && <div className="question-grid"><Field id={`${formId}-numeric-answer`} label="Accepted answer" name="numericAnswer" type="number" step="any" defaultValue={numericValue} required /><Field id={`${formId}-numeric-tolerance`} label="Allowed tolerance (±)" name="numericTolerance" type="number" step="any" min={0} max={1000} defaultValue={tolerance} required /></div>}
       {type === "TEXT" && <><label className="field"><span>Accepted answers</span><textarea name="acceptedAnswers" defaultValue={accepted} required rows={4} placeholder="One accepted answer per line" /></label><label className="check-row"><input name="caseSensitive" type="checkbox" defaultChecked={answer.caseSensitive === true} /> Answers are case-sensitive</label></>}
       <label className="field"><span>Explanation</span><textarea name="explanation" defaultValue={question?.explanation ?? ""} maxLength={20000} rows={5} placeholder="Explain why the answer is correct." /></label>
-      <div className="form-actions"><button className="button" type="submit">{busy ? "Saving…" : question ? "Save new revision" : "Create draft question"}</button><button className="button secondary" type="button" onClick={() => router.push(question ? `/admin/questions/${question.id}` : "/admin/questions")}>Cancel</button></div>
+      <div className="form-actions"><button className="button" type="submit">{busy ? "Saving…" : question ? "Save new revision" : sectionId ? "Add question to this test" : "Create draft question"}</button><button className="button secondary" type="button" onClick={() => sectionId ? onCancel?.() : router.push(question ? `/admin/questions/${question.id}` : "/admin/questions")}>Cancel</button></div>
     </fieldset>{error && <p className="notice danger" role="alert">{error}</p>}
   </form>;
 }

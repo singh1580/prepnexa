@@ -1,0 +1,59 @@
+# Approved Admin and Student delivery
+
+The owner approved implementation after the research/planning review. There are two authenticated workspaces: Student and Admin. The public catalogue remains. One admin can prepare and publish content without another staff member's approval. Live tests remain deferred.
+
+## Delivery 1: test creation and product assembly
+
+Implemented in this branch:
+
+- Exam workspace links to that exam's filtered test list and preselected create form.
+- A new prepared mock/practice set starts with one Questions section. Add more sections when needed.
+- Manual questions are saved directly into a section. The separate question bank is optional reuse tooling.
+- Test CSV uses a selected subject/topic; no spreadsheet topic UUID is required. All rows in an import use the selected topic, including legacy CSVs that carry a topicId column.
+- The simple MCQ template has question, four options, correct answer and explanation. Default marking: 1 mark, no negative marking, medium difficulty. Advanced columns support existing multiple-choice, numeric and text types.
+- Preview validates all rows before import. The server repeats validation. One invalid row prevents the entire import. Questions, answer revisions, options, test assignments and audit/job records are written in a single SQL statement.
+- Wrong-exam topics, missing destinations and published-test imports are rejected. Imported questions stay draft until paper publication. Their order follows the CSV and can be changed inside the section.
+- The paper shows answer/explanation previews. Publishing the test also publishes its draft questions/latest revisions atomically. Both test management and question publication permissions are required, within the same Admin workspace.
+- Store creation allows checkbox selection of one published resource or multiple tests/materials, with an independent price and access period. Product plus selected links are created atomically. The same resource can be selected in multiple products without copying it. Empty draft products remain supported but cannot be published.
+- Existing published content, orders and catalogue routes are preserved. No schema migration is required for this delivery.
+
+This delivery does not implement payment or student entitlements. Creating a product is not proof that checkout or paid access works.
+
+## Remaining stages
+
+1. Finish authoring usability: browser acceptance, richer exam/subject/topic filters, edit-within-paper flows, import retry/idempotency, bulk content selection search, and durable test-category labels. Current on-demand papers use existing MOCK mode; topic/subject scope comes from their chosen questions.
+2. Student test engine: free entry, server-authoritative start/deadline, question snapshots, autosave, resume, submission, scoring and result review. Coding execution is a separate capability, not implemented by TEXT questions.
+3. Materials: actual private upload, PDF/article/file organisation, previews and protected delivery. Existing PDF/file forms only hold metadata; they are not the final upload experience.
+4. Commerce: standalone resources, topic sets, subject packs, series and mixed bundles; coupons; replaceable payment adapter; verified webhook unlock; order/content/price/validity snapshots.
+5. Student library: deduplicate resources, retain purchase-specific grants, honour expiry and refunds without revoking another valid grant, preserve attempt limits across overlapping purchases.
+6. Combined acceptance: one admin creates and publishes a set/material, sells it individually and in two differently priced bundles, and a student buys, accesses, resumes and reviews it. Include invalid imports, repeat payments, overlaps, expiry and refunds.
+
+## TCS NQT boundary
+
+The researched TCS hiring pattern distinguishes Foundation (75 minutes) and Advanced (115 minutes), including coding. Aptitude-only sets must be labelled as aptitude/sectional preparation, not a complete 190-minute coding-enabled NQT simulation. Do not hard-code a universal NQT pattern or a question count that the official source does not confirm.
+
+Research sources used in the approved planning review:
+- https://www.tcs.com/careers/india/tcs-all-india-nqt-hiring
+- https://support.learnyst.com/import-quiz-questions-from-the-excel-for-mock-test
+- https://support.learnyst.com/add-questions-to-your-mock-test
+- https://support.learnyst.com/add-products-to-the-bundle
+- https://support.learnyst.com/create-a-bundles
+- https://testbook.com/ssc-cgl/test-series
+
+## Verification record
+
+- Targeted Neon acceptance on isolated `phase-5-acceptance`: passed invalid-row no-write, cross-exam rejection, ordered section attachment, draft state, atomic publication including answer revisions/options, published-paper import rejection, independently priced standalone and mixed bundles reusing the same material, and unavailable-content rejection. Synthetic fixtures were removed.
+- Unit tests, lint, TypeScript and production build are recorded with the delivery commit/PR.
+- Browser visual acceptance is pending: the available remote browser refused the local development URL (`ERR_BLOCKED_BY_CLIENT`). No screenshot or end-to-end browser pass is claimed.
+- Earlier long admin integration suite is not reclassified as passing. This targeted test does not cover the later student engine or commerce stages.
+
+## Local acceptance after pulling this branch
+
+Keep the existing feature database settings and secrets in `.env.local`; do not commit that file. No new environment variable or migration is required for this batch.
+
+1. Open Admin → Exams → the desired exam → Manage this exam's tests.
+2. Create a draft test. Its Questions section is ready automatically.
+3. Choose Write a question, or Import question set → topic → template → Check and preview → Add questions.
+4. Inspect answers/explanations and order; publish the complete paper.
+5. Open Store & materials. Select one published item for a standalone product, or several for a bundle; set each product's price and validity. The exam must be published for its content to appear in this selector.
+6. Report browser errors and usability gaps before this draft PR is merged.

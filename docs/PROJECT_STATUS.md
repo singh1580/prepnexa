@@ -62,3 +62,7 @@ This update hides schedule controls, rejects non-mock creation/publication, fixe
 The current batch targets Phase 5 content maintenance, not the remaining entire product. Live tests remain deferred. Phase 6 student attempts/timer/autosave/submission, Phase 7 results, Phase 8 coupons/payments, Phase 9 actual storage upload/protected delivery and Phase 10 operations remain separate.
 
 QA uses the isolated Neon branch `phase-5-acceptance`. The complete auth/MFA database flow passed. The admin database flow successfully exercised taxonomy creation and published editing, CSV import, direct question publication, mock-test remove/reorder/publish, material version editing, and package edit/link/unlink/publish. The runner then hit its 20-minute limit while executing final dependency assertions, so the full admin suite is not recorded as passed; those guards also have passing unit coverage. The integration timeout is configurable because this runner's Neon requests take roughly 20–50 seconds each. Browser acceptance should cover create/edit/copy/publish/archive and failed dependency checks.
+
+
+## Approved test-centred simplification
+See [ADMIN_SIMPLIFICATION.md](ADMIN_SIMPLIFICATION.md) for the approved scope, delivered test/import/product-assembly changes, verification evidence and remaining student/material/commerce work. This supersedes the earlier question-bank-first authoring flow; prepared topic and subject practice sets remain in scope, while live scheduling stays deferred. Phase 5 browser acceptance is still pending.

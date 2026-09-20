@@ -1,9 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { parseQuestionCsv, questionCsvTemplate, QUESTION_CSV_HEADERS } from "../../src/features/admin-imports/question-csv";
+import { parseQuestionCsv, questionCsvTemplate, testQuestionCsvTemplate, QUESTION_CSV_HEADERS } from "../../src/features/admin-imports/question-csv";
 
 const topicId = crypto.randomUUID();
 function csv(row: string) { return `${QUESTION_CSV_HEADERS.join(",")}\n${row}`; }
 describe("question CSV import validation", () => {
+  it("imports a test template using the selected topic without spreadsheet IDs", () => {
+    const result = parseQuestionCsv(testQuestionCsvTemplate(), topicId);
+    expect(result.issues).toEqual([]);
+    expect(result.questions[0].topicId).toBe(topicId);
+    expect(testQuestionCsvTemplate().split("\n")[0]).not.toContain("topicId");
+  });
+  it("uses the selected test topic even when a legacy file contains another topic", () => {
+    const result = parseQuestionCsv(questionCsvTemplate(crypto.randomUUID()), topicId);
+    expect(result.issues).toEqual([]);
+    expect(result.questions[0].topicId).toBe(topicId);
+  });
+  it("keeps row errors and valid rows separate for an all-or-nothing test import", () => {
+    const csv = testQuestionCsvTemplate();
+    const invalidRow = csv.split("\n")[1].replace(",B,", ",A|B,");
+    const result = parseQuestionCsv(`${csv}\n${invalidRow}`, topicId);
+    expect(result.totalRows).toBe(2);
+    expect(result.questions).toHaveLength(1);
+    expect(result.issues).toEqual(expect.arrayContaining([expect.objectContaining({ rowNumber: 3 })]));
+  });
   it("generates a valid starter row for an existing topic", () => {
     const result = parseQuestionCsv(questionCsvTemplate(topicId));
     expect(result.issues).toEqual([]);

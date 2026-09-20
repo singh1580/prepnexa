@@ -26,8 +26,12 @@ export async function requireAuthenticated() {
 }
 
 export async function requirePermission(permission: string) {
+  return requirePermissions([permission]);
+}
+
+export async function requirePermissions(permissions: readonly string[]) {
   const auth = await requireAuthenticated();
-  if (!auth.permissions.includes(permission)) throw new AppError("FORBIDDEN", "You do not have permission to perform this action.", 403);
+  if (permissions.some(permission => !auth.permissions.includes(permission))) throw new AppError("FORBIDDEN", "You do not have permission to perform this action.", 403);
   return auth;
 }
 
