@@ -39,7 +39,7 @@ Every product stores its own price, currency, access duration, included resource
 
 ### Prepared topic and subject practice sets
 
-- Practice target: configurable attempts, including unlimited practice. Current prepared papers use MOCK execution mode with limits of 1–100 and a default of one; unlimited practice remains pending. Saved full-mock/subject/topic category labels remain an authoring task.
+- Practice target: configurable attempts, including unlimited practice. Current prepared papers use MOCK execution mode with limits of 1–100 and a default of one; unlimited practice remains pending. Full-mock, subject-test and topic-set authoring categories are saved and enforced during publication.
 - Results and explanations are released immediately unless explicitly delayed.
 - Ranking is normally disabled.
 

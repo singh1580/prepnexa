@@ -22,7 +22,7 @@ This delivery does not implement payment or student entitlements. Creating a pro
 
 ## Remaining stages
 
-1. Finish authoring usability: browser acceptance, richer subject/topic filters and bulk content selection search. Current on-demand papers use existing MOCK mode; topic/subject scope comes from their chosen questions.
+1. Finish authoring usability with combined browser acceptance. Subject/topic filters, bulk content selection search and paginated paper filtering are implemented. Current on-demand papers use existing MOCK mode; topic/subject scope comes from their chosen questions.
 2. Student test engine: free entry, server-authoritative start/deadline, question snapshots, autosave, resume, submission, scoring and result review. Coding execution is a separate capability, not implemented by TEXT questions.
 3. Materials: actual private upload, PDF/article/file organisation, previews and protected delivery. Existing PDF/file forms only hold metadata; they are not the final upload experience.
 4. Commerce: standalone resources, topic sets, subject packs, series and mixed bundles; coupons; replaceable payment adapter; verified webhook unlock; order/content/price/validity snapshots.
@@ -74,7 +74,7 @@ Keep the existing feature database settings and secrets in `.env.local`; do not 
 - Manual question creation/editing and in-test CSV import share an exam/subject/topic picker. Filters narrow choices without silently changing the selected topic; a selected item outside the filters stays visibly pinned. Changing the CSV topic invalidates its preview.
 - Product creation filters published content by title, exam and test/material type. Selected-only view and a count help review the bundle. Selections are kept independently of visible results and submitted through hidden fields, so changing filters does not remove selected items or submit duplicate checkbox values.
 - Existing draft bundles have searchable test/material link selectors (title/exam). Empty results cannot submit a missing item. Eligible material selectors now consistently require a published parent exam; available tests remain prepared MOCK papers.
-- No schema migration or environment changes in this selector batch. List pagination, subject/topic filtering of the overall test list, and combined browser acceptance are still pending. Existing permissions and mutation validation apply.
+- No schema migration or environment changes in this selector batch. List pagination and subject/topic filtering of the overall test list are implemented; combined browser acceptance remains. Existing permissions and mutation validation apply.
 
 ## Test-list curriculum filters and pagination
 
