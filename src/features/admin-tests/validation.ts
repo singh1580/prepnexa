@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const testIdSchema = z.uuid();
 export const testInputSchema = z.object({
-  examId: z.uuid(), title: z.string().trim().min(3).max(200), mode: z.literal("MOCK"),
+  examId: z.uuid(), title: z.string().trim().min(3).max(200), mode: z.literal("MOCK"), category: z.enum(["FULL_MOCK", "SUBJECT_TEST", "TOPIC_SET"]).nullable().optional().default(null),
   durationMinutes: z.coerce.number().int().min(1).max(600), instructions: z.string().trim().max(10_000).optional().default(""),
   maxAttempts: z.coerce.number().int().min(1).max(100), shuffleQuestions: z.boolean().default(true), shuffleOptions: z.boolean().default(true),
 }).strict();

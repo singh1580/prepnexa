@@ -5,18 +5,18 @@ import { db } from "@/db/client";
 import { auditLogs, products, productTests, exams, questions, subjects, testQuestions, testSchedules, testSections, tests, topics } from "@/db/schema";
 
 type Audit = { actorUserId: string; requestId: string };
-export type TestInput = { examId: string; title: string; mode: "PRACTICE" | "MOCK" | "LIVE"; durationMinutes: number; instructions: string; maxAttempts: number; shuffleQuestions: boolean; shuffleOptions: boolean };
+export type TestInput = { category?: "FULL_MOCK" | "SUBJECT_TEST" | "TOPIC_SET" | null; examId: string; title: string; mode: "PRACTICE" | "MOCK" | "LIVE"; durationMinutes: number; instructions: string; maxAttempts: number; shuffleQuestions: boolean; shuffleOptions: boolean };
 export type SectionInput = { title: string; durationMinutes: number | null; sortOrder: number };
 export type ScheduleInput = { startsAt: string; endsAt: string; lateJoinMinutes: number; resultReleaseAt: string | null; rankingEnabled: boolean; cohortKey: string };
 
 export const listTestExams = () => db.select({ id: exams.id, name: exams.name }).from(exams).where(ne(exams.status, "ARCHIVED")).orderBy(asc(exams.name));
 export function listManagedTests() {
-  return db.select({ id: tests.id, examId: tests.examId, title: tests.title, mode: tests.mode, status: tests.status, durationMinutes: tests.durationMinutes, examName: exams.name, sectionCount: countDistinct(testSections.id), questionCount: countDistinct(testQuestions.questionId) }).from(tests)
+  return db.select({ id: tests.id, examId: tests.examId, title: tests.title, mode: tests.mode, category: tests.category, status: tests.status, durationMinutes: tests.durationMinutes, examName: exams.name, sectionCount: countDistinct(testSections.id), questionCount: countDistinct(testQuestions.questionId) }).from(tests)
     .innerJoin(exams, eq(tests.examId, exams.id)).leftJoin(testSections, eq(testSections.testId, tests.id)).leftJoin(testQuestions, eq(testQuestions.testId, tests.id))
     .groupBy(tests.id, exams.name).orderBy(desc(tests.updatedAt));
 }
 export async function findManagedTest(id: string) {
-  const [test] = await db.select({ id: tests.id, examId: tests.examId, title: tests.title, mode: tests.mode, durationMinutes: tests.durationMinutes, instructions: tests.instructions, maxAttempts: tests.maxAttempts, shuffleQuestions: tests.shuffleQuestions, shuffleOptions: tests.shuffleOptions, status: tests.status, examName: exams.name }).from(tests).innerJoin(exams, eq(tests.examId, exams.id)).where(eq(tests.id, id)).limit(1);
+  const [test] = await db.select({ id: tests.id, examId: tests.examId, title: tests.title, mode: tests.mode, category: tests.category, durationMinutes: tests.durationMinutes, instructions: tests.instructions, maxAttempts: tests.maxAttempts, shuffleQuestions: tests.shuffleQuestions, shuffleOptions: tests.shuffleOptions, status: tests.status, examName: exams.name }).from(tests).innerJoin(exams, eq(tests.examId, exams.id)).where(eq(tests.id, id)).limit(1);
   if (!test) return undefined;
   const [sections, assignments, schedules, availableQuestions] = await Promise.all([
     db.select().from(testSections).where(eq(testSections.testId, id)).orderBy(asc(testSections.sortOrder)),
@@ -57,11 +57,15 @@ export async function insertSchedule(testId: string, input: ScheduleInput, audit
 export async function publishTestRecord(before: NonNullable<Awaited<ReturnType<typeof findManagedTest>>>, audit: Audit) {
   const result = await db.execute(sql`
     with locked_test as (
-      select id from ${tests} where id = ${before.id} and status = 'DRAFT' and mode = 'MOCK' for update
+      select id, category from ${tests} where id = ${before.id} and status = 'DRAFT' and mode = 'MOCK' for update
     ), published as (
       update ${tests} set status = 'PUBLISHED', updated_at = now()
       where id in (select id from locked_test)
         and exists (select 1 from ${testSections} where test_id = ${before.id})
+        and ((select category from locked_test) is null or (select category from locked_test) = 'FULL_MOCK'
+          or (select count(distinct case when (select category from locked_test) = 'TOPIC_SET'
+            then p.id else p.subject_id end) from test_questions tq join questions q on q.id = tq.question_id
+            join topics p on p.id = q.topic_id where tq.test_id = ${before.id}) = 1)
         and not exists (
           select 1 from test_questions tq join questions q on q.id = tq.question_id
           join topics p on p.id = q.topic_id join subjects su on su.id = p.subject_id
@@ -90,7 +94,7 @@ export async function publishTestRecord(before: NonNullable<Awaited<ReturnType<t
     select ${audit.actorUserId}, 'test.published', 'test', id::text, ${audit.requestId},
       '{"status":"PUBLISHED"}'::jsonb from published returning entity_id
   `);
-  if (!result.rows.length) throw testStateConflict("The test changed before publishing. Refresh and try again.");
+  if (!result.rows.length) throw testStateConflict("Cannot publish: check every section has questions, timing fits, and Subject tests / Topic sets contain only one subject / topic. Refresh if the paper changed.");
   return { id: before.id, status: "PUBLISHED" as const };
 }
 
@@ -143,7 +147,7 @@ export async function archiveTestRecord(id: string, audit: Audit) {
 export async function copyTestRecord(before: NonNullable<Awaited<ReturnType<typeof findManagedTest>>>, audit: Audit) {
   const id = randomUUID();
   const sectionCopies = before.sections.map(section => ({ ...section, newId: randomUUID() }));
-  const create = db.insert(tests).values({ id, examId: before.examId, title: before.title.slice(0, 190) + " (copy)", mode: "MOCK", durationMinutes: before.durationMinutes, instructions: before.instructions, maxAttempts: before.maxAttempts, shuffleQuestions: before.shuffleQuestions, shuffleOptions: before.shuffleOptions, status: "DRAFT" });
+  const create = db.insert(tests).values({ id, examId: before.examId, category: before.category, title: before.title.slice(0, 190) + " (copy)", mode: "MOCK", durationMinutes: before.durationMinutes, instructions: before.instructions, maxAttempts: before.maxAttempts, shuffleQuestions: before.shuffleQuestions, shuffleOptions: before.shuffleOptions, status: "DRAFT" });
   const auditEntry = db.insert(auditLogs).values({ actorUserId: audit.actorUserId, action: "test.copied", entityType: "test", entityId: id, requestId: audit.requestId, after: { sourceTestId: before.id } });
   const assignments = sectionCopies.flatMap(section => section.questions.map(question => ({ testId: id, sectionId: section.newId, questionId: question.questionId, sortOrder: question.sortOrder })));
   if (!sectionCopies.length) await db.batch([create, auditEntry]);

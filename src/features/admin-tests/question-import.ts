@@ -10,12 +10,12 @@ type Actor = { userId: string; requestId: string };
 export async function importTestCsv(sectionId: string, topicId: string, csv: string, actor: Actor) {
   const parsed = parseQuestionCsv(csv, topicId);
   if (parsed.issues.length) return { status: "INVALID" as const, totalRows: parsed.totalRows, importedRows: 0, issues: parsed.issues };
-  return addTestQuestions(sectionId, parsed.questions, actor);
+  return addTestQuestions(sectionId, parsed.questions, actor, undefined, true);
 }
 
 // A single statement inserts the paper questions, answers and section assignments.
 // A rejected destination writes nothing; a database error rolls back every CTE.
-export async function addTestQuestions(sectionId: string, inputs: QuestionInput[], actor: Actor, replacesQuestionId?: string) {
+export async function addTestQuestions(sectionId: string, inputs: QuestionInput[], actor: Actor, replacesQuestionId?: string, csvImport = false) {
   if (replacesQuestionId && inputs.length !== 1) throw testStateConflict("Edit one question at a time.");
   if (!inputs.length) throw testStateConflict("Add at least one question.");
   const records = inputs.map((input, position) => ({
@@ -47,11 +47,16 @@ export async function addTestQuestions(sectionId: string, inputs: QuestionInput[
           where p.id = r."topicId" and s.exam_id = t.exam_id
         )
       )
+    ), import_job as (
+      insert into content_import_jobs (id, type, status, object_key, import_key, total_rows, valid_rows, invalid_rows, requested_by, completed_at)
+      select ${jobId}::uuid, ${replacesQuestionId ? 'TEST_QUESTION_EDIT' : 'TEST_QUESTIONS'}, 'IMPORTED', ${`inline-sha256:${fingerprint}`},
+        ${csvImport ? `test-csv:${sectionId}:${fingerprint}` : null}, ${inputs.length}, ${inputs.length}, 0, ${actor.userId}::uuid, now()
+      from destination on conflict (import_key) do nothing returning id
     ), new_questions as (
       insert into questions (id, topic_id, type, stem, explanation, marks, negative_marks, difficulty, status, created_by)
       select r.id, r."topicId", r.type::question_type, r.stem, r.explanation, r.marks,
         r."negativeMarks", r.difficulty, 'DRAFT', ${actor.userId}::uuid
-      from source r cross join destination returning id
+      from source r cross join destination cross join import_job returning id
     ), new_revisions as (
       insert into question_revisions (id, question_id, version, stem, explanation, marks, negative_marks, answer_config, created_by)
       select r."revisionId", r.id, 1, r.stem, r.explanation, r.marks, r."negativeMarks", r."answerConfig", ${actor.userId}::uuid
@@ -77,11 +82,6 @@ export async function addTestQuestions(sectionId: string, inputs: QuestionInput[
           coalesce((select max(sort_order) + 1 from test_questions where section_id = ${sectionId}::uuid), 0) + r.position
         from source r join new_questions q on q.id = r.id cross join destination d returning test_id
       `}
-    ), import_job as (
-      insert into content_import_jobs (id, type, status, object_key, total_rows, valid_rows, invalid_rows, requested_by, completed_at)
-      select ${jobId}::uuid, ${replacesQuestionId ? 'TEST_QUESTION_EDIT' : 'TEST_QUESTIONS'}, 'IMPORTED', ${`inline-sha256:${fingerprint}`},
-        ${inputs.length}, ${inputs.length}, 0, ${actor.userId}::uuid, now()
-      from destination where exists (select 1 from assignments) returning id
     )
     insert into audit_logs (actor_user_id, action, entity_type, entity_id, request_id, "after")
     select ${actor.userId}::uuid, ${replacesQuestionId ? 'test.question_edited' : 'test.questions_added'}, 'test', d.id::text, ${actor.requestId},
@@ -89,6 +89,6 @@ export async function addTestQuestions(sectionId: string, inputs: QuestionInput[
         (select jsonb_agg(id) from new_questions))
     from destination d cross join import_job j returning entity_id
   `);
-  if (!result.rows.length) throw testStateConflict(replacesQuestionId ? "This question or test changed, or the selected topic belongs to another exam. Return to the test and refresh before editing." : "Choose a topic from this exam and a section in a draft mock test. Refresh if the test changed.");
+  if (!result.rows.length) throw testStateConflict(replacesQuestionId ? "This question or test changed, or the selected topic belongs to another exam. Return to the test and refresh before editing." : csvImport ? "This question set may already be imported into this section. Refresh and check its questions. Otherwise select a topic from this exam and a draft test." : "Choose a topic from this exam and a section in a draft mock test. Refresh if the test changed.");
   return { id: jobId, status: "IMPORTED" as const, totalRows: inputs.length, importedRows: inputs.length, issues: [] };
 }

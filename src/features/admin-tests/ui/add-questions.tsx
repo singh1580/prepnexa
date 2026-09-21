@@ -45,7 +45,7 @@ export function AddTestQuestions({ sectionId, examId, topics }: { sectionId: str
     {mode === "manual" && <QuestionForm sectionId={sectionId} topics={topics} onCancel={() => setMode(null)} onAdded={() => { setMode(null); setSuccess("Question added to this section."); }} />}
     {mode === "csv" && <form className="admin-form" onSubmit={submit}><fieldset disabled={busy}>
       <label className="field"><span>Subject / topic for this set</span><select value={topicId} onChange={event => { setTopicId(event.target.value); setPreview(null); }}>{topics.map(topic => <option key={topic.id} value={topic.id}>{topic.subjectName} / {topic.topicName}</option>)}</select></label>
-      <p className="muted">All rows use the selected topic. Import another file for a different topic. No topic ID is needed in your spreadsheet.</p>
+      <p className="muted">All rows use the selected topic. Import another file for a different topic. No topic ID is needed in your spreadsheet. Repeating the same question set in this section is blocked; you can still reuse it in another section or test.</p>
       <button className="button secondary" type="button" onClick={download}>Download CSV template</button>
       <label className="field"><span>CSV file (up to 500 questions, 1 MB)</span><input type="file" accept=".csv,text/csv" onChange={async event => {
         const file = event.target.files?.[0]; if (!file) return; setPreview(null); setError("");

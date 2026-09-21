@@ -21,7 +21,7 @@ describe.skipIf(process.env.RUN_BUILDER_INTEGRATION !== "true")("test-centred qu
         db.insert(schema.exams).values([{ id: examId, slug: examId, name: "Builder QA", createdBy: actor.userId }, { id: otherExamId, slug: otherExamId, name: "Other exam", createdBy: actor.userId }]),
         db.insert(schema.subjects).values({ id: subjectId, examId, name: "Quantitative aptitude", sortOrder: 0 }),
         db.insert(schema.topics).values({ id: topicId, subjectId, name: "Percentages", sortOrder: 0 }),
-        db.insert(schema.tests).values([{ id: testId, examId, title: "Builder test", mode: "MOCK", durationMinutes: 30 }, { id: otherTestId, examId: otherExamId, title: "Other test", mode: "MOCK", durationMinutes: 30 }]),
+        db.insert(schema.tests).values([{ id: testId, examId, title: "Builder test", mode: "MOCK", category: "TOPIC_SET", durationMinutes: 30 }, { id: otherTestId, examId: otherExamId, title: "Other test", mode: "MOCK", durationMinutes: 30 }]),
         db.insert(schema.testSections).values([{ id: sectionId, testId, title: "Questions", sortOrder: 0 }, { id: otherSectionId, testId: otherTestId, title: "Questions", sortOrder: 0 }]),
       ]);
       const template = testQuestionCsvTemplate();
@@ -31,8 +31,15 @@ describe.skipIf(process.env.RUN_BUILDER_INTEGRATION !== "true")("test-centred qu
       let stored = await db.select().from(schema.questions).where(eq(schema.questions.createdBy, actor.userId));
       expect(stored).toHaveLength(0);
       const csv = template + "\n" + template.split("\n")[1].replace("What is 2 + 2?", "What is two plus two?");
-      expect(await importer.importTestCsv(sectionId, topicId, csv, actor)).toMatchObject({ status: "IMPORTED", importedRows: 2 });
+      const concurrent = await Promise.allSettled([
+        importer.importTestCsv(sectionId, topicId, csv, actor),
+        importer.importTestCsv(sectionId, topicId, csv, actor),
+      ]);
+      expect(concurrent.filter(result => result.status === "fulfilled")).toHaveLength(1);
+      expect(concurrent.filter(result => result.status === "rejected")).toHaveLength(1);
+      await expect(importer.importTestCsv(sectionId, topicId, csv.replaceAll("\n", "\r\n"), actor)).rejects.toMatchObject({ status: 409 });
       const paper = await repository.findManagedTest(testId);
+      expect(paper!.category).toBe("TOPIC_SET");
       expect(paper!.sections[0].questions.map(question => question.stem)).toEqual(["What is 2 + 2?", "What is two plus two?"]);
       expect(paper!.sections[0].questions.every(question => question.status === "DRAFT")).toBe(true);
       await repository.publishTestRecord(paper!, { actorUserId: actor.userId, requestId: actor.requestId });
@@ -46,6 +53,7 @@ describe.skipIf(process.env.RUN_BUILDER_INTEGRATION !== "true")("test-centred qu
       const copied = await repository.copyTestRecord(paper!, { actorUserId: actor.userId, requestId: actor.requestId });
       copiedTestIds.push(copied.id);
       const copy = await repository.findManagedTest(copied.id);
+      expect(copy!.category).toBe("TOPIC_SET");
       const oldQuestion = copy!.sections[0].questions[0];
       const { parseQuestionCsv } = await import("../../src/features/admin-imports/question-csv");
       const editedInput = { ...parseQuestionCsv(template, topicId).questions[0], stem: "What is four minus zero?" };
@@ -60,6 +68,21 @@ describe.skipIf(process.env.RUN_BUILDER_INTEGRATION !== "true")("test-centred qu
       expect(editedPaper!.sections[0].questions[0].questionId).not.toBe(oldQuestion.questionId);
       expect(originalPaper!.sections[0].questions[0]).toMatchObject({ questionId: oldQuestion.questionId, stem: "What is 2 + 2?", status: "PUBLISHED" });
       expect(allQuestions).toHaveLength(3);
+
+      // Reuse in another paper is allowed; scope is enforced across all its questions.
+      expect(await importer.importTestCsv(copy!.sections[0].id, topicId, csv, actor)).toMatchObject({ importedRows: 2 });
+      const secondTopicId = randomUUID(), secondSubjectId = randomUUID(), thirdTopicId = randomUUID();
+      await db.batch([
+        db.insert(schema.subjects).values({ id: secondSubjectId, examId, name: "Reasoning", sortOrder: 1 }),
+        db.insert(schema.topics).values([{ id: secondTopicId, subjectId, name: "Ratios", sortOrder: 1 }, { id: thirdTopicId, subjectId: secondSubjectId, name: "Logic", sortOrder: 0 }]),
+      ]);
+      await importer.importTestCsv(copy!.sections[0].id, secondTopicId, template, actor);
+      await expect(repository.publishTestRecord(copy!, { actorUserId: actor.userId, requestId: actor.requestId })).rejects.toMatchObject({ status: 409 });
+      await db.update(schema.tests).set({ category: "SUBJECT_TEST" }).where(eq(schema.tests.id, copied.id));
+      await importer.importTestCsv(copy!.sections[0].id, thirdTopicId, template, actor);
+      await expect(repository.publishTestRecord(copy!, { actorUserId: actor.userId, requestId: actor.requestId })).rejects.toMatchObject({ status: 409 });
+      await db.update(schema.tests).set({ category: "FULL_MOCK" }).where(eq(schema.tests.id, copied.id));
+      expect(await repository.publishTestRecord(copy!, { actorUserId: actor.userId, requestId: actor.requestId })).toMatchObject({ status: "PUBLISHED" });
 
       const catalog = await import("../../src/features/admin-catalog/repository");
       await db.batch([

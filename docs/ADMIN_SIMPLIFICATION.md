@@ -22,7 +22,7 @@ This delivery does not implement payment or student entitlements. Creating a pro
 
 ## Remaining stages
 
-1. Finish authoring usability: browser acceptance, richer subject/topic filters, import retry/idempotency, bulk content selection search, and durable test-category labels. Current on-demand papers use existing MOCK mode; topic/subject scope comes from their chosen questions.
+1. Finish authoring usability: browser acceptance, richer subject/topic filters and bulk content selection search. Current on-demand papers use existing MOCK mode; topic/subject scope comes from their chosen questions.
 2. Student test engine: free entry, server-authoritative start/deadline, question snapshots, autosave, resume, submission, scoring and result review. Coding execution is a separate capability, not implemented by TEXT questions.
 3. Materials: actual private upload, PDF/article/file organisation, previews and protected delivery. Existing PDF/file forms only hold metadata; they are not the final upload experience.
 4. Commerce: standalone resources, topic sets, subject packs, series and mixed bundles; coupons; replaceable payment adapter; verified webhook unlock; order/content/price/validity snapshots.
@@ -50,7 +50,7 @@ Research sources used in the approved planning review:
 
 ## Local acceptance after pulling this branch
 
-Keep the existing feature database settings and secrets in `.env.local`; do not commit that file. No new environment variable or migration is required for this batch.
+Keep the existing feature database settings and secrets in `.env.local`; do not commit that file. The category/import-guard follow-up requires migration `0006_test_categories_import_guard`; no new environment variables. Before starting against a different development database, run `node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate` with its direct `DATABASE_URL_UNPOOLED`.
 
 1. Open Admin → Exams → the desired exam → Manage this exam's tests.
 2. Create a draft test. Its Questions section is ready automatically.
@@ -58,3 +58,12 @@ Keep the existing feature database settings and secrets in `.env.local`; do not 
 4. Inspect answers/explanations and order; publish the complete paper.
 5. Open Store & materials. Select one published item for a standalone product, or several for a bundle; set each product's price and validity. The exam must be published for its content to appear in this selector.
 6. Report browser errors and usability gaps before this draft PR is merged.
+
+
+## Saved categories and repeat-import protection
+
+- Admin can create/edit a Full mock, Subject test or Topic set and filter the list by type. Copying preserves the type. Existing papers retain a null category, displayed as Uncategorised, until an admin chooses one; no historical content is silently reclassified.
+- Topic sets may publish only with one topic across all sections. Subject tests may contain multiple topics but only one subject. Full mocks may combine subjects. The publish statement reads the saved category rather than trusting an old page value. These are authoring categories within the existing on-demand MOCK mode, not a live-test feature or a promise of complete TCS coding simulation.
+- CSV imports reserve a unique section + parsed-content fingerprint in the same SQL statement as the questions and assignments. Retrying identical parsed content (including CSV line-ending changes) returns a conflict and inserts nothing. Different papers/sections and changed content remain importable. Manual additions and contextual edits do not use this import guard.
+- Protection applies to imports made after this change; old import records have no guard key. It does not detect partially overlapping or reordered CSV files. Removing individual imported questions does not clear the fingerprint: restore intentionally through manual entry or a changed question set.
+- Migration 0006 adds nullable test category and nullable unique import key; it removes no data. Browser acceptance remains pending.
