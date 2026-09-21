@@ -75,3 +75,8 @@ The current implementation is documented in ADMIN_SIMPLIFICATION.md; the histori
 This batch adds test-name/exam/status filters and a contextual Edit in this test screen. Saving creates an isolated question/answer copy and replaces that paper's assignment atomically, keeping its position and preserving the original for other papers. Missing/stale assignments, wrong-exam topics and non-draft papers reject edits.
 
 Saved full-mock/subject/topic categories and atomic same-section repeat-CSV protection are now implemented with migration 0006. Existing papers remain Uncategorised; publish enforces single-subject/topic content for the corresponding type. Remaining Admin work: richer subject/topic and bundle-content search, and combined browser acceptance. Then deliver student test execution/results, real protected materials/library, commerce/coupons, operations and release checks. No separate staff dashboards are introduced.
+
+
+## Selector usability follow-up
+
+Question entry and CSV authoring now offer subject filters and topic search. Bundle creation offers exam/type/title filters, selected-only review and selection preservation across searches; existing bundle links have searchable selectors. No new migration or env changes. Overall test-list curriculum filtering/pagination and browser acceptance remain; the student engine and commerce phases are not marked complete.

@@ -67,3 +67,11 @@ Keep the existing feature database settings and secrets in `.env.local`; do not 
 - CSV imports reserve a unique section + parsed-content fingerprint in the same SQL statement as the questions and assignments. Retrying identical parsed content (including CSV line-ending changes) returns a conflict and inserts nothing. Different papers/sections and changed content remain importable. Manual additions and contextual edits do not use this import guard.
 - Protection applies to imports made after this change; old import records have no guard key. It does not detect partially overlapping or reordered CSV files. Removing individual imported questions does not clear the fingerprint: restore intentionally through manual entry or a changed question set.
 - Migration 0006 adds nullable test category and nullable unique import key; it removes no data. Browser acceptance remains pending.
+
+
+## Authoring selectors and bundle search
+
+- Manual question creation/editing and in-test CSV import share an exam/subject/topic picker. Filters narrow choices without silently changing the selected topic; a selected item outside the filters stays visibly pinned. Changing the CSV topic invalidates its preview.
+- Product creation filters published content by title, exam and test/material type. Selected-only view and a count help review the bundle. Selections are kept independently of visible results and submitted through hidden fields, so changing filters does not remove selected items or submit duplicate checkbox values.
+- Existing draft bundles have searchable test/material link selectors (title/exam). Empty results cannot submit a missing item. Eligible material selectors now consistently require a published parent exam; available tests remain prepared MOCK papers.
+- No schema migration or environment changes in this selector batch. List pagination, subject/topic filtering of the overall test list, and combined browser acceptance are still pending. Existing permissions and mutation validation apply.

@@ -1,4 +1,5 @@
 "use client";
+import { TopicPicker } from "./topic-picker";
 import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Field } from "@/features/auth/ui/field";
@@ -24,6 +25,7 @@ export function QuestionForm({ topics, question, sectionId, onAdded, onCancel, r
   const [type, setType] = useState<QuestionType>(question?.type ?? "SINGLE_CHOICE");
   const [options, setOptions] = useState<Option[]>(question?.options.length ? question.options : blankOptions());
   const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  const [topicId, setTopicId] = useState(question?.topicId ?? topics[0]?.id ?? "");
   const answer = question?.answerConfig ?? {};
 
   function changeOption(index: number, patch: Partial<Option>) {
@@ -75,7 +77,7 @@ export function QuestionForm({ topics, question, sectionId, onAdded, onCancel, r
   const accepted = Array.isArray(answer.acceptedAnswers) ? answer.acceptedAnswers.join("\n") : "";
   return <form className="question-form panel" onSubmit={submit}>
     <fieldset disabled={busy}>
-      <div className="question-grid"><label className="field"><span>Topic</span><select name="topicId" defaultValue={question?.topicId} required>{topics.map((topic) => <option value={topic.id} key={topic.id}>{topic.examName} · {topic.subjectName} · {topic.topicName}</option>)}</select></label><label className="field"><span>Question type</span><select value={type} onChange={(event) => { setType(event.target.value as QuestionType); setOptions((current) => current.map((option) => ({ ...option, isCorrect: false }))); }}><option value="SINGLE_CHOICE">Single choice</option><option value="MULTIPLE_CHOICE">Multiple choice</option><option value="NUMERIC">Numeric answer</option><option value="TEXT">Text answer</option></select></label></div>
+      <div className="question-grid"><TopicPicker topics={topics} value={topicId} onChange={setTopicId} name="topicId" /><label className="field"><span>Question type</span><select value={type} onChange={(event) => { setType(event.target.value as QuestionType); setOptions((current) => current.map((option) => ({ ...option, isCorrect: false }))); }}><option value="SINGLE_CHOICE">Single choice</option><option value="MULTIPLE_CHOICE">Multiple choice</option><option value="NUMERIC">Numeric answer</option><option value="TEXT">Text answer</option></select></label></div>
       <label className="field"><span>Question</span><textarea name="stem" defaultValue={question?.stem} required minLength={10} maxLength={20000} rows={6} placeholder="Write a complete, unambiguous question." /></label>
       <div className="question-grid three"><Field id={`${formId}-question-marks`} label="Marks" name="marks" type="number" min={0.01} step="0.01" max={1000} defaultValue={question?.marks ?? "1"} required /><Field id={`${formId}-question-negative`} label="Negative marks" name="negativeMarks" type="number" min={0} step="0.01" max={1000} defaultValue={question?.negativeMarks ?? "0"} required /><label className="field"><span>Difficulty</span><select name="difficulty" defaultValue={question?.difficulty ?? "MEDIUM"}><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option></select></label></div>
       {(type === "SINGLE_CHOICE" || type === "MULTIPLE_CHOICE") && <section className="answer-builder"><div className="section-heading"><div><span className="eyebrow">ANSWER OPTIONS</span><h2>Mark the correct answer</h2><p className="muted">{type === "SINGLE_CHOICE" ? "Select one correct answer." : "Select every correct answer (at least two)."}</p></div>{options.length < 8 && <button className="button secondary" type="button" onClick={addOption}>Add option</button>}</div>{options.map((option, index) => <div className="option-editor" key={option.stableKey}><label className="correct-control"><input type={type === "SINGLE_CHOICE" ? "radio" : "checkbox"} name="correct-option" checked={option.isCorrect} onChange={(event) => changeOption(index, { isCorrect: event.target.checked })} /><span>{option.stableKey} · Correct</span></label><label className="field"><span>Option {option.stableKey}</span><input value={option.body} onChange={(event) => changeOption(index, { body: event.target.value })} required maxLength={4000} /></label>{options.length > 2 && <button className="text-button danger-text" type="button" onClick={() => removeOption(index)}>Remove</button>}</div>)}</section>}
