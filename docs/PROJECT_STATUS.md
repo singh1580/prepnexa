@@ -80,3 +80,5 @@ Saved full-mock/subject/topic categories and atomic same-section repeat-CSV prot
 ## Selector usability follow-up
 
 Question entry and CSV authoring now offer subject filters and topic search. Bundle creation offers exam/type/title filters, selected-only review and selection preservation across searches; existing bundle links have searchable selectors. No new migration or env changes. Overall test-list curriculum filtering/pagination and browser acceptance remain; the student engine and commerce phases are not marked complete.
+
+The Admin test list now performs exam/category/status/title/subject/topic filtering and 20-item pagination in Postgres. Subject/topic membership comes from assigned questions, with dependent selectors preventing stale combinations. Combined browser acceptance remains pending.

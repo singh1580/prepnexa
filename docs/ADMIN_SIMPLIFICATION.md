@@ -75,3 +75,11 @@ Keep the existing feature database settings and secrets in `.env.local`; do not 
 - Product creation filters published content by title, exam and test/material type. Selected-only view and a count help review the bundle. Selections are kept independently of visible results and submitted through hidden fields, so changing filters does not remove selected items or submit duplicate checkbox values.
 - Existing draft bundles have searchable test/material link selectors (title/exam). Empty results cannot submit a missing item. Eligible material selectors now consistently require a published parent exam; available tests remain prepared MOCK papers.
 - No schema migration or environment changes in this selector batch. List pagination, subject/topic filtering of the overall test list, and combined browser acceptance are still pending. Existing permissions and mutation validation apply.
+
+## Test-list curriculum filters and pagination
+
+- The Admin test list now filters by the subject/topic of questions actually assigned to each paper, alongside exam, saved paper type, status and title. Invalid URL identifiers are ignored before reaching the database.
+- Exam and subject selectors are dependent: changing the exam clears subject/topic, and changing the subject clears topic. This prevents hidden stale values from producing confusing empty results.
+- Filtering, counting and pagination run in Postgres rather than loading every test into the page. Results use a stable updated-time/id order, 20 papers per page, and Previous/Next links preserve active filters.
+- A read-only check against `phase-5-content` verified the paginated query and taxonomy retrieval. The branch currently had no assigned question row available for a positive curriculum-filter assertion, so that positive browser case remains part of combined acceptance.
+- No schema migration or environment change is required for this batch.

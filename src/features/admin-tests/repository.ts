@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, countDistinct, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, count, countDistinct, desc, eq, ilike, isNull, ne, sql } from "drizzle-orm";
 import { testStateConflict } from "./errors";
 import { db } from "@/db/client";
 import { auditLogs, products, productTests, exams, questions, subjects, testQuestions, testSchedules, testSections, tests, topics } from "@/db/schema";
@@ -10,10 +10,45 @@ export type SectionInput = { title: string; durationMinutes: number | null; sort
 export type ScheduleInput = { startsAt: string; endsAt: string; lateJoinMinutes: number; resultReleaseAt: string | null; rankingEnabled: boolean; cohortKey: string };
 
 export const listTestExams = () => db.select({ id: exams.id, name: exams.name }).from(exams).where(ne(exams.status, "ARCHIVED")).orderBy(asc(exams.name));
-export function listManagedTests() {
-  return db.select({ id: tests.id, examId: tests.examId, title: tests.title, mode: tests.mode, category: tests.category, status: tests.status, durationMinutes: tests.durationMinutes, examName: exams.name, sectionCount: countDistinct(testSections.id), questionCount: countDistinct(testQuestions.questionId) }).from(tests)
-    .innerJoin(exams, eq(tests.examId, exams.id)).leftJoin(testSections, eq(testSections.testId, tests.id)).leftJoin(testQuestions, eq(testQuestions.testId, tests.id))
-    .groupBy(tests.id, exams.name).orderBy(desc(tests.updatedAt));
+export type ManagedTestFilters = {
+  examId?: string; subjectId?: string; topicId?: string; query?: string;
+  category?: "FULL_MOCK" | "SUBJECT_TEST" | "TOPIC_SET" | "UNCLASSIFIED";
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED"; page: number; pageSize: number;
+};
+export async function listManagedTests(filters: ManagedTestFilters) {
+  const curriculum = filters.topicId || filters.subjectId ? sql`exists (
+    select 1 from test_questions tq
+    join questions q on q.id = tq.question_id
+    join topics tp on tp.id = q.topic_id
+    where tq.test_id = ${tests.id}
+      and (${filters.topicId ?? null}::uuid is null or tp.id = ${filters.topicId ?? null}::uuid)
+      and (${filters.subjectId ?? null}::uuid is null or tp.subject_id = ${filters.subjectId ?? null}::uuid)
+  )` : undefined;
+  const where = and(
+    eq(tests.mode, "MOCK"),
+    filters.examId ? eq(tests.examId, filters.examId) : undefined,
+    filters.status ? eq(tests.status, filters.status) : undefined,
+    filters.category === "UNCLASSIFIED" ? isNull(tests.category) : filters.category ? eq(tests.category, filters.category) : undefined,
+    filters.query ? ilike(tests.title, `%${filters.query}%`) : undefined,
+    curriculum,
+  );
+  const offset = (filters.page - 1) * filters.pageSize;
+  const [items, totals] = await db.batch([
+    db.select({ id: tests.id, examId: tests.examId, title: tests.title, mode: tests.mode, category: tests.category, status: tests.status, durationMinutes: tests.durationMinutes, examName: exams.name, sectionCount: countDistinct(testSections.id), questionCount: countDistinct(testQuestions.questionId) }).from(tests)
+      .innerJoin(exams, eq(tests.examId, exams.id)).leftJoin(testSections, eq(testSections.testId, tests.id)).leftJoin(testQuestions, eq(testQuestions.testId, tests.id))
+      .where(where).groupBy(tests.id, exams.name).orderBy(desc(tests.updatedAt), desc(tests.id)).limit(filters.pageSize).offset(offset),
+    db.select({ total: count() }).from(tests).innerJoin(exams, eq(tests.examId, exams.id)).where(where),
+  ]);
+  const total = totals[0]?.total ?? 0;
+  return { items, total, page: filters.page, pageSize: filters.pageSize, totalPages: Math.max(1, Math.ceil(total / filters.pageSize)) };
+}
+
+export async function listTestFilterTaxonomy() {
+  const [subjectRows, topicRows] = await Promise.all([
+    db.select({ id: subjects.id, name: subjects.name, examId: exams.id, examName: exams.name }).from(subjects).innerJoin(exams, eq(subjects.examId, exams.id)).where(ne(exams.status, "ARCHIVED")).orderBy(asc(exams.name), asc(subjects.name)),
+    db.select({ id: topics.id, name: topics.name, subjectId: subjects.id, subjectName: subjects.name, examId: exams.id, examName: exams.name }).from(topics).innerJoin(subjects, eq(topics.subjectId, subjects.id)).innerJoin(exams, eq(subjects.examId, exams.id)).where(ne(exams.status, "ARCHIVED")).orderBy(asc(exams.name), asc(subjects.name), asc(topics.name)),
+  ]);
+  return { subjects: subjectRows, topics: topicRows };
 }
 export async function findManagedTest(id: string) {
   const [test] = await db.select({ id: tests.id, examId: tests.examId, title: tests.title, mode: tests.mode, category: tests.category, durationMinutes: tests.durationMinutes, instructions: tests.instructions, maxAttempts: tests.maxAttempts, shuffleQuestions: tests.shuffleQuestions, shuffleOptions: tests.shuffleOptions, status: tests.status, examName: exams.name }).from(tests).innerJoin(exams, eq(tests.examId, exams.id)).where(eq(tests.id, id)).limit(1);

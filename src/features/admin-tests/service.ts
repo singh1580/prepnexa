@@ -2,12 +2,13 @@ import { logger } from "@/lib/logger";
 import { contentConflict, isUniqueViolation } from "@/features/admin-content/errors";
 import { findExam } from "@/features/admin-content/repository";
 import { testNotFound, testStateConflict } from "./errors";
-import { patchSection, replaceQuestionOrder, testHasPublishedPackage, archiveTestRecord, copyTestRecord, removeDraftItem, findManagedTest, findPublishedQuestionForExam, findSection, findTest, insertAssignment, insertSection, insertTest, listManagedTests, listTestExams, patchTest, publishTestRecord, type SectionInput, type TestInput } from "./repository";
+import { patchSection, replaceQuestionOrder, testHasPublishedPackage, archiveTestRecord, copyTestRecord, removeDraftItem, findManagedTest, findPublishedQuestionForExam, findSection, findTest, insertAssignment, insertSection, insertTest, listManagedTests, listTestExams, listTestFilterTaxonomy, patchTest, publishTestRecord, type ManagedTestFilters, type SectionInput, type TestInput } from "./repository";
 
 type Actor = { userId: string; requestId: string };
 async function write<T>(action: string, actor: Actor, operation: () => Promise<T>) { try { const result = await operation(); logger.info({ requestId: actor.requestId, module: "admin-tests", action, actorUserId: actor.userId }, "Admin test mutation completed"); return result; } catch (error) { if (isUniqueViolation(error)) throw contentConflict("This item already exists or uses the same display order."); throw error; } }
 export const getTestExams = () => listTestExams();
-export const getManagedTests = () => listManagedTests();
+export const getManagedTests = (filters: ManagedTestFilters) => listManagedTests(filters);
+export const getTestFilterTaxonomy = () => listTestFilterTaxonomy();
 export async function getManagedTest(id: string) { const test = await findManagedTest(id); if (!test) throw testNotFound("Test"); return test; }
 export async function createTest(input: TestInput, actor: Actor) { if (input.mode !== "MOCK") throw testStateConflict("Only mock tests are currently available."); if (!await findExam(input.examId)) throw testNotFound("Test"); return write("test_create", actor, () => insertTest(input, { actorUserId: actor.userId, requestId: actor.requestId })); }
 export async function updateTest(id: string, input: TestInput, actor: Actor) { if (input.mode !== "MOCK") throw testStateConflict("Only mock tests are currently available."); const before = await findTest(id); if (!before) throw testNotFound("Test"); if (before.status !== "DRAFT") throw testStateConflict("Only draft tests can be edited."); if (!await findExam(input.examId)) throw testNotFound("Test"); if (before.examId !== input.examId) { const detail = await getManagedTest(id); if (detail.sections.some((section) => section.questions.length)) throw testStateConflict("Remove assigned questions before changing the exam."); } return write("test_update", actor, () => patchTest(before, input, { actorUserId: actor.userId, requestId: actor.requestId })); }
