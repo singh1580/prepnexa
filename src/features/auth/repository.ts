@@ -80,8 +80,22 @@ export async function touchLastLogin(userId: string) {
   await db.update(users).set({ lastLoginAt: new Date(), updatedAt: new Date() }).where(eq(users.id, userId));
 }
 
-export async function createSession(input: typeof sessions.$inferInsert) {
-  await db.insert(sessions).values(input);
+export async function createSession(input: typeof sessions.$inferInsert, maxActiveSessions: number) {
+  const sessionId = input.id ?? randomUUID();
+  await db.execute(sql`
+    with user_lock as (
+      select pg_advisory_xact_lock(hashtext(${input.userId}::text))
+    ), sessions_to_revoke as (
+      select s.id from ${sessions} s cross join user_lock
+      where s.user_id=${input.userId} and s.revoked_at is null and s.expires_at > now()
+      order by s.created_at desc offset ${Math.max(0, maxActiveSessions - 1)}
+    ), revoked as (
+      update ${sessions} set revoked_at=now() where id in (select id from sessions_to_revoke) returning id
+    )
+    insert into ${sessions} (id,user_id,token_hash,ip_hash,user_agent,expires_at,created_at)
+    select ${sessionId}::uuid,${input.userId},${input.tokenHash},${input.ipHash ?? null},${input.userAgent ?? null},${input.expiresAt},now()
+    from user_lock
+  `);
 }
 
 export function findActiveSession(tokenHash: string) {

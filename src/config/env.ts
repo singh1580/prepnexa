@@ -5,6 +5,7 @@ const schema = z.object({
   DATABASE_URL: z.string().startsWith("postgresql://"), DATABASE_URL_UNPOOLED: z.string().startsWith("postgresql://"),
   AUTH_SECRET: z.string().min(32), PASSWORD_PEPPER: z.string().min(16),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+  MAX_ACTIVE_SESSIONS: z.coerce.number().int().min(1).max(10).default(2),
   EMAIL_VERIFICATION_TTL_HOURS: z.coerce.number().int().min(1).max(168).default(24),
   PASSWORD_RESET_TTL_MINUTES: z.coerce.number().int().min(5).max(120).default(30),
   LOGIN_MAX_ATTEMPTS: z.coerce.number().int().min(3).max(20).default(5),

@@ -5,6 +5,7 @@ import { checkoutConflict, commerceNotFound, couponUnavailable, invalidCommerceS
 import { evaluateCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProduct, findManagedCoupon, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findStudentPaymentAttempt, insertCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCouponRecord } from "./repository";
 import { getPaymentProvider, type VerifiedPaymentEvent } from "./providers";
 import type { CheckoutInput, CouponInput, RefundInput } from "./validation";
+import { queueStudentNotification } from "@/features/operations/service";
 
 type Actor = { userId: string; requestId: string };
 type StudentActor = Actor & { email: string; name: string };
@@ -76,6 +77,7 @@ export async function previewCheckout(productId: string, couponCode: string | nu
 async function startProviderCheckout(order: NonNullable<Awaited<ReturnType<typeof findOrderByIdempotency>>>, student: StudentActor) {
   if (order.totalPaise <= 0) {
     await finalizeFreeOrder(order.id, student.userId, student.requestId);
+    await queueStudentNotification({ userId: student.userId, type: "PURCHASE_CONFIRMED", deduplicationKey: `order-paid:${order.id}`, title: "Access is ready", body: "Your order is complete and the included tests and materials are available.", requestId: student.requestId });
     return { ...order, status: "PAID", paymentRequired: false, checkoutReference: null };
   }
   if (order.checkoutReference && order.paymentAttemptId) return { ...order, paymentRequired: true };
@@ -117,6 +119,7 @@ export async function handlePaymentWebhook(providerKey: string, rawBody: string,
   if (!target || target.amountPaise !== event.amountPaise || target.currency !== event.currency) throw paymentVerificationFailed();
   const result = await processPaymentEvent(provider.key, event, requestId);
   if (!result) throw invalidCommerceState("The payment event could not be applied to this order.");
+  if (!result.duplicate) await queueStudentNotification({ userId: target.userId, type: event.type === "PAYMENT_CAPTURED" ? "PURCHASE_CONFIRMED" : "PAYMENT_FAILED", deduplicationKey: `${event.type === "PAYMENT_CAPTURED" ? "order-paid" : "order-failed"}:${result.orderId}`, title: event.type === "PAYMENT_CAPTURED" ? "Payment confirmed" : "Payment failed", body: event.type === "PAYMENT_CAPTURED" ? "Your payment is confirmed and purchased access is active." : "Your payment was not completed. No access was granted.", requestId });
   logger.info({ requestId, module: "commerce", action: event.type.toLowerCase(), provider: provider.key, orderId: result.orderId, duplicate: result.duplicate }, "Payment webhook processed");
   return result;
 }
@@ -128,6 +131,7 @@ export async function confirmMockPayment(attemptId: string, student: StudentActo
   const event: VerifiedPaymentEvent = { eventId: `mock-capture:${attempt.attemptId}`, type: "PAYMENT_CAPTURED", providerOrderId: attempt.providerOrderId, providerPaymentId: `mock_payment_${attempt.attemptId}`, amountPaise: attempt.amountPaise, currency: attempt.currency, occurredAt: new Date(), payload: { source: "authenticated-mock-confirmation", attemptId: attempt.attemptId } };
   const result = await processPaymentEvent("mock", event, student.requestId);
   if (!result) throw invalidCommerceState("The test payment could not be completed.");
+  if (!result.duplicate) await queueStudentNotification({ userId: student.userId, type: "PURCHASE_CONFIRMED", deduplicationKey: `order-paid:${result.orderId}`, title: "Payment confirmed", body: "Your payment is confirmed and purchased access is active.", requestId: student.requestId });
   return result;
 }
 

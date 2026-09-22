@@ -2,6 +2,7 @@ import { logger } from "@/lib/logger";
 import { findAttemptForScoring, findPendingStudentAttempts, findResultIdByAttempt, findStudentResult, listStudentResults, persistInitialResult } from "./repository";
 import { resultNotFound, resultNotReady } from "./errors";
 import { scoreAttempt } from "./scoring";
+import { queueStudentNotification } from "@/features/operations/service";
 
 export async function evaluateAttempt(attemptId: string, userId: string, requestId: string) {
   const existing = await findResultIdByAttempt(attemptId, userId);
@@ -18,6 +19,7 @@ export async function evaluateAttempt(attemptId: string, userId: string, request
     sections: scoring.sections, topics: scoring.topics });
   const id = created?.id ?? (await findResultIdByAttempt(attemptId, userId))?.id;
   if (!id) throw resultNotReady();
+  await queueStudentNotification({ userId, type: "RESULT_PUBLISHED", deduplicationKey: `result-published:${id}`, title: "Your result is ready", body: "Your mock-test result and answer review are now available.", requestId });
   logger.info({ requestId, module: "student-results", action: "result_publish", actorUserId: userId, attemptId, resultId: id }, "Student result published");
   return { id };
 }

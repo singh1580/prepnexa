@@ -25,8 +25,8 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 | Coupons — Phase 8 | Admin create/edit/enable controls, validation, schedules, limits, product targeting and atomic reservations implemented | Final browser acceptance with the consolidated platform |
 | Orders/payments — Phase 8 | Server-priced checkout, mock adapter, verified idempotent capture, access, history and refunds implemented | Select a production gateway; provider invoice/reconciliation and production acceptance |
 | Protected materials — Phase 9 | Admin private upload/version/publish, Student library, signed delivery, current entitlement/revocation checks, checksum, PDF watermark and audit log implemented | Select/configure a production S3-compatible provider; consolidated browser acceptance |
-| Notifications/support — Phase 10 | Auth email works; operational tables exist | Purchase/test/result emails, retry delivery, in-app notifications, tickets/replies |
-| Student/admin operations — Phase 10 | Basic account/content views | Student management, orders/refunds/coupons/support/settings in same dashboard |
+| Notifications/support — Phase 10 | In-app events, retryable Resend delivery, inbox, tickets and replies implemented | Production Resend configuration and consolidated browser acceptance |
+| Student/admin operations — Phase 10 | Student summaries/devices/support plus permission-gated Admin students/support/delivery/activity and metrics implemented; CONTENT_ADMIN seed extended for the single owner Admin | Run target-environment seed and complete Phase 11 acceptance |
 | Release — Phase 11 | Not accepted | E2E, accessibility, security, performance, monitoring, backup/restore and beta sign-off |
 
 ## Changes in this update
@@ -100,3 +100,7 @@ See [PHASE_8_SCOPE.md](PHASE_8_SCOPE.md). Students can apply coupons on publishe
 ## Phase 9 protected-material checkpoint
 
 See [PHASE_9_SCOPE.md](PHASE_9_SCOPE.md). The manual private-object-key placeholder is replaced by validated Admin uploads, immutable file versions and automatic checksum/metadata capture. Students have one `My library` surface for entitled/free articles, videos, PDFs and files. File delivery uses short-lived scoped tokens, rechecks access on every request, verifies stored bytes, watermarks PDFs and writes audit records. The isolated Neon `phase-9-materials` branch passed paid access, revoke, free access, constraints and cleanup. The production storage provider and consolidated browser acceptance remain deferred; local storage cannot run in production.
+
+## Phase 10 operations checkpoint
+
+See [PHASE_10_SCOPE.md](PHASE_10_SCOPE.md). Student dashboard summaries, two-device enforcement, active-session revocation, in-app notifications and owned support conversations are implemented. The same Admin workspace now exposes permission-gated student operations, support queue/replies, notification delivery/retry, audit activity and operational metrics. Purchase/payment/result/suspicious-login/support events queue idempotent in-app and email delivery; delivery failure is recorded without rolling back the primary operation. The existing `CONTENT_ADMIN` seed is explicitly extended for the single owner Admin while reviewer/support roles remain restricted. Migration `0011_lowly_lady_vermin.sql` and its indexes were applied and inspected only on isolated Neon branch `phase-10-operations`. Production/main remain untouched. Running the seed in the target environment, real provider configuration and consolidated browser acceptance remain explicit deployment/release work.

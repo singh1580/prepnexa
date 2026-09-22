@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     const result = await login(input, {
       ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
       userAgent: request.headers.get("user-agent") ?? undefined,
+      requestId,
     });
     if (result.mfaRequired) return successResponse({ mfaRequired: true, mfaSetupRequired: result.mfaSetupRequired, challengeToken: result.challengeToken, expiresAt: result.expiresAt.toISOString(), user: result.user }, requestId);
     await setSessionCookie(result.token, result.expiresAt);

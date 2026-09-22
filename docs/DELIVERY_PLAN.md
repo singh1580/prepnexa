@@ -62,3 +62,7 @@ See [PHASE_8_SCOPE.md](PHASE_8_SCOPE.md). The implementation covers single-produ
 ## Phase 9 protected-material delivery
 
 See [PHASE_9_SCOPE.md](PHASE_9_SCOPE.md). Admin now uploads private PDFs/study files without handling object keys, versions them and attaches published material to existing products/bundles. Students receive an entitlement-filtered library, short-lived signed access, fresh revocation checks, checksummed delivery, PDF watermarking and access logs. Storage is provider-neutral because the current Neon region cannot enable Neon Object Storage beta.
+
+## Phase 10 operational delivery
+
+See [PHASE_10_SCOPE.md](PHASE_10_SCOPE.md). Student summaries, active-device controls, in-app notifications and support are implemented in the Student workspace. Permission-gated student management, support, delivery retry, activity and operational metrics stay in the single Admin workspace. Owner-wide grants and production provider configuration remain explicit deployment actions.

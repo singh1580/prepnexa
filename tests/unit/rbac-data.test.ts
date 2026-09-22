@@ -19,4 +19,11 @@ describe("RBAC seed data", () => {
     expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).not.toContain("question.create");
     expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).not.toContain("question.publish");
   });
+
+  it("keeps the existing CONTENT_ADMIN as the single operational Admin", () => {
+    expect(ROLE_PERMISSION_KEYS.CONTENT_ADMIN).toEqual(expect.arrayContaining(["exam.manage", "product.manage", "user.read.support", "support.manage.all", "notification.manage", "order.read.all", "refund.manage", "coupon.manage", "audit.read", "system.manage"]));
+    expect(ROLE_PERMISSION_KEYS.CONTENT_ADMIN).not.toContain("role.manage");
+    expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).not.toContain("system.manage");
+    expect(ROLE_PERMISSION_KEYS.SUPPORT_AGENT).not.toContain("order.read.all");
+  });
 });
