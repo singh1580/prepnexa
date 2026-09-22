@@ -1,0 +1,9 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { WorkspaceShell } from "@/components/workspace-shell";
+import { requireWorkspace } from "@/features/auth/page-access";
+import { getStudentOrders } from "@/features/commerce/service";
+import { formatMoney } from "@/features/commerce/pricing";
+
+export const metadata={title:"My orders"};
+export default async function Page(){const auth=await requireWorkspace();if(auth.admin)redirect("/admin");const orders=await getStudentOrders(auth.user.id);return <WorkspaceShell admin={false} name={auth.user.name} section="orders"><header className="page-heading"><span className="eyebrow">PURCHASES</span><h1>My orders and access</h1><p>Payment status, discounts and purchased access stay together in one place.</p></header>{orders.length?<div className="managed-list">{orders.map(order=>{const value=order as {id:string;status:string;totalPaise:number;discountPaise:number;currency:string;couponCode:string|null;createdAt:Date;items:{name:string;accessDays:number}[]};return <article className="panel order-card" key={value.id}><div><span className="eyebrow">{new Date(value.createdAt).toLocaleString("en-IN")}</span><h2>{value.items.map(item=>item.name).join(", ")}</h2><p>{value.items.map(item=>`${item.accessDays} days access`).join(" · ")}</p>{value.couponCode?<small>Coupon {value.couponCode} saved {formatMoney(value.discountPaise,value.currency)}</small>:null}</div><div><span className={`status-pill content-${value.status.toLowerCase()}`}>{value.status}</span><strong>{formatMoney(value.totalPaise,value.currency)}</strong></div></article>})}</div>:<section className="panel empty-state"><h2>No orders yet</h2><p>Choose a published package to start your preparation.</p><Link className="button" href="/packages">Browse packages</Link></section>}</WorkspaceShell>}

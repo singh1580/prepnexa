@@ -54,3 +54,7 @@ See [PHASE_6_SCOPE.md](PHASE_6_SCOPE.md). The current gate covers server-authori
 ## Phase 7 scoring delivery
 
 See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). On-demand mocks publish immediate snapshot-based results with negative marking, accuracy, time, section/topic performance and protected answer explanations. Rank/percentile is shown only when a real ranking cohort is enabled; current live/cohort functionality remains deferred. Consolidated browser/visual acceptance remains at the final platform gate.
+
+## Phase 8 commerce delivery
+
+See [PHASE_8_SCOPE.md](PHASE_8_SCOPE.md). The implementation covers single-product checkout, server-side pricing, coupon reservations/limits, free orders, provider-neutral attempts, verified idempotent capture, entitlements, order history and Admin refunds/coupon controls. The mock adapter is non-production only. A real gateway remains an explicit deployment decision and does not require changing core order/access rules.

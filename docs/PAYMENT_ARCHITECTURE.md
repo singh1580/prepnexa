@@ -10,7 +10,7 @@ Webhook URL -> Adapter verification -> Normalized event -> Payment service
 Payment service -> Order/payment/refund repositories -> Entitlement service
 ```
 
-Required provider operations are create checkout, verify client callback when applicable, verify webhook, fetch payment status, and request refund. Provider adapters translate external identifiers and statuses into internal values.
+The Phase 8 provider contract requires create checkout, verify webhook and request refund. Provider adapters translate external identifiers and statuses into internal values. A future adapter may add status-fetch/reconciliation internally without leaking provider-specific states into application services.
 
 ## Internal guarantees
 
@@ -21,6 +21,7 @@ Required provider operations are create checkout, verify client callback when ap
 - Existing transactions continue using their original adapter after the default provider changes.
 - Secrets are server-only and validated conditionally for the selected adapter.
 - A mock adapter supports deterministic local and automated testing.
+- The mock adapter and authenticated mock-confirmation route refuse to run in production.
 
 ## Forbidden coupling
 
