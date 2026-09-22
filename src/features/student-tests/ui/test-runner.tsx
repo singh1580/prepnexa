@@ -25,6 +25,7 @@ export function TestRunner({ attempt }: { attempt: Attempt }) {
   const queues = useRef(new Map<string, Promise<void>>()); const dirtyAnswers = useRef(new Set<string>()); const submitRef = useRef<(automatic?: boolean) => Promise<void>>(async () => {});
   const [current, setCurrent] = useState(0); const [saving, setSaving] = useState(0); const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(attempt.status !== "IN_PROGRESS"); const [submitting, setSubmitting] = useState(false);
+  const [resultId, setResultId] = useState<string | null>(null);
   const [remaining, setRemaining] = useState(attempt.remainingSeconds);
   const question = attempt.questions[current];
   const section = attempt.sections.find(item => item.id === question?.sectionId);
@@ -67,9 +68,9 @@ export function TestRunner({ attempt }: { attempt: Attempt }) {
     if (!automatic && pending.some(item => item.status === "rejected")) { setError("One or more answers were not saved. Check your connection and try again."); setSubmitting(false); return; }
     try {
       const response = await fetch(`/api/attempts/${attempt.id}/submit`, { method: "POST", credentials: "same-origin" });
-      const payload = await response.json() as ApiSuccess<{ status: string }> | ApiFailure;
+      const payload = await response.json() as ApiSuccess<{ status: string; resultId: string }> | ApiFailure;
       if (!response.ok || "error" in payload) throw new Error("error" in payload ? payload.error.message : "Couldn't submit the test.");
-      setSubmitted(true); setRemaining(0);
+      setResultId(payload.data.resultId); setSubmitted(true); setRemaining(0);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Couldn't submit the test."); }
     finally { setSubmitting(false); }
   }
@@ -90,7 +91,7 @@ export function TestRunner({ attempt }: { attempt: Attempt }) {
     window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn);
   }, [submitted]);
 
-  if (submitted) return <section className="panel attempt-complete"><div className="large-icon" aria-hidden="true">✓</div><span className="eyebrow">ATTEMPT SUBMITTED</span><h1>Your responses are safe</h1><p>Scoring and detailed result review will appear in the Results module.</p><Link className="button" href="/dashboard/tests">Back to my tests</Link></section>;
+  if (submitted) return <section className="panel attempt-complete"><div className="large-icon" aria-hidden="true">✓</div><span className="eyebrow">ATTEMPT SUBMITTED</span><h1>Your result is ready</h1><p>Your score, topic analysis and answer explanations are available now.</p><Link className="button" href={resultId ? `/results/${resultId}` : "/dashboard/results"}>View result</Link></section>;
   if (!question) return <section className="panel empty-state"><h1>This paper has no questions</h1><Link className="button" href="/dashboard/tests">Back to my tests</Link></section>;
   const answer = answers[question.id];
   return <div className="attempt-runner">

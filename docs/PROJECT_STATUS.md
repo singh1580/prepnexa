@@ -21,7 +21,7 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 | Materials | Article/file metadata, version 1 and direct publish | Draft edit, HTTPS video validation, copy and guarded archive implemented. Actual PDF/file upload, reader/download and access protection remain Phase 9 |
 | CSV | Parsing, row errors and atomic draft import code; invalid job observed | CSV file picker implemented; valid import/rollback live acceptance required |
 | Student test engine — Phase 6 | On-demand student library, instructions, immutable snapshots, server deadline, responsive runner, versioned autosave, resume and submission implemented | Final browser visual acceptance is deferred; scoring/results remain Phase 7 |
-| Results — Phase 7 | Schema/design only | Scoring, release, explanations, breakdowns, rank/percentile, corrections |
+| Results — Phase 7 | Snapshot-based scoring, immediate mock result publication, section/topic breakdowns and protected answer review implemented and QA-tested | Cohort rank/percentile stays deferred with live tests and manual corrections stay in Admin operations |
 | Coupons — Phase 8 | Coupon/product/redemption schema and permission only | Admin controls, validation, limits, checkout, concurrent redemption |
 | Orders/payments — Phase 8 | Schema/provider-neutral design only | Checkout, adapter, mock integration, verified webhooks, access, refunds, invoices, reconciliation |
 | Protected materials — Phase 9 | Schema/policy only | Private storage, authorized signed access, expiry/revocation, watermarking/access logs |
@@ -88,3 +88,7 @@ The Admin test list now performs exam/category/status/title/subject/topic filter
 The on-demand student execution path is implemented. Students can discover accessible published papers, inspect instructions, start or resume one active attempt, answer supported question types with versioned autosave, mark questions for review and submit manually or at the server deadline. Attempt content is copied from published revisions into immutable snapshots, and active APIs do not expose solutions. Migration `0007_gray_karen_page` supplies snapshot metadata, answer versions and the database-enforced one-active-attempt rule.
 
 See [PHASE_6_SCOPE.md](PHASE_6_SCOPE.md) for the exact security, migration and verification boundary. The isolated QA integration passed the complete start/resume/autosave/submit/lock flow and removed its synthetic fixtures. Lint, TypeScript, 55 unit tests and the 42-page production build passed. Phase 7 scoring/result review is not folded into this phase. The owner has deferred consolidated local browser/visual acceptance until the remaining platform phases are complete.
+
+## Phase 7 scoring checkpoint
+
+See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). Submitted mock attempts now evaluate from immutable snapshots and publish an owner-scoped result with exact-choice, numeric-tolerance and text-answer rules, negative marks, totals, accuracy, time, section/topic breakdowns and post-submit explanations. The isolated Neon flow passed submit, result publication, score/explanation review, locking and cleanup. Lint, TypeScript, 59 unit tests and the 43-page production build pass. Ranking is not fabricated for on-demand papers without an enabled cohort; the existing schedule/rank snapshot model remains for deferred live testing.

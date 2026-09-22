@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 
 describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt execution", () => {
   it("starts once, snapshots safely, resumes, autosaves with versions, and locks on submit", async () => {
-    const [{ db }, schema, { eq }, service] = await Promise.all([
-      import("../../src/db/client"), import("../../src/db/schema"), import("drizzle-orm"), import("../../src/features/student-tests/service"),
+    const [{ db }, schema, { eq }, service, resultsService] = await Promise.all([
+      import("../../src/db/client"), import("../../src/db/schema"), import("drizzle-orm"), import("../../src/features/student-tests/service"), import("../../src/features/student-results/service"),
     ]);
     const userId = randomUUID(), examId = randomUUID(), subjectId = randomUUID(), topicId = randomUUID();
     const questionId = randomUUID(), revisionId = randomUUID(), testId = randomUUID(), secondTestId = randomUUID();
@@ -49,12 +49,19 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
       expect(attempt.questions[0].options[0]).not.toHaveProperty("isCorrect");
       await expect(service.startOrResumeAttempt(secondTestId, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CONFLICT", status: 409 });
 
-      const selectedOptionIds = [attempt.questions[0].options[0].id];
+      const correctOption = attempt.questions[0].options.find(option => option.body === "5");
+      expect(correctOption).toBeDefined();
+      const selectedOptionIds = [correctOption!.id];
       expect(await service.saveAttemptAnswer(started.id, attempt.questions[0].id, { selectedOptionIds, textAnswer: null, numericAnswer: null, markedForReview: true, version: 0 }, { userId, requestId })).toMatchObject({ version: 1 });
       await expect(service.saveAttemptAnswer(started.id, attempt.questions[0].id, { selectedOptionIds, textAnswer: null, numericAnswer: null, markedForReview: false, version: 0 }, { userId, requestId })).rejects.toMatchObject({ code: "STALE_ANSWER", status: 409 });
       await expect(service.saveAttemptAnswer(started.id, attempt.questions[0].id, { selectedOptionIds: [randomUUID()], textAnswer: null, numericAnswer: null, markedForReview: false, version: 1 }, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CONFLICT", status: 409 });
 
-      expect(await service.submitAttempt(started.id, { userId, requestId })).toMatchObject({ id: started.id, status: "SUBMITTED" });
+      const submitted = await service.submitAttempt(started.id, { userId, requestId });
+      expect(submitted).toMatchObject({ id: started.id, status: "SUBMITTED", resultId: expect.any(String) });
+      const result = await resultsService.getStudentResult(submitted.resultId, userId);
+      expect(result).toMatchObject({ score: "1.00", maxScore: "1.00", correctCount: 1, incorrectCount: 0, unansweredCount: 0 });
+      expect(result.questions[0]).toMatchObject({ isCorrect: true, awardedMarks: "1.00", explanation: "Five is half of ten." });
+      expect((result.questions[0].options as { isCorrect: boolean }[]).some(option => option.isCorrect)).toBe(true);
       await expect(service.saveAttemptAnswer(started.id, attempt.questions[0].id, { selectedOptionIds, textAnswer: null, numericAnswer: null, markedForReview: false, version: 1 }, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CLOSED", status: 409 });
       await expect(service.startOrResumeAttempt(testId, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CONFLICT", status: 409 });
     } finally {

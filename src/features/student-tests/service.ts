@@ -1,4 +1,5 @@
 import { logger } from "@/lib/logger";
+import { evaluateAttempt } from "@/features/student-results/service";
 import { normalizeAnswerForQuestion, type AnswerInput } from "./validation";
 import { attemptClosed, attemptConflict, attemptExpired, attemptNotFound, staleAnswer, studentTestNotFound, testAccessRequired } from "./errors";
 import { createAttemptWithSnapshots, expireStudentAttempts, findActiveAttempt, findAnswerTarget, findAttemptForStudent, findAttemptOwnerStatus, findStartContext, findStudentTestAccess, listStudentTests, randomUUID, saveAnswerRecord, stableOrder, submitAttemptRecord, type AttemptSnapshotInput } from "./repository";
@@ -110,10 +111,14 @@ export async function submitAttempt(attemptId: string, actor: Actor) {
   const submitted = await submitAttemptRecord(attemptId, actor.userId, actor.requestId);
   if (submitted) {
     logger.info({ requestId: actor.requestId, module: "student-tests", action: "attempt_submit", actorUserId: actor.userId, attemptId, status: submitted.status }, "Student attempt submitted");
-    return { ...submitted, submittedAt: new Date(submitted.submittedAt).toISOString() };
+    const result = await evaluateAttempt(attemptId, actor.userId, actor.requestId);
+    return { ...submitted, submittedAt: new Date(submitted.submittedAt).toISOString(), resultId: result.id };
   }
   const existing = await findAttemptOwnerStatus(attemptId, actor.userId);
   if (!existing) throw attemptNotFound();
-  if (existing.status === "SUBMITTED" || existing.status === "AUTO_SUBMITTED" || existing.status === "EVALUATED") return { id: existing.id, status: existing.status, submittedAt: existing.submittedAt?.toISOString() ?? null };
+  if (existing.status === "SUBMITTED" || existing.status === "AUTO_SUBMITTED" || existing.status === "EVALUATED") {
+    const result = await evaluateAttempt(attemptId, actor.userId, actor.requestId);
+    return { id: existing.id, status: existing.status, submittedAt: existing.submittedAt?.toISOString() ?? null, resultId: result.id };
+  }
   throw attemptClosed();
 }

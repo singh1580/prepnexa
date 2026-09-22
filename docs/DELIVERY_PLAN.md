@@ -50,3 +50,7 @@ See [ADMIN_SIMPLIFICATION.md](ADMIN_SIMPLIFICATION.md) for the approved scope, d
 ## Phase 6 execution delivery
 
 See [PHASE_6_SCOPE.md](PHASE_6_SCOPE.md). The current gate covers server-authoritative start/deadline, immutable snapshots, a database-enforced single active attempt, versioned autosave, resume, manual/automatic submission and a responsive Student runner. Phase 7 owns deterministic scoring and result analytics. Consolidated browser/visual acceptance is deferred by the owner until the full planned platform is complete.
+
+## Phase 7 scoring delivery
+
+See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). On-demand mocks publish immediate snapshot-based results with negative marking, accuracy, time, section/topic performance and protected answer explanations. Rank/percentile is shown only when a real ranking cohort is enabled; current live/cohort functionality remains deferred. Consolidated browser/visual acceptance remains at the final platform gate.
