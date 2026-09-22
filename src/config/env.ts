@@ -13,6 +13,10 @@ const schema = z.object({
   MFA_ENCRYPTION_KEY: z.string().min(32).optional(),
   MFA_CHALLENGE_TTL_MINUTES: z.coerce.number().int().min(2).max(15).default(5),
   PAYMENT_PROVIDER: z.string().default("mock"), PAYMENT_API_KEY: z.string().optional(), PAYMENT_WEBHOOK_SECRET: z.string().optional(),
-  RESEND_API_KEY: z.string().optional(), EMAIL_FROM: z.string().optional(), STORAGE_BUCKET: z.string().optional(), STORAGE_REGION: z.string().optional(), STORAGE_ACCESS_KEY_ID: z.string().optional(), STORAGE_SECRET_ACCESS_KEY: z.string().optional()
+  RESEND_API_KEY: z.string().optional(), EMAIL_FROM: z.string().optional(),
+  STORAGE_PROVIDER: z.enum(["local","s3"]).default("local"), STORAGE_BUCKET: z.string().optional(), STORAGE_REGION: z.string().optional(),
+  STORAGE_ENDPOINT_URL: z.url().optional(), STORAGE_ACCESS_KEY_ID: z.string().optional(), STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
+  STORAGE_LOCAL_ROOT: z.string().default(".local-storage"), STORAGE_MAX_FILE_MB: z.coerce.number().int().min(1).max(100).default(25),
+  MATERIAL_LINK_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(300)
 });
 export const env = schema.parse(process.env);

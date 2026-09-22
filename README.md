@@ -25,6 +25,7 @@ Rule: route -> feature service -> repository -> database. Routes must not contai
 - `docs/AUTHENTICATION.md` — session, verification, reset, RBAC, and email-delivery rules
 - `docs/PHASE_5_SCOPE.md` — admin content slices, authorization, branch policy, and acceptance gates
 - `docs/PHASE_8_SCOPE.md` — provider-neutral checkout, coupons, refunds and access guarantees
+- `docs/PHASE_9_SCOPE.md` — private upload, versioning, Student library and protected delivery
 
 ## Local setup
 

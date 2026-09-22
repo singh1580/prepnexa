@@ -1,0 +1,5 @@
+ALTER TABLE "materials" ADD CONSTRAINT "materials_download_type_check" CHECK (not "materials"."allow_download" or "materials"."type" in ('PDF','FILE'));--> statement-breakpoint
+ALTER TABLE "material_versions" ADD CONSTRAINT "material_versions_size_check" CHECK ("material_versions"."size_bytes" is null or "material_versions"."size_bytes" > 0);--> statement-breakpoint
+ALTER TABLE "material_access_logs" ADD CONSTRAINT "material_access_source_check" CHECK ("material_access_logs"."access_source" in ('FREE','ENTITLEMENT'));--> statement-breakpoint
+ALTER TABLE "material_access_logs" ADD CONSTRAINT "material_access_entitlement_check" CHECK (("material_access_logs"."access_source" = 'FREE' and "material_access_logs"."entitlement_id" is null) or ("material_access_logs"."access_source" = 'ENTITLEMENT' and "material_access_logs"."entitlement_id" is not null));--> statement-breakpoint
+ALTER TABLE "material_access_logs" ADD CONSTRAINT "material_access_action_check" CHECK ("material_access_logs"."action" in ('VIEW','DOWNLOAD'));

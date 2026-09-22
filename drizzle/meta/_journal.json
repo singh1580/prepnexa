@@ -64,6 +64,20 @@
       "when": 1790059002555,
       "tag": "0008_damp_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790065704303,
+      "tag": "0009_shiny_ultron",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790065788931,
+      "tag": "0010_bright_lockheed",
+      "breakpoints": true
     }
   ]
 }

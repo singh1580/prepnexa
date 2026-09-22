@@ -24,7 +24,7 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 | Results — Phase 7 | Snapshot-based scoring, immediate mock result publication, section/topic breakdowns and protected answer review implemented and QA-tested | Cohort rank/percentile stays deferred with live tests and manual corrections stay in Admin operations |
 | Coupons — Phase 8 | Admin create/edit/enable controls, validation, schedules, limits, product targeting and atomic reservations implemented | Final browser acceptance with the consolidated platform |
 | Orders/payments — Phase 8 | Server-priced checkout, mock adapter, verified idempotent capture, access, history and refunds implemented | Select a production gateway; provider invoice/reconciliation and production acceptance |
-| Protected materials — Phase 9 | Schema/policy only | Private storage, authorized signed access, expiry/revocation, watermarking/access logs |
+| Protected materials — Phase 9 | Admin private upload/version/publish, Student library, signed delivery, current entitlement/revocation checks, checksum, PDF watermark and audit log implemented | Select/configure a production S3-compatible provider; consolidated browser acceptance |
 | Notifications/support — Phase 10 | Auth email works; operational tables exist | Purchase/test/result emails, retry delivery, in-app notifications, tickets/replies |
 | Student/admin operations — Phase 10 | Basic account/content views | Student management, orders/refunds/coupons/support/settings in same dashboard |
 | Release — Phase 11 | Not accepted | E2E, accessibility, security, performance, monitoring, backup/restore and beta sign-off |
@@ -96,3 +96,7 @@ See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). Submitted mock attempts now evaluate f
 ## Phase 8 commerce checkpoint
 
 See [PHASE_8_SCOPE.md](PHASE_8_SCOPE.md). Students can apply coupons on published packages, create idempotent server-priced orders, complete a non-production mock payment or free checkout and review order status. Verified capture grants access atomically. The same Admin dashboard manages coupon rules and partial/full refunds with optional entitlement revocation. The isolated `phase-8-commerce` Neon flow passed coupon-capacity, duplicate checkout/capture, entitlement, idempotent partial refund, full refund/revoke, free-order and cleanup assertions. Migration `0008_damp_patriot.sql` was applied and inspected only on that isolated branch. A real production gateway remains deliberately unselected; the mock adapter is blocked in production. Consolidated browser/visual acceptance remains deferred by the owner.
+
+## Phase 9 protected-material checkpoint
+
+See [PHASE_9_SCOPE.md](PHASE_9_SCOPE.md). The manual private-object-key placeholder is replaced by validated Admin uploads, immutable file versions and automatic checksum/metadata capture. Students have one `My library` surface for entitled/free articles, videos, PDFs and files. File delivery uses short-lived scoped tokens, rechecks access on every request, verifies stored bytes, watermarks PDFs and writes audit records. The isolated Neon `phase-9-materials` branch passed paid access, revoke, free access, constraints and cleanup. The production storage provider and consolidated browser acceptance remain deferred; local storage cannot run in production.

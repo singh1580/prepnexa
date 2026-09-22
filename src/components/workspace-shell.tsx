@@ -15,6 +15,7 @@ export function WorkspaceShell({ admin, name, permissions = [], section, childre
     ...(admin && [CONTENT_PERMISSIONS.manageProducts, CONTENT_PERMISSIONS.manageMaterials].some((permission) => permissions.includes(permission)) ? [{ key: "packages", href: "/admin/packages", label: "Store & materials", icon: "◇" }] : []),
     ...(admin ? [{ key: "coupons", href: "/admin/coupons", label: "Coupons", icon: "%" }, { key: "orders", href: "/admin/orders", label: "Orders & payments", icon: "₹" }] : []),
     ...(!admin ? [{ key: "tests", href: "/dashboard/tests", label: "My tests", icon: "▣" }] : []),
+    ...(!admin ? [{ key: "library", href: "/dashboard/library", label: "My library", icon: "▤" }] : []),
     ...(!admin ? [{ key: "results", href: "/dashboard/results", label: "Results", icon: "✓" }] : []),
     ...(!admin ? [{ key: "orders", href: "/dashboard/orders", label: "My orders", icon: "₹" }] : []),
     { key: "profile", href: "/account/profile", label: "My profile", icon: "○" },
