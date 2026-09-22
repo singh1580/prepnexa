@@ -13,8 +13,10 @@ export function WorkspaceShell({ admin, name, permissions = [], section, childre
     ...(admin && [CONTENT_PERMISSIONS.manageTests, CONTENT_PERMISSIONS.manageSchedules].some((permission) => permissions.includes(permission)) ? [{ key: "tests", href: "/admin/tests", label: "Tests & practice sets", icon: "▣" }] : []),
 
     ...(admin && [CONTENT_PERMISSIONS.manageProducts, CONTENT_PERMISSIONS.manageMaterials].some((permission) => permissions.includes(permission)) ? [{ key: "packages", href: "/admin/packages", label: "Store & materials", icon: "◇" }] : []),
+    ...(admin ? [{ key: "coupons", href: "/admin/coupons", label: "Coupons", icon: "%" }, { key: "orders", href: "/admin/orders", label: "Orders & payments", icon: "₹" }] : []),
     ...(!admin ? [{ key: "tests", href: "/dashboard/tests", label: "My tests", icon: "▣" }] : []),
     ...(!admin ? [{ key: "results", href: "/dashboard/results", label: "Results", icon: "✓" }] : []),
+    ...(!admin ? [{ key: "orders", href: "/dashboard/orders", label: "My orders", icon: "₹" }] : []),
     { key: "profile", href: "/account/profile", label: "My profile", icon: "○" },
     { key: "security", href: "/account/security", label: "Account security", icon: "◇" },
   ];

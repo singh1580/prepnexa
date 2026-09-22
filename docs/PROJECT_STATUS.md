@@ -22,8 +22,8 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 | CSV | Parsing, row errors and atomic draft import code; invalid job observed | CSV file picker implemented; valid import/rollback live acceptance required |
 | Student test engine — Phase 6 | On-demand student library, instructions, immutable snapshots, server deadline, responsive runner, versioned autosave, resume and submission implemented | Final browser visual acceptance is deferred; scoring/results remain Phase 7 |
 | Results — Phase 7 | Snapshot-based scoring, immediate mock result publication, section/topic breakdowns and protected answer review implemented and QA-tested | Cohort rank/percentile stays deferred with live tests and manual corrections stay in Admin operations |
-| Coupons — Phase 8 | Coupon/product/redemption schema and permission only | Admin controls, validation, limits, checkout, concurrent redemption |
-| Orders/payments — Phase 8 | Schema/provider-neutral design only | Checkout, adapter, mock integration, verified webhooks, access, refunds, invoices, reconciliation |
+| Coupons — Phase 8 | Admin create/edit/enable controls, validation, schedules, limits, product targeting and atomic reservations implemented | Final browser acceptance with the consolidated platform |
+| Orders/payments — Phase 8 | Server-priced checkout, mock adapter, verified idempotent capture, access, history and refunds implemented | Select a production gateway; provider invoice/reconciliation and production acceptance |
 | Protected materials — Phase 9 | Schema/policy only | Private storage, authorized signed access, expiry/revocation, watermarking/access logs |
 | Notifications/support — Phase 10 | Auth email works; operational tables exist | Purchase/test/result emails, retry delivery, in-app notifications, tickets/replies |
 | Student/admin operations — Phase 10 | Basic account/content views | Student management, orders/refunds/coupons/support/settings in same dashboard |
@@ -92,3 +92,7 @@ See [PHASE_6_SCOPE.md](PHASE_6_SCOPE.md) for the exact security, migration and v
 ## Phase 7 scoring checkpoint
 
 See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). Submitted mock attempts now evaluate from immutable snapshots and publish an owner-scoped result with exact-choice, numeric-tolerance and text-answer rules, negative marks, totals, accuracy, time, section/topic breakdowns and post-submit explanations. The isolated Neon flow passed submit, result publication, score/explanation review, locking and cleanup. Lint, TypeScript, 59 unit tests and the 43-page production build pass. Ranking is not fabricated for on-demand papers without an enabled cohort; the existing schedule/rank snapshot model remains for deferred live testing.
+
+## Phase 8 commerce checkpoint
+
+See [PHASE_8_SCOPE.md](PHASE_8_SCOPE.md). Students can apply coupons on published packages, create idempotent server-priced orders, complete a non-production mock payment or free checkout and review order status. Verified capture grants access atomically. The same Admin dashboard manages coupon rules and partial/full refunds with optional entitlement revocation. The isolated `phase-8-commerce` Neon flow passed coupon-capacity, duplicate checkout/capture, entitlement, idempotent partial refund, full refund/revoke, free-order and cleanup assertions. Migration `0008_damp_patriot.sql` was applied and inspected only on that isolated branch. A real production gateway remains deliberately unselected; the mock adapter is blocked in production. Consolidated browser/visual acceptance remains deferred by the owner.
