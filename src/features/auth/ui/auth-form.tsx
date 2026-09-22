@@ -17,7 +17,7 @@ const copy: Record<AuthMode, { title: string; description: string; action: strin
   "verify-email": { title: "Verify your email", description: "Confirm your email address to activate your account.", action: "Verify email" },
 };
 
-export function AuthForm({ mode, token, expiredSession = false }: { mode: AuthMode; token?: string; expiredSession?: boolean }) {
+export function AuthForm({ mode, token, expiredSession = false, nextPath = "/dashboard" }: { mode: AuthMode; token?: string; expiredSession?: boolean; nextPath?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -40,7 +40,7 @@ export function AuthForm({ mode, token, expiredSession = false }: { mode: AuthMo
       if (mode === "login") {
         const result = await authRequest<{ mfaRequired: boolean; mfaSetupRequired?: boolean; challengeToken?: string }>("login", values);
         if (result.mfaRequired && result.challengeToken) setChallenge({ token: result.challengeToken, setup: Boolean(result.mfaSetupRequired) });
-        else router.push("/dashboard");
+        else router.push(nextPath);
       } else if (mode === "signup") {
         const result = await authRequest<{ emailSent: boolean }>("register", values);
         setMessage(result.emailSent ? "Account created. Check your inbox for the verification link before signing in." : "Account created, but we couldn't send the verification email. Try resending it below; contact your administrator if delivery remains unavailable."); setDone(true);
@@ -59,7 +59,7 @@ export function AuthForm({ mode, token, expiredSession = false }: { mode: AuthMo
     } finally { setBusy(false); }
   }
 
-  if (challenge) return <MfaFlow challengeToken={challenge.token} setup={challenge.setup} onBack={() => { setChallenge(null); setError(""); }} />;
+  if (challenge) return <MfaFlow challengeToken={challenge.token} setup={challenge.setup} nextPath={nextPath} onBack={() => { setChallenge(null); setError(""); }} />;
   if (mode === "reset-password" && (!token || invalidLink)) return <><span className="eyebrow">ACCOUNT RECOVERY</span><h1>This link isn't available</h1><p className="muted">It may have expired or already been used. Request a new password reset link.</p><Link className="button" href="/forgot-password">Request a new link</Link><Link className="text-link" href="/login">Back to sign in</Link></>;
   return <><span className="eyebrow">{mode === "login" ? "GOOD TO SEE YOU AGAIN" : "YOUR ACCOUNT"}</span><h1>{done ? "You're one step closer" : c.title}</h1><p className="muted">{!done && c.description}</p>{expiredSession && <p className="notice">Please sign in again to continue securely.</p>}{error && <div className="notice danger" role="alert">{error}</div>}{message && <div className="notice success" role="status">{message}</div>}{!done && <form onSubmit={submit} aria-busy={busy}><fieldset disabled={busy}>{mode === "signup" && <Field label="Full name" name="name" autoComplete="name" required minLength={2} maxLength={120} />}{hasEmail && <Field label="Email address" name="email" type="email" autoComplete="email" required maxLength={320} placeholder="you@example.com" />}{hasPassword && <Field label={mode === "reset-password" ? "New password" : "Password"} name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={10} maxLength={128} hint={mode === "login" ? undefined : "Use 10–128 characters. A long, unique passphrase works well."} />}{mode === "reset-password" && <Field label="Confirm password" name="confirmPassword" type="password" autoComplete="new-password" required minLength={10} maxLength={128} />}{mode === "login" && <div className="form-right"><Link href="/forgot-password">Forgot password?</Link></div>}<button className="button full" type="submit">{busy ? "Please wait…" : mode === "verify-email" && (!token || invalidLink) ? "Resend verification email" : c.action}</button></fieldset></form>}{mode === "login" && <><p className="form-switch">New here? <Link href="/signup">Create an account</Link></p><Link className="text-link subtle" href="/verify-email">Need a new verification email?</Link></>}{mode !== "login" && <Link className="text-link" href="/login">Back to sign in</Link>}{done && mode === "signup" && <Link className="text-link" href="/verify-email">Resend verification email</Link>}</>;
 }

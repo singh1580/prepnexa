@@ -40,3 +40,9 @@ export async function requireAdmin() {
   if (!auth.roles.some((role) => ADMIN_ROLE_KEYS.has(role))) throw new AppError("FORBIDDEN", "Administrator access is required.", 403);
   return auth;
 }
+
+export async function requireStudent() {
+  const auth = await requireAuthenticated();
+  if (!auth.roles.includes("STUDENT")) throw new AppError("FORBIDDEN", "Student access is required.", 403);
+  return auth;
+}

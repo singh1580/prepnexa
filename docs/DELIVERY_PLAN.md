@@ -41,8 +41,12 @@ Current evidence and outstanding work: see PROJECT_STATUS.md. A table or permiss
 ## Mock-first scope update
 Live tests and standalone practice-mode creation are deferred by the owner. Existing database modes/schedules remain for compatibility. Current test creation is MOCK only; free diagnostic and paid mock packages remain. Students start a prepared test on demand and its timer begins at attempt creation (Phase 6). Live scheduling is not part of current acceptance.
 
-This update hides schedule controls, rejects non-mock creation/publication, fixes async form reset, adds draft question/empty-section removal and prevents publishing papers with empty sections. Actual student attempts, autosave/resume and results remain pending.
+This update hides schedule controls, rejects non-mock creation/publication, fixes async form reset, adds draft question/empty-section removal and prevents publishing papers with empty sections. Student attempts, snapshots, timer, autosave/resume and submission are delivered in Phase 6; scoring and result review remain Phase 7.
 
 
 ## Approved test-centred simplification
 See [ADMIN_SIMPLIFICATION.md](ADMIN_SIMPLIFICATION.md) for the approved scope, delivered test/import/product-assembly changes, verification evidence and remaining student/material/commerce work. This supersedes the earlier question-bank-first authoring flow; prepared topic and subject practice sets remain in scope, while live scheduling stays deferred. Phase 5 browser acceptance is still pending.
+
+## Phase 6 execution delivery
+
+See [PHASE_6_SCOPE.md](PHASE_6_SCOPE.md). The current gate covers server-authoritative start/deadline, immutable snapshots, a database-enforced single active attempt, versioned autosave, resume, manual/automatic submission and a responsive Student runner. Phase 7 owns deterministic scoring and result analytics. Consolidated browser/visual acceptance is deferred by the owner until the full planned platform is complete.

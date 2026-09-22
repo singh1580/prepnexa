@@ -23,7 +23,7 @@ This delivery does not implement payment or student entitlements. Creating a pro
 ## Remaining stages
 
 1. Finish authoring usability with combined browser acceptance. Subject/topic filters, bulk content selection search and paginated paper filtering are implemented. Current on-demand papers use existing MOCK mode; topic/subject scope comes from their chosen questions.
-2. Student test engine: free entry, server-authoritative start/deadline, question snapshots, autosave, resume, submission, scoring and result review. Coding execution is a separate capability, not implemented by TEXT questions.
+2. Student test execution is delivered through Phase 6: free/entitled entry, server-authoritative start/deadline, immutable question snapshots, versioned autosave, resume and submission. Phase 7 still owns scoring and result review. Coding execution is a separate capability, not implemented by TEXT questions.
 3. Materials: actual private upload, PDF/article/file organisation, previews and protected delivery. Existing PDF/file forms only hold metadata; they are not the final upload experience.
 4. Commerce: standalone resources, topic sets, subject packs, series and mixed bundles; coupons; replaceable payment adapter; verified webhook unlock; order/content/price/validity snapshots.
 5. Student library: deduplicate resources, retain purchase-specific grants, honour expiry and refunds without revoking another valid grant, preserve attempt limits across overlapping purchases.

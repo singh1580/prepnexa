@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { authRequest } from "./api";
 import { Field } from "./field";
 
-export function MfaFlow({ challengeToken, setup, onBack }: { challengeToken: string; setup: boolean; onBack: () => void }) {
+export function MfaFlow({ challengeToken, setup, nextPath = "/dashboard", onBack }: { challengeToken: string; setup: boolean; nextPath?: string; onBack: () => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -33,7 +33,7 @@ export function MfaFlow({ challengeToken, setup, onBack }: { challengeToken: str
         setCodes(result.recoveryCodes); setFactor(null);
       } else {
         await authRequest("mfa/verify-login", { challengeToken, ...values });
-        router.push("/dashboard"); router.refresh();
+        router.push(nextPath); router.refresh();
       }
     } catch (e) { setError(e instanceof Error ? e.message : "Verification failed."); }
     finally { setBusy(false); }

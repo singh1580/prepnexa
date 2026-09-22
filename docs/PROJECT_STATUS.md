@@ -1,4 +1,4 @@
-# PrepNexa implementation audit — 2026-09-19
+# PrepNexa implementation audit — 2026-09-22
 
 Evidence: inspected requirements, delivery plan, source routes/services/schema and PR #4. User supplied successful local auth/MFA/admin/taxonomy logs. This is a source audit, not a fresh end-to-end test of every module or a production database audit.
 
@@ -20,7 +20,7 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 | Packages | Create, bundle links, price/validity, publish code | Draft editing/unlinking, editable package copies and archive implemented; acceptance required |
 | Materials | Article/file metadata, version 1 and direct publish | Draft edit, HTTPS video validation, copy and guarded archive implemented. Actual PDF/file upload, reader/download and access protection remain Phase 9 |
 | CSV | Parsing, row errors and atomic draft import code; invalid job observed | CSV file picker implemented; valid import/rollback live acceptance required |
-| Student test engine — Phase 6 | Tables/design only | Timer, attempts, snapshots, autosave, resume, submission, device/concurrency rules |
+| Student test engine — Phase 6 | On-demand student library, instructions, immutable snapshots, server deadline, responsive runner, versioned autosave, resume and submission implemented | Final browser visual acceptance is deferred; scoring/results remain Phase 7 |
 | Results — Phase 7 | Schema/design only | Scoring, release, explanations, breakdowns, rank/percentile, corrections |
 | Coupons — Phase 8 | Coupon/product/redemption schema and permission only | Admin controls, validation, limits, checkout, concurrent redemption |
 | Orders/payments — Phase 8 | Schema/provider-neutral design only | Checkout, adapter, mock integration, verified webhooks, access, refunds, invoices, reconciliation |
@@ -43,7 +43,7 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 
 ## Remaining order
 1. Finish Phase 5 usability/maintenance gaps and run live content acceptance with one admin.
-2. Test engine, then results.
+2. Complete Phase 6 verification, then deliver scoring and results.
 3. Commerce including coupons with a replaceable payment provider.
 4. Actual protected material upload/delivery and student library.
 5. Complete operational screens/notifications/support in the same dashboards.
@@ -82,3 +82,9 @@ Saved full-mock/subject/topic categories and atomic same-section repeat-CSV prot
 Question entry and CSV authoring now offer subject filters and topic search. Bundle creation offers exam/type/title filters, selected-only review and selection preservation across searches; existing bundle links have searchable selectors. No new migration or env changes. Overall test-list curriculum filtering/pagination is implemented; browser acceptance remains. The student engine and commerce phases are not marked complete.
 
 The Admin test list now performs exam/category/status/title/subject/topic filtering and 20-item pagination in Postgres. Subject/topic membership comes from assigned questions, with dependent selectors preventing stale combinations. Combined browser acceptance remains pending.
+
+## Phase 6 student runner checkpoint
+
+The on-demand student execution path is implemented. Students can discover accessible published papers, inspect instructions, start or resume one active attempt, answer supported question types with versioned autosave, mark questions for review and submit manually or at the server deadline. Attempt content is copied from published revisions into immutable snapshots, and active APIs do not expose solutions. Migration `0007_gray_karen_page` supplies snapshot metadata, answer versions and the database-enforced one-active-attempt rule.
+
+See [PHASE_6_SCOPE.md](PHASE_6_SCOPE.md) for the exact security, migration and verification boundary. The isolated QA integration passed the complete start/resume/autosave/submit/lock flow and removed its synthetic fixtures. Lint, TypeScript, 55 unit tests and the 42-page production build passed. Phase 7 scoring/result review is not folded into this phase. The owner has deferred consolidated local browser/visual acceptance until the remaining platform phases are complete.
