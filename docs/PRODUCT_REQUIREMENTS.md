@@ -1,21 +1,17 @@
 # PrepNexa MVP Product Requirements
 
-Status: Phase 0 baseline
+Status: Revised for the approved single-admin workflow
 
 PrepNexa is a mobile-first placement-exam preparation platform for India. The first catalogue targets TCS-style placement preparation, while the data model and navigation must allow additional company exams without code duplication. PrepNexa is an independent preparation service and must not imply affiliation with an employer or examination body.
 
 ## 1. Users and roles
 
-The initial public audience is students aged 18 or older. Supported internal roles are:
+The product has exactly two workspaces: Student and Admin. One owner can operate every admin module without another staff member's approval.
 
-- `STUDENT`: purchase packages, access entitled content, take tests, and view personal results.
-- `CONTENT_REVIEWER`: review questions and materials but cannot publish, manage users, or view payment secrets.
-- `CONTENT_ADMIN`: manage exams, questions, tests, schedules, packages, and materials.
-- `SUPPORT_AGENT`: view the minimum student/order information required to resolve support cases.
-- `FINANCE_ADMIN`: review payments, reconciliation, invoices, and refunds without content permissions.
-- `SUPER_ADMIN`: manage roles, permissions, system settings, and other admins.
-
-Permissions are server-enforced. Hiding a menu item is never authorization.
+- Student: browse, purchase, take tests, use materials, view results and contact support.
+- Admin: manage content, students, coupons, orders, payments, support and settings within one dashboard.
+- Existing database role keys remain for compatibility; they do not imply separate dashboards or required staff. The current CONTENT_ADMIN account can operate existing content tools. Owner-wide permissions must be provisioned explicitly before commerce/support management launches; never auto-promote reviewer/support accounts.
+- Server permissions and administrator MFA remain enforced.
 
 ## 2. MVP catalogue
 
@@ -25,7 +21,7 @@ The first release supports:
 - Paid packages containing tests, study materials, or both.
 - Topic-wise practice tests.
 - Full mock tests.
-- Scheduled live tests.
+- Scheduled live tests: deferred; not part of the current mock-first release.
 - Articles, private PDFs, videos, and downloadable resources.
 
 Every product stores its own price, currency, access duration, included resources, publication status, and refund-policy reference. The default access duration is 90 days, but it is configurable per product.
@@ -41,9 +37,9 @@ Every product stores its own price, currency, access duration, included resource
 
 ## 4. Test modes
 
-### Practice
+### Prepared topic and subject practice sets
 
-- Attempts are configurable; the default is unlimited.
+- Practice target: configurable attempts, including unlimited practice. Current prepared papers use MOCK execution mode with limits of 1–100 and a default of one; unlimited practice remains pending. Full-mock, subject-test and topic-set authoring categories are saved and enforced during publication.
 - Results and explanations are released immediately unless explicitly delayed.
 - Ranking is normally disabled.
 
@@ -54,7 +50,7 @@ Every product stores its own price, currency, access duration, included resource
 - Results are immediate unless the test has a configured release time.
 - Ranking may be enabled for a defined cohort.
 
-### Live
+### Live (deferred)
 
 - The test has an authoritative server start and end time.
 - Default late-join window is 15 minutes and is configurable per schedule.
@@ -102,6 +98,10 @@ Rank calculations include only eligible, evaluated, non-void attempts in the con
 
 Payment providers are replaceable adapters. No order, entitlement, UI, or result code may depend directly on Razorpay, Cashfree, PhonePe, or another provider.
 
+### Coupons (Phase 8)
+
+Keep fixed/percentage discounts, start/end dates, minimum order, maximum discount, total/per-student usage limits, eligible packages and enable/disable controls. Existing coupon tables are only a schema foundation: admin screens, checkout validation and race-safe redemption remain to implement. All controls live in the common Admin dashboard.
+
 ## 8. Protected materials
 
 - Paid files are never placed in the public application directory.
@@ -114,17 +114,17 @@ Payment providers are replaceable adapters. No order, entitlement, UI, or result
 
 ## 9. Admin content workflow
 
-Questions and materials follow `DRAFT -> IN_REVIEW -> PUBLISHED -> ARCHIVED`.
+The primary test workflow is exam → draft paper → write/import/edit questions in its sections → preview → publish. Questions and materials use draft, preview, direct publish and archive. No separate reviewer is required. Legacy IN_REVIEW questions can be directly published by an authorized admin.
 
-- Authors cannot mark their own work reviewed when separation of duties is enabled.
+- The same admin can create and publish their own content.
 - Publishing records the actor and timestamp.
-- Editing published content creates a revision instead of silently changing history.
+- Editing published content uses an explicit draft copy; existing linked records remain unchanged. Draft material/question edits retain revision history.
 - Active or completed test attempts retain their original snapshots.
 - Bulk imports produce row-level validation errors and never partially publish invalid content.
 
 ## 10. Notifications and support
 
-The MVP supports in-app and email notifications for verification, password reset, purchase confirmation, payment failure, live-test reminders, result publication, suspicious login, and support-ticket updates.
+The MVP supports in-app and email notifications for verification, password reset, purchase confirmation, payment failure, result publication, suspicious login, and support-ticket updates.
 
 Notification failure does not roll back a successful payment or test submission. Failed deliveries are recorded for retry.
 

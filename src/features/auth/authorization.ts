@@ -26,13 +26,23 @@ export async function requireAuthenticated() {
 }
 
 export async function requirePermission(permission: string) {
+  return requirePermissions([permission]);
+}
+
+export async function requirePermissions(permissions: readonly string[]) {
   const auth = await requireAuthenticated();
-  if (!auth.permissions.includes(permission)) throw new AppError("FORBIDDEN", "You do not have permission to perform this action.", 403);
+  if (permissions.some(permission => !auth.permissions.includes(permission))) throw new AppError("FORBIDDEN", "You do not have permission to perform this action.", 403);
   return auth;
 }
 
 export async function requireAdmin() {
   const auth = await requireAuthenticated();
   if (!auth.roles.some((role) => ADMIN_ROLE_KEYS.has(role))) throw new AppError("FORBIDDEN", "Administrator access is required.", 403);
+  return auth;
+}
+
+export async function requireStudent() {
+  const auth = await requireAuthenticated();
+  if (!auth.roles.includes("STUDENT")) throw new AppError("FORBIDDEN", "Student access is required.", 403);
   return auth;
 }

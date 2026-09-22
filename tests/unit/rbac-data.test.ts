@@ -13,4 +13,10 @@ describe("RBAC seed data", () => {
       for (const key of keys) expect(known.has(key)).toBe(true);
     }
   });
+
+  it("keeps reviewer duties separate from authoring and publishing", () => {
+    expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).toContain("question.review");
+    expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).not.toContain("question.create");
+    expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).not.toContain("question.publish");
+  });
 });
