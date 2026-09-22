@@ -58,3 +58,7 @@ See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). On-demand mocks publish immediate snap
 ## Phase 8 commerce delivery
 
 See [PHASE_8_SCOPE.md](PHASE_8_SCOPE.md). The implementation covers single-product checkout, server-side pricing, coupon reservations/limits, free orders, provider-neutral attempts, verified idempotent capture, entitlements, order history and Admin refunds/coupon controls. The mock adapter is non-production only. A real gateway remains an explicit deployment decision and does not require changing core order/access rules.
+
+## Phase 9 protected-material delivery
+
+See [PHASE_9_SCOPE.md](PHASE_9_SCOPE.md). Admin now uploads private PDFs/study files without handling object keys, versions them and attaches published material to existing products/bundles. Students receive an entitlement-filtered library, short-lived signed access, fresh revocation checks, checksummed delivery, PDF watermarking and access logs. Storage is provider-neutral because the current Neon region cannot enable Neon Object Storage beta.
