@@ -1,5 +1,6 @@
 import { z } from "zod";
-const schema = z.object({
+
+export const envSchema = z.object({
   NODE_ENV: z.enum(["development","test","production"]).default("development"),
   NEXT_PUBLIC_APP_NAME: z.string().default("PrepNexa"), NEXT_PUBLIC_APP_URL: z.url(),
   DATABASE_URL: z.string().startsWith("postgresql://"), DATABASE_URL_UNPOOLED: z.string().startsWith("postgresql://"),
@@ -14,10 +15,27 @@ const schema = z.object({
   MFA_ENCRYPTION_KEY: z.string().min(32).optional(),
   MFA_CHALLENGE_TTL_MINUTES: z.coerce.number().int().min(2).max(15).default(5),
   PAYMENT_PROVIDER: z.string().default("mock"), PAYMENT_API_KEY: z.string().optional(), PAYMENT_WEBHOOK_SECRET: z.string().optional(),
-  RESEND_API_KEY: z.string().optional(), EMAIL_FROM: z.string().optional(),
+  RESEND_API_KEY: z.string().trim().min(1).optional(), EMAIL_FROM: z.string().trim().min(1).optional(),
   STORAGE_PROVIDER: z.enum(["local","s3"]).default("local"), STORAGE_BUCKET: z.string().optional(), STORAGE_REGION: z.string().optional(),
   STORAGE_ENDPOINT_URL: z.url().optional(), STORAGE_ACCESS_KEY_ID: z.string().optional(), STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
   STORAGE_LOCAL_ROOT: z.string().default(".local-storage"), STORAGE_MAX_FILE_MB: z.coerce.number().int().min(1).max(100).default(25),
   MATERIAL_LINK_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(300)
+}).superRefine((value, context) => {
+  if (Boolean(value.RESEND_API_KEY) !== Boolean(value.EMAIL_FROM)) {
+    context.addIssue({
+      code: "custom",
+      path: value.RESEND_API_KEY ? ["EMAIL_FROM"] : ["RESEND_API_KEY"],
+      message: "RESEND_API_KEY and EMAIL_FROM must be configured together.",
+    });
+  }
+
+  if (value.NODE_ENV === "production" && value.EMAIL_FROM?.toLowerCase().includes("@resend.dev")) {
+    context.addIssue({
+      code: "custom",
+      path: ["EMAIL_FROM"],
+      message: "A verified sender domain is required in production.",
+    });
+  }
 });
-export const env = schema.parse(process.env);
+
+export const env = envSchema.parse(process.env);

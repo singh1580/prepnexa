@@ -1,6 +1,6 @@
-# PrepNexa implementation audit — 2026-09-22
+# PrepNexa implementation audit — 2026-09-23
 
-Evidence: inspected requirements, delivery plan, source routes/services/schema and PR #4. User supplied successful local auth/MFA/admin/taxonomy logs. This is a source audit, not a fresh end-to-end test of every module or a production database audit.
+Evidence: inspected requirements, delivery plan, source routes/services/schema and merged PRs through #7. CI passed lint, TypeScript, 73 tests and the production build for the Phase 10 tree; the isolated Neon Phase 10 migration was also verified. This is not yet the final consolidated browser or production acceptance.
 
 ## Agreed product
 Exactly two roles and dashboards: Student and Admin. One Admin creates, publishes and operates the platform without staff approval. Existing public catalogue remains. Coupons, commerce, materials, results and support remain in scope. Reviewer, content-admin, support-agent, finance-admin and super-admin roles are removed rather than treated as hidden staff types.
@@ -25,9 +25,9 @@ Exactly two roles and dashboards: Student and Admin. One Admin creates, publishe
 | Coupons — Phase 8 | Admin create/edit/enable controls, validation, schedules, limits, product targeting and atomic reservations implemented | Final browser acceptance with the consolidated platform |
 | Orders/payments — Phase 8 | Server-priced checkout, mock adapter, verified idempotent capture, access, history and refunds implemented | Select a production gateway; provider invoice/reconciliation and production acceptance |
 | Protected materials — Phase 9 | Admin private upload/version/publish, Student library, signed delivery, current entitlement/revocation checks, checksum, PDF watermark and audit log implemented | Select/configure a production S3-compatible provider; consolidated browser acceptance |
-| Notifications/support — Phase 10 | In-app events, retryable Resend delivery, inbox, tickets and replies implemented | Production Resend configuration and consolidated browser acceptance |
-| Student/admin operations — Phase 10 | Student summaries/devices/support plus Admin students/support/delivery/activity and metrics implemented; role model consolidated to STUDENT and one ADMIN | Verify migration/seed, then complete Phase 11 acceptance |
-| Release — Phase 11 | Not accepted | E2E, accessibility, security, performance, monitoring, backup/restore and beta sign-off |
+| Notifications/support — Phase 10 | In-app events, retryable Resend delivery, inbox, tickets and replies implemented; verified-domain external Resend delivery passed | Runtime API-key configuration and application-flow acceptance |
+| Student/admin operations — Phase 10 | Student summaries/devices/support plus Admin students/support/delivery/activity and metrics implemented; role model consolidated to STUDENT and one ADMIN; isolated migration/seed verification passed | Complete Phase 11 acceptance |
+| Release — Phase 11 | Active; see `PHASE_11_SCOPE.md` | Application email-flow, E2E/UI/accessibility, security, performance, production storage, monitoring, backup/restore, beta and final payment-gateway sign-off |
 
 ## Changes in this update
 - Remove mandatory reviewer approval from question publishing; allow the creator to publish.
@@ -42,15 +42,11 @@ Exactly two roles and dashboards: Student and Admin. One Admin creates, publishe
 - Update requirements and phase plan; retain coupons and every original product module.
 
 ## Remaining order
-1. Finish Phase 5 usability/maintenance gaps and run live content acceptance with one admin.
-2. Complete Phase 6 verification, then deliver scoring and results.
-3. Commerce including coupons with a replaceable payment provider.
-4. Actual protected material upload/delivery and student library.
-5. Complete operational screens/notifications/support in the same dashboards.
-6. Release readiness.
-
-Do not claim Phase 5 complete or merge draft PR #4 until acceptance. Existing published revisions and future attempt snapshots must be preserved when edit workflows are implemented.
-
+1. Complete Resend runtime configuration and real application email-flow acceptance.
+2. Run consolidated browser, responsive UI, keyboard/accessibility, security and performance checks.
+3. Configure and verify production private-object storage, monitoring and backup/restore.
+4. Integrate the real production payment gateway last.
+5. Complete beta sign-off, then promote `develop` to `main` and deploy with explicit release approval.
 
 ## Mock-first scope update
 Live tests and standalone practice-mode creation are deferred by the owner. Existing database modes/schedules remain for compatibility. Current test creation is MOCK only; free diagnostic and paid mock packages remain. Students start a prepared test on demand and its timer begins at attempt creation (Phase 6). Live scheduling is not part of current acceptance.
@@ -103,4 +99,4 @@ See [PHASE_9_SCOPE.md](PHASE_9_SCOPE.md). The manual private-object-key placehol
 
 ## Phase 10 operations checkpoint
 
-See [PHASE_10_SCOPE.md](PHASE_10_SCOPE.md). Student dashboard summaries, two-device enforcement, active-session revocation, in-app notifications and owned support conversations are implemented. The same Admin workspace exposes student operations, support queue/replies, notification delivery/retry, audit activity and operational metrics. Purchase/payment/result/suspicious-login/support events queue idempotent in-app and email delivery; delivery failure is recorded without rolling back the primary operation. Migration `0012_single_admin_roles.sql` converts the owner from the legacy `CONTENT_ADMIN` key to `ADMIN`, removes all unused staff/admin role types, rejects ambiguous legacy assignments and prevents a second Admin assignment. Production/main remain untouched. Isolated migration verification, real provider configuration and consolidated browser acceptance remain explicit release work.
+See [PHASE_10_SCOPE.md](PHASE_10_SCOPE.md). Student dashboard summaries, two-device enforcement, active-session revocation, in-app notifications and owned support conversations are implemented. The same Admin workspace exposes student operations, support queue/replies, notification delivery/retry, audit activity and operational metrics. Purchase/payment/result/suspicious-login/support events queue idempotent in-app and email delivery; delivery failure is recorded without rolling back the primary operation. Migration `0012_single_admin_roles.sql` converts the owner from the legacy `CONTENT_ADMIN` key to `ADMIN`, removes all unused staff/admin role types, rejects ambiguous legacy assignments and prevents a second Admin assignment. Production/main remain untouched. Isolated migration verification passed and PR #7 was merged into `develop`; real provider configuration and consolidated browser acceptance remain Phase 11 release work.
