@@ -66,3 +66,7 @@ See [PHASE_9_SCOPE.md](PHASE_9_SCOPE.md). Admin now uploads private PDFs/study f
 ## Phase 10 operational delivery
 
 See [PHASE_10_SCOPE.md](PHASE_10_SCOPE.md). Student summaries, active-device controls, in-app notifications and support are implemented in the Student workspace. Permission-gated student management, support, delivery retry, activity and operational metrics stay in the single Admin workspace. Owner-wide grants and production provider configuration remain explicit deployment actions.
+
+## Phase 11 release delivery
+
+See [PHASE_11_SCOPE.md](PHASE_11_SCOPE.md). Resend configuration and application email acceptance come first, followed by consolidated browser/UI/accessibility, security, performance, production storage, monitoring and restore checks. The real payment gateway is integrated last, after those checks are stable. Promotion to `main` and production deployment require explicit release approval.
