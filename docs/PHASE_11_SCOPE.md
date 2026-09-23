@@ -22,6 +22,17 @@ Phase 11 is the only active delivery phase. Phases 0–10 are implemented and me
 
 Receiving being enabled at the domain level does not by itself create an inbound support workflow. PrepNexa support remains the authenticated in-app ticket system unless a separate inbound-email feature is approved later.
 
+## Browser and accessibility checkpoint — 2026-09-23
+
+- Created isolated Neon branch `phase-11-browser-qa` from the fully migrated Phase 10 QA branch; production remained untouched.
+- HTTP smoke checks passed for the home page, exams, packages, free tests, login, signup, forgot-password and health routes. Unauthenticated Student/Admin routes redirected to login as expected.
+- Fixed the public mobile header, which previously hid Exams, Packages, Free tests and Sign in. It now exposes an accessible mobile menu while preserving desktop navigation.
+- Replaced the fixed three-column workspace mobile navigation with a single-row, horizontally scrollable navigation so the full Student/Admin link set does not cover the page.
+- Added keyboard skip links for public and workspace content, focus styling for menu/select/textarea controls, reduced-motion support remains enabled, and 44px-class mobile targets are maintained.
+- Lint, TypeScript, 76 unit tests and the 62-page production build pass after the changes.
+
+The automated visual runner could not attach inside the current execution environment, so screenshot-level desktop/mobile inspection and authenticated click-through acceptance remain open; HTTP, rendered-markup and source-level checks are recorded separately rather than presenting them as visual proof.
+
 ## Deferred, non-blocking product extensions
 
 - Live/cohort tests, rank and percentile.

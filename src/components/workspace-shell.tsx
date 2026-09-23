@@ -30,6 +30,7 @@ export function WorkspaceShell({ admin, name, permissions = [], section, childre
   ];
   const upcoming: string[] = [];
   return <div className="workspace">
+    <a className="skip-link" href="#main-content">Skip to main content</a>
     <aside className="sidebar"><Brand /><div className="sidebar-label">{admin ? "ADMIN WORKSPACE" : "MY WORKSPACE"}</div><nav aria-label="Workspace">{nav.map((item) => <Link key={item.key} href={item.href} className={section === item.key ? "nav-item active" : "nav-item"} aria-current={section === item.key ? "page" : undefined}><span aria-hidden="true">{item.icon}</span>{item.label}</Link>)}</nav>{upcoming.length > 0 ? <div className="sidebar-next"><span className="sidebar-label">UP NEXT</span>{upcoming.map((label) => <div className="upcoming" key={label}>{label}<span>Coming soon</span></div>)}</div> : null}<div className="sidebar-bottom"><span className="avatar">{name.slice(0, 1).toUpperCase()}</span><div><strong>{name}</strong><small>{admin ? "Administrator" : "Student"}</small></div></div></aside>
     <div className="workspace-body"><header className="workspace-header"><div className="mobile-brand"><Brand /></div><span>{admin ? "Admin workspace" : "Student workspace"}</span><LogoutButton /></header><main id="main-content" className="workspace-main">{children}</main><nav className="mobile-nav" aria-label="Mobile workspace">{nav.map((item) => <Link key={item.key} href={item.href} aria-current={section === item.key ? "page" : undefined}>{item.label}</Link>)}</nav></div>
   </div>;
