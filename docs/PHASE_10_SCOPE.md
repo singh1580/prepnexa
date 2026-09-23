@@ -28,7 +28,7 @@ The product has exactly two role keys: `STUDENT` and `ADMIN`. There is one Admin
 - `notification.manage`: inspect and retry notification email.
 - `audit.read`: inspect activity.
 
-Migration `0012_single_admin_roles.sql` safely converts the existing `CONTENT_ADMIN` owner assignment to `ADMIN`, removes the unused reviewer/support/finance/super-admin role records, and rejects ambiguous databases that contain multiple administrator or assigned legacy-staff accounts. A database trigger prevents a second Admin assignment. The RBAC seed then maintains only `STUDENT` and `ADMIN`; the Admin receives every capability used by the single Admin workspace.
+Migration `0012_single_admin_roles.sql` safely converts the existing `CONTENT_ADMIN` owner assignment to `ADMIN`, preserves assignment timestamps using the physical `created_at` column, removes the unused reviewer/support/finance/super-admin role records, and rejects ambiguous databases that contain multiple administrator or assigned legacy-staff accounts. A database trigger provides the second-Admin error, and a partial unique index enforces the limit across concurrent transactions. The index resolves the Admin role ID during migration; no account ID is hard-coded. The RBAC seed then maintains only `STUDENT` and `ADMIN`; the Admin receives every capability used by the single Admin workspace.
 
 ## Delivery and failure behavior
 
@@ -41,6 +41,8 @@ Migration `0011_lowly_lady_vermin.sql` adds the nullable notification deduplicat
 - TypeScript and ESLint pass.
 - Unit suite passes with Phase 10 validation and permission cases.
 - Migration column and indexes verified on the isolated Neon branch.
+- On 2026-09-23, migration `0012` was applied atomically on `phase-10-operations` (`br-purple-voice-b396eu4l`) in project `odd-breeze-04065253`, database `prepnexa`. Assertions confirmed that only `STUDENT` and `ADMIN` remain, the existing owner's assignment and all three Student assignments retain their timestamps and assigners, all 21 Admin grants are preserved, a second Admin is rejected, and the concurrency-safe unique index is valid.
+- The QA branch already contained the exact `0011` column/index definitions but lacked its Drizzle history entry. The definitions were verified before recording the migration's repository hash and timestamp in the same transaction as `0012`. No shared-development or production migration was applied.
 - Consolidated browser/mobile/accessibility acceptance remains deferred to Phase 11 as approved by the owner.
 - Production Resend, payment and storage credentials remain deployment configuration; secrets are not committed.
 - No editable Settings page is invented in this phase. Provider selection and secret configuration stay in the deployment checklist, matching the earlier phases.

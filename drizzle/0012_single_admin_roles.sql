@@ -33,8 +33,8 @@ BEGIN
   WHERE r."key" = 'CONTENT_ADMIN'
   ON CONFLICT DO NOTHING;
 
-  INSERT INTO "user_roles" ("user_id", "role_id", "assigned_by", "assigned_at")
-  SELECT ur."user_id", admin_role_id, ur."assigned_by", ur."assigned_at"
+  INSERT INTO "user_roles" ("user_id", "role_id", "assigned_by", "created_at")
+  SELECT ur."user_id", admin_role_id, ur."assigned_by", ur."created_at"
   FROM "user_roles" ur
   JOIN "roles" r ON r."id" = ur."role_id"
   WHERE r."key" = 'CONTENT_ADMIN'
@@ -42,6 +42,19 @@ BEGIN
 
   DELETE FROM "roles"
   WHERE "key" IN ('CONTENT_REVIEWER', 'CONTENT_ADMIN', 'SUPPORT_AGENT', 'FINANCE_ADMIN', 'SUPER_ADMIN');
+END $$;
+--> statement-breakpoint
+-- A unique index also enforces the limit across concurrent transactions.
+-- Resolve the role ID at migration time instead of hard-coding an account.
+DO $$
+DECLARE
+  admin_role_id uuid;
+BEGIN
+  SELECT "id" INTO STRICT admin_role_id FROM "roles" WHERE "key" = 'ADMIN';
+  EXECUTE format(
+    'CREATE UNIQUE INDEX user_roles_single_admin_uq ON user_roles (role_id) WHERE role_id = %L::uuid',
+    admin_role_id
+  );
 END $$;
 --> statement-breakpoint
 CREATE OR REPLACE FUNCTION enforce_single_prepnexa_admin() RETURNS trigger AS $$
