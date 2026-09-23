@@ -6,4 +6,4 @@ export const TOKEN_PURPOSE = {
 
 export type TokenPurpose = (typeof TOKEN_PURPOSE)[keyof typeof TOKEN_PURPOSE];
 
-export const ADMIN_ROLE_KEYS = new Set(["CONTENT_REVIEWER", "CONTENT_ADMIN", "SUPPORT_AGENT", "FINANCE_ADMIN", "SUPER_ADMIN"]);
+export const ADMIN_ROLE_KEYS = new Set(["ADMIN"]);

@@ -10,7 +10,8 @@ The product has exactly two workspaces: Student and Admin. One owner can operate
 
 - Student: browse, purchase, take tests, use materials, view results and contact support.
 - Admin: manage content, students, coupons, orders, payments, support and settings within one dashboard.
-- Existing database role keys remain for compatibility; they do not imply separate dashboards or required staff. The current CONTENT_ADMIN account can operate existing content tools. Owner-wide permissions must be provisioned explicitly before commerce/support management launches; never auto-promote reviewer/support accounts.
+- The database and application expose only `STUDENT` and `ADMIN` role keys. Reviewer, content-admin, support-agent, finance-admin and super-admin roles are not part of the product.
+- Exactly one account may hold `ADMIN`; it has the permissions required to operate every Admin module without another account's approval.
 - Server permissions and administrator MFA remain enforced.
 
 ## 2. MVP catalogue

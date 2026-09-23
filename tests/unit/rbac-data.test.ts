@@ -14,16 +14,12 @@ describe("RBAC seed data", () => {
     }
   });
 
-  it("keeps reviewer duties separate from authoring and publishing", () => {
-    expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).toContain("question.review");
-    expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).not.toContain("question.create");
-    expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).not.toContain("question.publish");
+  it("defines only the approved Student and Admin roles", () => {
+    expect(SYSTEM_ROLES.map((role) => role.key)).toEqual(["STUDENT", "ADMIN"]);
   });
 
-  it("keeps the existing CONTENT_ADMIN as the single operational Admin", () => {
-    expect(ROLE_PERMISSION_KEYS.CONTENT_ADMIN).toEqual(expect.arrayContaining(["exam.manage", "product.manage", "user.read.support", "support.manage.all", "notification.manage", "order.read.all", "refund.manage", "coupon.manage", "audit.read", "system.manage"]));
-    expect(ROLE_PERMISSION_KEYS.CONTENT_ADMIN).not.toContain("role.manage");
-    expect(ROLE_PERMISSION_KEYS.CONTENT_REVIEWER).not.toContain("system.manage");
-    expect(ROLE_PERMISSION_KEYS.SUPPORT_AGENT).not.toContain("order.read.all");
+  it("gives the single Admin every platform-management capability", () => {
+    expect(ROLE_PERMISSION_KEYS.ADMIN).toEqual(expect.arrayContaining(["exam.manage", "question.create", "question.publish", "product.manage", "user.read.support", "support.manage.all", "notification.manage", "order.read.all", "refund.manage", "coupon.manage", "audit.read", "system.manage"]));
+    expect(ROLE_PERMISSION_KEYS.STUDENT).not.toContain("system.manage");
   });
 });

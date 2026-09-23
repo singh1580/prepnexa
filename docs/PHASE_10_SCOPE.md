@@ -1,6 +1,6 @@
 # Phase 10 — dashboards, notifications and support
 
-Phase 10 completes operational workflows inside the existing Student and Admin workspaces. It does not introduce staff dashboards, change `main`, select a production payment/storage provider, or assign owner-wide permissions to an existing account.
+Phase 10 completes operational workflows inside the existing Student and Admin workspaces. It does not introduce staff roles or dashboards, change `main`, or select a production payment/storage provider.
 
 ## Student operations
 
@@ -20,7 +20,7 @@ Phase 10 completes operational workflows inside the existing Student and Admin w
 
 ## Permission boundary
 
-Existing role keys remain for compatibility, but they do not create separate dashboards. Operational pages independently enforce their server permission:
+The product has exactly two role keys: `STUDENT` and `ADMIN`. There is one Admin account and one Admin workspace. Operational pages independently enforce server permissions as defence in depth:
 
 - `user.read.support`: read student operations.
 - `system.manage`: suspend/reactivate students.
@@ -28,13 +28,13 @@ Existing role keys remain for compatibility, but they do not create separate das
 - `notification.manage`: inspect and retry notification email.
 - `audit.read`: inspect activity.
 
-The existing owner continues to use `CONTENT_ADMIN`, matching the earlier phases. Its seed grants are explicitly extended to the operational, finance, audit and system permissions used by the single Admin workspace; `role.manage` remains reserved. Reviewer and support roles are not promoted. The seed must be run in the target environment before operational launch; no production role is changed by the schema migration itself.
+Migration `0012_single_admin_roles.sql` safely converts the existing `CONTENT_ADMIN` owner assignment to `ADMIN`, removes the unused reviewer/support/finance/super-admin role records, and rejects ambiguous databases that contain multiple administrator or assigned legacy-staff accounts. A database trigger prevents a second Admin assignment. The RBAC seed then maintains only `STUDENT` and `ADMIN`; the Admin receives every capability used by the single Admin workspace.
 
 ## Delivery and failure behavior
 
 In-app notification creation is idempotent through `deduplication_key`. Each notification has at most one email delivery row. Email is attempted after the primary payment/result/support operation commits; a missing provider or failed send records a retryable failure and never rolls back payment, entitlement, result or support state.
 
-Migration `0011_lowly_lady_vermin.sql` adds the nullable notification deduplication key and two unique indexes. It was applied and inspected on isolated Neon branch `phase-10-operations`; production and the shared development branch were not changed.
+Migration `0011_lowly_lady_vermin.sql` adds the nullable notification deduplication key and two unique indexes. Migration `0012_single_admin_roles.sql` consolidates the role model without hard-coding an owner email or user ID. Both must be verified on the isolated Neon branch before merge; production and the shared development branch remain unchanged.
 
 ## Verification checkpoint
 

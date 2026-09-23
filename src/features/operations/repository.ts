@@ -71,7 +71,7 @@ export async function updateManagedStudentStatus(studentId: string, status: "ACT
     with target as (
       select u.id,u.status from users u where u.id=${studentId}
         and exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key='STUDENT')
-        and not exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key in('CONTENT_REVIEWER','CONTENT_ADMIN','SUPPORT_AGENT','FINANCE_ADMIN','SUPER_ADMIN'))
+        and not exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key='ADMIN')
       for update
     ), changed as (
       update users u set status=${status}::user_status,updated_at=now() from target t where u.id=t.id returning u.id,t.status as "beforeStatus",u.status
