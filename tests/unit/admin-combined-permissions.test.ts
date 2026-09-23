@@ -17,7 +17,7 @@ describe("combined admin action permissions", () => {
   it.each([false, true])("requires every permission for paper publication (question permission: %s)", async granted => {
     vi.mocked(readSessionCookie).mockResolvedValue("test-session");
     vi.mocked(findActiveSession).mockResolvedValue({ userId: "fixture", userStatus: "ACTIVE" } as NonNullable<Awaited<ReturnType<typeof findActiveSession>>>);
-    vi.mocked(findAuthorizationForUser).mockResolvedValue((granted ? ["test.manage", "question.publish"] : ["test.manage"]).map(permission => ({ role: "CONTENT_ADMIN", permission })));
+    vi.mocked(findAuthorizationForUser).mockResolvedValue((granted ? ["test.manage", "question.publish"] : ["test.manage"]).map(permission => ({ role: "ADMIN", permission })));
     const result = requirePermissions(["test.manage", "question.publish"]);
     if (granted) await expect(result).resolves.toMatchObject({ permissions: ["test.manage", "question.publish"] });
     else await expect(result).rejects.toMatchObject({ status: 403 });

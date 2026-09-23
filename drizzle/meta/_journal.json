@@ -78,6 +78,20 @@
       "when": 1790065788931,
       "tag": "0010_bright_lockheed",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790083669399,
+      "tag": "0011_lowly_lady_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790143923983,
+      "tag": "0012_single_admin_roles",
+      "breakpoints": true
     }
   ]
 }

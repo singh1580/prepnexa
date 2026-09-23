@@ -50,7 +50,7 @@ export async function verifyMfaLogin(input: MfaLoginInput, context: { ip?: strin
   const { token, tokenHash } = createOpaqueToken();
   const expiresAt = new Date(Date.now() + env.SESSION_TTL_DAYS * 86_400_000);
   const ipHash = context.ip ? hashIdentifier(context.ip) : undefined;
-  await createSession({ userId: challenge.userId, tokenHash, ipHash, userAgent: context.userAgent?.slice(0, 1000), expiresAt });
+  await createSession({ userId: challenge.userId, tokenHash, ipHash, userAgent: context.userAgent?.slice(0, 1000), expiresAt }, env.MAX_ACTIVE_SESSIONS);
   await Promise.all([touchLastLogin(challenge.userId), recordLoginAttempt({ emailHash: hashIdentifier(challenge.email), ipHash, succeeded: true })]);
   return { token, expiresAt, user: { id: challenge.userId, name: challenge.name, email: challenge.email } };
 }

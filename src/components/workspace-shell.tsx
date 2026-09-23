@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Brand } from "./brand";
 import { LogoutButton } from "@/features/account/account-actions";
 import { CONTENT_PERMISSIONS, hasAnyContentPermission } from "@/features/admin-content/permissions";
+import { OPERATIONS_PERMISSIONS } from "@/features/operations/permissions";
 
 export function WorkspaceShell({ admin, name, permissions = [], section, children }: { admin: boolean; name: string; permissions?: readonly string[]; section: string; children: React.ReactNode }) {
   const base = admin ? "/admin" : "/dashboard";
@@ -14,10 +15,16 @@ export function WorkspaceShell({ admin, name, permissions = [], section, childre
 
     ...(admin && [CONTENT_PERMISSIONS.manageProducts, CONTENT_PERMISSIONS.manageMaterials].some((permission) => permissions.includes(permission)) ? [{ key: "packages", href: "/admin/packages", label: "Store & materials", icon: "◇" }] : []),
     ...(admin ? [{ key: "coupons", href: "/admin/coupons", label: "Coupons", icon: "%" }, { key: "orders", href: "/admin/orders", label: "Orders & payments", icon: "₹" }] : []),
+    ...(admin && permissions.includes(OPERATIONS_PERMISSIONS.readStudents) ? [{ key: "students", href: "/admin/students", label: "Students", icon: "○" }] : []),
+    ...(admin && permissions.includes(OPERATIONS_PERMISSIONS.manageSupport) ? [{ key: "support", href: "/admin/support", label: "Support", icon: "?" }] : []),
+    ...(admin && permissions.includes(OPERATIONS_PERMISSIONS.manageNotifications) ? [{ key: "notifications", href: "/admin/notifications", label: "Notifications", icon: "!" }] : []),
+    ...(admin && permissions.includes(OPERATIONS_PERMISSIONS.readAudit) ? [{ key: "activity", href: "/admin/activity", label: "Activity", icon: "≡" }] : []),
     ...(!admin ? [{ key: "tests", href: "/dashboard/tests", label: "My tests", icon: "▣" }] : []),
     ...(!admin ? [{ key: "library", href: "/dashboard/library", label: "My library", icon: "▤" }] : []),
     ...(!admin ? [{ key: "results", href: "/dashboard/results", label: "Results", icon: "✓" }] : []),
     ...(!admin ? [{ key: "orders", href: "/dashboard/orders", label: "My orders", icon: "₹" }] : []),
+    ...(!admin ? [{ key: "notifications", href: "/dashboard/notifications", label: "Notifications", icon: "!" }] : []),
+    ...(!admin ? [{ key: "support", href: "/dashboard/support", label: "Support", icon: "?" }] : []),
     { key: "profile", href: "/account/profile", label: "My profile", icon: "○" },
     { key: "security", href: "/account/security", label: "Account security", icon: "◇" },
   ];

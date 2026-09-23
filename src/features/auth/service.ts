@@ -5,6 +5,7 @@ import { authNotifier } from "./notifier";
 import { ADMIN_ROLE_KEYS, TOKEN_PURPOSE } from "./constants";
 import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin } from "./repository";
 import type { EmailInput, LoginInput, RegisterInput, ResetPasswordInput } from "./validation";
+import { queueStudentNotification } from "@/features/operations/service";
 
 const genericCredentialsError = () => new AppError("INVALID_CREDENTIALS", "Email or password is incorrect.", 401);
 
@@ -17,19 +18,21 @@ export async function register(input: RegisterInput) {
   return { user, emailSent };
 }
 
-export async function login(input: LoginInput, context: { ip?: string; userAgent?: string }) {
+export async function login(input: LoginInput, context: { ip?: string; userAgent?: string; requestId?: string }) {
   const email = normalizeEmail(input.email);
   const emailHash = hashIdentifier(email);
   const ipHash = context.ip ? hashIdentifier(context.ip) : undefined;
   const since = new Date(Date.now() - env.LOGIN_WINDOW_MINUTES * 60_000);
   const failedAttempts = await countRecentFailedAttempts(emailHash, ipHash, since);
+  const user = await findUserByEmail(email);
   if (failedAttempts.email >= env.LOGIN_MAX_ATTEMPTS || failedAttempts.ip >= env.LOGIN_IP_MAX_ATTEMPTS) {
+    if (user?.status === "ACTIVE") await queueSuspiciousLogin(user.id, emailHash, context.requestId ?? crypto.randomUUID());
     throw new AppError("TOO_MANY_LOGIN_ATTEMPTS", "Too many login attempts. Please try again later.", 429);
   }
-  const user = await findUserByEmail(email);
 
   if (!user || !(await verifyPassword(user.passwordHash, input.password))) {
     await recordLoginAttempt({ emailHash, ipHash, succeeded: false, failureReason: "INVALID_CREDENTIALS" });
+    if (user?.status === "ACTIVE" && failedAttempts.email + 1 >= env.LOGIN_MAX_ATTEMPTS) await queueSuspiciousLogin(user.id, emailHash, context.requestId ?? crypto.randomUUID());
     throw genericCredentialsError();
   }
   if (user.status !== "ACTIVE") {
@@ -54,9 +57,14 @@ export async function login(input: LoginInput, context: { ip?: string; userAgent
 
   const { token, tokenHash } = createOpaqueToken();
   const expiresAt = new Date(Date.now() + env.SESSION_TTL_DAYS * 86_400_000);
-  await createSession({ userId: user.id, tokenHash, ipHash, userAgent: context.userAgent?.slice(0, 1000), expiresAt });
+  await createSession({ userId: user.id, tokenHash, ipHash, userAgent: context.userAgent?.slice(0, 1000), expiresAt }, env.MAX_ACTIVE_SESSIONS);
   await Promise.all([touchLastLogin(user.id), recordLoginAttempt({ emailHash, ipHash, succeeded: true })]);
   return { mfaRequired: false as const, token, expiresAt, user: { id: user.id, name: user.name, email: user.email } };
+}
+
+async function queueSuspiciousLogin(userId:string,emailHash:string,requestId:string) {
+  const window=Math.floor(Date.now()/(env.LOGIN_WINDOW_MINUTES*60_000));
+  await queueStudentNotification({userId,type:"SUSPICIOUS_LOGIN",deduplicationKey:`suspicious-login:${emailHash}:${window}`,title:"Suspicious sign-in activity",body:"Several unsuccessful sign-in attempts were detected for your account. Reset your password if this wasn't you.",requestId});
 }
 
 export async function logout(token: string | undefined) {

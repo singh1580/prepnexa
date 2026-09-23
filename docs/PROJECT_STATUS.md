@@ -3,7 +3,7 @@
 Evidence: inspected requirements, delivery plan, source routes/services/schema and PR #4. User supplied successful local auth/MFA/admin/taxonomy logs. This is a source audit, not a fresh end-to-end test of every module or a production database audit.
 
 ## Agreed product
-Exactly two dashboards: Student and Admin. One admin creates and publishes without staff approval. Existing public catalogue remains. Coupons, commerce, materials, results and support remain in scope. No new specialist dashboards. Current CONTENT_ADMIN grants cover existing content modules; explicit owner permission provisioning remains before operational modules launch.
+Exactly two roles and dashboards: Student and Admin. One Admin creates, publishes and operates the platform without staff approval. Existing public catalogue remains. Coupons, commerce, materials, results and support remain in scope. Reviewer, content-admin, support-agent, finance-admin and super-admin roles are removed rather than treated as hidden staff types.
 
 ## Historical inventory — see the current checkpoint below
 | Area | Evidence/status | Remaining |
@@ -25,8 +25,8 @@ Exactly two dashboards: Student and Admin. One admin creates and publishes witho
 | Coupons — Phase 8 | Admin create/edit/enable controls, validation, schedules, limits, product targeting and atomic reservations implemented | Final browser acceptance with the consolidated platform |
 | Orders/payments — Phase 8 | Server-priced checkout, mock adapter, verified idempotent capture, access, history and refunds implemented | Select a production gateway; provider invoice/reconciliation and production acceptance |
 | Protected materials — Phase 9 | Admin private upload/version/publish, Student library, signed delivery, current entitlement/revocation checks, checksum, PDF watermark and audit log implemented | Select/configure a production S3-compatible provider; consolidated browser acceptance |
-| Notifications/support — Phase 10 | Auth email works; operational tables exist | Purchase/test/result emails, retry delivery, in-app notifications, tickets/replies |
-| Student/admin operations — Phase 10 | Basic account/content views | Student management, orders/refunds/coupons/support/settings in same dashboard |
+| Notifications/support — Phase 10 | In-app events, retryable Resend delivery, inbox, tickets and replies implemented | Production Resend configuration and consolidated browser acceptance |
+| Student/admin operations — Phase 10 | Student summaries/devices/support plus Admin students/support/delivery/activity and metrics implemented; role model consolidated to STUDENT and one ADMIN | Verify migration/seed, then complete Phase 11 acceptance |
 | Release — Phase 11 | Not accepted | E2E, accessibility, security, performance, monitoring, backup/restore and beta sign-off |
 
 ## Changes in this update
@@ -100,3 +100,7 @@ See [PHASE_8_SCOPE.md](PHASE_8_SCOPE.md). Students can apply coupons on publishe
 ## Phase 9 protected-material checkpoint
 
 See [PHASE_9_SCOPE.md](PHASE_9_SCOPE.md). The manual private-object-key placeholder is replaced by validated Admin uploads, immutable file versions and automatic checksum/metadata capture. Students have one `My library` surface for entitled/free articles, videos, PDFs and files. File delivery uses short-lived scoped tokens, rechecks access on every request, verifies stored bytes, watermarks PDFs and writes audit records. The isolated Neon `phase-9-materials` branch passed paid access, revoke, free access, constraints and cleanup. The production storage provider and consolidated browser acceptance remain deferred; local storage cannot run in production.
+
+## Phase 10 operations checkpoint
+
+See [PHASE_10_SCOPE.md](PHASE_10_SCOPE.md). Student dashboard summaries, two-device enforcement, active-session revocation, in-app notifications and owned support conversations are implemented. The same Admin workspace exposes student operations, support queue/replies, notification delivery/retry, audit activity and operational metrics. Purchase/payment/result/suspicious-login/support events queue idempotent in-app and email delivery; delivery failure is recorded without rolling back the primary operation. Migration `0012_single_admin_roles.sql` converts the owner from the legacy `CONTENT_ADMIN` key to `ADMIN`, removes all unused staff/admin role types, rejects ambiguous legacy assignments and prevents a second Admin assignment. Production/main remain untouched. Isolated migration verification, real provider configuration and consolidated browser acceptance remain explicit release work.
