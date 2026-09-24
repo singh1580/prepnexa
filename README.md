@@ -31,8 +31,11 @@ Rule: route -> feature service -> repository -> database. Routes must not contai
 
 1. Copy `.env.example` to `.env.local` and use the Neon branch matching the current Git feature branch.
 2. Run `npm ci`.
-3. Run `npm run db:generate` only after changing the schema, then inspect the SQL migration.
-4. Run `npm run db:migrate` only against that feature branch's direct Neon URL.
-5. Run `npm run dev`.
+3. Run `npm run qa:preflight` to validate the environment, QA database, roles and local providers.
+4. Run `npm run db:generate` only after changing the schema, then inspect the SQL migration.
+5. Run `npm run db:migrate` only against that feature branch's direct Neon URL.
+6. Run `npm run dev`, then run `npm run qa:smoke` in a second terminal.
+
+Follow [`docs/LOCAL_ACCEPTANCE.md`](docs/LOCAL_ACCEPTANCE.md) for the complete Student/Admin workflow and UI checklist.
 
 Never commit `.env*`, gateway secrets, database credentials or real student data.
