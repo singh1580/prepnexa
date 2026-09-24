@@ -33,6 +33,16 @@ Receiving being enabled at the domain level does not by itself create an inbound
 
 The automated visual runner could not attach inside the current execution environment, so screenshot-level desktop/mobile inspection and authenticated click-through acceptance remain open; HTTP, rendered-markup and source-level checks are recorded separately rather than presenting them as visual proof.
 
+## Local release candidate — 2026-09-24
+
+- Added one `qa:preflight` command that validates local environment readiness, the isolated database, critical schema, exactly two roles, exactly one Admin, and selected providers without displaying secrets.
+- Added one `qa:smoke` command covering public pages, database readiness, security headers, latency, and protected Student/Admin redirects.
+- Added a database-backed `/api/ready` dependency check while keeping `/api/health` as cheap liveness.
+- Added global anti-framing, MIME-sniffing, referrer, permissions, and cross-origin opener headers; expanded structured-log secret redaction.
+- Consolidated the real email, Student, Admin, responsive, keyboard and UI review into `LOCAL_ACCEPTANCE.md` so the owner can run the entire workflow once in VS Code and return one UI-change list.
+
+The code-level Phase 11 release candidate is ready for local acceptance. Production storage, monitoring/restore evidence, the real payment adapter, `main` promotion and deployment are deliberately not prerequisites for this local review. The real payment adapter remains the last implementation step after workflow/UI acceptance.
+
 ## Deferred, non-blocking product extensions
 
 - Live/cohort tests, rank and percentile.

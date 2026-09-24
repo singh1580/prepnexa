@@ -27,7 +27,7 @@ Exactly two roles and dashboards: Student and Admin. One Admin creates, publishe
 | Protected materials — Phase 9 | Admin private upload/version/publish, Student library, signed delivery, current entitlement/revocation checks, checksum, PDF watermark and audit log implemented | Select/configure a production S3-compatible provider; consolidated browser acceptance |
 | Notifications/support — Phase 10 | In-app events, retryable Resend delivery, inbox, tickets and replies implemented; verified-domain external Resend delivery passed | Runtime API-key configuration and application-flow acceptance |
 | Student/admin operations — Phase 10 | Student summaries/devices/support plus Admin students/support/delivery/activity and metrics implemented; role model consolidated to STUDENT and one ADMIN; isolated migration/seed verification passed | Complete Phase 11 acceptance |
-| Release — Phase 11 | Active; see `PHASE_11_SCOPE.md` | Application email-flow, E2E/UI/accessibility, security, performance, production storage, monitoring, backup/restore, beta and final payment-gateway sign-off |
+| Release — Phase 11 | Local release candidate implemented; see `PHASE_11_SCOPE.md` and `LOCAL_ACCEPTANCE.md` | Owner's authenticated workflow/UI review, then production storage/operations evidence and final payment-gateway sign-off |
 
 ## Changes in this update
 - Remove mandatory reviewer approval from question publishing; allow the creator to publish.
