@@ -1,0 +1,72 @@
+{
+  "source": "https://www.tcs.com/careers/india/tcs-all-india-nqt-hiring",
+  "note": "Original practice questions inspired by publicly described TCS NQT topics; these are not verified verbatim previous-year questions. Advanced Coding is intentionally excluded.",
+  "exam": "TCS NQT Aptitude (Coding Excluded)",
+  "sections": [
+    {"name":"Numerical Ability","minutes":25,"topics":[
+      {"name":"Percentages and Profit","study":"Percentage change = (new - old) / old × 100. Profit percentage = (selling price - cost price) / cost price × 100. Successive changes of a% and b% give a + b + ab/100 percent. Example: +20% then -10% gives +8%, not +10%.","resource":"Practice percentage changes, discounts and marked price with a cost-price base. When discounts follow one another, multiply the remaining fractions rather than adding discount rates."},
+      {"name":"Ratio and Averages","study":"For a ratio a:b, total parts = a+b. Weighted average = sum(value × weight) / sum(weights). To combine groups, use their sizes as weights. Example: 2 students averaging 60 and 3 averaging 80 give (2×60+3×80)/5 = 72.","resource":"Build a table with quantity, value and total contribution. A simple average of group averages is incorrect when group sizes differ."},
+      {"name":"Time, Work and Speed","study":"Work rate = 1 / time; combined rates add. Distance = speed × time. For equal distances at speeds a and b, average speed = 2ab/(a+b). Convert minutes to hours before applying km/h.","resource":"Solve work questions with one-day rates. For travel, draw the legs, units and distances; do not average speeds unless durations are equal."}
+    ]},
+    {"name":"Verbal Ability","minutes":25,"topics":[
+      {"name":"Grammar and Usage","study":"Check agreement between the subject and main verb, consistent tense, articles and prepositions. Words between a subject and its verb do not change the subject's number. Example: The list of items is ready.","resource":"Identify the true subject before choosing is/are or has/have. Read each option in the complete sentence to catch tense and preposition errors."},
+      {"name":"Vocabulary in Context","study":"Choose a word from the surrounding sentence, not its dictionary meaning alone. Contrast clues such as although, however and yet often reverse the expected tone. Eliminate choices that do not fit the sentence's grammar.","resource":"Read one sentence before and after the blank. Decide whether the tone is positive, negative or neutral, then check the part of speech."},
+      {"name":"Reading Comprehension","study":"Separate facts stated in a passage from inferences. A valid inference follows from the text without adding outside assumptions. For a main-idea question, prefer the option covering the whole passage over a single detail.","resource":"Underline the claim and evidence in a short passage. Reject absolute words such as always or never unless the passage supports them."}
+    ]},
+    {"name":"Reasoning Ability","minutes":25,"topics":[
+      {"name":"Number and Letter Series","study":"Inspect first differences, second differences, multiplication and alternating positions. For letter series use A=1 through Z=26 and consider wraparound only when the pattern requires it.","resource":"Write the gaps between consecutive terms. If one rule fails, split odd-position and even-position terms into separate series."},
+      {"name":"Logical Arrangements","study":"Translate ordering clues into fixed constraints. Draw slots or a small grid, place direct clues first and test conditional clues afterward. Never infer a neighbor from a simple before/after relation.","resource":"Use 4–5 slots and place the strongest restriction first. Verify every clue against the final arrangement."},
+      {"name":"Directions and Syllogisms","study":"Direction turns are relative to the current facing direction: from north, right is east. For syllogisms, use set inclusion: All A are B does not imply all B are A, nor does it prove any A exist.","resource":"Sketch a compass for turns and Venn sets for all/some/no claims. Evaluate only conclusions that must follow."}
+    ]},
+    {"name":"Advanced Quantitative and Reasoning","minutes":25,"topics":[
+      {"name":"Data Interpretation","study":"Read table units, totals and denominators before computing. Percentage contribution = part/whole × 100. When a chart gives growth rates, apply each rate to its own starting value.","resource":"Extract the correct row and column before calculating. Keep units in the working and round only at the end."},
+      {"name":"Probability and Counting","study":"Probability = favorable outcomes / equally likely outcomes. Count choices by multiplication when independent. For selecting an unordered pair from n people use n(n−1)/2; for ordered roles use n(n−1).", "resource":"Decide whether order matters and whether replacement is allowed. For complements, compute 1 minus the probability of the opposite event."},
+      {"name":"Advanced Logic","study":"Distinguish a condition from its converse: if P then Q does not mean if Q then P. Use a truth table or counterexample for must-be-true claims. In scheduling puzzles, combine all constraints before selecting a feasible option.","resource":"Translate each statement into if/then or a slot constraint. Test every answer choice and seek one counterexample to reject a universal claim."}
+    ]}
+  ],
+  "questions": [
+    [0,0,"A price rises from ₹800 to ₹920. What is the percentage increase?",["12%","15%","20%","25%"],1,"Increase is ₹120; 120/800 × 100 = 15%."],
+    [0,0,"An item costing ₹500 is sold at a 12% profit. What is its selling price?",["₹540","₹550","₹560","₹580"],2,"Profit = 12% of 500 = 60, so selling price = ₹560."],
+    [0,0,"A ₹2,000 jacket gets successive discounts of 10% and 20%. What is the final price?",["₹1,400","₹1,440","₹1,500","₹1,600"],1,"2000 × 0.9 × 0.8 = ₹1,440."],
+    [0,1,"The ratio of red to blue balls is 3:5. If there are 64 balls, how many are red?",["20","24","30","40"],1,"Red balls = 3/(3+5) × 64 = 24."],
+    [0,1,"Four scores have an average of 18. A fifth score is 28. What is the new average?",["19","20","21","22"],1,"Old sum = 72; new sum = 100; average = 100/5 = 20."],
+    [0,1,"A class has 10 students averaging 60 and 20 averaging 75. What is the overall average?",["65","68","70","72"],2,"Weighted average = (10×60 + 20×75)/30 = 70."],
+    [0,2,"A completes a task in 6 days and B in 3 days. Together how many days do they take?",["1","2","3","4"],1,"Their daily rates add to 1/6 + 1/3 = 1/2 task; total time = 2 days."],
+    [0,2,"A vehicle travels 150 km in 2.5 hours. What is its average speed?",["50 km/h","55 km/h","60 km/h","75 km/h"],2,"Speed = 150/2.5 = 60 km/h."],
+    [0,2,"A cyclist covers equal distances at 30 km/h and 60 km/h. What is the overall average speed?",["40 km/h","45 km/h","48 km/h","50 km/h"],0,"For equal distances, 2ab/(a+b) = 2×30×60/90 = 40 km/h."],
+    [0,0,"A number decreases by 20% and then increases by 20%. What is its net change?",["No change","4% decrease","4% increase","20% decrease"],1,"0.8 × 1.2 = 0.96 of the original, a 4% decrease."],
+
+    [1,0,"Choose the grammatically correct sentence.",["The list of candidates are ready.","The list of candidates is ready.","The list of candidates were ready.","The list of candidates have ready."],1,"The singular subject list takes the singular verb is."],
+    [1,0,"Fill in the blank: Neither of the two plans ___ feasible.",["are","were","is","have"],2,"Neither is singular here and takes is."],
+    [1,0,"Choose the correct preposition: She is interested ___ learning statistics.",["on","at","in","for"],2,"The standard construction is interested in."],
+    [1,1,"In 'Despite the setback, the team remained resilient', resilient most nearly means:",["careless","able to recover","uncertain","silent"],1,"Resilient describes the ability to recover after difficulty."],
+    [1,1,"Choose the best word: The instructions were so ___ that everyone finished without asking for help.",["ambiguous","clear","hostile","lengthy"],1,"Clear instructions explain why nobody needed help."],
+    [1,1,"The report was concise yet comprehensive. What does concise mean in this context?",["brief","inaccurate","expensive","repetitive"],0,"Concise means brief while still containing needed information."],
+    [1,2,"Passage: A library extended its hours by two hours. Visits rose, but book loans stayed unchanged. What definitely increased?",["Book loans","Library visits","Number of books","Staff count"],1,"The passage explicitly states that visits rose."],
+    [1,2,"Passage: Some employees prefer remote work because it saves travel time. Which inference is supported?",["All employees work remotely.","Remote work saves travel time for some employees.","Remote work always raises pay.","No one travels to work."],1,"The passage supports the statement for some employees only."],
+    [1,2,"Passage: Rainfall was lower this month, yet reservoir levels increased after water transfers. Why did levels rise?",["Higher rainfall","Water transfers","Reduced demand is stated","More reservoirs were built"],1,"The passage attributes the increase to water transfers."],
+    [1,0,"Select the correct form: Each of the applicants ___ an interview slot.",["have","are having","has","were"],2,"Each is singular, so has is correct."],
+
+    [2,0,"What comes next in the series 3, 7, 15, 31, ?",["47","60","63","65"],2,"Each term is double the previous term plus one: 31×2+1 = 63."],
+    [2,0,"Find the next number: 2, 5, 10, 17, 26, ?",["35","36","37","39"],2,"The gaps are 3,5,7,9, so the next gap is 11; 26+11 = 37."],
+    [2,0,"Find the missing letter: B, D, G, K, P, ?",["T","U","V","W"],2,"Positions 2,4,7,11,16 have gaps 2,3,4,5; next is 22 = V."],
+    [2,1,"P is before Q, and Q is before R in a queue. Which statement must be true?",["R is immediately after Q","P is before R","Q is first","P is immediately before Q"],1,"Before is transitive: P precedes Q and Q precedes R, so P precedes R."],
+    [2,1,"Four people sit in a row. A is immediately left of B; C is immediately right of B. Which three-person order is fixed?",["C-B-A","B-A-C","A-B-C","A-C-B"],2,"Immediate left/right constraints give A-B-C."],
+    [2,1,"In a line, T is third from the front and fourth from the back. How many people are there?",["5","6","7","8"],1,"Total = 3+4−1 = 6."],
+    [2,2,"Facing north, you turn right, then left. Which direction do you face?",["North","South","East","West"],0,"North → right East → left North."],
+    [2,2,"All roses are flowers. Which conclusion necessarily follows?",["All flowers are roses","No roses are flowers","Every rose is a flower","Some flowers are red"],2,"All roses are flowers restates the given inclusion; the others add unsupported information."],
+    [2,2,"You walk 3 km east and then 4 km north. How far are you from the start?",["5 km","6 km","7 km","12 km"],0,"By the 3-4-5 right triangle, distance is √(3²+4²) = 5 km."],
+    [2,0,"Find the next number: 81, 27, 9, 3, ?",["0","1","2","6"],1,"Each term is divided by 3, so 3/3 = 1."],
+
+    [3,0,"A shop sold 120 units on Monday and 150 on Tuesday. What was the percentage increase?",["20%","25%","30%","35%"],1,"Increase = 30; 30/120 × 100 = 25%."],
+    [3,0,"Department A has 40 employees and B has 60. What share of the total is B?",["40%","50%","60%","66%"],2,"60/(40+60) × 100 = 60%."],
+    [3,0,"Revenue increased from ₹2 lakh to ₹2.5 lakh. By what percentage did it grow?",["20%","25%","30%","50%"],1,"Change = 0.5 lakh on a base of 2 lakh, so 25%."],
+    [3,1,"A fair die is rolled once. What is the probability of an even result?",["1/6","1/3","1/2","2/3"],2,"Even outcomes 2,4,6 give 3/6 = 1/2."],
+    [3,1,"How many unordered pairs can be selected from 5 people?",["5","10","15","20"],1,"5 choose 2 = 5×4/2 = 10."],
+    [3,1,"A coin is tossed twice. What is the probability of at least one head?",["1/4","1/2","3/4","1"],2,"Only TT has no heads; probability = 1−1/4 = 3/4."],
+    [3,2,"If completing a review implies receiving approval, which statement is logically equivalent?",["Approval implies review was completed.","No approval implies review was not completed.","No review implies no approval.","Review and approval are unrelated."],1,"The contrapositive of review → approval is not approval → not review."],
+    [3,2,"Every selected candidate passed aptitude. Ravi did not pass aptitude. What follows?",["Ravi was selected.","Ravi was not selected.","All who passed were selected.","Ravi passed coding."],1,"Selected → passed aptitude. Contrapositive: did not pass → not selected."],
+    [3,2,"Three tasks X, Y, Z run one after another. X must precede Y and Z must follow Y. Which order is valid?",["Y-X-Z","Z-X-Y","X-Y-Z","X-Z-Y"],2,"Both constraints yield X before Y before Z."],
+    [3,0,"Two groups have sales of 80 and 120 units. What percentage of total sales is the first group?",["30%","40%","50%","60%"],1,"80/(80+120) × 100 = 40%. "]
+  ]
+}
