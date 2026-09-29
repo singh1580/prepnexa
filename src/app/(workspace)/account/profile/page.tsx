@@ -1,9 +1,8 @@
+import Link from "next/link";
 import { WorkspaceShell } from "@/components/workspace-shell";
-import { ProfileForm } from "@/features/account/account-actions";
+import { ProfileForm,LogoutButton } from "@/features/account/account-actions";
 import { requireWorkspace } from "@/features/auth/page-access";
-
-export const metadata = { title: "My profile" };
-export default async function Page() {
-  const auth = await requireWorkspace();
-  return <WorkspaceShell admin={auth.admin} name={auth.user.name} permissions={auth.permissions} section="profile"><div className="page-heading"><span className="eyebrow">YOUR DETAILS</span><h1>My profile</h1><p>Keep your account information accurate and up to date.</p></div><section className="panel narrow-panel"><ProfileForm name={auth.user.name} email={auth.user.email} verified={auth.user.emailVerified} /></section></WorkspaceShell>;
-}
+import { getActiveSessions } from "@/features/operations/service";
+import { SessionList } from "@/features/operations/ui/student-actions";
+export const metadata={title:"Profile & security"};
+export default async function Page(){const auth=await requireWorkspace();const sessions=await getActiveSessions(auth.user.id,auth.sessionId);return <WorkspaceShell admin={auth.admin} name={auth.user.name} permissions={auth.permissions} section="profile"><header className={auth.admin?"admin-page-header":"page-heading"}><div><p className={auth.admin?"admin-kicker":"eyebrow"}>ACCOUNT</p><h1>Profile & security</h1><p>Manage personal details, password and signed-in devices from one place.</p></div></header><div className="profile-layout"><section className={auth.admin?"admin-card":"panel"}><h2>Profile details</h2><ProfileForm name={auth.user.name} email={auth.user.email} verified={auth.user.emailVerified}/></section><section className={auth.admin?"admin-card security-summary":"panel security-summary"}><h2>Account protection</h2><div className="security-item"><span>✉</span><div><strong>Email address</strong><small>{auth.user.email}</small></div><b>{auth.user.emailVerified?"Verified":"Pending"}</b></div><div className="security-item"><span>●</span><div><strong>Password</strong><small>Reset it if you notice unusual activity.</small></div><Link className="text-button" href="/forgot-password">Reset</Link></div>{auth.admin?<div className="security-item"><span>◇</span><div><strong>Two-factor authentication</strong><small>Required for administrator sign-in.</small></div><b>Enabled</b></div>:null}</section></div><section className={auth.admin?"admin-card sessions-card":"panel"}><div className="card-heading"><div><h2>Signed-in devices</h2><p className="muted">Review and revoke active sessions.</p></div><LogoutButton/></div><SessionList sessions={sessions}/></section></WorkspaceShell>}

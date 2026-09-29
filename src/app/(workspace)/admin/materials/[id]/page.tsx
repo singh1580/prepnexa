@@ -3,20 +3,74 @@ import { notFound } from "next/navigation";
 import { AppError } from "@/lib/errors/app-error";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { getMaterial, getCatalogExams } from "@/features/admin-catalog/service";
-import { MaterialCreateForm, MaterialPublishButton, MaterialUploadForm, CatalogActions } from "@/features/admin-catalog/ui/forms";
+import {
+  MaterialCreateForm,
+  MaterialUploadForm,
+} from "@/features/admin-catalog/ui/forms";
 import { requireWorkspacePermission } from "@/features/auth/page-access";
 import { catalogIdSchema } from "@/features/admin-catalog/validation";
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const auth = await requireWorkspacePermission("material.manage");
-  const parsed = catalogIdSchema.safeParse((await params).id); if (!parsed.success) notFound();
+  const parsed = catalogIdSchema.safeParse((await params).id);
+  if (!parsed.success) notFound();
   let material: Awaited<ReturnType<typeof getMaterial>>;
-  try { material = await getMaterial(parsed.data); }
-  catch (error) { if (error instanceof AppError && error.status === 404) notFound(); throw error; }
-  const exams = material.status === "DRAFT" ? await getCatalogExams() : [];
-  return <WorkspaceShell admin name={auth.user.name} permissions={auth.permissions} section="packages">
-    <Link href="/admin/packages">← Packages and materials</Link>
-    <header className="page-heading"><h1>{material.title}</h1><p>{material.type} · {material.status}</p></header>
-    {material.status === "DRAFT" ? <section className="panel">{material.type === "PDF" || material.type === "FILE" ? <><div className="file-facts"><strong>{material.latestVersion?.originalFileName ?? "No file uploaded"}</strong><span>{material.latestVersion?.sizeBytes ? `${(material.latestVersion.sizeBytes / 1024 / 1024).toFixed(2)} MB` : "Upload required"}</span><span>Version {material.latestVersion?.version ?? 0}</span></div><MaterialUploadForm material={material} /></> : <MaterialCreateForm material={material} exams={exams} />}<MaterialPublishButton id={material.id} /></section> : <section className="panel"><span className="eyebrow">PUBLISHED VERSION {material.latestVersion?.version}</span><h2>{material.latestVersion?.originalFileName ?? material.type}</h2><p style={{ whiteSpace: "pre-wrap" }}>{material.body || "This private file is available through entitled Student libraries."}</p></section>}
-    <CatalogActions id={material.id} kind="materials" status={material.status} />
-  </WorkspaceShell>;
+  try {
+    material = await getMaterial(parsed.data);
+  } catch (error) {
+    if (error instanceof AppError && error.status === 404) notFound();
+    throw error;
+  }
+  const exams = material.status !== "ARCHIVED" ? await getCatalogExams() : [];
+  return (
+    <WorkspaceShell
+      admin
+      name={auth.user.name}
+      permissions={auth.permissions}
+      section="materials"
+    >
+      <Link href="/admin/materials">← Store & materials</Link>
+      <header className="admin-page-header">
+        <h1>{material.title}</h1>
+        <p>
+          {material.type} · Version {material.latestVersion?.version ?? 1}
+        </p>
+      </header>
+      {material.status !== "ARCHIVED" ? (
+        <section className="panel">
+          {material.type === "PDF" || material.type === "FILE" ? (
+            <>
+              <div className="file-facts">
+                <strong>
+                  {material.latestVersion?.originalFileName ??
+                    "No file uploaded"}
+                </strong>
+                <span>
+                  {material.latestVersion?.sizeBytes
+                    ? `${(material.latestVersion.sizeBytes / 1024 / 1024).toFixed(2)} MB`
+                    : "Upload required"}
+                </span>
+                <span>Version {material.latestVersion?.version ?? 0}</span>
+              </div>
+              <MaterialUploadForm material={material} />
+            </>
+          ) : (
+            <MaterialCreateForm material={material} exams={exams} />
+          )}
+        </section>
+      ) : (
+        <section className="panel">
+          <span className="eyebrow">SAVED MATERIAL</span>
+          <h2>{material.latestVersion?.originalFileName ?? material.type}</h2>
+          <p style={{ whiteSpace: "pre-wrap" }}>
+            {material.body ||
+              "This private file is available through entitled Student libraries."}
+          </p>
+        </section>
+      )}
+    </WorkspaceShell>
+  );
 }

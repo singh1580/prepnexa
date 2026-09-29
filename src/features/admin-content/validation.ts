@@ -23,6 +23,7 @@ export const questionInputSchema = z.object({
   topicId: z.uuid(),
   type: z.enum(["SINGLE_CHOICE", "MULTIPLE_CHOICE", "NUMERIC", "TEXT"]),
   stem: z.string().trim().min(10).max(20_000),
+  imageUrl: z.union([z.url().max(2_048), z.literal("")]).optional().default(""),
   explanation: z.string().trim().max(20_000).optional().default(""),
   marks: z.coerce.number().positive().max(1_000),
   negativeMarks: z.coerce.number().min(0).max(1_000),

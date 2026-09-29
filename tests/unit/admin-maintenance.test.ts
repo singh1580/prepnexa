@@ -18,12 +18,12 @@ import { archiveTest, publishTest, reorderQuestions } from "../../src/features/a
 const actor = { userId: "owner", requestId: "request" };
 describe("admin maintenance safeguards", () => {
   beforeEach(() => vi.clearAllMocks());
-  it("does not edit or unlink a published package", async () => {
+  it("edits and unlinks a live package without lifecycle copies", async () => {
     vi.mocked(catalogRepo.findProduct).mockResolvedValue({ id: "package", status: "PUBLISHED" } as NonNullable<Awaited<ReturnType<typeof catalogRepo.findProduct>>>);
-    await expect(updateProduct("package", { name: "New", slug: "new", description: "", pricePaise: 100, accessDays: 90 }, actor)).rejects.toMatchObject({ status: 409 });
-    await expect(unlinkProduct("package", "TEST", "test", actor)).rejects.toMatchObject({ status: 409 });
-    expect(catalogRepo.patchProduct).not.toHaveBeenCalled();
-    expect(catalogRepo.unlinkProductRecord).not.toHaveBeenCalled();
+    await updateProduct("package", { name: "New", slug: "new", description: "", pricePaise: 100, accessDays: 90 }, actor);
+    await unlinkProduct("package", "TEST", "test", actor);
+    expect(catalogRepo.patchProduct).toHaveBeenCalledOnce();
+    expect(catalogRepo.unlinkProductRecord).toHaveBeenCalledOnce();
   });
   it("preserves material used by a published package", async () => {
     vi.mocked(catalogRepo.findMaterial).mockResolvedValue({ id: "material", status: "PUBLISHED" } as NonNullable<Awaited<ReturnType<typeof catalogRepo.findMaterial>>>);

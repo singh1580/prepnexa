@@ -14,10 +14,11 @@ describe("admin catalog validation", () => {
     expect(productCreateSchema.safeParse({ ...base, testIds: [id, id] }).success).toBe(false);
     expect(productInputSchema.safeParse({ ...base, testIds: [id] }).success).toBe(false);
   });
-  it("validates online material content while file metadata is handled by the upload route", () => {
+  it("accepts stored files and secure video links while rejecting removed article content", () => {
     const base = { examId: crypto.randomUUID(), title: "Study guide", body: "", privateObjectKey: "" };
-    expect(materialInputSchema.safeParse({ ...base, type: "ARTICLE", body: "Useful article" }).success).toBe(true);
-    expect(materialInputSchema.safeParse({ ...base, type: "ARTICLE" }).success).toBe(false);
+    expect(materialInputSchema.safeParse({ ...base, type: "ARTICLE", body: "Legacy article" }).success).toBe(false);
     expect(materialInputSchema.safeParse({ ...base, type: "PDF" }).success).toBe(true);
+    expect(materialInputSchema.safeParse({ ...base, type: "VIDEO", body: "https://videos.example.com/lesson" }).success).toBe(true);
+    expect(materialInputSchema.safeParse({ ...base, type: "VIDEO", body: "http://videos.example.com/lesson" }).success).toBe(false);
   });
 });
