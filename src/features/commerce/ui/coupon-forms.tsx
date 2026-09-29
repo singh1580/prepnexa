@@ -27,7 +27,7 @@ function dateTimeLocal(value: Date | string | null) {
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
 
-export function CouponForm({ initial }: { products: ProductOption[]; initial?: CouponFormValue }) {
+export function CouponForm({ products, initial }: { products: ProductOption[]; initial?: CouponFormValue }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -51,7 +51,7 @@ export function CouponForm({ initial }: { products: ProductOption[]; initial?: C
         startsAt: null,
         endsAt: data.get("endsAt") ? new Date(String(data.get("endsAt"))).toISOString() : null,
         active: initial?.active ?? true,
-        productIds: [],
+        productIds: data.getAll("productIds"),
       }, initial ? "PATCH" : "POST");
       if (initial) router.push("/admin/coupons");
       else form.reset();
@@ -73,6 +73,14 @@ export function CouponForm({ initial }: { products: ProductOption[]; initial?: C
         <label className="field"><span>Total uses</span><input name="totalLimit" type="number" min="1" defaultValue={initial?.totalLimit ?? undefined} /></label>
         <label className="field"><span>Ends at</span><input name="endsAt" type="datetime-local" defaultValue={dateTimeLocal(initial?.endsAt ?? null)} /></label>
       </div>
+      <details className="coupon-scope">
+        <summary>Limit to selected live products (optional)</summary>
+        <p className="muted">Leave every package unchecked to allow this coupon on all live products.</p>
+        <div className="content-choice-list">
+          {products.map((product) => <label className="content-choice" key={product.id}><input name="productIds" value={product.id} type="checkbox" defaultChecked={initial?.products.some((item) => item.id === product.id)} /><span><strong>{product.name}</strong><small>₹{(product.pricePaise / 100).toLocaleString("en-IN")}</small></span></label>)}
+          {!products.length && <p className="muted">No live products available.</p>}
+        </div>
+      </details>
       <button className="button" type="submit">{busy ? "Saving…" : initial ? "Save coupon" : "Create coupon"}</button>
     </fieldset>
     {error ? <p className="notice danger" role="alert">{error}</p> : null}

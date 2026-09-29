@@ -1,15 +1,34 @@
 import Link from "next/link";
-import { z } from "zod";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { AdminModal } from "@/components/admin-modal";
 import { CONTENT_PERMISSIONS } from "@/features/admin-content/permissions";
 import { testCategoryLabel } from "@/features/admin-tests/categories";
-import { getManagedTests,getTestExams,getTestFilterTaxonomy } from "@/features/admin-tests/service";
+import { getManagedTests } from "@/features/admin-tests/service";
 import { TestCreateForm } from "@/features/admin-tests/ui/forms";
 import { TestListFilters } from "@/features/admin-tests/ui/test-list-filters";
 import { requireAnyWorkspacePermission } from "@/features/auth/page-access";
-const access=[CONTENT_PERMISSIONS.manageTests,CONTENT_PERMISSIONS.manageSchedules],id=z.uuid(),pageSize=20;
-type Params={exam?:string|string[];subject?:string|string[];topic?:string|string[];q?:string|string[];category?:string|string[];page?:string|string[]};
-function text(value:string|string[]|undefined,max=160){return typeof value==="string"?value.trim().slice(0,max):""}function identifier(value:string|string[]|undefined){const parsed=id.safeParse(typeof value==="string"?value:"");return parsed.success?parsed.data:""}
-export const metadata={title:"Tests & practice sets"};
-export default async function Page({searchParams}:{searchParams:Promise<Params>}){const filters=await searchParams;const examId=identifier(filters.exam),subjectId=identifier(filters.subject),topicId=identifier(filters.topic),query=text(filters.q),category=text(filters.category) as "FULL_MOCK"|"SUBJECT_TEST"|"TOPIC_SET"|"UNCLASSIFIED"|"";const page=Math.max(1,Number.parseInt(text(filters.page,5),10)||1);const auth=await requireAnyWorkspacePermission(access);const canManage=auth.permissions.includes(CONTENT_PERMISSIONS.manageTests);const[result,exams,taxonomy]=await Promise.all([getManagedTests({examId:examId||undefined,subjectId:subjectId||undefined,topicId:topicId||undefined,query:query||undefined,category:category||undefined,page,pageSize}),canManage?getTestExams():Promise.resolve([]),getTestFilterTaxonomy()]);return <WorkspaceShell admin name={auth.user.name} permissions={auth.permissions} section="tests"><header className="admin-page-header"><div><p className="admin-kicker">TEST CREATION</p><h1>Tests & practice sets</h1><p>Create tests, organise sections and add questions manually or from a spreadsheet.</p></div>{canManage&&exams.length?<AdminModal label="+ New test" title="Create a new test" description="Set up the paper first, then add sections and questions." large><TestCreateForm exams={exams} selectedExamId={examId}/></AdminModal>:null}</header><TestListFilters exams={exams} subjects={taxonomy.subjects} topics={taxonomy.topics} initial={{exam:examId,subject:subjectId,topic:topicId,category,status:"",query}}/><div className="admin-toolbar"><span>{result.total} test{result.total===1?"":"s"}</span></div>{result.items.length?<div className="test-card-grid">{result.items.map(test=><Link className="test-list-card" href={`/admin/tests/${test.id}`} key={test.id}><span className="test-card-icon">▣</span><div><span>{test.examName} · {testCategoryLabel(test.category)}</span><h2>{test.title}</h2><p>{test.durationMinutes} minutes</p></div><dl><div><dt>Sections</dt><dd>{test.sectionCount}</dd></div><div><dt>Questions</dt><dd>{test.questionCount}</dd></div></dl><b>→</b></Link>)}</div>:<div className="admin-card clean-empty tall"><span className="empty-icon">▣</span><strong>No matching tests</strong><span>Change filters or create a new test.</span></div>}</WorkspaceShell>}
+
+const access = [CONTENT_PERMISSIONS.manageTests, CONTENT_PERMISSIONS.manageSchedules];
+const pageSize = 20;
+type Params = { q?: string | string[]; category?: string | string[]; mode?: string | string[]; page?: string | string[] };
+function text(value: string | string[] | undefined, max = 160) { return typeof value === "string" ? value.trim().slice(0, max) : ""; }
+export const metadata = { title: "Tests & practice sets" };
+
+export default async function Page({ searchParams }: { searchParams: Promise<Params> }) {
+  const filters = await searchParams;
+  const query = text(filters.q);
+  const category = text(filters.category) as "FULL_MOCK" | "SUBJECT_TEST" | "TOPIC_SET" | "UNCLASSIFIED" | "";
+  const mode = text(filters.mode) as "MOCK" | "PRACTICE" | "";
+  const page = Math.max(1, Number.parseInt(text(filters.page, 5), 10) || 1);
+  const auth = await requireAnyWorkspacePermission(access);
+  const canManage = auth.permissions.includes(CONTENT_PERMISSIONS.manageTests);
+  const result = await getManagedTests({ query: query || undefined, category: category || undefined, mode: mode || undefined, page, pageSize });
+  return (
+    <WorkspaceShell admin name={auth.user.name} permissions={auth.permissions} section="tests">
+      <header className="admin-page-header"><div><p className="admin-kicker">ASSESSMENT WORKSPACE</p><h1>Tests & practice sets</h1><p>Create papers, organise sections and add questions manually or with Excel.</p></div>{canManage && <AdminModal label="+ New test" title="Create test or practice set" description="Add the settings now, then build sections and questions." large><TestCreateForm /></AdminModal>}</header>
+      <TestListFilters initial={{ query, category, mode }} />
+      <div className="admin-toolbar"><span>{result.total} item{result.total === 1 ? "" : "s"}</span></div>
+      {result.items.length ? <div className="test-card-grid">{result.items.map((test) => <Link className="test-list-card" href={`/admin/tests/${test.id}`} key={test.id}><span className="test-card-icon">▣</span><div><span>{test.mode === "PRACTICE" ? "Practice set" : "Mock test"} · {testCategoryLabel(test.category)}</span><h2>{test.title}</h2><p>{test.durationMinutes} minutes</p></div><dl><div><dt>Sections</dt><dd>{test.sectionCount}</dd></div><div><dt>Questions</dt><dd>{test.questionCount}</dd></div></dl><b>→</b></Link>)}</div> : <div className="admin-card clean-empty tall"><span className="empty-icon">▣</span><strong>No tests or practice sets</strong><span>Create your first item or change the active filters.</span></div>}
+    </WorkspaceShell>
+  );
+}

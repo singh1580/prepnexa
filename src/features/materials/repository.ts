@@ -12,13 +12,13 @@ export type StudentMaterial = {
 function rows<T>(value: Awaited<ReturnType<typeof db.execute>>) { return value.rows as T[]; }
 
 const accessSql = (userId: string) => sql`
-  select m.id, m.title, m.type, m.body, m.allow_download as "allowDownload", e.name as "examName",
+  select m.id, m.title, m.type, m.body, m.allow_download as "allowDownload", coalesce(e.name,'Prepstore') as "examName",
     v.id as "versionId", v.version, v.original_file_name as "originalFileName", v.content_type as "contentType",
     v.size_bytes as "sizeBytes", v.private_object_key as "privateObjectKey", v.checksum,
     access.entitlement_id as "entitlementId",
     case when access.entitlement_id is null then 'FREE' else 'ENTITLEMENT' end as "accessSource"
   from materials m
-  join exams e on e.id = m.exam_id and e.status = 'PUBLISHED'
+  left join exams e on e.id = m.exam_id
   join lateral (
     select mv.* from material_versions mv where mv.material_id = m.id and mv.published_at is not null
     order by mv.version desc limit 1
@@ -26,7 +26,7 @@ const accessSql = (userId: string) => sql`
   join lateral (
     select en.id as entitlement_id
     from product_materials pm
-    join products p on p.id = pm.product_id and p.status = 'PUBLISHED'
+    join products p on p.id = pm.product_id and p.is_live = true
     left join entitlements en on en.product_id = p.id and en.user_id = ${userId}::uuid
       and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now()
     where pm.material_id = m.id and (p.price_paise = 0 or en.id is not null)

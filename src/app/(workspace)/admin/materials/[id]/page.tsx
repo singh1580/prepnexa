@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppError } from "@/lib/errors/app-error";
 import { WorkspaceShell } from "@/components/workspace-shell";
-import { getMaterial, getCatalogExams } from "@/features/admin-catalog/service";
+import { getMaterial } from "@/features/admin-catalog/service";
 import {
   MaterialCreateForm,
+  MaterialDeleteButton,
   MaterialUploadForm,
 } from "@/features/admin-catalog/ui/forms";
 import { requireWorkspacePermission } from "@/features/auth/page-access";
@@ -24,7 +25,6 @@ export default async function Page({
     if (error instanceof AppError && error.status === 404) notFound();
     throw error;
   }
-  const exams = material.status !== "ARCHIVED" ? await getCatalogExams() : [];
   return (
     <WorkspaceShell
       admin
@@ -39,8 +39,7 @@ export default async function Page({
           {material.type} · Version {material.latestVersion?.version ?? 1}
         </p>
       </header>
-      {material.status !== "ARCHIVED" ? (
-        <section className="panel">
+      <section className="panel">
           {material.type === "PDF" || material.type === "FILE" ? (
             <>
               <div className="file-facts">
@@ -58,19 +57,10 @@ export default async function Page({
               <MaterialUploadForm material={material} />
             </>
           ) : (
-            <MaterialCreateForm material={material} exams={exams} />
+            <MaterialCreateForm material={material} />
           )}
-        </section>
-      ) : (
-        <section className="panel">
-          <span className="eyebrow">SAVED MATERIAL</span>
-          <h2>{material.latestVersion?.originalFileName ?? material.type}</h2>
-          <p style={{ whiteSpace: "pre-wrap" }}>
-            {material.body ||
-              "This private file is available through entitled Student libraries."}
-          </p>
-        </section>
-      )}
+      </section>
+      <MaterialDeleteButton id={material.id} />
     </WorkspaceShell>
   );
 }

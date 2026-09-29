@@ -15,7 +15,7 @@ describe("admin catalog validation", () => {
     expect(productInputSchema.safeParse({ ...base, testIds: [id] }).success).toBe(false);
   });
   it("accepts stored files and secure video links while rejecting removed article content", () => {
-    const base = { examId: crypto.randomUUID(), title: "Study guide", body: "", privateObjectKey: "" };
+    const base = { title: "Study guide", body: "", privateObjectKey: "" };
     expect(materialInputSchema.safeParse({ ...base, type: "ARTICLE", body: "Legacy article" }).success).toBe(false);
     expect(materialInputSchema.safeParse({ ...base, type: "PDF" }).success).toBe(true);
     expect(materialInputSchema.safeParse({ ...base, type: "VIDEO", body: "https://videos.example.com/lesson" }).success).toBe(true);

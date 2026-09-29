@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { Field } from "@/features/auth/ui/field";
 import type { ApiFailure, ApiSuccess } from "@/lib/http/api-response";
 
-type Exam = { id: string; name: string };
 type LinkOption = {
   id: string;
   title: string;
@@ -97,7 +96,7 @@ export function ProductCreateForm({
         product ? `products/${product.id}` : "products",
         {
           name: String(data.get("name")),
-          slug: String(data.get("slug")),
+          slug: product?.slug ?? "",
           description: String(data.get("description") ?? ""),
           mrpPaise: Math.round(Number(data.get("mrpRupees")) * 100),
           pricePaise: Math.round(Number(data.get("priceRupees")) * 100),
@@ -122,14 +121,6 @@ export function ProductCreateForm({
           label="Product / bundle name"
           name="name"
           defaultValue={product?.name}
-          required
-        />
-        <Field
-          id="product-slug"
-          label="URL slug"
-          name="slug"
-          defaultValue={product?.slug}
-          pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
           required
         />
         <div className="question-grid">
@@ -183,13 +174,10 @@ export function ProductCreateForm({
 }
 
 export function MaterialCreateForm({
-  exams,
   material,
 }: {
-  exams: Exam[];
   material?: {
     id: string;
-    examId: string;
     title: string;
     type: string;
     body: string | null;
@@ -207,7 +195,6 @@ export function MaterialCreateForm({
       request(
         material ? `materials/${material.id}` : "materials",
         {
-          examId: String(data.get("examId")),
           title: String(data.get("title")),
           type,
           body: String(data.get("body") ?? ""),
@@ -222,16 +209,6 @@ export function MaterialCreateForm({
   return (
     <form className="admin-form" onSubmit={submit}>
       <fieldset disabled={Boolean(busy)}>
-        <label className="field">
-          <span>Exam</span>
-          <select name="examId" defaultValue={material?.examId}>
-            {exams.map((exam) => (
-              <option value={exam.id} key={exam.id}>
-                {exam.name}
-              </option>
-            ))}
-          </select>
-        </label>
         <Field
           id="material-title"
           label="Material title"
@@ -257,10 +234,8 @@ export function MaterialCreateForm({
 }
 
 export function MaterialUploadForm({
-  exams,
   material,
 }: {
-  exams?: Exam[];
   material?: { id: string; title: string; allowDownload: boolean };
 }) {
   const { router, busy, error, mutate } = useMutation();
@@ -283,18 +258,6 @@ export function MaterialUploadForm({
   return (
     <form className="admin-form material-upload-form" onSubmit={submit}>
       <fieldset disabled={Boolean(busy)}>
-        {!material && (
-          <label className="field">
-            <span>Exam</span>
-            <select name="examId" required>
-              {exams?.map((exam) => (
-                <option value={exam.id} key={exam.id}>
-                  {exam.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
         <Field
           id={material ? "replacement-title" : "upload-title"}
           label="Material title"
@@ -338,46 +301,22 @@ export function MaterialUploadForm({
   );
 }
 
-export function MaterialPublishButton({ id }: { id: string }) {
-  const { busy, error, mutate } = useMutation();
-  return (
-    <div>
-      <button
-        type="button"
-        className="button secondary"
-        disabled={Boolean(busy)}
-        onClick={() =>
-          mutate("publish", () => request(`materials/${id}/publish`, {}))
-        }
-      >
-        {busy ? "Publishing…" : "Publish"}
-      </button>
-      {error && (
-        <p className="notice danger" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
 export function ProductBundleControls({
   id,
-  status,
+  isLive,
   linkedTests,
   linkedMaterials,
   availableTests,
   availableMaterials,
 }: {
   id: string;
-  status: string;
+  isLive: boolean;
   linkedTests: LinkOption[];
   linkedMaterials: LinkOption[];
   availableTests: LinkOption[];
   availableMaterials: LinkOption[];
 }) {
   const { busy, error, mutate } = useMutation();
-  const editable = status !== "ARCHIVED";
   const linked = new Set(
     [...linkedTests, ...linkedMaterials].map((item) => item.id),
   );
@@ -403,8 +342,7 @@ export function ProductBundleControls({
             <span>TEST</span>
             <strong>{item.title}</strong>
             <small>{item.mode}</small>
-            {editable && (
-              <button
+            <button
                 type="button"
                 className="text-button"
                 disabled={Boolean(busy)}
@@ -420,7 +358,6 @@ export function ProductBundleControls({
               >
                 Remove
               </button>
-            )}
           </div>
         ))}
         {linkedMaterials.map((item) => (
@@ -428,8 +365,7 @@ export function ProductBundleControls({
             <span>MATERIAL</span>
             <strong>{item.title}</strong>
             <small>{item.type}</small>
-            {editable && (
-              <button
+            <button
                 type="button"
                 className="text-button"
                 disabled={Boolean(busy)}
@@ -445,14 +381,12 @@ export function ProductBundleControls({
               >
                 Remove
               </button>
-            )}
           </div>
         ))}
         {!linkedTests.length && !linkedMaterials.length && (
           <p className="muted">Nothing linked yet.</p>
         )}
       </section>
-      {editable && (
         <>
           <section className="panel">
             <h2>Add test</h2>
@@ -490,20 +424,15 @@ export function ProductBundleControls({
               <p className="muted">No other materials available.</p>
             )}
           </section>
-          {status !== "PUBLISHED" && (
-            <button
-              type="button"
-              className="button"
-              disabled={Boolean(busy)}
-              onClick={() =>
-                mutate("publish", () => request(`products/${id}/publish`, {}))
-              }
-            >
-              {busy === "publish" ? "Making live…" : "Make product live"}
-            </button>
-          )}
+          <button
+            type="button"
+            className={isLive ? "button secondary" : "button"}
+            disabled={Boolean(busy)}
+            onClick={() => mutate("visibility", () => request(`products/${id}/status`, { isLive: !isLive }, "PATCH"))}
+          >
+            {busy === "visibility" ? "Updating…" : isLive ? "Take product offline" : "Make product live"}
+          </button>
         </>
-      )}
       {error && (
         <p className="notice danger" role="alert">
           {error}
@@ -516,11 +445,9 @@ export function ProductBundleControls({
 export function CatalogActions({
   id,
   kind,
-  status,
 }: {
   id: string;
   kind: "materials" | "products";
-  status: string;
 }) {
   const { router, busy, error, mutate } = useMutation();
   async function duplicate() {
@@ -534,8 +461,7 @@ export function CatalogActions({
   }
   return (
     <div className="form-actions">
-      {status !== "DRAFT" && (
-        <button
+      <button
           type="button"
           className="button secondary"
           disabled={Boolean(busy)}
@@ -543,24 +469,26 @@ export function CatalogActions({
         >
           Create editable copy
         </button>
-      )}
-      {status !== "ARCHIVED" && (
-        <button
-          type="button"
-          className="button secondary"
-          disabled={Boolean(busy)}
-          onClick={() =>
-            mutate("archive", () => request(`${kind}/${id}/archive`, {}))
-          }
-        >
-          Archive
-        </button>
-      )}
       {error && (
         <p className="notice danger" role="alert">
           {error}
         </p>
       )}
+    </div>
+  );
+}
+
+export function MaterialDeleteButton({ id }: { id: string }) {
+  const { router, busy, error, mutate } = useMutation();
+  async function remove() {
+    if (!window.confirm("Delete this saved material permanently?")) return;
+    const result = await mutate("delete", () => request(`materials/${id}`, {}, "DELETE"));
+    if (result) router.push("/admin/materials");
+  }
+  return (
+    <div className="danger-zone">
+      <button className="button danger" type="button" disabled={Boolean(busy)} onClick={remove}>{busy ? "Deleting…" : "Delete material"}</button>
+      {error && <p className="notice danger" role="alert">{error}</p>}
     </div>
   );
 }

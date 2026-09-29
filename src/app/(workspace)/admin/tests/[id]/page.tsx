@@ -3,8 +3,7 @@ import { testCategoryLabel } from "@/features/admin-tests/categories";
 import { notFound } from "next/navigation";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { CONTENT_PERMISSIONS } from "@/features/admin-content/permissions";
-import { getManagedTest, getTestExams } from "@/features/admin-tests/service";
-import { listTopicsForTest } from "@/features/admin-tests/repository";
+import { getManagedTest } from "@/features/admin-tests/service";
 import { TestBuilder } from "@/features/admin-tests/ui/forms";
 import { testIdSchema } from "@/features/admin-tests/validation";
 import { requireAnyWorkspacePermission } from "@/features/auth/page-access";
@@ -32,9 +31,6 @@ export default async function Page({
     throw error;
   }
   const canManage = auth.permissions.includes(CONTENT_PERMISSIONS.manageTests);
-  const exams = canManage ? await getTestExams() : [];
-  const topics =
-    test.status !== "ARCHIVED" ? await listTopicsForTest(test.examId) : [];
   const assigned = new Set(
     test.sections.flatMap((section) =>
       section.questions.map((question) => question.questionId),
@@ -53,7 +49,7 @@ export default async function Page({
       <header className="admin-page-header">
         <div>
           <span className="eyebrow">
-            {test.examName} · {testCategoryLabel(test.category)}
+            {test.mode === "PRACTICE" ? "Practice set" : "Mock test"} · {testCategoryLabel(test.category)}
           </span>
           <h1>{test.title}</h1>
           <p>
@@ -66,17 +62,14 @@ export default async function Page({
         test={{
           category: test.category,
           id: test.id,
-          examId: test.examId,
           title: test.title,
-          mode: test.mode,
+          mode: test.mode === "PRACTICE" ? "PRACTICE" : "MOCK",
           durationMinutes: test.durationMinutes,
           instructions: test.instructions,
           maxAttempts: test.maxAttempts,
           shuffleQuestions: test.shuffleQuestions,
           shuffleOptions: test.shuffleOptions,
-          status: test.status,
         }}
-        exams={exams}
         sections={test.sections.map((section) => ({
           id: section.id,
           title: section.title,
@@ -101,7 +94,6 @@ export default async function Page({
         canCreate={auth.permissions.includes(
           CONTENT_PERMISSIONS.createQuestions,
         )}
-        topics={topics}
       />
     </WorkspaceShell>
   );

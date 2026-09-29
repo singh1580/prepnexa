@@ -34,7 +34,7 @@ export async function listManagedCoupons() {
 
 export function listCouponProducts() {
   return db.select({ id: products.id, name: products.name, pricePaise: products.pricePaise, currency: products.currency })
-    .from(products).where(eq(products.status, "PUBLISHED")).orderBy(asc(products.name));
+    .from(products).where(eq(products.isLive, true)).orderBy(asc(products.name));
 }
 
 export async function findManagedCoupon(id: string) {
@@ -89,7 +89,7 @@ export async function findCheckoutProduct(productId: string, userId: string) {
   const result = await db.execute(sql`
     select p.id,p.slug,p.name,p.description,p.price_paise as "pricePaise",p.currency,p.access_days as "accessDays",p.refund_policy as "refundPolicy",
       exists(select 1 from entitlements e where e.user_id=${userId} and e.product_id=p.id and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now()) as "alreadyOwned"
-    from products p where p.id=${productId} and p.status='PUBLISHED' limit 1
+    from products p where p.id=${productId} and p.is_live=true limit 1
   `);
   return rows<{ id:string;slug:string;name:string;description:string|null;pricePaise:number;currency:string;accessDays:number;refundPolicy:string;alreadyOwned:boolean }>(result)[0];
 }
@@ -131,7 +131,7 @@ export async function insertCheckoutOrder(input: { userId:string;productId:strin
       select p.*,c.id as coupon_id,c.code as coupon_code,
         least(p.price_paise, case when c.type='FIXED' then c.value else floor(p.price_paise*c.value/10000.0)::int end,
           coalesce(c.max_discount_paise,p.price_paise))::int as discount
-      from products p cross join locked_coupon c where p.id=${input.productId} and p.status='PUBLISHED'
+      from products p cross join locked_coupon c where p.id=${input.productId} and p.is_live=true
         and p.price_paise>=c.min_order_paise and (c.currency is null or c.currency=p.currency)
         and (not exists(select 1 from coupon_products cp where cp.coupon_id=c.id) or exists(select 1 from coupon_products cp where cp.coupon_id=c.id and cp.product_id=p.id))
         and (c.total_limit is null or (select count(*) from coupon_redemptions cr where cr.coupon_id=c.id and (cr.status='CONSUMED' or (cr.status='RESERVED' and cr.expires_at>now())))<c.total_limit)
@@ -154,7 +154,7 @@ export async function insertCheckoutOrder(input: { userId:string;productId:strin
     ) select id,status,subtotal_paise as "subtotalPaise",discount_paise as "discountPaise",total_paise as "totalPaise",currency,coupon_code as "couponCode",expires_at as "expiresAt",null::uuid as "paymentAttemptId",null::text as provider,null::text as "checkoutReference" from created_order
   `) : await db.execute(sql`
     with priced as (
-      select p.* from products p where p.id=${input.productId} and p.status='PUBLISHED'
+      select p.* from products p where p.id=${input.productId} and p.is_live=true
         and not exists(select 1 from entitlements e where e.user_id=${input.userId} and e.product_id=p.id and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())
     ), created_order as (
       insert into orders(id,user_id,status,subtotal_paise,discount_paise,total_paise,currency,idempotency_key,expires_at,created_at,updated_at)

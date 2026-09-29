@@ -29,7 +29,7 @@ describe("admin content policy and validation", () => {
 
   it("validates answer rules for every question type", () => {
     const base = { topicId: crypto.randomUUID(), stem: "What is ten plus ten?", explanation: "Basic addition", marks: 1, negativeMarks: 0, difficulty: "EASY" as const, numericAnswer: null, numericTolerance: 0, acceptedAnswers: [], caseSensitive: false };
-    const options = [{ stableKey: "A", body: "20", isCorrect: true, sortOrder: 0 }, { stableKey: "B", body: "30", isCorrect: false, sortOrder: 1 }];
+    const options = [{ stableKey: "A", body: "20", isCorrect: true, sortOrder: 0 }, { stableKey: "B", body: "30", isCorrect: false, sortOrder: 1 }, { stableKey: "C", body: "40", isCorrect: false, sortOrder: 2 }, { stableKey: "D", body: "50", isCorrect: false, sortOrder: 3 }];
     expect(questionInputSchema.safeParse({ ...base, type: "SINGLE_CHOICE", options }).success).toBe(true);
     expect(questionInputSchema.safeParse({ ...base, type: "SINGLE_CHOICE", options: options.map((option) => ({ ...option, isCorrect: true })) }).success).toBe(false);
     expect(questionInputSchema.safeParse({ ...base, type: "NUMERIC", options: [], numericAnswer: 20 }).success).toBe(true);

@@ -1,141 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-type Item = { id: string; title: string; examName: string };
+type Item = { id: string; title: string; mode?: string; type?: string };
 export type SellableItems = { tests: Item[]; materials: Item[] };
 
-export function ContentPicker({ items }: { items: SellableItems }) {
+function MultiSelect({
+  title,
+  hint,
+  field,
+  items,
+}: {
+  title: string;
+  hint: string;
+  field: "testIds" | "materialIds";
+  items: Item[];
+}) {
   const [query, setQuery] = useState("");
-  const [exam, setExam] = useState("");
-  const [kind, setKind] = useState("");
-  const [selectedOnly, setSelectedOnly] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const all = [
-    ...items.tests.map((item) => ({ ...item, kind: "Test", field: "testIds" })),
-    ...items.materials.map((item) => ({
-      ...item,
-      kind: "Material",
-      field: "materialIds",
-    })),
-  ];
-  const exams = [...new Set(all.map((item) => item.examName))];
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return items.filter((item) =>
+      `${item.title} ${item.mode ?? ""} ${item.type ?? ""}`.toLowerCase().includes(needle),
+    );
+  }, [items, query]);
   const chosen = new Set(selected);
-  const visible = all.filter(
-    (item) =>
-      (!exam || item.examName === exam) &&
-      (!kind || item.kind === kind) &&
-      (!selectedOnly || chosen.has(`${item.field}:${item.id}`)) &&
-      item.title.toLowerCase().includes(query.trim().toLowerCase()),
-  );
-  const selectedItems = all.filter((item) =>
-    chosen.has(`${item.field}:${item.id}`),
-  );
   return (
-    <div>
-      <h3>Choose what students get</h3>
-      <p>
-        Select one item to sell individually, or combine tests and materials
-        into a bundle.
-      </p>
-      <div className="question-grid">
-        <label className="field">
-          <span>Search content title</span>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </label>
-        <label className="field">
-          <span>Exam</span>
-          <select
-            value={exam}
-            onChange={(event) => setExam(event.target.value)}
-          >
-            <option value="">All exams</option>
-            {exams.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span>Content type</span>
-          <select
-            value={kind}
-            onChange={(event) => setKind(event.target.value)}
-          >
-            <option value="">Tests and materials</option>
-            <option>Test</option>
-            <option>Material</option>
-          </select>
-        </label>
+    <section className="content-select-panel">
+      <div className="section-heading">
+        <div><h3>{title}</h3><p>{hint}</p></div>
+        <span className="selection-count">{selected.length} selected</span>
       </div>
-      <label className="check-row">
-        <input
-          type="checkbox"
-          checked={selectedOnly}
-          onChange={(event) => setSelectedOnly(event.target.checked)}
-        />{" "}
-        Show selected only
+      <label className="compact-search">
+        <span className="sr-only">Search {title.toLowerCase()}</span>
+        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${title.toLowerCase()}…`} />
       </label>
-      <p role="status">
-        {selectedItems.length} selected · {visible.length} matching. Selections
-        stay saved when filters change.
-      </p>
-      {selectedItems.map((item) => (
-        <input
-          type="hidden"
-          name={item.field}
-          value={item.id}
-          key={`${item.field}:${item.id}`}
-        />
-      ))}
-      {visible.map((item) => {
-        const key = `${item.field}:${item.id}`;
-        return (
-          <label className="check-row" key={key}>
+      {selected.map((id) => <input key={id} type="hidden" name={field} value={id} />)}
+      <div className="content-choice-list">
+        {visible.map((item) => (
+          <label className="content-choice" key={item.id}>
             <input
               type="checkbox"
-              checked={chosen.has(key)}
-              onChange={(event) => {
-                const checked = event.target.checked;
-                setSelected((current) =>
-                  checked
-                    ? [...new Set([...current, key])]
-                    : current.filter((value) => value !== key),
-                );
-              }}
+              checked={chosen.has(item.id)}
+              onChange={(event) => setSelected((current) => event.target.checked ? [...new Set([...current, item.id])] : current.filter((id) => id !== item.id))}
             />
-            <span>
-              {item.kind} · {item.examName} · {item.title}
-            </span>
+            <span><strong>{item.title}</strong><small>{item.mode?.replaceAll("_", " ") ?? item.type ?? "Saved item"}</small></span>
           </label>
-        );
-      })}
-      {!all.length ? (
-        <p className="notice">
-          Add tests or materials first. You can save an empty package for now.
-        </p>
-      ) : (
-        !visible.length && (
-          <p className="muted">
-            No matching content. Clear filters or try another title.
-          </p>
-        )
-      )}
-      <button
-        type="button"
-        className="text-button"
-        onClick={() => {
-          setQuery("");
-          setExam("");
-          setKind("");
-          setSelectedOnly(false);
-        }}
-      >
-        Clear content filters
-      </button>
+        ))}
+        {!visible.length && <p className="muted">{items.length ? "No matching items." : "Nothing available yet."}</p>}
+      </div>
+    </section>
+  );
+}
+
+export function ContentPicker({ items }: { items: SellableItems }) {
+  return (
+    <div className="package-content-picker">
+      <MultiSelect title="Add study material" hint="Select one or more files or videos from Store & materials." field="materialIds" items={items.materials} />
+      <MultiSelect title="Add tests & practice sets" hint="Select one or more items from Tests & practice sets." field="testIds" items={items.tests} />
     </div>
   );
 }
@@ -144,61 +66,15 @@ export function SearchableContentSelect({
   items,
   label,
 }: {
-  items: {
-    id: string;
-    title: string;
-    examName?: string;
-    mode?: string;
-    type?: string;
-  }[];
+  items: Item[];
   label: string;
 }) {
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState("");
-  const visible = items.filter((item) =>
-    `${item.examName ?? ""} ${item.title} ${item.type ?? ""}`
-      .toLowerCase()
-      .includes(query.trim().toLowerCase()),
-  );
-  const value = visible.some((item) => item.id === selected)
-    ? selected
-    : (visible[0]?.id ?? "");
+  const visible = items.filter((item) => item.title.toLowerCase().includes(query.trim().toLowerCase()));
   return (
-    <div>
-      <label className="field">
-        <span>Search {label.toLowerCase()}</span>
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Title or exam"
-        />
-      </label>
-      <label className="field">
-        <span>{label}</span>
-        <select
-          name="id"
-          value={value}
-          onChange={(event) => setSelected(event.target.value)}
-          required
-        >
-          <option value="" disabled>
-            Choose {label.toLowerCase()}
-          </option>
-          {visible.map((item) => (
-            <option value={item.id} key={item.id}>
-              {item.examName ? `${item.examName} · ` : ""}
-              {item.title}
-              {item.type ? ` · ${item.type}` : ""}
-            </option>
-          ))}
-        </select>
-      </label>
-      {!visible.length && (
-        <p className="muted">
-          No matches. Clear the search to see available content.
-        </p>
-      )}
+    <div className="searchable-select">
+      <label className="field"><span>Search {label.toLowerCase()}</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+      <label className="field"><span>{label}</span><select name="id" required>{visible.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
     </div>
   );
 }

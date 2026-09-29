@@ -5,27 +5,24 @@ import {
   invalidContentState,
   isUniqueViolation,
 } from "@/features/admin-content/errors";
-import { findExam } from "@/features/admin-content/repository";
 import {
   copyProductRecord,
+  deleteMaterialRecord,
   patchProduct,
   patchMaterial,
   unlinkProductRecord,
-  archiveCatalogRecord,
-  materialHasPublishedPackage,
   findCatalogTest,
   findLatestMaterialVersion,
+  findIncompleteProductItems,
   findMaterial,
   findProduct,
   findProductBundle,
   insertMaterial,
   insertProduct,
   insertProductLink,
-  listCatalogExams,
   listMaterials,
   listProducts,
-  publishMaterialRecord,
-  publishProductRecord,
+  setProductLiveRecord,
   appendMaterialFileVersion,
   type MaterialInput,
   type ProductInput,
@@ -60,21 +57,21 @@ async function write<T>(
 }
 export const getProducts = () => listProducts();
 export const getMaterials = () => listMaterials();
-export const getCatalogExams = () => listCatalogExams();
 export async function getProduct(id: string) {
   const product = await findProductBundle(id);
   if (!product) throw contentNotFound("Product");
   return product;
 }
+const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 150);
+const withSlug = <T extends ProductInput>(input: T): T => ({ ...input, slug: input.slug || slugify(input.name) });
 export const createProduct = (input: ProductCreationInput, actor: Actor) =>
   write("product_create", actor, () =>
-    insertProduct(input, {
+    insertProduct(withSlug(input), {
       actorUserId: actor.userId,
       requestId: actor.requestId,
     }),
   );
 export async function createMaterial(input: MaterialInput, actor: Actor) {
-  if (!(await findExam(input.examId))) throw contentNotFound("Exam");
   if (input.type === "PDF" || input.type === "FILE")
     throw invalidContentState(
       "Use the file upload form for PDF and downloadable materials.",
@@ -93,7 +90,6 @@ export async function createUploadedMaterial(
   file: StoredFileMetadata,
   actor: Actor,
 ) {
-  if (!(await findExam(input.examId))) throw contentNotFound("Exam");
   return write("material_file_create", actor, () =>
     insertMaterial(
       { ...input, body: "", privateObjectKey: file.objectKey },
@@ -109,39 +105,8 @@ export async function uploadMaterialVersion(
   actor: Actor,
 ) {
   const before = await getMaterial(id);
-  if (before.status === "ARCHIVED")
-    throw invalidContentState("This material is unavailable.");
   return write("material_file_version", actor, () =>
     appendMaterialFileVersion(before, file, input, {
-      actorUserId: actor.userId,
-      requestId: actor.requestId,
-    }),
-  );
-}
-export async function publishMaterial(id: string, actor: Actor) {
-  const before = await findMaterial(id);
-  if (!before) throw contentNotFound("Material");
-  if (before.status !== "DRAFT")
-    throw invalidContentState("Only draft materials can be published.");
-  const exam = await findExam(before.examId);
-  if (!exam || exam.status !== "PUBLISHED")
-    throw invalidContentState(
-      "Publish the material's exam before publishing this material.",
-    );
-  const version = await findLatestMaterialVersion(id);
-  if (
-    (before.type === "PDF" || before.type === "FILE") &&
-    (!version?.privateObjectKey ||
-      !version.checksum ||
-      !version.contentType ||
-      !version.originalFileName ||
-      !version.sizeBytes)
-  )
-    throw invalidContentState(
-      "Upload a valid file before publishing this material.",
-    );
-  return write("material_publish", actor, () =>
-    publishMaterialRecord(before, {
       actorUserId: actor.userId,
       requestId: actor.requestId,
     }),
@@ -155,13 +120,11 @@ export async function linkProduct(
 ) {
   const product = await findProduct(id);
   if (!product) throw contentNotFound("Product");
-  if (product.status === "ARCHIVED")
-    throw invalidContentState("This product is unavailable.");
   const target =
     kind === "TEST"
       ? await findCatalogTest(targetId)
       : await findMaterial(targetId);
-  if (!target || target.status !== "PUBLISHED")
+  if (!target)
     throw invalidContentState(`This ${kind.toLowerCase()} is unavailable.`);
   return write("product_link", actor, () =>
     insertProductLink(id, kind, targetId, {
@@ -170,31 +133,21 @@ export async function linkProduct(
     }),
   );
 }
-export async function publishProduct(id: string, actor: Actor) {
+export async function setProductLive(id: string, isLive: boolean, actor: Actor) {
   const before = await getProduct(id);
-  if (before.status !== "DRAFT")
-    throw invalidContentState("Only draft packages can be published.");
-  const usableTest = before.linkedTests.some(
-    (test) => test.status === "PUBLISHED" && test.examStatus === "PUBLISHED",
-  );
-  const usableMaterial = before.linkedMaterials.some(
-    (material) => material.status === "PUBLISHED",
-  );
-  if (
-    before.linkedTests.some(
-      (test) => test.status !== "PUBLISHED" || test.examStatus !== "PUBLISHED",
-    ) ||
-    before.linkedMaterials.some((material) => material.status !== "PUBLISHED")
-  )
+  if (isLive && !before.linkedTests.length && !before.linkedMaterials.length)
     throw invalidContentState(
-      "Remove unavailable items before publishing this package.",
+      "Add at least one test, practice set or study material before making this package live.",
     );
-  if (!usableTest && !usableMaterial)
-    throw invalidContentState(
-      "Link at least one currently published test or material before publishing.",
-    );
-  return write("product_publish", actor, () =>
-    publishProductRecord(before, {
+  if (isLive) {
+    const incomplete = await findIncompleteProductItems(id);
+    if (incomplete.tests.length)
+      throw invalidContentState(`Add questions to these tests before going live: ${incomplete.tests.join(", ")}.`);
+    if (incomplete.materials.length)
+      throw invalidContentState(`Complete these materials before going live: ${incomplete.materials.join(", ")}.`);
+  }
+  return write(isLive ? "product_enable" : "product_disable", actor, () =>
+    setProductLiveRecord(before, isLive, {
       actorUserId: actor.userId,
       requestId: actor.requestId,
     }),
@@ -208,10 +161,8 @@ export async function updateProduct(
 ) {
   const before = await findProduct(id);
   if (!before) throw contentNotFound("Product");
-  if (before.status === "ARCHIVED")
-    throw invalidContentState("This product is unavailable.");
   return write("product_update", actor, () =>
-    patchProduct(before, input, {
+    patchProduct(before, withSlug(input), {
       actorUserId: actor.userId,
       requestId: actor.requestId,
     }),
@@ -228,16 +179,24 @@ export async function updateMaterial(
   actor: Actor,
 ) {
   const before = await getMaterial(id);
-  if (before.status === "ARCHIVED")
-    throw invalidContentState("This material is unavailable.");
-  const exam = await findExam(input.examId);
-  if (!exam || exam.status === "ARCHIVED") throw contentNotFound("Exam");
   return write("material_update", actor, () =>
     patchMaterial(before, input, {
       actorUserId: actor.userId,
       requestId: actor.requestId,
     }),
   );
+}
+export async function deleteMaterial(id: string, actor: Actor) {
+  const before = await findMaterial(id);
+  if (!before) throw contentNotFound("Material");
+  const result = await write("material_delete", actor, () =>
+    deleteMaterialRecord(id, { actorUserId: actor.userId, requestId: actor.requestId }),
+  );
+  if (!result)
+    throw invalidContentState(
+      "Remove this material from every product package before deleting it. Previously accessed material must be retained for records.",
+    );
+  return result;
 }
 export async function unlinkProduct(
   id: string,
@@ -247,32 +206,8 @@ export async function unlinkProduct(
 ) {
   const before = await findProduct(id);
   if (!before) throw contentNotFound("Product");
-  if (before.status === "ARCHIVED")
-    throw invalidContentState("This product is unavailable.");
   return write("product_unlink", actor, () =>
     unlinkProductRecord(id, kind, targetId, {
-      actorUserId: actor.userId,
-      requestId: actor.requestId,
-    }),
-  );
-}
-export async function archiveCatalog(
-  id: string,
-  kind: "product" | "material",
-  actor: Actor,
-) {
-  const before =
-    kind === "product" ? await findProduct(id) : await findMaterial(id);
-  if (!before)
-    throw contentNotFound(kind === "product" ? "Product" : "Material");
-  if (before.status === "ARCHIVED")
-    throw invalidContentState("This item is already archived.");
-  if (kind === "material" && (await materialHasPublishedPackage(id)))
-    throw invalidContentState(
-      "Archive the linked packages before archiving this material.",
-    );
-  return write(`${kind}_archive`, actor, () =>
-    archiveCatalogRecord(id, kind, {
       actorUserId: actor.userId,
       requestId: actor.requestId,
     }),
@@ -283,9 +218,8 @@ export async function duplicateMaterial(id: string, actor: Actor) {
   return write("material_copy", actor, () =>
     insertMaterial(
       {
-        examId: before.examId,
         title: before.title.slice(0, 190) + " (copy)",
-        type: before.type,
+        type: before.type === "ARTICLE" ? "FILE" : before.type,
         body: before.body ?? "",
         privateObjectKey: before.privateObjectKey ?? "",
         allowDownload: before.allowDownload,

@@ -20,7 +20,7 @@ const optionSchema = z.object({
 }).strict();
 
 export const questionInputSchema = z.object({
-  topicId: z.uuid(),
+  topicId: z.uuid().nullable().optional().default(null),
   type: z.enum(["SINGLE_CHOICE", "MULTIPLE_CHOICE", "NUMERIC", "TEXT"]),
   stem: z.string().trim().min(10).max(20_000),
   imageUrl: z.union([z.url().max(2_048), z.literal("")]).optional().default(""),
@@ -38,6 +38,7 @@ export const questionInputSchema = z.object({
   const choice = value.type === "SINGLE_CHOICE" || value.type === "MULTIPLE_CHOICE";
   if (choice && value.options.length < 2) context.addIssue({ code: "custom", path: ["options"], message: "Choice questions need at least two options." });
   const correct = value.options.filter((option) => option.isCorrect).length;
+  if (value.type === "SINGLE_CHOICE" && value.options.length !== 4) context.addIssue({ code: "custom", path: ["options"], message: "Single-choice questions need exactly four options." });
   if (value.type === "SINGLE_CHOICE" && correct !== 1) context.addIssue({ code: "custom", path: ["options"], message: "Select exactly one correct option." });
   if (value.type === "MULTIPLE_CHOICE" && correct < 2) context.addIssue({ code: "custom", path: ["options"], message: "Select at least two correct options." });
   if (!choice && value.options.length) context.addIssue({ code: "custom", path: ["options"], message: "This question type cannot contain options." });

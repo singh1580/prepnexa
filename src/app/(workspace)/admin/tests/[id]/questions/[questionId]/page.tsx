@@ -2,10 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { requireWorkspacePermission } from "@/features/auth/page-access";
-import {
-  findManagedTest,
-  listTopicsForTest,
-} from "@/features/admin-tests/repository";
+import { findManagedTest } from "@/features/admin-tests/repository";
 import { getManagedQuestion } from "@/features/admin-content/service";
 import { QuestionForm } from "@/features/admin-content/ui/question-forms";
 import { testIdSchema } from "@/features/admin-tests/validation";
@@ -29,13 +26,7 @@ export default async function Page({
   );
   if (!section) notFound();
   const returnTo = `/admin/tests/${test.id}`;
-  const editable = test.status !== "ARCHIVED" && test.mode === "MOCK";
-  const [question, topics] = editable
-    ? await Promise.all([
-        getManagedQuestion(questionId.data),
-        listTopicsForTest(test.examId),
-      ])
-    : [null, []];
+  const question = await getManagedQuestion(questionId.data);
   return (
     <WorkspaceShell
       admin
@@ -48,7 +39,7 @@ export default async function Page({
       </Link>
       <header className="page-heading">
         <span className="eyebrow">
-          {test.examName} · {section.title}
+          {test.mode === "PRACTICE" ? "Practice set" : "Mock test"} · {section.title}
         </span>
         <h1>Edit question in this test</h1>
         <p>
@@ -60,7 +51,6 @@ export default async function Page({
         <QuestionForm
           sectionId={section.id}
           returnTo={returnTo}
-          topics={topics}
           question={{
             id: question.id,
             topicId: question.topicId,
@@ -75,12 +65,7 @@ export default async function Page({
             answerConfig: question.revision?.answerConfig ?? {},
           }}
         />
-      ) : (
-        <p className="notice">
-          This paper is no longer editable. Duplicate it from the test builder
-          to prepare a new version.
-        </p>
-      )}
+      ) : null}
     </WorkspaceShell>
   );
 }

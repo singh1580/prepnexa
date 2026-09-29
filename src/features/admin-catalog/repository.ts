@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, countDistinct, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, countDistinct, desc, eq, sql } from "drizzle-orm";
 import { invalidContentState } from "@/features/admin-content/errors";
 import { db } from "@/db/client";
 import {
   auditLogs,
-  exams,
   materials,
   materialVersions,
   productMaterials,
@@ -23,9 +22,8 @@ export type ProductInput = {
   accessDays: number;
 };
 export type MaterialInput = {
-  examId: string;
   title: string;
-  type: "ARTICLE" | "PDF" | "VIDEO" | "FILE";
+  type: "PDF" | "VIDEO" | "FILE";
   body: string;
   privateObjectKey: string;
   allowDownload?: boolean;
@@ -46,7 +44,7 @@ export function listProducts() {
       pricePaise: products.pricePaise,
       mrpPaise: products.mrpPaise,
       accessDays: products.accessDays,
-      status: products.status,
+      isLive: products.isLive,
       testCount: countDistinct(productTests.testId),
       materialCount: countDistinct(productMaterials.materialId),
     })
@@ -62,36 +60,21 @@ export function listMaterials() {
       id: materials.id,
       title: materials.title,
       type: materials.type,
-      status: materials.status,
-      examName: exams.name,
       allowDownload: materials.allowDownload,
+      updatedAt: materials.updatedAt,
     })
     .from(materials)
-    .innerJoin(exams, eq(materials.examId, exams.id))
     .orderBy(desc(materials.updatedAt));
 }
-export const listCatalogExams = () =>
-  db
-    .select({ id: exams.id, name: exams.name })
-    .from(exams)
-    .where(ne(exams.status, "ARCHIVED"))
-    .orderBy(asc(exams.name));
 export const findProduct = (id: string) =>
   db.query.products.findFirst({ where: eq(products.id, id) });
 export const findMaterial = (id: string) =>
   db.query.materials.findFirst({ where: eq(materials.id, id) });
 export async function findCatalogTest(id: string) {
   const [test] = await db
-    .select({ id: tests.id, status: tests.status })
+    .select({ id: tests.id })
     .from(tests)
-    .innerJoin(exams, eq(tests.examId, exams.id))
-    .where(
-      and(
-        eq(tests.id, id),
-        eq(tests.status, "PUBLISHED"),
-        eq(exams.status, "PUBLISHED"),
-      ),
-    )
+    .where(eq(tests.id, id))
     .limit(1);
   return test;
 }
@@ -104,21 +87,16 @@ export async function findProductBundle(id: string) {
         .select({
           id: tests.id,
           title: tests.title,
-          examName: exams.name,
           mode: tests.mode,
-          status: tests.status,
-          examStatus: exams.status,
         })
         .from(productTests)
         .innerJoin(tests, eq(productTests.testId, tests.id))
-        .innerJoin(exams, eq(tests.examId, exams.id))
         .where(eq(productTests.productId, id)),
       db
         .select({
           id: materials.id,
           title: materials.title,
           type: materials.type,
-          status: materials.status,
         })
         .from(productMaterials)
         .innerJoin(materials, eq(productMaterials.materialId, materials.id))
@@ -127,31 +105,17 @@ export async function findProductBundle(id: string) {
         .select({
           id: tests.id,
           title: tests.title,
-          examName: exams.name,
           mode: tests.mode,
         })
         .from(tests)
-        .innerJoin(exams, eq(tests.examId, exams.id))
-        .where(
-          and(
-            eq(tests.status, "PUBLISHED"),
-            eq(tests.mode, "MOCK"),
-            eq(exams.status, "PUBLISHED"),
-          ),
-        )
         .orderBy(asc(tests.title)),
       db
         .select({
           id: materials.id,
           title: materials.title,
-          examName: exams.name,
           type: materials.type,
         })
         .from(materials)
-        .innerJoin(exams, eq(materials.examId, exams.id))
-        .where(
-          and(eq(materials.status, "PUBLISHED"), eq(exams.status, "PUBLISHED")),
-        )
         .orderBy(asc(materials.title)),
     ]);
   return {
@@ -162,32 +126,30 @@ export async function findProductBundle(id: string) {
     availableMaterials,
   };
 }
+export async function findIncompleteProductItems(id: string) {
+  const result = await db.execute(sql`
+    select
+      coalesce((select jsonb_agg(t.title order by t.title) from ${productTests} pt join ${tests} t on t.id=pt.test_id
+        where pt.product_id=${id} and not exists(select 1 from test_questions tq where tq.test_id=t.id)),'[]'::jsonb) as tests,
+      coalesce((select jsonb_agg(m.title order by m.title) from ${productMaterials} pm join ${materials} m on m.id=pm.material_id
+        where pm.product_id=${id} and not exists(select 1 from ${materialVersions} mv where mv.material_id=m.id)),'[]'::jsonb) as materials
+  `);
+  return (result.rows[0] ?? { tests: [], materials: [] }) as { tests: string[]; materials: string[] };
+}
 export async function listSellableItems() {
   const [testItems, materialItems] = await Promise.all([
     db
-      .select({ id: tests.id, title: tests.title, examName: exams.name })
+      .select({ id: tests.id, title: tests.title, mode: tests.mode })
       .from(tests)
-      .innerJoin(exams, eq(tests.examId, exams.id))
-      .where(
-        and(
-          eq(tests.status, "PUBLISHED"),
-          eq(tests.mode, "MOCK"),
-          eq(exams.status, "PUBLISHED"),
-        ),
-      )
-      .orderBy(asc(exams.name), asc(tests.title)),
+      .orderBy(asc(tests.title)),
     db
       .select({
         id: materials.id,
         title: materials.title,
-        examName: exams.name,
+        type: materials.type,
       })
       .from(materials)
-      .innerJoin(exams, eq(materials.examId, exams.id))
-      .where(
-        and(eq(materials.status, "PUBLISHED"), eq(exams.status, "PUBLISHED")),
-      )
-      .orderBy(asc(exams.name), asc(materials.title)),
+      .orderBy(asc(materials.title)),
   ]);
   return { tests: testItems, materials: materialItems };
 }
@@ -203,12 +165,12 @@ export async function insertProduct(input: ProductCreationInput, audit: Audit) {
     with selected_tests as (select jsonb_array_elements_text(${JSON.stringify(testIds)}::jsonb)::uuid as id),
     selected_materials as (select jsonb_array_elements_text(${JSON.stringify(materialIds)}::jsonb)::uuid as id),
     created as (
-      insert into products (id, name, slug, description, mrp_paise, price_paise, access_days, status)
-      select ${id}::uuid, ${input.name}, ${input.slug}, ${input.description || null}, ${input.mrpPaise ?? null}, ${input.pricePaise}, ${input.accessDays}, 'DRAFT'
+      insert into products (id, name, slug, description, mrp_paise, price_paise, access_days, is_live, status)
+      select ${id}::uuid, ${input.name}, ${input.slug}, ${input.description || null}, ${input.mrpPaise ?? null}, ${input.pricePaise}, ${input.accessDays}, false, 'DRAFT'
       where not exists (select 1 from selected_tests s where not exists (
-        select 1 from tests t join exams e on e.id = t.exam_id where t.id = s.id and t.status = 'PUBLISHED' and t.mode = 'MOCK' and e.status = 'PUBLISHED'
+        select 1 from tests t where t.id = s.id
       )) and not exists (select 1 from selected_materials s where not exists (
-        select 1 from materials m join exams e on e.id = m.exam_id where m.id = s.id and m.status = 'PUBLISHED' and e.status = 'PUBLISHED'
+        select 1 from materials m where m.id = s.id
       )) returning id
     ), linked_tests as (
       insert into product_tests (product_id, test_id) select p.id, t.id from created p cross join selected_tests t
@@ -221,7 +183,7 @@ export async function insertProduct(input: ProductCreationInput, audit: Audit) {
   `);
   if (!result.rows.length)
     throw invalidContentState(
-      "One of the selected items is unavailable. Refresh and choose published content.",
+      "One of the selected items is unavailable. Refresh and choose available content.",
     );
   return { id };
 }
@@ -237,7 +199,7 @@ export async function insertMaterial(
   const allowDownload = input.allowDownload ?? false;
   const values = {
     id,
-    examId: input.examId,
+    examId: null,
     title: input.title,
     type: input.type,
     body: input.body || null,
@@ -272,7 +234,6 @@ export async function insertMaterial(
       entityId: id,
       requestId: audit.requestId,
       after: {
-        examId: input.examId,
         title: input.title,
         type: input.type,
         allowDownload,
@@ -297,39 +258,6 @@ export async function findLatestMaterialVersion(materialId: string) {
     orderBy: desc(materialVersions.version),
   });
 }
-export async function publishMaterialRecord(
-  before: NonNullable<Awaited<ReturnType<typeof findMaterial>>>,
-  audit: Audit,
-) {
-  const [latest] = await db
-    .select({ id: materialVersions.id })
-    .from(materialVersions)
-    .where(eq(materialVersions.materialId, before.id))
-    .orderBy(desc(materialVersions.version))
-    .limit(1);
-  if (!latest) throw new Error("Material version invariant failed.");
-  const now = new Date();
-  await db.batch([
-    db
-      .update(materials)
-      .set({ status: "PUBLISHED", updatedAt: now })
-      .where(eq(materials.id, before.id)),
-    db
-      .update(materialVersions)
-      .set({ publishedAt: now })
-      .where(eq(materialVersions.id, latest.id)),
-    db.insert(auditLogs).values({
-      actorUserId: audit.actorUserId,
-      action: "material.published",
-      entityType: "material",
-      entityId: before.id,
-      requestId: audit.requestId,
-      before: { status: before.status },
-      after: { status: "PUBLISHED", versionId: latest.id },
-    }),
-  ]);
-  return { id: before.id, status: "PUBLISHED" as const };
-}
 export async function insertProductLink(
   productId: string,
   kind: "TEST" | "MATERIAL",
@@ -353,27 +281,28 @@ export async function insertProductLink(
   ]);
   return { productId, kind, targetId };
 }
-export async function publishProductRecord(
+export async function setProductLiveRecord(
   before: NonNullable<Awaited<ReturnType<typeof findProductBundle>>>,
+  isLive: boolean,
   audit: Audit,
 ) {
   const now = new Date();
   await db.batch([
     db
       .update(products)
-      .set({ status: "PUBLISHED", updatedAt: now })
+      .set({ isLive, status: isLive ? "PUBLISHED" : "DRAFT", updatedAt: now })
       .where(eq(products.id, before.id)),
     db.insert(auditLogs).values({
       actorUserId: audit.actorUserId,
-      action: "product.published",
+      action: isLive ? "product.enabled" : "product.disabled",
       entityType: "product",
       entityId: before.id,
       requestId: audit.requestId,
-      before: { status: before.status },
-      after: { status: "PUBLISHED" },
+      before: { isLive: before.isLive },
+      after: { isLive },
     }),
   ]);
-  return { id: before.id, status: "PUBLISHED" as const };
+  return { id: before.id, isLive };
 }
 
 export async function patchProduct(
@@ -385,7 +314,7 @@ export async function patchProduct(
     db
       .update(products)
       .set({ ...input, updatedAt: new Date() })
-      .where(and(eq(products.id, before.id), ne(products.status, "ARCHIVED"))),
+      .where(eq(products.id, before.id)),
     db.insert(auditLogs).values({
       actorUserId: audit.actorUserId,
       action: "product.updated",
@@ -415,7 +344,6 @@ export async function patchMaterial(
     db
       .update(materials)
       .set({
-        examId: input.examId,
         title: input.title,
         type: input.type,
         body: input.body || null,
@@ -423,9 +351,7 @@ export async function patchMaterial(
         allowDownload: input.allowDownload ?? false,
         updatedAt: new Date(),
       })
-      .where(
-        and(eq(materials.id, before.id), ne(materials.status, "ARCHIVED")),
-      ),
+      .where(eq(materials.id, before.id)),
     db.insert(materialVersions).values({
       materialId: before.id,
       version,
@@ -470,9 +396,7 @@ export async function appendMaterialFileVersion(
         allowDownload: input.allowDownload,
         updatedAt: new Date(),
       })
-      .where(
-        and(eq(materials.id, before.id), ne(materials.status, "ARCHIVED")),
-      ),
+      .where(eq(materials.id, before.id)),
     db.insert(materialVersions).values({
       materialId: before.id,
       version,
@@ -540,43 +464,21 @@ export async function unlinkProductRecord(
   return { id: productId };
 }
 
-export async function materialHasPublishedPackage(id: string) {
-  const rows = await db
-    .select({ id: products.id })
-    .from(productMaterials)
-    .innerJoin(products, eq(productMaterials.productId, products.id))
-    .where(
-      and(
-        eq(productMaterials.materialId, id),
-        eq(products.status, "PUBLISHED"),
-      ),
+export async function deleteMaterialRecord(id: string, audit: Audit) {
+  const result = await db.execute(sql`
+    with removed as (
+      delete from ${materials} m where m.id=${id}
+        and not exists(select 1 from ${productMaterials} pm where pm.material_id=m.id)
+        and not exists(select 1 from material_access_logs l where l.material_id=m.id)
+      returning m.id
     )
-    .limit(1);
-  return rows.length > 0;
+    insert into ${auditLogs}(actor_user_id,action,entity_type,entity_id,request_id,"after")
+    select ${audit.actorUserId},'material.deleted','material',id::text,${audit.requestId},jsonb_build_object('deleted',true)
+    from removed returning entity_id
+  `);
+  return result.rows.length ? { id } : undefined;
 }
 
-export async function archiveCatalogRecord(
-  id: string,
-  kind: "product" | "material",
-  audit: Audit,
-) {
-  const table = kind === "product" ? products : materials;
-  await db.batch([
-    db
-      .update(table)
-      .set({ status: "ARCHIVED", updatedAt: new Date() })
-      .where(eq(table.id, id)),
-    db.insert(auditLogs).values({
-      actorUserId: audit.actorUserId,
-      action: `${kind}.archived`,
-      entityType: kind,
-      entityId: id,
-      requestId: audit.requestId,
-      after: { status: "ARCHIVED" },
-    }),
-  ]);
-  return { id, status: "ARCHIVED" };
-}
 
 export async function copyProductRecord(
   before: NonNullable<Awaited<ReturnType<typeof findProductBundle>>>,
@@ -592,6 +494,7 @@ export async function copyProductRecord(
     pricePaise: before.pricePaise,
     accessDays: before.accessDays,
     status: "DRAFT" as const,
+    isLive: false,
   };
   const create = db.insert(products).values(values);
   const auditEntry = db.insert(auditLogs).values({
@@ -602,12 +505,8 @@ export async function copyProductRecord(
     requestId: audit.requestId,
     after: { sourceProductId: before.id },
   });
-  const testRows = before.linkedTests
-    .filter((test) => test.status === "PUBLISHED")
-    .map((test) => ({ productId: id, testId: test.id }));
-  const materialRows = before.linkedMaterials
-    .filter((material) => material.status === "PUBLISHED")
-    .map((material) => ({ productId: id, materialId: material.id }));
+  const testRows = before.linkedTests.map((test) => ({ productId: id, testId: test.id }));
+  const materialRows = before.linkedMaterials.map((material) => ({ productId: id, materialId: material.id }));
   if (testRows.length && materialRows.length)
     await db.batch([
       create,

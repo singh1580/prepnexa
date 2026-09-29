@@ -35,7 +35,7 @@ type StartQuestion = {
   sectionId: string;
   sectionOrder: number;
   questionOrder: number;
-  topicId: string;
+  topicId: string | null;
   type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "NUMERIC" | "TEXT";
   stem: string;
   imageUrl: string | null;
@@ -62,7 +62,7 @@ export type AttemptSnapshotInput = {
   questionId: string;
   revisionId: string;
   sectionId: string;
-  topicId: string;
+  topicId: string | null;
   type: StartQuestion["type"];
   position: number;
   stem: string;
@@ -104,15 +104,15 @@ export async function expireStudentAttempts(userId: string) {
 export async function listStudentTests(userId: string) {
   const result = await db.execute(sql`
     select t.id, t.title, t.category, t.duration_minutes as "durationMinutes", t.max_attempts as "maxAttempts",
-      e.name as "examName",
+      coalesce(e.name,'Prepstore') as "examName",
       (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
       (select count(*)::int from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
       (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId"
-    from tests t join exams e on e.id = t.exam_id
-    where t.status = 'PUBLISHED' and e.status = 'PUBLISHED' and (
-      exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.status = 'PUBLISHED' and p.price_paise = 0)
+    from tests t left join exams e on e.id = t.exam_id
+    where t.status = 'PUBLISHED' and (
+      exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)
       or exists (select 1 from product_tests pt join products p on p.id = pt.product_id join entitlements en on en.product_id = p.id
-        where pt.test_id = t.id and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())
+        where pt.test_id = t.id and p.is_live = true and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())
     ) order by e.name, t.title
   `);
   return rows<
@@ -130,14 +130,14 @@ export async function findStudentTestAccess(
   const result = await db.execute(sql`
     select t.id, t.title, t.category, t.duration_minutes as "durationMinutes", t.instructions,
       t.max_attempts as "maxAttempts", t.shuffle_questions as "shuffleQuestions", t.shuffle_options as "shuffleOptions",
-      e.name as "examName", (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
+      coalesce(e.name,'Prepstore') as "examName", (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
       (select count(*)::int from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
       (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId",
-      (exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.status = 'PUBLISHED' and p.price_paise = 0)
+      (exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)
         or exists (select 1 from product_tests pt join products p on p.id = pt.product_id join entitlements en on en.product_id = p.id
-          where pt.test_id = t.id and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())) as "hasAccess"
-    from tests t join exams e on e.id = t.exam_id
-    where t.id = ${testId} and t.status = 'PUBLISHED' and e.status = 'PUBLISHED' limit 1
+          where pt.test_id = t.id and p.is_live = true and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())) as "hasAccess"
+    from tests t left join exams e on e.id = t.exam_id
+    where t.id = ${testId} and t.status = 'PUBLISHED' limit 1
   `);
   return rows<StudentTestAccess>(result)[0];
 }
@@ -308,11 +308,11 @@ export async function findAttemptForStudent(attemptId: string, userId: string) {
       submittedAt: attempts.submittedAt,
       title: tests.title,
       durationMinutes: tests.durationMinutes,
-      examName: exams.name,
+      examName: sql<string>`coalesce(${exams.name}, 'Prepstore')`,
     })
     .from(attempts)
     .innerJoin(tests, eq(tests.id, attempts.testId))
-    .innerJoin(exams, eq(exams.id, tests.examId))
+    .leftJoin(exams, eq(exams.id, tests.examId))
     .where(and(eq(attempts.id, attemptId), eq(attempts.userId, userId)))
     .limit(1);
   if (!attempt) return undefined;

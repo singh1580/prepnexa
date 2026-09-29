@@ -50,15 +50,13 @@ export default async function Page({
           </p>
         </div>
       </header>
-      {product.status !== "ARCHIVED" && (
-        <section className="panel">
+      <section className="panel">
           <h2>Package details</h2>
           <ProductCreateForm product={product} />
-        </section>
-      )}
+      </section>
       <ProductBundleControls
         id={product.id}
-        status={product.status}
+        isLive={product.isLive}
         linkedTests={product.linkedTests}
         linkedMaterials={product.linkedMaterials}
         availableTests={product.availableTests}

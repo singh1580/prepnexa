@@ -9,11 +9,10 @@ type Actor = { userId: string; requestId: string };
 
 export async function importTestCsv(
   sectionId: string,
-  topicId: string,
   csv: string,
   actor: Actor,
 ) {
-  const parsed = parseQuestionCsv(csv, topicId);
+  const parsed = parseQuestionCsv(csv, null);
   if (parsed.issues.length)
     return {
       status: "INVALID" as const,
@@ -72,20 +71,15 @@ export async function addTestQuestions(
         marks numeric, "negativeMarks" numeric, difficulty text, options jsonb,
         "answerConfig" jsonb, position integer)
     ), locked_test as (
-      select t.id, t.exam_id from tests t join test_sections s on s.test_id = t.id
-      where s.id = ${sectionId}::uuid and t.status <> 'ARCHIVED' and t.mode = 'MOCK'
+      select t.id from tests t join test_sections s on s.test_id = t.id
+      where s.id = ${sectionId}::uuid
       for update of t
     ), locked_assignment as (
       select a.* from test_questions a join locked_test t on t.id = a.test_id
       where a.section_id = ${sectionId}::uuid and a.question_id = ${replacesQuestionId ?? null}::uuid
       for update of a
     ), destination as (
-      select t.* from locked_test t where (${replacesQuestionId ?? null}::uuid is null or exists (select 1 from locked_assignment)) and not exists (
-        select 1 from source r where not exists (
-          select 1 from topics p join subjects s on s.id = p.subject_id
-          where p.id = r."topicId" and s.exam_id = t.exam_id
-        )
-      )
+      select t.* from locked_test t where (${replacesQuestionId ?? null}::uuid is null or exists (select 1 from locked_assignment))
     ), import_job as (
       insert into content_import_jobs (id, type, status, object_key, import_key, total_rows, valid_rows, invalid_rows, requested_by, completed_at)
       select ${jobId}::uuid, ${replacesQuestionId ? "TEST_QUESTION_EDIT" : "TEST_QUESTIONS"}, 'IMPORTED', ${`inline-sha256:${fingerprint}`},
@@ -135,10 +129,10 @@ export async function addTestQuestions(
   if (!result.rows.length)
     throw testStateConflict(
       replacesQuestionId
-        ? "This question or test changed, or the selected topic belongs to another exam. Return to the test and refresh before editing."
+        ? "This question or test changed. Return to the test and refresh before editing."
         : csvImport
-          ? "This question set may already be imported into this section. Refresh and check its questions. Otherwise select a topic from this exam and a draft test."
-          : "Choose a topic from this exam and a section in a draft mock test. Refresh if the test changed.",
+          ? "This question set may already be imported into this section. Refresh and check its questions."
+          : "Choose a valid section and refresh if the test changed.",
     );
   return {
     id: jobId,

@@ -19,7 +19,7 @@ type AuditContext = { actorUserId: string; requestId: string };
 type ExamInput = { name: string; slug: string; description: string };
 type TaxonomyInput = { name: string; sortOrder: number };
 export type QuestionInput = {
-  topicId: string;
+  topicId?: string | null;
   type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "NUMERIC" | "TEXT";
   stem: string;
   imageUrl?: string;
@@ -295,9 +295,9 @@ export function listQuestions() {
       examName: exams.name,
     })
     .from(questions)
-    .innerJoin(topics, eq(questions.topicId, topics.id))
-    .innerJoin(subjects, eq(topics.subjectId, subjects.id))
-    .innerJoin(exams, eq(subjects.examId, exams.id))
+    .leftJoin(topics, eq(questions.topicId, topics.id))
+    .leftJoin(subjects, eq(topics.subjectId, subjects.id))
+    .leftJoin(exams, eq(subjects.examId, exams.id))
     .orderBy(desc(questions.updatedAt));
 }
 
@@ -324,9 +324,9 @@ export async function findQuestion(id: string) {
       examName: exams.name,
     })
     .from(questions)
-    .innerJoin(topics, eq(questions.topicId, topics.id))
-    .innerJoin(subjects, eq(topics.subjectId, subjects.id))
-    .innerJoin(exams, eq(subjects.examId, exams.id))
+    .leftJoin(topics, eq(questions.topicId, topics.id))
+    .leftJoin(subjects, eq(topics.subjectId, subjects.id))
+    .leftJoin(exams, eq(subjects.examId, exams.id))
     .where(eq(questions.id, id))
     .limit(1);
   if (!question) return undefined;
@@ -411,7 +411,8 @@ export async function insertQuestion(
   const question = {
     id,
     ...currentQuestionValues(input, now),
-    status: "DRAFT" as const,
+    status: "PUBLISHED" as const,
+    publishedAt: now,
     createdBy: audit.actorUserId,
     createdAt: now,
   };
@@ -426,6 +427,7 @@ export async function insertQuestion(
     negativeMarks: String(input.negativeMarks),
     answerConfig: answerConfig(input),
     createdBy: audit.actorUserId,
+    publishedAt: now,
     createdAt: now,
   };
   const auditRow = {
@@ -434,7 +436,7 @@ export async function insertQuestion(
     entityType: "question",
     entityId: id,
     requestId: audit.requestId,
-    after: { ...input, status: "DRAFT", version: 1 },
+    after: { ...input, version: 1 },
   };
   if (input.options.length)
     await db.batch([
@@ -474,6 +476,7 @@ export async function patchQuestion(
     negativeMarks: String(input.negativeMarks),
     answerConfig: answerConfig(input),
     createdBy: audit.actorUserId,
+    publishedAt: now,
     createdAt: now,
   };
   const auditRow = {

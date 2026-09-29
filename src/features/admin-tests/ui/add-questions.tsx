@@ -1,84 +1,114 @@
 "use client";
 
-import Link from "next/link";
-import { TopicPicker } from "@/features/admin-content/ui/topic-picker";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { QuestionForm } from "@/features/admin-content/ui/question-forms";
+import { Field } from "@/features/auth/ui/field";
 import {
   parseQuestionCsv,
   testQuestionCsvTemplate,
 } from "@/features/admin-imports/question-csv";
 
-type Topic = {
-  id: string;
-  topicName: string;
-  subjectName: string;
-  examName: string;
-};
-export function AddTestQuestions({
-  sectionId,
-  examId,
-  topics,
-}: {
-  sectionId: string;
-  examId: string;
-  topics: Topic[];
-}) {
+const optionKeys = ["A", "B", "C", "D"] as const;
+
+export function AddTestQuestions({ sectionId }: { sectionId: string }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"manual" | "csv" | null>(null);
-  const [topicId, setTopicId] = useState(topics[0]?.id ?? "");
-  const [csv, setCsv] = useState("");
-  const [preview, setPreview] = useState<ReturnType<
-    typeof parseQuestionCsv
-  > | null>(null);
+  const [mode, setMode] = useState<"manual" | "sheet">("manual");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  function download() {
-    const url = URL.createObjectURL(
-      new Blob([testQuestionCsvTemplate()], { type: "text/csv;charset=utf-8" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "test-questions.csv";
-    link.click();
-    URL.revokeObjectURL(url);
+  const [csv, setCsv] = useState("");
+  const [preview, setPreview] = useState<ReturnType<typeof parseQuestionCsv>>();
+
+  async function post(path: string, body: Record<string, unknown>) {
+    const response = await fetch(path, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    if (!response.ok || result.error)
+      throw new Error(result.error?.message ?? "Could not save questions.");
+    return result.data;
   }
-  async function submit(event: FormEvent<HTMLFormElement>) {
+
+  async function submitManual(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!preview || preview.issues.length) return;
+    setBusy(true);
+    setError("");
+    setSuccess("");
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    try {
+      await post(`/api/admin/tests/sections/${sectionId}/new-question`, {
+        topicId: null,
+        type: "SINGLE_CHOICE",
+        stem: String(data.get("stem")),
+        imageUrl: String(data.get("imageUrl") ?? ""),
+        explanation: String(data.get("explanation") ?? ""),
+        marks: Number(data.get("marks")),
+        negativeMarks: Number(data.get("negativeMarks")),
+        difficulty: String(data.get("difficulty")),
+        options: optionKeys.map((key, index) => ({
+          stableKey: key,
+          body: String(data.get(`option${key}`)),
+          isCorrect: data.get("correctOption") === key,
+          sortOrder: index,
+        })),
+        numericAnswer: null,
+        numericTolerance: 0,
+        acceptedAnswers: [],
+        caseSensitive: false,
+      });
+      form.reset();
+      setSuccess("Question added successfully.");
+      router.refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not add question.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function readSheet(file?: File) {
+    if (!file) return;
+    setError("");
+    setPreview(undefined);
+    if (file.size > 1_000_000) {
+      setError("Choose a spreadsheet no larger than 1 MB.");
+      return;
+    }
+    try {
+      if (/\.xlsx?$/i.test(file.name)) {
+        const XLSX = await import("xlsx");
+        const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        if (!sheet) throw new Error("This workbook has no worksheet.");
+        setCsv(XLSX.utils.sheet_to_csv(sheet));
+      } else setCsv(await file.text());
+    } catch (cause) {
+      setCsv("");
+      setError(cause instanceof Error ? cause.message : "Could not read this file.");
+    }
+  }
+
+  async function submitSheet(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const checked = parseQuestionCsv(csv, null);
+    setPreview(checked);
+    if (checked.issues.length) return;
     setBusy(true);
     setError("");
     setSuccess("");
     try {
-      const response = await fetch(
-        `/api/admin/tests/sections/${sectionId}/import`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ csv, topicId }),
-        },
-      );
-      const payload = await response.json();
-      if (!response.ok || payload.error)
-        throw new Error(
-          payload.error?.message ?? "Could not import these questions.",
-        );
-      if (payload.data.status === "INVALID") {
-        setPreview({
-          questions: [],
-          issues: payload.data.issues,
-          totalRows: payload.data.totalRows,
-        });
+      const result = await post(`/api/admin/tests/sections/${sectionId}/import`, { csv });
+      if (result.status === "INVALID") {
+        setPreview({ questions: [], issues: result.issues, totalRows: result.totalRows });
         return;
       }
-      setSuccess(
-        `${payload.data.importedRows} questions added to this section in spreadsheet order.`,
-      );
       setCsv("");
-      setPreview(null);
-      setMode(null);
+      setPreview(undefined);
+      setSuccess(`${result.importedRows} questions imported successfully.`);
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Import failed.");
@@ -86,205 +116,78 @@ export function AddTestQuestions({
       setBusy(false);
     }
   }
-  if (!topics.length)
-    return (
-      <p className="notice">
-        Add a subject and topic in{" "}
-        <Link href={`/admin/exams/${examId}`}>this exam’s curriculum</Link>{" "}
-        before adding questions.
-      </p>
+
+  function downloadTemplate() {
+    const url = URL.createObjectURL(
+      new Blob([testQuestionCsvTemplate()], { type: "text/csv;charset=utf-8" }),
     );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "prepstore-test-questions.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
-    <div className="panel">
-      <h3>Add questions here</h3>
-      <p>
-        Choose a topic, then write a question or import a complete set.
-        Everything stays attached to this section.
-      </p>
-      <div className="form-actions">
-        <button
-          type="button"
-          className="button secondary"
-          disabled={busy}
-          aria-pressed={mode === "manual"}
-          onClick={() => {
-            setMode(mode === "manual" ? null : "manual");
-            setSuccess("");
-          }}
-        >
-          Write a question
-        </button>
-        <button
-          type="button"
-          className="button secondary"
-          disabled={busy}
-          aria-pressed={mode === "csv"}
-          onClick={() => {
-            setMode(mode === "csv" ? null : "csv");
-            setSuccess("");
-          }}
-        >
-          Import Excel / CSV
-        </button>
+    <section className="question-workbench">
+      <div className="section-heading">
+        <div>
+          <h3>Add questions</h3>
+          <p>Write one MCQ or upload up to 500 questions together.</p>
+        </div>
+        <div className="segmented-actions" aria-label="Question input method">
+          <button className={mode === "manual" ? "active" : ""} type="button" onClick={() => setMode("manual")}>Manual</button>
+          <button className={mode === "sheet" ? "active" : ""} type="button" onClick={() => setMode("sheet")}>Excel / CSV</button>
+        </div>
       </div>
-      {mode === "manual" && (
-        <QuestionForm
-          sectionId={sectionId}
-          topics={topics}
-          onCancel={() => setMode(null)}
-          onAdded={() => {
-            setMode(null);
-            setSuccess("Question added to this section.");
-          }}
-        />
-      )}
-      {mode === "csv" && (
-        <form className="admin-form" onSubmit={submit}>
+
+      {mode === "manual" ? (
+        <form className="admin-form" onSubmit={submitManual}>
           <fieldset disabled={busy}>
-            <TopicPicker
-              topics={topics}
-              value={topicId}
-              onChange={(id) => {
-                setTopicId(id);
-                setPreview(null);
-              }}
-            />
-            <p className="muted">
-              All rows use the selected topic. Import another file for a
-              different topic. No topic ID is needed in your spreadsheet.
-              Repeating the same question set in this section is blocked; you
-              can still reuse it in another section or test.
-            </p>
-            <button
-              className="button secondary"
-              type="button"
-              onClick={download}
-            >
-              Download spreadsheet template
-            </button>
-            <label className="field">
-              <span>Excel or CSV file (up to 500 questions, 1 MB)</span>
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (!file) return;
-                  setPreview(null);
-                  setError("");
-                  if (file.size > 1_000_000) {
-                    setCsv("");
-                    setError("Choose a spreadsheet no larger than 1 MB.");
-                    return;
-                  }
-                  try {
-                    if (/\.xlsx?$/i.test(file.name)) {
-                      const XLSX = await import("xlsx");
-                      const workbook = XLSX.read(await file.arrayBuffer(), {
-                        type: "array",
-                      });
-                      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                      if (!sheet)
-                        throw new Error("This workbook has no worksheet.");
-                      setCsv(XLSX.utils.sheet_to_csv(sheet));
-                    } else setCsv(await file.text());
-                  } catch (cause) {
-                    setCsv("");
-                    setError(
-                      cause instanceof Error
-                        ? cause.message
-                        : "Could not read this spreadsheet.",
-                    );
-                  }
-                }}
-              />
+            <label className="field field-wide">
+              <span>Question</span>
+              <textarea name="stem" rows={4} minLength={3} required placeholder="Write the question here" />
             </label>
-            <label className="field">
-              <span>Paste or review CSV</span>
-              <textarea
-                value={csv}
-                rows={8}
-                required
-                onChange={(event) => {
-                  setCsv(event.target.value);
-                  setPreview(null);
-                }}
-              />
-            </label>
-            <p className="muted">
-              For a normal MCQ, fill the question, choices and correctOptions
-              (A, B, C or D). The template uses 1 mark, no negative marking and
-              medium difficulty.
-            </p>
-            <details>
-              <summary>Other question types and marking</summary>
-              <p>
-                Add optional columns: type (MULTIPLE_CHOICE, NUMERIC or TEXT),
-                marks, negativeMarks, difficulty. Multiple-choice answers use
-                A|C. Numeric questions use numericAnswer and numericTolerance;
-                text questions use acceptedAnswers separated by | and
-                caseSensitive.
-              </p>
-            </details>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => {
-                setError("");
-                setPreview(parseQuestionCsv(csv, topicId));
-              }}
-            >
-              Check and preview
-            </button>
-            {preview &&
-              (preview.issues.length ? (
-                <div className="notice danger" role="alert">
-                  <strong>No questions saved. Fix these rows:</strong>
-                  <ul>
-                    {preview.issues.slice(0, 30).map((issue, index) => (
-                      <li key={index}>
-                        Row {issue.rowNumber} · {issue.field}: {issue.message}
-                      </li>
-                    ))}
-                  </ul>
-                  {preview.issues.length > 30 && (
-                    <p>{preview.issues.length - 30} more errors.</p>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <p className="notice success">
-                    {preview.totalRows} valid questions. Ready to add to this
-                    section.
-                  </p>
-                  <ol>
-                    {preview.questions.slice(0, 10).map((question, index) => (
-                      <li key={index}>{question.stem}</li>
-                    ))}
-                  </ol>
-                  {preview.totalRows > 10 && (
-                    <p>Showing the first 10 questions.</p>
-                  )}
-                  <button className="button" type="submit">
-                    {busy
-                      ? "Adding…"
-                      : `Add ${preview.totalRows} questions to this test`}
-                  </button>
+            <Field id={`image-${sectionId}`} label="Question image URL (optional)" name="imageUrl" type="url" placeholder="https://…" />
+            <div className="option-editor">
+              {optionKeys.map((key) => (
+                <div className="option-row" key={key}>
+                  <label className="correct-choice" title="Mark as correct">
+                    <input type="radio" name="correctOption" value={key} required />
+                    <span>{key}</span>
+                  </label>
+                  <Field id={`option-${sectionId}-${key}`} label={`Option ${key}`} name={`option${key}`} required minLength={1} />
                 </div>
               ))}
+            </div>
+            <label className="field field-wide">
+              <span>Solution / explanation</span>
+              <textarea name="explanation" rows={4} maxLength={10000} placeholder="Explain why the selected answer is correct" />
+            </label>
+            <div className="admin-form-grid">
+              <Field id={`marks-${sectionId}`} label="Marks" name="marks" type="number" min={0.01} step="0.01" defaultValue={1} required />
+              <Field id={`negative-${sectionId}`} label="Negative marks" name="negativeMarks" type="number" min={0} step="0.01" defaultValue={0} required />
+              <label className="field"><span>Difficulty</span><select name="difficulty" defaultValue="MEDIUM"><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option></select></label>
+            </div>
+            <div className="form-actions"><button className="button" type="submit">{busy ? "Adding…" : "Add question"}</button></div>
+          </fieldset>
+        </form>
+      ) : (
+        <form className="admin-form" onSubmit={submitSheet}>
+          <fieldset disabled={busy}>
+            <div className="import-toolbar">
+              <label className="button secondary file-button">Choose Excel / CSV<input type="file" accept=".xlsx,.xls,.csv,text/csv" onChange={(event) => void readSheet(event.target.files?.[0])} /></label>
+              <button className="button secondary" type="button" onClick={downloadTemplate}>Download template</button>
+            </div>
+            <label className="field field-wide"><span>Spreadsheet preview</span><textarea value={csv} rows={9} required onChange={(event) => { setCsv(event.target.value); setPreview(undefined); }} placeholder="Upload a file or paste CSV rows" /></label>
+            {preview && !preview.issues.length && <p className="import-ready">{preview.questions.length} questions are ready to import.</p>}
+            {preview?.issues.map((issue, index) => <p className="notice danger" key={`${issue.rowNumber}-${index}`}>Row {issue.rowNumber}: {issue.message}</p>)}
+            <div className="form-actions"><button className="button" type="submit">{busy ? "Importing…" : "Check and import"}</button></div>
           </fieldset>
         </form>
       )}
-      {success && (
-        <p className="notice success" role="status">
-          {success}
-        </p>
-      )}
-      {error && (
-        <p className="notice danger" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
+      {error && <p className="notice danger" role="alert">{error}</p>}
+      {success && <p className="notice success" role="status">{success}</p>}
+    </section>
   );
 }

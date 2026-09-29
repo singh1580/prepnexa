@@ -3,27 +3,21 @@ import {
   contentConflict,
   isUniqueViolation,
 } from "@/features/admin-content/errors";
-import { findExam } from "@/features/admin-content/repository";
 import { testNotFound, testStateConflict } from "./errors";
 import {
   patchSection,
   replaceQuestionOrder,
-  testHasPublishedPackage,
-  archiveTestRecord,
   copyTestRecord,
   removeDraftItem,
   findManagedTest,
-  findPublishedQuestionForExam,
+  findAvailableQuestion,
   findSection,
   findTest,
   insertAssignment,
   insertSection,
   insertTest,
   listManagedTests,
-  listTestExams,
-  listTestFilterTaxonomy,
   patchTest,
-  publishTestRecord,
   type ManagedTestFilters,
   type SectionInput,
   type TestInput,
@@ -55,19 +49,14 @@ async function write<T>(
     throw error;
   }
 }
-export const getTestExams = () => listTestExams();
 export const getManagedTests = (filters: ManagedTestFilters) =>
   listManagedTests(filters);
-export const getTestFilterTaxonomy = () => listTestFilterTaxonomy();
 export async function getManagedTest(id: string) {
   const test = await findManagedTest(id);
   if (!test) throw testNotFound("Test");
   return test;
 }
 export async function createTest(input: TestInput, actor: Actor) {
-  if (input.mode !== "MOCK")
-    throw testStateConflict("Only mock tests are currently available.");
-  if (!(await findExam(input.examId))) throw testNotFound("Test");
   return write("test_create", actor, () =>
     insertTest(input, {
       actorUserId: actor.userId,
@@ -76,20 +65,8 @@ export async function createTest(input: TestInput, actor: Actor) {
   );
 }
 export async function updateTest(id: string, input: TestInput, actor: Actor) {
-  if (input.mode !== "MOCK")
-    throw testStateConflict("Only mock tests are currently available.");
   const before = await findTest(id);
   if (!before) throw testNotFound("Test");
-  if (before.status === "ARCHIVED")
-    throw testStateConflict("This test is unavailable.");
-  if (!(await findExam(input.examId))) throw testNotFound("Test");
-  if (before.examId !== input.examId) {
-    const detail = await getManagedTest(id);
-    if (detail.sections.some((section) => section.questions.length))
-      throw testStateConflict(
-        "Remove assigned questions before changing the exam.",
-      );
-  }
   return write("test_update", actor, () =>
     patchTest(before, input, {
       actorUserId: actor.userId,
@@ -104,8 +81,6 @@ export async function createSection(
 ) {
   const test = await findTest(testId);
   if (!test) throw testNotFound("Test");
-  if (test.status === "ARCHIVED")
-    throw testStateConflict("This test is unavailable.");
   return write("test_section_create", actor, () =>
     insertSection(testId, input, {
       actorUserId: actor.userId,
@@ -123,9 +98,7 @@ export async function assignQuestion(
   if (!section) throw testNotFound("Section");
   const test = await findTest(section.testId);
   if (!test) throw testNotFound("Test");
-  if (test.status === "ARCHIVED")
-    throw testStateConflict("This test is unavailable.");
-  const question = await findPublishedQuestionForExam(questionId, test.examId);
+  const question = await findAvailableQuestion(questionId);
   if (!question) throw testNotFound("Question");
   return write("test_question_assign", actor, () =>
     insertAssignment(test.id, sectionId, questionId, sortOrder, {
@@ -139,44 +112,6 @@ export async function createSchedule(): Promise<never> {
     "Live tests are deferred. Create a mock test instead.",
   );
 }
-export async function publishTest(id: string, actor: Actor) {
-  const before = await getManagedTest(id);
-  if (before.mode !== "MOCK")
-    throw testStateConflict("Only mock tests are currently available.");
-  if (before.status !== "DRAFT")
-    throw testStateConflict("Only draft tests can be published.");
-  if (
-    !before.sections.length ||
-    before.sections.some((section) => !section.questions.length)
-  )
-    throw testStateConflict(
-      "Add a question to every section before publishing.",
-    );
-  if (
-    before.sections.some((section) =>
-      section.questions.some((question) => question.status === "ARCHIVED"),
-    )
-  )
-    throw testStateConflict(
-      "Remove or replace archived questions before publishing.",
-    );
-  const timed = before.sections.map((section) => section.durationMinutes);
-  if (
-    timed.some((minutes) => minutes !== null) &&
-    timed.reduce<number>((total, minutes) => total + (minutes ?? 0), 0) >
-      before.durationMinutes
-  )
-    throw testStateConflict(
-      "Section durations cannot exceed the overall test duration.",
-    );
-  return write("test_publish", actor, () =>
-    publishTestRecord(before, {
-      actorUserId: actor.userId,
-      requestId: actor.requestId,
-    }),
-  );
-}
-
 export async function removeTestItem(
   sectionId: string,
   questionId: string | null,
@@ -201,7 +136,7 @@ export async function updateSection(
   const section = await findSection(id);
   if (!section) throw testNotFound("Section");
   const test = await findTest(section.testId);
-  if (!test || test.status === "ARCHIVED" || test.mode !== "MOCK")
+  if (!test)
     throw testStateConflict("This test is unavailable.");
   return write("section_update", actor, () =>
     patchSection(id, input, {
@@ -218,8 +153,6 @@ export async function reorderQuestions(
   const section = await findSection(sectionId);
   if (!section) throw testNotFound("Section");
   const test = await getManagedTest(section.testId);
-  if (test.status === "ARCHIVED" || test.mode !== "MOCK")
-    throw testStateConflict("This test is unavailable.");
   const existing = test.sections
     .find((item) => item.id === sectionId)!
     .questions.map((item) => item.questionId);
@@ -239,25 +172,8 @@ export async function reorderQuestions(
     }),
   );
 }
-export async function archiveTest(id: string, actor: Actor) {
-  const test = await getManagedTest(id);
-  if (test.status === "ARCHIVED")
-    throw testStateConflict("This test is already archived.");
-  if (await testHasPublishedPackage(id))
-    throw testStateConflict(
-      "Archive linked packages before archiving this test.",
-    );
-  return write("test_archive", actor, () =>
-    archiveTestRecord(id, {
-      actorUserId: actor.userId,
-      requestId: actor.requestId,
-    }),
-  );
-}
 export async function duplicateTest(id: string, actor: Actor) {
   const test = await getManagedTest(id);
-  if (test.mode !== "MOCK")
-    throw testStateConflict("Only mock tests can be copied.");
   return write("test_copy", actor, () =>
     copyTestRecord(test, {
       actorUserId: actor.userId,

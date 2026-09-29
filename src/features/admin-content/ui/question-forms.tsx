@@ -20,7 +20,7 @@ type TopicOption = {
 };
 type EditableQuestion = {
   id: string;
-  topicId: string;
+  topicId: string | null;
   type: QuestionType;
   stem: string;
   imageUrl?: string | null;
@@ -54,7 +54,7 @@ export function QuestionForm({
   onCancel,
   returnTo,
 }: {
-  topics: TopicOption[];
+  topics?: TopicOption[];
   question?: EditableQuestion;
   sectionId?: string;
   onAdded?: () => void;
@@ -72,7 +72,7 @@ export function QuestionForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [topicId, setTopicId] = useState(
-    question?.topicId ?? topics[0]?.id ?? "",
+    question?.topicId ?? topics?.[0]?.id ?? "",
   );
   const answer = question?.answerConfig ?? {};
 
@@ -126,7 +126,7 @@ export function QuestionForm({
     setBusy(true);
     const numericRaw = String(data.get("numericAnswer") ?? "").trim();
     const payload = {
-      topicId: String(data.get("topicId")),
+      topicId: topicId || null,
       type,
       stem: String(data.get("stem")),
       imageUrl: String(data.get("imageUrl") ?? ""),
@@ -194,12 +194,9 @@ export function QuestionForm({
     <form className="question-form panel" onSubmit={submit}>
       <fieldset disabled={busy}>
         <div className="question-grid">
-          <TopicPicker
-            topics={topics}
-            value={topicId}
-            onChange={setTopicId}
-            name="topicId"
-          />
+          {topics?.length ? (
+            <TopicPicker topics={topics} value={topicId} onChange={setTopicId} name="topicId" />
+          ) : null}
           <label className="field">
             <span>Question type</span>
             <select
@@ -290,7 +287,7 @@ export function QuestionForm({
                     : "Select every correct answer (at least two)."}
                 </p>
               </div>
-              {options.length < 8 && (
+              {type === "MULTIPLE_CHOICE" && options.length < 8 && (
                 <button
                   className="button secondary"
                   type="button"
@@ -324,7 +321,7 @@ export function QuestionForm({
                     maxLength={4000}
                   />
                 </label>
-                {options.length > 2 && (
+                {type === "MULTIPLE_CHOICE" && options.length > 2 && (
                   <button
                     className="text-button danger-text"
                     type="button"

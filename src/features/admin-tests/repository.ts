@@ -8,31 +8,25 @@ import {
   eq,
   ilike,
   isNull,
-  ne,
   sql,
 } from "drizzle-orm";
-import { testStateConflict } from "./errors";
 import { db } from "@/db/client";
 import {
   auditLogs,
   products,
   productTests,
-  exams,
   questions,
-  subjects,
   testQuestions,
   testSchedules,
   testSections,
   tests,
-  topics,
 } from "@/db/schema";
 
 type Audit = { actorUserId: string; requestId: string };
 export type TestInput = {
   category?: "FULL_MOCK" | "SUBJECT_TEST" | "TOPIC_SET" | null;
-  examId: string;
   title: string;
-  mode: "PRACTICE" | "MOCK" | "LIVE";
+  mode: "PRACTICE" | "MOCK";
   durationMinutes: number;
   instructions: string;
   maxAttempts: number;
@@ -53,74 +47,46 @@ export type ScheduleInput = {
   cohortKey: string;
 };
 
-export const listTestExams = () =>
-  db
-    .select({ id: exams.id, name: exams.name })
-    .from(exams)
-    .where(ne(exams.status, "ARCHIVED"))
-    .orderBy(asc(exams.name));
 export type ManagedTestFilters = {
-  examId?: string;
-  subjectId?: string;
-  topicId?: string;
   query?: string;
   category?: "FULL_MOCK" | "SUBJECT_TEST" | "TOPIC_SET" | "UNCLASSIFIED";
-  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  mode?: "MOCK" | "PRACTICE";
   page: number;
   pageSize: number;
 };
 export async function listManagedTests(filters: ManagedTestFilters) {
-  const curriculum =
-    filters.topicId || filters.subjectId
-      ? sql`exists (
-    select 1 from test_questions tq
-    join questions q on q.id = tq.question_id
-    join topics tp on tp.id = q.topic_id
-    where tq.test_id = ${tests.id}
-      and (${filters.topicId ?? null}::uuid is null or tp.id = ${filters.topicId ?? null}::uuid)
-      and (${filters.subjectId ?? null}::uuid is null or tp.subject_id = ${filters.subjectId ?? null}::uuid)
-  )`
-      : undefined;
   const where = and(
-    eq(tests.mode, "MOCK"),
-    filters.examId ? eq(tests.examId, filters.examId) : undefined,
-    filters.status ? eq(tests.status, filters.status) : undefined,
+    filters.mode ? eq(tests.mode, filters.mode) : undefined,
     filters.category === "UNCLASSIFIED"
       ? isNull(tests.category)
       : filters.category
         ? eq(tests.category, filters.category)
         : undefined,
     filters.query ? ilike(tests.title, `%${filters.query}%`) : undefined,
-    curriculum,
   );
   const offset = (filters.page - 1) * filters.pageSize;
   const [items, totals] = await db.batch([
     db
       .select({
         id: tests.id,
-        examId: tests.examId,
         title: tests.title,
         mode: tests.mode,
         category: tests.category,
-        status: tests.status,
         durationMinutes: tests.durationMinutes,
-        examName: exams.name,
         sectionCount: countDistinct(testSections.id),
         questionCount: countDistinct(testQuestions.questionId),
       })
       .from(tests)
-      .innerJoin(exams, eq(tests.examId, exams.id))
       .leftJoin(testSections, eq(testSections.testId, tests.id))
       .leftJoin(testQuestions, eq(testQuestions.testId, tests.id))
       .where(where)
-      .groupBy(tests.id, exams.name)
+      .groupBy(tests.id)
       .orderBy(desc(tests.updatedAt), desc(tests.id))
       .limit(filters.pageSize)
       .offset(offset),
     db
       .select({ total: count() })
       .from(tests)
-      .innerJoin(exams, eq(tests.examId, exams.id))
       .where(where),
   ]);
   const total = totals[0]?.total ?? 0;
@@ -133,41 +99,10 @@ export async function listManagedTests(filters: ManagedTestFilters) {
   };
 }
 
-export async function listTestFilterTaxonomy() {
-  const [subjectRows, topicRows] = await Promise.all([
-    db
-      .select({
-        id: subjects.id,
-        name: subjects.name,
-        examId: exams.id,
-        examName: exams.name,
-      })
-      .from(subjects)
-      .innerJoin(exams, eq(subjects.examId, exams.id))
-      .where(ne(exams.status, "ARCHIVED"))
-      .orderBy(asc(exams.name), asc(subjects.name)),
-    db
-      .select({
-        id: topics.id,
-        name: topics.name,
-        subjectId: subjects.id,
-        subjectName: subjects.name,
-        examId: exams.id,
-        examName: exams.name,
-      })
-      .from(topics)
-      .innerJoin(subjects, eq(topics.subjectId, subjects.id))
-      .innerJoin(exams, eq(subjects.examId, exams.id))
-      .where(ne(exams.status, "ARCHIVED"))
-      .orderBy(asc(exams.name), asc(subjects.name), asc(topics.name)),
-  ]);
-  return { subjects: subjectRows, topics: topicRows };
-}
 export async function findManagedTest(id: string) {
   const [test] = await db
     .select({
       id: tests.id,
-      examId: tests.examId,
       title: tests.title,
       mode: tests.mode,
       category: tests.category,
@@ -176,11 +111,8 @@ export async function findManagedTest(id: string) {
       maxAttempts: tests.maxAttempts,
       shuffleQuestions: tests.shuffleQuestions,
       shuffleOptions: tests.shuffleOptions,
-      status: tests.status,
-      examName: exams.name,
     })
     .from(tests)
-    .innerJoin(exams, eq(tests.examId, exams.id))
     .where(eq(tests.id, id))
     .limit(1);
   if (!test) return undefined;
@@ -199,7 +131,7 @@ export async function findManagedTest(id: string) {
           sortOrder: testQuestions.sortOrder,
           stem: questions.stem,
           type: questions.type,
-          status: questions.status,
+          imageUrl: questions.imageUrl,
           explanation: questions.explanation,
           marks: questions.marks,
           negativeMarks: questions.negativeMarks,
@@ -223,19 +155,11 @@ export async function findManagedTest(id: string) {
         .select({
           id: questions.id,
           stem: questions.stem,
-          topicName: topics.name,
-          subjectName: subjects.name,
+          topicName: sql<string>`'Reusable question'`,
+          subjectName: sql<string>`'Question library'`,
         })
         .from(questions)
-        .innerJoin(topics, eq(questions.topicId, topics.id))
-        .innerJoin(subjects, eq(topics.subjectId, subjects.id))
-        .where(
-          and(
-            eq(subjects.examId, test.examId),
-            eq(questions.status, "PUBLISHED"),
-          ),
-        )
-        .orderBy(asc(subjects.name), asc(topics.name)),
+        .orderBy(desc(questions.updatedAt)),
     ]);
   return {
     ...test,
@@ -251,19 +175,11 @@ export const findTest = (id: string) =>
   db.query.tests.findFirst({ where: eq(tests.id, id) });
 export const findSection = (id: string) =>
   db.query.testSections.findFirst({ where: eq(testSections.id, id) });
-export async function findPublishedQuestionForExam(id: string, examId: string) {
+export async function findAvailableQuestion(id: string) {
   const [question] = await db
     .select({ id: questions.id })
     .from(questions)
-    .innerJoin(topics, eq(questions.topicId, topics.id))
-    .innerJoin(subjects, eq(topics.subjectId, subjects.id))
-    .where(
-      and(
-        eq(questions.id, id),
-        eq(questions.status, "PUBLISHED"),
-        eq(subjects.examId, examId),
-      ),
-    )
+    .where(eq(questions.id, id))
     .limit(1);
   return question;
 }
@@ -396,57 +312,6 @@ export async function insertSchedule(
   ]);
   return { id };
 }
-export async function publishTestRecord(
-  before: NonNullable<Awaited<ReturnType<typeof findManagedTest>>>,
-  audit: Audit,
-) {
-  const result = await db.execute(sql`
-    with locked_test as (
-      select id, category from ${tests} where id = ${before.id} and status = 'DRAFT' and mode = 'MOCK' for update
-    ), published as (
-      update ${tests} set status = 'PUBLISHED', updated_at = now()
-      where id in (select id from locked_test)
-        and exists (select 1 from ${testSections} where test_id = ${before.id})
-        and ((select category from locked_test) is null or (select category from locked_test) = 'FULL_MOCK'
-          or (select count(distinct case when (select category from locked_test) = 'TOPIC_SET'
-            then p.id else p.subject_id end) from test_questions tq join questions q on q.id = tq.question_id
-            join topics p on p.id = q.topic_id where tq.test_id = ${before.id}) = 1)
-        and not exists (
-          select 1 from test_questions tq join questions q on q.id = tq.question_id
-          join topics p on p.id = q.topic_id join subjects su on su.id = p.subject_id
-          where tq.test_id = ${before.id} and (q.status = 'ARCHIVED' or su.exam_id <> ${before.examId}::uuid
-            or not exists (select 1 from question_revisions r where r.question_id = q.id))
-        )
-        and coalesce((select sum(duration_minutes) from test_sections where test_id = ${before.id}), 0)
-          <= (select duration_minutes from tests where id = ${before.id})
-        and not exists (
-          select 1 from ${testSections} s where s.test_id = ${before.id}
-          and not exists (select 1 from ${testQuestions} q where q.section_id = s.id)
-        )
-      returning id
-    ), published_questions as (
-      update questions set status = 'PUBLISHED', published_at = now(), updated_at = now()
-      where status in ('DRAFT', 'IN_REVIEW') and id in (
-        select question_id from test_questions where test_id in (select id from published)
-      ) returning id
-    ), published_revisions as (
-      update question_revisions r set published_at = now()
-      where r.question_id in (select id from published_questions)
-        and r.version = (select max(v.version) from question_revisions v where v.question_id = r.question_id)
-      returning id
-    )
-    insert into ${auditLogs} ("actor_user_id", "action", "entity_type", "entity_id", "request_id", "after")
-    select ${audit.actorUserId}, 'test.published', 'test', id::text, ${audit.requestId},
-      '{"status":"PUBLISHED"}'::jsonb from published returning entity_id
-  `);
-  if (!result.rows.length)
-    throw testStateConflict(
-      "Cannot publish: check every section has questions, timing fits, and Subject tests / Topic sets contain only one subject / topic. Refresh if the paper changed.",
-    );
-  return { id: before.id, status: "PUBLISHED" as const };
-}
-
-// Lock the parent test so removing content cannot race a cooperating publisher.
 export async function removeDraftItem(
   sectionId: string,
   questionId: string | null,
@@ -458,8 +323,7 @@ export async function removeDraftItem(
         and not exists (select 1 from ${testQuestions} where section_id = ${sectionId}) returning test_id`;
   const result = await db.execute(sql`
     with locked_test as (
-      select id from ${tests} where id = (select test_id from ${testSections} where id = ${sectionId})
-        and status <> 'ARCHIVED' and mode = 'MOCK' for update
+      select id from ${tests} where id = (select test_id from ${testSections} where id = ${sectionId}) for update
     ), removed as (${removal})
     insert into ${auditLogs} ("actor_user_id", "action", "entity_type", "entity_id", "request_id", "after")
     select ${audit.actorUserId}, ${questionId ? "test_question.removed" : "test_section.removed"},
@@ -522,31 +386,14 @@ export async function replaceQuestionOrder(
   ]);
   return { id: testId };
 }
-export async function testHasPublishedPackage(id: string) {
+export async function testHasLivePackage(id: string) {
   const rows = await db
     .select({ id: products.id })
     .from(productTests)
     .innerJoin(products, eq(productTests.productId, products.id))
-    .where(and(eq(productTests.testId, id), eq(products.status, "PUBLISHED")))
+    .where(and(eq(productTests.testId, id), eq(products.isLive, true)))
     .limit(1);
   return rows.length > 0;
-}
-export async function archiveTestRecord(id: string, audit: Audit) {
-  await db.batch([
-    db
-      .update(tests)
-      .set({ status: "ARCHIVED", updatedAt: new Date() })
-      .where(eq(tests.id, id)),
-    db.insert(auditLogs).values({
-      actorUserId: audit.actorUserId,
-      action: "test.archived",
-      entityType: "test",
-      entityId: id,
-      requestId: audit.requestId,
-      after: { status: "ARCHIVED" },
-    }),
-  ]);
-  return { id };
 }
 export async function copyTestRecord(
   before: NonNullable<Awaited<ReturnType<typeof findManagedTest>>>,
@@ -559,16 +406,15 @@ export async function copyTestRecord(
   }));
   const create = db.insert(tests).values({
     id,
-    examId: before.examId,
     category: before.category,
     title: before.title.slice(0, 190) + " (copy)",
-    mode: "MOCK",
+    mode: before.mode === "PRACTICE" ? "PRACTICE" : "MOCK",
     durationMinutes: before.durationMinutes,
     instructions: before.instructions,
     maxAttempts: before.maxAttempts,
     shuffleQuestions: before.shuffleQuestions,
     shuffleOptions: before.shuffleOptions,
-    status: "DRAFT",
+    status: "PUBLISHED",
   });
   const auditEntry = db.insert(auditLogs).values({
     actorUserId: audit.actorUserId,
@@ -607,19 +453,4 @@ export async function copyTestRecord(
     else await db.batch([create, createSections, auditEntry]);
   }
   return { id };
-}
-
-export function listTopicsForTest(examId: string) {
-  return db
-    .select({
-      id: topics.id,
-      topicName: topics.name,
-      subjectName: subjects.name,
-      examName: exams.name,
-    })
-    .from(topics)
-    .innerJoin(subjects, eq(topics.subjectId, subjects.id))
-    .innerJoin(exams, eq(subjects.examId, exams.id))
-    .where(eq(exams.id, examId))
-    .orderBy(asc(subjects.name), asc(topics.name));
 }

@@ -7,19 +7,16 @@ import { AddTestQuestions } from "./add-questions";
 import { Field } from "@/features/auth/ui/field";
 import type { ApiFailure, ApiSuccess } from "@/lib/http/api-response";
 
-type Exam = { id: string; name: string };
 type TestDetails = {
   category: TestCategory | null;
   id: string;
-  examId: string;
   title: string;
-  mode: "PRACTICE" | "MOCK" | "LIVE";
+  mode: "PRACTICE" | "MOCK";
   durationMinutes: number;
   instructions: string | null;
   maxAttempts: number;
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
-  status: string;
 };
 type Section = {
   id: string;
@@ -68,9 +65,8 @@ async function request<T>(
 }
 function payload(data: FormData) {
   return {
-    examId: String(data.get("examId")),
     title: String(data.get("title")),
-    mode: "MOCK",
+    mode: String(data.get("mode")),
     category: data.get("category") || null,
     durationMinutes: Number(data.get("durationMinutes")),
     instructions: String(data.get("instructions") ?? ""),
@@ -108,13 +104,7 @@ function CategoryField({
   );
 }
 
-export function TestCreateForm({
-  exams,
-  selectedExamId,
-}: {
-  exams: Exam[];
-  selectedExamId?: string;
-}) {
+export function TestCreateForm() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -141,13 +131,10 @@ export function TestCreateForm({
     <form className="admin-form" onSubmit={submit}>
       <fieldset disabled={busy}>
         <label className="field">
-          <span>Exam</span>
-          <select name="examId" defaultValue={selectedExamId} required>
-            {exams.map((exam) => (
-              <option value={exam.id} key={exam.id}>
-                {exam.name}
-              </option>
-            ))}
+          <span>Format</span>
+          <select name="mode" defaultValue="MOCK" required>
+            <option value="MOCK">Mock test</option>
+            <option value="PRACTICE">Practice set</option>
           </select>
         </label>
         <CategoryField />
@@ -161,7 +148,6 @@ export function TestCreateForm({
           placeholder="Full-length mock test 01"
         />
         <div className="question-grid">
-          <input type="hidden" name="mode" value="MOCK" />
           <Field
             id="new-test-duration"
             label="Duration (minutes)"
@@ -210,31 +196,21 @@ export function TestCreateForm({
 
 export function TestBuilder({
   test,
-  exams,
   sections,
   questions,
   canManage,
   canCreate,
-  topics,
 }: {
   test: TestDetails;
-  exams: Exam[];
   sections: Section[];
   questions: Question[];
   canManage: boolean;
   canCreate: boolean;
-  topics: {
-    id: string;
-    topicName: string;
-    subjectName: string;
-    examName: string;
-  }[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
-  const editable =
-    test.status !== "ARCHIVED" && test.mode === "MOCK" && canManage;
+  const editable = canManage;
   async function mutate(
     event: FormEvent<HTMLFormElement>,
     path: string,
@@ -314,7 +290,7 @@ export function TestBuilder({
   }
   return (
     <div className="test-builder">
-      {canManage && test.mode === "MOCK" && (
+      {canManage && (
         <div className="form-actions">
           <button
             type="button"
@@ -339,13 +315,10 @@ export function TestBuilder({
           >
             <fieldset disabled={Boolean(busy)}>
               <label className="field">
-                <span>Exam</span>
-                <select name="examId" defaultValue={test.examId}>
-                  {exams.map((exam) => (
-                    <option value={exam.id} key={exam.id}>
-                      {exam.name}
-                    </option>
-                  ))}
+                <span>Format</span>
+                <select name="mode" defaultValue={test.mode}>
+                  <option value="MOCK">Mock test</option>
+                  <option value="PRACTICE">Practice set</option>
                 </select>
               </label>
               <CategoryField value={test.category} />
@@ -357,7 +330,6 @@ export function TestBuilder({
                 required
               />
               <div className="question-grid">
-                <input type="hidden" name="mode" value="MOCK" />
                 <Field
                   id="edit-test-duration"
                   label="Duration"
@@ -580,11 +552,7 @@ export function TestBuilder({
                   </div>
                 ))}
                 {editable && canCreate && (
-                  <AddTestQuestions
-                    sectionId={section.id}
-                    examId={test.examId}
-                    topics={topics}
-                  />
+                  <AddTestQuestions sectionId={section.id} />
                 )}
                 {editable && questions.length > 0 && (
                   <form
@@ -605,7 +573,7 @@ export function TestBuilder({
                     <fieldset disabled={Boolean(busy)}>
                       <label className="field">
                         <span>
-                          Reuse a question from the question bank (optional)
+                          Reuse an existing question (optional)
                         </span>
                         <select name="questionId">
                           {questions.map((question) => (

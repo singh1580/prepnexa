@@ -69,14 +69,11 @@ export async function getManagedQuestion(id: string) {
 }
 
 export async function createQuestion(input: QuestionInput, actor: Actor) {
-  if (!await findTopic(input.topicId)) throw contentNotFound("Topic");
   return write("question_create", actor, () => insertQuestion(input, { actorUserId: actor.userId, requestId: actor.requestId }), "This question conflicts with existing content.");
 }
 
 export async function updateQuestion(id: string, input: QuestionInput, actor: Actor) {
   const before = await getManagedQuestion(id);
-  if (before.status !== "DRAFT") throw invalidContentState("Only draft questions can be edited.");
-  if (!await findTopic(input.topicId)) throw contentNotFound("Topic");
   return write("question_update", actor, () => patchQuestion(before, input, { actorUserId: actor.userId, requestId: actor.requestId }), "This question was updated elsewhere. Refresh and try again.");
 }
 
