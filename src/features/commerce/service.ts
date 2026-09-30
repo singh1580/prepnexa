@@ -57,7 +57,7 @@ export async function setCouponActive(id: string, active: boolean, actor: Actor)
 
 async function priceCheckout(productId: string, couponCode: string | null, userId: string) {
   const product = await findCheckoutProduct(productId, userId);
-  if (!product) throw commerceNotFound("Published product");
+  if (!product) throw commerceNotFound("Live product");
   if (product.alreadyOwned) throw checkoutConflict("You already have active access to this product.");
   if (!couponCode) return { product, coupon: null, discountPaise: 0, totalPaise: product.pricePaise };
   const code = normalizeCouponCode(couponCode);

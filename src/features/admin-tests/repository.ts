@@ -192,7 +192,6 @@ export async function insertTest(input: TestInput, audit: Audit) {
       id,
       ...input,
       instructions: input.instructions || null,
-      status: "PUBLISHED",
       createdAt: now,
       updatedAt: now,
     }),
@@ -208,7 +207,7 @@ export async function insertTest(input: TestInput, audit: Audit) {
       entityType: "test",
       entityId: id,
       requestId: audit.requestId,
-      after: { ...input, status: "PUBLISHED" },
+      after: input,
     }),
   ]);
   return { id };
@@ -312,7 +311,7 @@ export async function insertSchedule(
   ]);
   return { id };
 }
-export async function removeDraftItem(
+export async function removeTestContent(
   sectionId: string,
   questionId: string | null,
   audit: Audit,
@@ -414,7 +413,6 @@ export async function copyTestRecord(
     maxAttempts: before.maxAttempts,
     shuffleQuestions: before.shuffleQuestions,
     shuffleOptions: before.shuffleOptions,
-    status: "PUBLISHED",
   });
   const auditEntry = db.insert(auditLogs).values({
     actorUserId: audit.actorUserId,

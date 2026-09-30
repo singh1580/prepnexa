@@ -101,7 +101,6 @@ export async function startOrResumeAttempt(testId: string, actor: Actor) {
         questionId: question.questionId,
         revisionId: question.revisionId,
         sectionId: question.sectionId,
-        topicId: question.topicId,
         type: question.type,
         position: snapshots.length,
         stem: question.stem,

@@ -113,6 +113,20 @@
       "when": 1790703806303,
       "tag": "0015_clear_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790741026585,
+      "tag": "0016_curly_onslaught",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790741625056,
+      "tag": "0017_remove_legacy_permissions",
+      "breakpoints": true
     }
   ]
 }

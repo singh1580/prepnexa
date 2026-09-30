@@ -13,7 +13,7 @@ export async function getStudentMaterial(materialId: string, userId: string) {
 
 export async function createStudentMaterialLink(materialId: string, action: "VIEW" | "DOWNLOAD", userId: string) {
   const material = await getStudentMaterial(materialId, userId);
-  if ((material.type === "ARTICLE" || material.type === "VIDEO") || !material.privateObjectKey) throw materialNotFound();
+  if (material.type === "VIDEO" || !material.privateObjectKey) throw materialNotFound();
   if (action === "DOWNLOAD" && !material.allowDownload) throw materialDownloadDisabled();
   return createMaterialToken({ userId, materialId, versionId: material.versionId, action });
 }

@@ -41,7 +41,6 @@ export function AddTestQuestions({ sectionId }: { sectionId: string }) {
     const data = new FormData(form);
     try {
       await post(`/api/admin/tests/sections/${sectionId}/new-question`, {
-        topicId: null,
         type: "SINGLE_CHOICE",
         stem: String(data.get("stem")),
         imageUrl: String(data.get("imageUrl") ?? ""),
@@ -94,7 +93,7 @@ export function AddTestQuestions({ sectionId }: { sectionId: string }) {
 
   async function submitSheet(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const checked = parseQuestionCsv(csv, null);
+    const checked = parseQuestionCsv(csv);
     setPreview(checked);
     if (checked.issues.length) return;
     setBusy(true);

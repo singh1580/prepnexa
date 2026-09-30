@@ -12,7 +12,7 @@ export async function importTestCsv(
   csv: string,
   actor: Actor,
 ) {
-  const parsed = parseQuestionCsv(csv, null);
+  const parsed = parseQuestionCsv(csv);
   if (parsed.issues.length)
     return {
       status: "INVALID" as const,
@@ -67,7 +67,7 @@ export async function addTestQuestions(
   const result = await db.execute(sql`
     with source as (
       select * from jsonb_to_recordset(${JSON.stringify(records)}::jsonb) as r(
-        id uuid, "revisionId" uuid, "topicId" uuid, type text, stem text, "imageUrl" text, explanation text,
+        id uuid, "revisionId" uuid, type text, stem text, "imageUrl" text, explanation text,
         marks numeric, "negativeMarks" numeric, difficulty text, options jsonb,
         "answerConfig" jsonb, position integer)
     ), locked_test as (
@@ -86,13 +86,13 @@ export async function addTestQuestions(
         ${csvImport ? `test-csv:${sectionId}:${fingerprint}` : null}, ${inputs.length}, ${inputs.length}, 0, ${actor.userId}::uuid, now()
       from destination on conflict (import_key) do nothing returning id
     ), new_questions as (
-      insert into questions (id, topic_id, type, stem, image_url, explanation, marks, negative_marks, difficulty, status, created_by)
-      select r.id, r."topicId", r.type::question_type, r.stem, nullif(r."imageUrl", ''), r.explanation, r.marks,
-        r."negativeMarks", r.difficulty, 'PUBLISHED', ${actor.userId}::uuid
+      insert into questions (id, type, stem, image_url, explanation, marks, negative_marks, difficulty, created_by)
+      select r.id, r.type::question_type, r.stem, nullif(r."imageUrl", ''), r.explanation, r.marks,
+        r."negativeMarks", r.difficulty, ${actor.userId}::uuid
       from source r cross join destination cross join import_job returning id
     ), new_revisions as (
-      insert into question_revisions (id, question_id, version, stem, image_url, explanation, marks, negative_marks, answer_config, created_by, published_at)
-      select r."revisionId", r.id, 1, r.stem, nullif(r."imageUrl", ''), r.explanation, r.marks, r."negativeMarks", r."answerConfig", ${actor.userId}::uuid, now()
+      insert into question_revisions (id, question_id, version, stem, image_url, explanation, marks, negative_marks, answer_config, created_by)
+      select r."revisionId", r.id, 1, r.stem, nullif(r."imageUrl", ''), r.explanation, r.marks, r."negativeMarks", r."answerConfig", ${actor.userId}::uuid
       from source r join new_questions q on q.id = r.id returning id
     ), new_options as (
       insert into question_options (question_id, body, is_correct, sort_order)

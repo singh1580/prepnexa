@@ -14,12 +14,12 @@ describe("combined admin action permissions", () => {
     await expect(requirePermissions(["test.manage", "question.create"])).rejects.toMatchObject({ status: 401 });
     expect(findAuthorizationForUser).not.toHaveBeenCalled();
   });
-  it.each([false, true])("requires every permission for paper publication (question permission: %s)", async granted => {
+  it.each([false, true])("requires every permission for managing test questions (question permission: %s)", async granted => {
     vi.mocked(readSessionCookie).mockResolvedValue("test-session");
     vi.mocked(findActiveSession).mockResolvedValue({ userId: "fixture", userStatus: "ACTIVE" } as NonNullable<Awaited<ReturnType<typeof findActiveSession>>>);
-    vi.mocked(findAuthorizationForUser).mockResolvedValue((granted ? ["test.manage", "question.publish"] : ["test.manage"]).map(permission => ({ role: "ADMIN", permission })));
-    const result = requirePermissions(["test.manage", "question.publish"]);
-    if (granted) await expect(result).resolves.toMatchObject({ permissions: ["test.manage", "question.publish"] });
+    vi.mocked(findAuthorizationForUser).mockResolvedValue((granted ? ["test.manage", "question.create"] : ["test.manage"]).map(permission => ({ role: "ADMIN", permission })));
+    const result = requirePermissions(["test.manage", "question.create"]);
+    if (granted) await expect(result).resolves.toMatchObject({ permissions: ["test.manage", "question.create"] });
     else await expect(result).rejects.toMatchObject({ status: 403 });
     expect(findActiveSession).toHaveBeenCalledOnce();
     expect(findAuthorizationForUser).toHaveBeenCalledOnce();

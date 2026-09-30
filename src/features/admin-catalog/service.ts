@@ -219,7 +219,7 @@ export async function duplicateMaterial(id: string, actor: Actor) {
     insertMaterial(
       {
         title: before.title.slice(0, 190) + " (copy)",
-        type: before.type === "ARTICLE" ? "FILE" : before.type,
+        type: before.type,
         body: before.body ?? "",
         privateObjectKey: before.privateObjectKey ?? "",
         allowDownload: before.allowDownload,

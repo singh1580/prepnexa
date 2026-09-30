@@ -53,7 +53,6 @@ export default async function Page({
           returnTo={returnTo}
           question={{
             id: question.id,
-            topicId: question.topicId,
             type: question.type,
             stem: question.stem,
             imageUrl: question.imageUrl,

@@ -8,7 +8,7 @@ import {
   patchSection,
   replaceQuestionOrder,
   copyTestRecord,
-  removeDraftItem,
+  removeTestContent,
   findManagedTest,
   findAvailableQuestion,
   findSection,
@@ -117,7 +117,7 @@ export async function removeTestItem(
   questionId: string | null,
   actor: Actor,
 ) {
-  const removed = await removeDraftItem(sectionId, questionId, {
+  const removed = await removeTestContent(sectionId, questionId, {
     actorUserId: actor.userId,
     requestId: actor.requestId,
   });

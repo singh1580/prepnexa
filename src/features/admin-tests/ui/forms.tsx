@@ -97,8 +97,8 @@ function CategoryField({
         ))}
       </select>
       <small>
-        Subject test: questions from one subject. Topic set: questions from one
-        topic. Full mock: combine subjects as needed.
+        Subject test: one focused section. Topic set: one focused practice set.
+        Full mock: combine multiple sections as needed.
       </small>
     </label>
   );

@@ -1,5 +1,5 @@
 export type ScoringQuestion = {
-  questionId: string; sectionId: string; topicId: string;
+  questionId: string; sectionId: string;
   type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "NUMERIC" | "TEXT";
   marks: string; negativeMarks: string; answerConfig: Record<string, unknown>;
   options: { id: string; isCorrect: boolean }[];
@@ -49,6 +49,5 @@ export function scoreAttempt(questions: ScoringQuestion[]) {
   const scored = questions.map(scoreQuestion);
   const total = group(scored);
   const sections = [...new Set(scored.map(item => item.sectionId))].map(sectionId => ({ sectionId, ...group(scored.filter(item => item.sectionId === sectionId)) }));
-  const topics = [...new Set(scored.map(item => item.topicId))].map(topicId => ({ topicId, ...group(scored.filter(item => item.topicId === topicId)) }));
-  return { questions: scored, sections, topics, ...total };
+  return { questions: scored, sections, ...total };
 }

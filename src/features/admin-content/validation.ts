@@ -1,16 +1,6 @@
 import { z } from "zod";
 
-const name = z.string().trim().min(2).max(180);
-const sortOrder = z.coerce.number().int().min(0).max(10_000);
-
 export const entityIdSchema = z.uuid();
-export const examInputSchema = z.object({
-  name,
-  slug: z.string().trim().min(2).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase words separated by hyphens."),
-  description: z.string().trim().max(4_000).optional().default(""),
-}).strict();
-export const subjectInputSchema = z.object({ name: name.max(160), sortOrder }).strict();
-export const topicInputSchema = z.object({ name: name.max(160), sortOrder }).strict();
 
 const optionSchema = z.object({
   stableKey: z.string().trim().min(1).max(50).regex(/^[A-Z0-9_-]+$/),
@@ -20,7 +10,6 @@ const optionSchema = z.object({
 }).strict();
 
 export const questionInputSchema = z.object({
-  topicId: z.uuid().nullable().optional().default(null),
   type: z.enum(["SINGLE_CHOICE", "MULTIPLE_CHOICE", "NUMERIC", "TEXT"]),
   stem: z.string().trim().min(10).max(20_000),
   imageUrl: z.union([z.url().max(2_048), z.literal("")]).optional().default(""),
@@ -47,5 +36,3 @@ export const questionInputSchema = z.object({
   if (new Set(value.options.map((option) => option.stableKey)).size !== value.options.length) context.addIssue({ code: "custom", path: ["options"], message: "Option keys must be unique." });
   if (new Set(value.options.map((option) => option.sortOrder)).size !== value.options.length) context.addIssue({ code: "custom", path: ["options"], message: "Option order must be unique." });
 });
-
-export const reviewActionSchema = z.object({ action: z.enum(["APPROVE", "RETURN"]) }).strict();

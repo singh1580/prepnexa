@@ -1,9 +1,10 @@
 "use client";
-import { TopicPicker } from "./topic-picker";
 import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Field } from "@/features/auth/ui/field";
-import { adminContentRequest, AdminContentApiError } from "./api";
+class AdminContentApiError extends Error {
+  constructor(public code: string, message: string) { super(message); }
+}
 
 type QuestionType = "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "NUMERIC" | "TEXT";
 type Option = {
@@ -12,15 +13,8 @@ type Option = {
   isCorrect: boolean;
   sortOrder: number;
 };
-type TopicOption = {
-  id: string;
-  topicName: string;
-  subjectName: string;
-  examName: string;
-};
 type EditableQuestion = {
   id: string;
-  topicId: string | null;
   type: QuestionType;
   stem: string;
   imageUrl?: string | null;
@@ -47,19 +41,17 @@ const blankOptions = () =>
   }));
 
 export function QuestionForm({
-  topics,
   question,
   sectionId,
   onAdded,
   onCancel,
   returnTo,
 }: {
-  topics?: TopicOption[];
   question?: EditableQuestion;
-  sectionId?: string;
+  sectionId: string;
   onAdded?: () => void;
   onCancel?: () => void;
-  returnTo?: string;
+  returnTo: string;
 }) {
   const router = useRouter();
   const formId = useId();
@@ -71,9 +63,6 @@ export function QuestionForm({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [topicId, setTopicId] = useState(
-    question?.topicId ?? topics?.[0]?.id ?? "",
-  );
   const answer = question?.answerConfig ?? {};
 
   function changeOption(index: number, patch: Partial<Option>) {
@@ -126,7 +115,6 @@ export function QuestionForm({
     setBusy(true);
     const numericRaw = String(data.get("numericAnswer") ?? "").trim();
     const payload = {
-      topicId: topicId || null,
       type,
       stem: String(data.get("stem")),
       imageUrl: String(data.get("imageUrl") ?? ""),
@@ -151,7 +139,7 @@ export function QuestionForm({
       caseSensitive: type === "TEXT" && data.get("caseSensitive") === "on",
     };
     try {
-      if (sectionId) {
+      {
         const response = await fetch(
           `/api/admin/tests/sections/${sectionId}/${question ? `questions/${question.id}` : "new-question"}`,
           {
@@ -172,13 +160,6 @@ export function QuestionForm({
         setBusy(false);
         return;
       }
-      const result = await adminContentRequest<{ id: string }>(
-        question ? `questions/${question.id}` : "questions",
-        question ? "PATCH" : "POST",
-        payload,
-      );
-      router.push(`/admin/questions/${result.id}`);
-      router.refresh();
     } catch (cause) {
       setError(errorMessage(cause));
       setBusy(false);
@@ -194,9 +175,6 @@ export function QuestionForm({
     <form className="question-form panel" onSubmit={submit}>
       <fieldset disabled={busy}>
         <div className="question-grid">
-          {topics?.length ? (
-            <TopicPicker topics={topics} value={topicId} onChange={setTopicId} name="topicId" />
-          ) : null}
           <label className="field">
             <span>Question type</span>
             <select
@@ -395,26 +373,14 @@ export function QuestionForm({
             {busy
               ? "Saving…"
               : question
-                ? sectionId
-                  ? "Save changes to this test"
-                  : "Save question"
-                : sectionId
-                  ? "Add question to this test"
-                  : "Create question"}
+                ? "Save changes to this test"
+                : "Add question to this test"}
           </button>
           <button
             className="button secondary"
             type="button"
             onClick={() =>
-              returnTo
-                ? router.push(returnTo)
-                : sectionId
-                  ? onCancel?.()
-                  : router.push(
-                      question
-                        ? `/admin/questions/${question.id}`
-                        : "/admin/questions",
-                    )
+              onCancel ? onCancel() : router.push(returnTo)
             }
           >
             Cancel
@@ -427,102 +393,5 @@ export function QuestionForm({
         </p>
       )}
     </form>
-  );
-}
-
-export function QuestionWorkflowActions({
-  questionId,
-  status,
-  permissions,
-}: {
-  questionId: string;
-  status: string;
-  permissions: readonly string[];
-}) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const canPublish = permissions.includes("question.publish");
-  async function action(path: "publish" | "archive") {
-    setBusy(true);
-    setError("");
-    try {
-      await adminContentRequest(`questions/${questionId}/${path}`, "POST", {});
-      router.refresh();
-    } catch (cause) {
-      setError(errorMessage(cause));
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function duplicate() {
-    setBusy(true);
-    setError("");
-    try {
-      const result = await adminContentRequest<{ id: string }>(
-        `questions/${questionId}/duplicate`,
-        "POST",
-        {},
-      );
-      router.push(`/admin/questions/${result.id}`);
-      router.refresh();
-    } catch (cause) {
-      setError(errorMessage(cause));
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <section className="panel workflow-panel">
-      <h2>Publication</h2>
-      <p className="muted">
-        Save any edits, check the question and answer, then publish.
-      </p>
-      <div className="workflow-actions">
-        {status !== "DRAFT" && permissions.includes("question.create") && (
-          <button
-            type="button"
-            className="button secondary"
-            disabled={busy}
-            onClick={duplicate}
-          >
-            Create editable copy
-          </button>
-        )}
-        {(status === "DRAFT" || status === "IN_REVIEW") && canPublish && (
-          <button
-            type="button"
-            className="button"
-            disabled={busy}
-            onClick={() => action("publish")}
-          >
-            {busy ? "Publishing…" : "Publish question"}
-          </button>
-        )}
-        {status === "PUBLISHED" && canPublish && (
-          <button
-            type="button"
-            className="button secondary"
-            disabled={busy}
-            onClick={() => action("archive")}
-          >
-            {busy ? "Archiving…" : "Archive question"}
-          </button>
-        )}
-      </div>
-      {status === "PUBLISHED" && (
-        <p className="notice success">This question is published.</p>
-      )}
-      {status === "ARCHIVED" && (
-        <p className="notice">
-          This question is archived and unavailable for new tests.
-        </p>
-      )}
-      {error && (
-        <p className="notice danger" role="alert">
-          {error}
-        </p>
-      )}
-    </section>
   );
 }

@@ -165,8 +165,8 @@ export async function insertProduct(input: ProductCreationInput, audit: Audit) {
     with selected_tests as (select jsonb_array_elements_text(${JSON.stringify(testIds)}::jsonb)::uuid as id),
     selected_materials as (select jsonb_array_elements_text(${JSON.stringify(materialIds)}::jsonb)::uuid as id),
     created as (
-      insert into products (id, name, slug, description, mrp_paise, price_paise, access_days, is_live, status)
-      select ${id}::uuid, ${input.name}, ${input.slug}, ${input.description || null}, ${input.mrpPaise ?? null}, ${input.pricePaise}, ${input.accessDays}, false, 'DRAFT'
+      insert into products (id, name, slug, description, mrp_paise, price_paise, access_days, is_live)
+      select ${id}::uuid, ${input.name}, ${input.slug}, ${input.description || null}, ${input.mrpPaise ?? null}, ${input.pricePaise}, ${input.accessDays}, false
       where not exists (select 1 from selected_tests s where not exists (
         select 1 from tests t where t.id = s.id
       )) and not exists (select 1 from selected_materials s where not exists (
@@ -179,7 +179,7 @@ export async function insertProduct(input: ProductCreationInput, audit: Audit) {
     )
     insert into audit_logs (actor_user_id, action, entity_type, entity_id, request_id, "after")
     select ${audit.actorUserId}::uuid, 'product.created', 'product', id::text, ${audit.requestId},
-      ${JSON.stringify({ ...input, status: "DRAFT" })}::jsonb from created returning entity_id
+      ${JSON.stringify(input)}::jsonb from created returning entity_id
   `);
   if (!result.rows.length)
     throw invalidContentState(
@@ -199,13 +199,11 @@ export async function insertMaterial(
   const allowDownload = input.allowDownload ?? false;
   const values = {
     id,
-    examId: null,
     title: input.title,
     type: input.type,
     body: input.body || null,
     privateObjectKey: objectKey,
     allowDownload,
-    status: "PUBLISHED" as const,
     createdBy: audit.actorUserId,
     createdAt: now,
     updatedAt: now,
@@ -224,7 +222,6 @@ export async function insertMaterial(
       checksum: file?.checksum,
       sizeBytes: file?.sizeBytes,
       createdBy: audit.actorUserId,
-      publishedAt: now,
       createdAt: now,
     }),
     db.insert(auditLogs).values({
@@ -237,7 +234,6 @@ export async function insertMaterial(
         title: input.title,
         type: input.type,
         allowDownload,
-        status: "PUBLISHED",
         version: 1,
         file: file
           ? {
@@ -290,7 +286,7 @@ export async function setProductLiveRecord(
   await db.batch([
     db
       .update(products)
-      .set({ isLive, status: isLive ? "PUBLISHED" : "DRAFT", updatedAt: now })
+      .set({ isLive, updatedAt: now })
       .where(eq(products.id, before.id)),
     db.insert(auditLogs).values({
       actorUserId: audit.actorUserId,
@@ -493,7 +489,6 @@ export async function copyProductRecord(
     mrpPaise: before.mrpPaise,
     pricePaise: before.pricePaise,
     accessDays: before.accessDays,
-    status: "DRAFT" as const,
     isLive: false,
   };
   const create = db.insert(products).values(values);

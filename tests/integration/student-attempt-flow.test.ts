@@ -6,25 +6,22 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
     const [{ db }, schema, { eq }, service, resultsService] = await Promise.all([
       import("../../src/db/client"), import("../../src/db/schema"), import("drizzle-orm"), import("../../src/features/student-tests/service"), import("../../src/features/student-results/service"),
     ]);
-    const userId = randomUUID(), examId = randomUUID(), subjectId = randomUUID(), topicId = randomUUID();
+    const userId = randomUUID();
     const questionId = randomUUID(), revisionId = randomUUID(), testId = randomUUID(), secondTestId = randomUUID();
     const sectionId = randomUUID(), secondSectionId = randomUUID(), productId = randomUUID();
     const requestId = randomUUID();
     try {
       await db.batch([
         db.insert(schema.users).values({ id: userId, email: `attempt-${userId}@example.com`, name: "Attempt QA", passwordHash: "test-only", status: "ACTIVE", emailVerifiedAt: new Date() }),
-        db.insert(schema.exams).values({ id: examId, slug: examId, name: "Attempt QA Exam", status: "PUBLISHED", createdBy: userId }),
-        db.insert(schema.subjects).values({ id: subjectId, examId, name: "Aptitude", sortOrder: 0 }),
-        db.insert(schema.topics).values({ id: topicId, subjectId, name: "Percentages", sortOrder: 0 }),
-        db.insert(schema.questions).values({ id: questionId, topicId, type: "SINGLE_CHOICE", stem: "Current mutable stem", marks: "1", negativeMarks: "0", difficulty: "EASY", status: "PUBLISHED", createdBy: userId, publishedAt: new Date() }),
-        db.insert(schema.questionRevisions).values({ id: revisionId, questionId, version: 1, stem: "What is fifty percent of ten?", explanation: "Five is half of ten.", marks: "1", negativeMarks: "0", answerConfig: { correctKeys: ["B"] }, createdBy: userId, publishedAt: new Date() }),
+        db.insert(schema.questions).values({ id: questionId, type: "SINGLE_CHOICE", stem: "Current mutable stem", marks: "1", negativeMarks: "0", difficulty: "EASY", createdBy: userId }),
+        db.insert(schema.questionRevisions).values({ id: revisionId, questionId, version: 1, stem: "What is fifty percent of ten?", explanation: "Five is half of ten.", marks: "1", negativeMarks: "0", answerConfig: { correctKeys: ["B"] }, createdBy: userId }),
         db.insert(schema.questionRevisionOptions).values([
           { revisionId, stableKey: "A", body: "4", isCorrect: false, sortOrder: 0 },
           { revisionId, stableKey: "B", body: "5", isCorrect: true, sortOrder: 1 },
         ]),
         db.insert(schema.tests).values([
-          { id: testId, examId, title: "Attempt QA Paper", mode: "MOCK", category: "TOPIC_SET", durationMinutes: 30, maxAttempts: 1, status: "PUBLISHED" },
-          { id: secondTestId, examId, title: "Second QA Paper", mode: "MOCK", category: "TOPIC_SET", durationMinutes: 30, maxAttempts: 1, status: "PUBLISHED" },
+          { id: testId, title: "Attempt QA Paper", mode: "MOCK", category: "TOPIC_SET", durationMinutes: 30, maxAttempts: 1 },
+          { id: secondTestId, title: "Second QA Paper", mode: "MOCK", category: "TOPIC_SET", durationMinutes: 30, maxAttempts: 1 },
         ]),
         db.insert(schema.testSections).values([
           { id: sectionId, testId, title: "Questions", sortOrder: 0 },
@@ -34,7 +31,7 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
           { testId, sectionId, questionId, sortOrder: 0 },
           { testId: secondTestId, sectionId: secondSectionId, questionId, sortOrder: 0 },
         ]),
-        db.insert(schema.products).values({ id: productId, slug: productId, name: "Attempt QA Free", pricePaise: 0, accessDays: 30, status: "PUBLISHED" }),
+        db.insert(schema.products).values({ id: productId, slug: productId, name: "Attempt QA Free", pricePaise: 0, accessDays: 30, isLive: true }),
         db.insert(schema.productTests).values([{ productId, testId }, { productId, testId: secondTestId }]),
       ]);
 
@@ -68,9 +65,9 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
       await db.batch([
         db.delete(schema.attempts).where(eq(schema.attempts.userId, userId)),
         db.delete(schema.products).where(eq(schema.products.id, productId)),
-        db.delete(schema.tests).where(eq(schema.tests.examId, examId)),
+        db.delete(schema.tests).where(eq(schema.tests.id, testId)),
+        db.delete(schema.tests).where(eq(schema.tests.id, secondTestId)),
         db.delete(schema.questions).where(eq(schema.questions.id, questionId)),
-        db.delete(schema.exams).where(eq(schema.exams.id, examId)),
         db.delete(schema.auditLogs).where(eq(schema.auditLogs.actorUserId, userId)),
         db.delete(schema.users).where(eq(schema.users.id, userId)),
       ]);

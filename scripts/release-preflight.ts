@@ -53,7 +53,7 @@ async function main() {
 
   try {
     const sql = neon(env.DATABASE_URL);
-    const requiredTables = ["attempts", "exams", "orders", "products", "roles", "support_tickets", "tests", "users"];
+    const requiredTables = ["attempts", "materials", "orders", "products", "roles", "support_tickets", "tests", "users"];
     const [databaseState] = await sql`
       select
         (select array_agg(key order by key) from roles) as role_keys,

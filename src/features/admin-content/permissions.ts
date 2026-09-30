@@ -1,8 +1,5 @@
 export const CONTENT_PERMISSIONS = {
-  manageExams: "exam.manage",
   createQuestions: "question.create",
-  reviewQuestions: "question.review",
-  publishQuestions: "question.publish",
   manageTests: "test.manage",
   manageSchedules: "schedule.manage",
   manageMaterials: "material.manage",

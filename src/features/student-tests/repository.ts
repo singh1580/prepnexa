@@ -4,7 +4,6 @@ import { db } from "@/db/client";
 import {
   attemptAnswers,
   attempts,
-  exams,
   questionRevisionOptions,
   questionRevisions,
   questions,
@@ -35,7 +34,6 @@ type StartQuestion = {
   sectionId: string;
   sectionOrder: number;
   questionOrder: number;
-  topicId: string | null;
   type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "NUMERIC" | "TEXT";
   stem: string;
   imageUrl: string | null;
@@ -62,7 +60,6 @@ export type AttemptSnapshotInput = {
   questionId: string;
   revisionId: string;
   sectionId: string;
-  topicId: string | null;
   type: StartQuestion["type"];
   position: number;
   stem: string;
@@ -104,16 +101,16 @@ export async function expireStudentAttempts(userId: string) {
 export async function listStudentTests(userId: string) {
   const result = await db.execute(sql`
     select t.id, t.title, t.category, t.duration_minutes as "durationMinutes", t.max_attempts as "maxAttempts",
-      coalesce(e.name,'Prepstore') as "examName",
+      'Prepstore' as "examName",
       (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
       (select count(*)::int from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
       (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId"
-    from tests t left join exams e on e.id = t.exam_id
-    where t.status = 'PUBLISHED' and (
+    from tests t
+    where (
       exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)
       or exists (select 1 from product_tests pt join products p on p.id = pt.product_id join entitlements en on en.product_id = p.id
         where pt.test_id = t.id and p.is_live = true and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())
-    ) order by e.name, t.title
+    ) order by t.title
   `);
   return rows<
     Omit<
@@ -130,14 +127,14 @@ export async function findStudentTestAccess(
   const result = await db.execute(sql`
     select t.id, t.title, t.category, t.duration_minutes as "durationMinutes", t.instructions,
       t.max_attempts as "maxAttempts", t.shuffle_questions as "shuffleQuestions", t.shuffle_options as "shuffleOptions",
-      coalesce(e.name,'Prepstore') as "examName", (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
+      'Prepstore' as "examName", (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
       (select count(*)::int from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
       (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId",
       (exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)
         or exists (select 1 from product_tests pt join products p on p.id = pt.product_id join entitlements en on en.product_id = p.id
           where pt.test_id = t.id and p.is_live = true and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())) as "hasAccess"
-    from tests t left join exams e on e.id = t.exam_id
-    where t.id = ${testId} and t.status = 'PUBLISHED' limit 1
+    from tests t
+    where t.id = ${testId} limit 1
   `);
   return rows<StudentTestAccess>(result)[0];
 }
@@ -175,7 +172,6 @@ export async function findStartContext(
         sectionId: testQuestions.sectionId,
         sectionOrder: testSections.sortOrder,
         questionOrder: testQuestions.sortOrder,
-        topicId: questions.topicId,
         type: questions.type,
         stem: questionRevisions.stem,
         imageUrl: questionRevisions.imageUrl,
@@ -191,7 +187,7 @@ export async function findStartContext(
         questionRevisions,
         and(
           eq(questionRevisions.questionId, questions.id),
-          sql`${questionRevisions.version} = (select max(qr.version) from question_revisions qr where qr.question_id = ${questions.id} and qr.published_at is not null)`,
+          sql`${questionRevisions.version} = (select max(qr.version) from question_revisions qr where qr.question_id = ${questions.id})`,
         ),
       )
       .where(eq(testQuestions.testId, testId))
@@ -234,7 +230,6 @@ export async function createAttemptWithSnapshots(input: {
     questionId: snapshot.questionId,
     revisionId: snapshot.revisionId,
     sectionId: snapshot.sectionId,
-    topicId: snapshot.topicId,
     type: snapshot.type,
     position: snapshot.position,
     stem: snapshot.stem,
@@ -261,10 +256,10 @@ export async function createAttemptWithSnapshots(input: {
       from jsonb_to_recordset(${JSON.stringify(sectionPayload)}::jsonb) as x("attemptId" text, "sectionId" text)
       where exists (select 1 from inserted_attempt) returning attempt_id
     ), inserted_questions as (
-      insert into attempt_question_snapshots (id, attempt_id, question_id, revision_id, section_id, topic_id, type, position, stem, image_url, explanation, marks, negative_marks, answer_config)
-      select x.id::uuid, x."attemptId"::uuid, x."questionId"::uuid, x."revisionId"::uuid, x."sectionId"::uuid, x."topicId"::uuid,
+      insert into attempt_question_snapshots (id, attempt_id, question_id, revision_id, section_id, type, position, stem, image_url, explanation, marks, negative_marks, answer_config)
+      select x.id::uuid, x."attemptId"::uuid, x."questionId"::uuid, x."revisionId"::uuid, x."sectionId"::uuid,
         x.type::question_type, x.position, x.stem, x."imageUrl", x.explanation, x.marks::numeric, x."negativeMarks"::numeric, x."answerConfig"::jsonb
-      from jsonb_to_recordset(${JSON.stringify(snapshotPayload)}::jsonb) as x(id text, "attemptId" text, "questionId" text, "revisionId" text, "sectionId" text, "topicId" text, type text, position int, stem text, "imageUrl" text, explanation text, marks text, "negativeMarks" text, "answerConfig" jsonb)
+      from jsonb_to_recordset(${JSON.stringify(snapshotPayload)}::jsonb) as x(id text, "attemptId" text, "questionId" text, "revisionId" text, "sectionId" text, type text, position int, stem text, "imageUrl" text, explanation text, marks text, "negativeMarks" text, "answerConfig" jsonb)
       where exists (select 1 from inserted_attempt) returning id
     ), inserted_options as (
       insert into attempt_option_snapshots (id, question_snapshot_id, stable_key, body, is_correct, position)
@@ -308,11 +303,10 @@ export async function findAttemptForStudent(attemptId: string, userId: string) {
       submittedAt: attempts.submittedAt,
       title: tests.title,
       durationMinutes: tests.durationMinutes,
-      examName: sql<string>`coalesce(${exams.name}, 'Prepstore')`,
+      examName: sql<string>`'Prepstore'`,
     })
     .from(attempts)
     .innerJoin(tests, eq(tests.id, attempts.testId))
-    .leftJoin(exams, eq(exams.id, tests.examId))
     .where(and(eq(attempts.id, attemptId), eq(attempts.userId, userId)))
     .limit(1);
   if (!attempt) return undefined;
