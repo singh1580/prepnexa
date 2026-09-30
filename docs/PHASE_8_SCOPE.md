@@ -1,6 +1,6 @@
 # Phase 8 — provider-neutral commerce
 
-Phase 8 adds checkout and access without tying PrepNexa to Razorpay, Stripe or another gateway. The production provider is intentionally undecided. Core business rules live behind a `PaymentProvider` interface; the bundled mock adapter is for local and automated testing and refuses to run in production.
+Phase 8 adds checkout and access without tying Prepstore to Razorpay, Stripe or another gateway. The production provider is intentionally undecided. Core business rules live behind a `PaymentProvider` interface; the bundled mock adapter is for local and automated testing and refuses to run in production.
 
 ## Student flow
 

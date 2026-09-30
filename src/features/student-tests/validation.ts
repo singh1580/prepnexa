@@ -7,6 +7,7 @@ export const answerInputSchema = z.object({
   textAnswer: z.string().trim().max(10_000).nullable().default(null),
   numericAnswer: z.string().trim().max(100).nullable().default(null),
   markedForReview: z.boolean().default(false),
+  timeSpentSeconds: z.number().int().min(0).max(86_400).default(0),
   version: z.number().int().min(0).max(1_000_000),
 }).strict().superRefine((value, context) => {
   if (new Set(value.selectedOptionIds).size !== value.selectedOptionIds.length) context.addIssue({ code: "custom", path: ["selectedOptionIds"], message: "An option can only be selected once." });

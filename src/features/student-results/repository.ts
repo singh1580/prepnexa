@@ -11,6 +11,7 @@ export async function findAttemptForScoring(attemptId: string, userId: string) {
       q.question_id as "questionId", q.section_id as "sectionId", q.type,
       q.marks, q.negative_marks as "negativeMarks", q.answer_config as "answerConfig",
       coalesce(ans.selected_option_ids, '[]'::jsonb) as "selectedOptionIds", ans.text_answer as "textAnswer", ans.numeric_answer as "numericAnswer",
+      coalesce(ans.time_spent_seconds, 0)::int as "timeSpentSeconds",
       coalesce((select jsonb_agg(jsonb_build_object('id', o.id, 'isCorrect', o.is_correct) order by o.position)
         from attempt_option_snapshots o where o.question_snapshot_id = q.id), '[]'::jsonb) as options
     from attempts a join tests t on t.id=a.test_id join attempt_question_snapshots q on q.attempt_id = a.id
@@ -18,12 +19,13 @@ export async function findAttemptForScoring(attemptId: string, userId: string) {
     where a.id = ${attemptId} and a.user_id = ${userId}
     order by q.position
   `);
-  const values = rows<ScoringQuestion & { id: string; testId: string; status: string; startedAt: Date | null; submittedAt: Date | null; durationMinutes: number }>(result);
+  const values = rows<ScoringQuestion & { id: string; testId: string; status: string; startedAt: Date | null; submittedAt: Date | null; durationMinutes: number; timeSpentSeconds: number }>(result);
   if (!values.length) return undefined;
   return { id: values[0].id, testId: values[0].testId, status: values[0].status, startedAt: values[0].startedAt, submittedAt: values[0].submittedAt, durationMinutes: values[0].durationMinutes,
     questions: values.map(item => ({ questionId: item.questionId, sectionId: item.sectionId, type: item.type,
       marks: item.marks, negativeMarks: item.negativeMarks, answerConfig: item.answerConfig, options: item.options,
-      selectedOptionIds: item.selectedOptionIds, textAnswer: item.textAnswer, numericAnswer: item.numericAnswer })) };
+      selectedOptionIds: item.selectedOptionIds, textAnswer: item.textAnswer, numericAnswer: item.numericAnswer,
+      timeSpentSeconds: item.timeSpentSeconds })) };
 }
 
 export async function findPendingStudentAttempts(userId: string) {
@@ -38,7 +40,7 @@ export async function findPendingStudentAttempts(userId: string) {
 export async function persistInitialResult(input: { attemptId: string; userId: string; requestId: string; timeSpentSeconds: number;
   score: string; maxScore: string; correctCount: number; incorrectCount: number; unansweredCount: number;
   questions: { questionId: string; correct: boolean; awardedMarks: string }[];
-  sections: { sectionId: string; score: string; maxScore: string; correctCount: number; incorrectCount: number; unansweredCount: number }[] }) {
+  sections: { sectionId: string; score: string; maxScore: string; correctCount: number; incorrectCount: number; unansweredCount: number; timeSpentSeconds: number }[] }) {
   const resultId = randomUUID();
   const result = await db.execute(sql`
     with created_result as (
@@ -53,9 +55,9 @@ export async function persistInitialResult(input: { attemptId: string; userId: s
       where ans.attempt_id = ${input.attemptId} and ans.question_id = x."questionId" returning ans.question_id
     ), saved_sections as (
       insert into section_results (result_id, section_id, score, max_score, correct_count, incorrect_count, unanswered_count, time_spent_seconds)
-      select r.id, x."sectionId", x.score::numeric, x."maxScore"::numeric, x."correctCount", x."incorrectCount", x."unansweredCount", 0
+      select r.id, x."sectionId", x.score::numeric, x."maxScore"::numeric, x."correctCount", x."incorrectCount", x."unansweredCount", x."timeSpentSeconds"
       from created_result r cross join jsonb_to_recordset(${JSON.stringify(input.sections)}::jsonb)
-        as x("sectionId" uuid, score text, "maxScore" text, "correctCount" int, "incorrectCount" int, "unansweredCount" int)
+        as x("sectionId" uuid, score text, "maxScore" text, "correctCount" int, "incorrectCount" int, "unansweredCount" int, "timeSpentSeconds" int)
       returning result_id
     ), evaluated as (
       update attempts set status = 'EVALUATED', updated_at = now() where id = ${input.attemptId} and exists (select 1 from created_result) returning id
@@ -90,7 +92,9 @@ export async function findStudentResult(resultId: string, userId: string) {
   const summaryResult = await db.execute(sql`
     select r.id, r.attempt_id as "attemptId", r.version, r.status, r.score, r.max_score as "maxScore", r.correct_count as "correctCount",
       r.incorrect_count as "incorrectCount", r.unanswered_count as "unansweredCount", r.time_spent_seconds as "timeSpentSeconds",
-      r.published_at as "publishedAt", t.id as "testId", t.title, 'Prepstore' as "examName", a.sequence
+      r.published_at as "publishedAt", t.id as "testId", t.title, 'Prepstore' as "examName", a.sequence,
+      t.max_attempts as "maxAttempts",
+      (select count(*)::int from attempts ax where ax.user_id=a.user_id and ax.test_id=a.test_id and ax.status <> 'VOID') as "attemptsUsed"
     from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id
     where r.id=${resultId} and a.user_id=${userId} and r.status in ('PUBLISHED','REVISED') limit 1
   `);
@@ -98,11 +102,11 @@ export async function findStudentResult(resultId: string, userId: string) {
   if (!summary) return undefined;
   const attemptId = summary.attemptId as string;
   const [sectionsResult, questionsResult] = await Promise.all([
-    db.execute(sql`select s.title, sr.score, sr.max_score as "maxScore", sr.correct_count as "correctCount", sr.incorrect_count as "incorrectCount", sr.unanswered_count as "unansweredCount" from section_results sr join test_sections s on s.id=sr.section_id where sr.result_id=${resultId} order by s.sort_order`),
+    db.execute(sql`select s.title, sr.score, sr.max_score as "maxScore", sr.correct_count as "correctCount", sr.incorrect_count as "incorrectCount", sr.unanswered_count as "unansweredCount", sr.time_spent_seconds as "timeSpentSeconds" from section_results sr join test_sections s on s.id=sr.section_id where sr.result_id=${resultId} order by s.sort_order`),
     db.execute(sql`
       select q.id, q.position, q.stem, q.explanation, q.type, q.marks, q.negative_marks as "negativeMarks",
         ans.selected_option_ids as "selectedOptionIds", ans.text_answer as "textAnswer", ans.numeric_answer as "numericAnswer",
-        coalesce(ans.is_correct,false) as "isCorrect", coalesce(ans.awarded_marks,0) as "awardedMarks",
+        coalesce(ans.is_correct,false) as "isCorrect", coalesce(ans.awarded_marks,0) as "awardedMarks", coalesce(ans.time_spent_seconds,0)::int as "timeSpentSeconds",
         q.answer_config as "answerConfig", s.title as "sectionTitle",
         coalesce((select jsonb_agg(jsonb_build_object('id',o.id,'body',o.body,'isCorrect',o.is_correct,'selected',coalesce(ans.selected_option_ids,'[]'::jsonb) ? o.id::text) order by o.position) from attempt_option_snapshots o where o.question_snapshot_id=q.id),'[]'::jsonb) as options
       from attempt_question_snapshots q join test_sections s on s.id=q.section_id
@@ -110,5 +114,25 @@ export async function findStudentResult(resultId: string, userId: string) {
       where q.attempt_id=${attemptId} order by q.position
     `),
   ]);
-  return { ...summary, sections: rows<Record<string, unknown>>(sectionsResult), questions: rows<Record<string, unknown>>(questionsResult) };
+  const rankResult = await db.execute(sql`
+    with latest as (
+      select distinct on (a.id) a.user_id, a.test_id, r.score
+      from attempts a join results r on r.attempt_id=a.id
+      where a.test_id=${summary.testId as string} and r.status in ('PUBLISHED','REVISED')
+      order by a.id, r.version desc
+    ), best as (
+      select user_id, max(score) as score from latest group by user_id
+    ), standing as (
+      select (1 + count(*) filter (where score > ${summary.score as string}::numeric))::int as rank,
+        (1 + count(*))::int as "eligibleCount"
+      from best where user_id <> ${userId}
+    )
+    select rank, "eligibleCount",
+      case when "eligibleCount" <= 1 then 100
+        else round(100.0 * ("eligibleCount" - rank) / ("eligibleCount" - 1), 2)
+      end as percentile
+    from standing
+  `);
+  const ranking = rows<{ rank: number; eligibleCount: number; percentile: string }>(rankResult)[0] ?? { rank: 1, eligibleCount: 1, percentile: "100" };
+  return { ...summary, ...ranking, sections: rows<Record<string, unknown>>(sectionsResult), questions: rows<Record<string, unknown>>(questionsResult) };
 }

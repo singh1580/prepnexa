@@ -524,3 +524,19 @@ export async function copyProductRecord(
   else await db.batch([create, auditEntry]);
   return { id };
 }
+
+export async function deleteProductRecord(id: string, audit: Audit) {
+  const result = await db.execute(sql`
+    with removed as (
+      delete from products p where p.id=${id}
+        and not p.is_live
+        and not exists(select 1 from order_items oi where oi.product_id=p.id)
+        and not exists(select 1 from entitlements e where e.product_id=p.id)
+      returning p.id
+    )
+    insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,"after")
+    select ${audit.actorUserId},'product.deleted','product',id::text,${audit.requestId},jsonb_build_object('deleted',true)
+    from removed returning entity_id
+  `);
+  return result.rows.length ? { id } : undefined;
+}

@@ -1,14 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { answerInputSchema, normalizeAnswerForQuestion } from "../../src/features/student-tests/validation";
+import { answerInputFromState } from "../../src/features/student-tests/answer-payload";
 
 const optionA = crypto.randomUUID();
 const optionB = crypto.randomUUID();
-const base = { selectedOptionIds: [] as string[], textAnswer: null, numericAnswer: null, markedForReview: false, version: 0 };
+const base = { selectedOptionIds: [] as string[], textAnswer: null, numericAnswer: null, markedForReview: false, timeSpentSeconds: 0, version: 0 };
 
 describe("student attempt answer validation", () => {
   it("accepts clear answers and a valid optimistic version", () => {
     expect(answerInputSchema.parse(base)).toEqual(base);
     expect(answerInputSchema.safeParse({ ...base, version: -1 }).success).toBe(false);
+  });
+
+  it("builds the API payload without UI-only state", () => {
+    const uiAnswer = { ...base, savedAt: "2026-09-30T00:00:00.000Z" };
+    const payload = answerInputFromState(uiAnswer, 3);
+    expect(payload).toEqual({ ...base, version: 3 });
+    expect(answerInputSchema.safeParse(payload).success).toBe(true);
+    expect(answerInputSchema.safeParse({ ...payload, savedAt: "2026-09-30T00:00:00.000Z" }).success).toBe(false);
   });
 
   it("rejects duplicate, foreign, and multiple single-choice options", () => {

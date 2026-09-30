@@ -452,3 +452,18 @@ export async function copyTestRecord(
   }
   return { id };
 }
+
+export async function deleteTestRecord(id: string, audit: Audit) {
+  const result = await db.execute(sql`
+    with removed as (
+      delete from tests t where t.id=${id}
+        and not exists(select 1 from product_tests pt where pt.test_id=t.id)
+        and not exists(select 1 from attempts a where a.test_id=t.id)
+      returning t.id
+    )
+    insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,"after")
+    select ${audit.actorUserId},'test.deleted','test',id::text,${audit.requestId},jsonb_build_object('deleted',true)
+    from removed returning entity_id
+  `);
+  return result.rows.length ? { id } : undefined;
+}

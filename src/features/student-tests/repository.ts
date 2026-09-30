@@ -316,7 +316,7 @@ export async function findAttemptForStudent(attemptId: string, userId: string) {
         sql`select s.id, s.title, s.sort_order as "sortOrder" from attempt_section_states st join test_sections s on s.id = st.section_id where st.attempt_id = ${attemptId} order by s.sort_order`,
       ),
       db.execute(
-        sql`select id, question_id as "questionId", section_id as "sectionId", type, position, stem, marks, negative_marks as "negativeMarks" from attempt_question_snapshots where attempt_id = ${attemptId} order by position`,
+        sql`select id, question_id as "questionId", section_id as "sectionId", type, position, stem, image_url as "imageUrl", marks, negative_marks as "negativeMarks" from attempt_question_snapshots where attempt_id = ${attemptId} order by position`,
       ),
       db.execute(
         sql`select o.id, o.question_snapshot_id as "questionSnapshotId", o.body, o.position from attempt_option_snapshots o join attempt_question_snapshots q on q.id = o.question_snapshot_id where q.attempt_id = ${attemptId} order by o.position`,
@@ -328,6 +328,7 @@ export async function findAttemptForStudent(attemptId: string, userId: string) {
           textAnswer: attemptAnswers.textAnswer,
           numericAnswer: attemptAnswers.numericAnswer,
           markedForReview: attemptAnswers.markedForReview,
+          timeSpentSeconds: attemptAnswers.timeSpentSeconds,
           version: attemptAnswers.version,
           savedAt: attemptAnswers.savedAt,
         })
@@ -351,6 +352,7 @@ export async function findAttemptForStudent(attemptId: string, userId: string) {
     type: StartQuestion["type"];
     position: number;
     stem: string;
+    imageUrl: string | null;
     marks: string;
     negativeMarks: string;
   }>(questionRows).map((question) => ({
@@ -363,6 +365,7 @@ export async function findAttemptForStudent(attemptId: string, userId: string) {
       textAnswer: null,
       numericAnswer: null,
       markedForReview: false,
+      timeSpentSeconds: 0,
       version: 0,
       savedAt: null,
     },
@@ -409,17 +412,18 @@ export async function saveAnswerRecord(input: {
   textAnswer: string | null;
   numericAnswer: string | null;
   markedForReview: boolean;
+  timeSpentSeconds: number;
   version: number;
 }) {
   const result = await db.execute(sql`
-    insert into attempt_answers (attempt_id, question_id, selected_option_ids, text_answer, numeric_answer, marked_for_review, version, saved_at)
-    select a.id, q.question_id, ${JSON.stringify(input.selectedOptionIds)}::jsonb, ${input.textAnswer}, ${input.numericAnswer}::numeric, ${input.markedForReview}, 1, now()
+    insert into attempt_answers (attempt_id, question_id, selected_option_ids, text_answer, numeric_answer, marked_for_review, time_spent_seconds, version, saved_at)
+    select a.id, q.question_id, ${JSON.stringify(input.selectedOptionIds)}::jsonb, ${input.textAnswer}, ${input.numericAnswer}::numeric, ${input.markedForReview}, ${input.timeSpentSeconds}, 1, now()
     from attempts a join attempt_question_snapshots q on q.attempt_id = a.id
     where a.id = ${input.attemptId} and a.user_id = ${input.userId} and q.id = ${input.snapshotId}
       and a.status = 'IN_PROGRESS' and a.server_deadline_at > now() and ${input.version} = 0
     on conflict (attempt_id, question_id) do update set selected_option_ids = excluded.selected_option_ids,
       text_answer = excluded.text_answer, numeric_answer = excluded.numeric_answer, marked_for_review = excluded.marked_for_review,
-      version = attempt_answers.version + 1, saved_at = now()
+      time_spent_seconds = excluded.time_spent_seconds, version = attempt_answers.version + 1, saved_at = now()
     where attempt_answers.version = ${input.version}
     returning version, saved_at as "savedAt"
   `);

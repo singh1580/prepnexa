@@ -8,6 +8,7 @@ import {
   patchSection,
   replaceQuestionOrder,
   copyTestRecord,
+  deleteTestRecord,
   removeTestContent,
   findManagedTest,
   findAvailableQuestion,
@@ -180,4 +181,11 @@ export async function duplicateTest(id: string, actor: Actor) {
       requestId: actor.requestId,
     }),
   );
+}
+export async function deleteTest(id: string, actor: Actor) {
+  const test = await findTest(id);
+  if (!test) throw testNotFound("Test");
+  const removed = await write("test_delete", actor, () => deleteTestRecord(id, { actorUserId: actor.userId, requestId: actor.requestId }));
+  if (!removed) throw testStateConflict("Remove this test from every product package first. Tests with student attempts must be retained.");
+  return removed;
 }

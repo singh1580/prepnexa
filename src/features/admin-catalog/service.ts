@@ -1,4 +1,6 @@
 import { logger } from "@/lib/logger";
+import { createHash } from "node:crypto";
+import { privateStorage } from "@/features/materials/storage";
 import {
   contentConflict,
   contentNotFound,
@@ -7,6 +9,7 @@ import {
 } from "@/features/admin-content/errors";
 import {
   copyProductRecord,
+  deleteProductRecord,
   deleteMaterialRecord,
   patchProduct,
   patchMaterial,
@@ -168,10 +171,31 @@ export async function updateProduct(
     }),
   );
 }
+export async function deleteProduct(id: string, actor: Actor) {
+  const before = await findProduct(id);
+  if (!before) throw contentNotFound("Product");
+  if (before.isLive) throw invalidContentState("Make this product offline before deleting it.");
+  const removed = await write("product_delete", actor, () => deleteProductRecord(id, { actorUserId: actor.userId, requestId: actor.requestId }));
+  if (!removed) throw invalidContentState("Products used by an order or student entitlement must be retained.");
+  return removed;
+}
 export async function getMaterial(id: string) {
   const value = await findMaterial(id);
   if (!value) throw contentNotFound("Material");
   return { ...value, latestVersion: await findLatestMaterialVersion(id) };
+}
+export async function getAdminMaterialFile(id: string) {
+  const material = await getMaterial(id);
+  const version = material.latestVersion;
+  if (!version?.privateObjectKey) throw invalidContentState("Upload a file before opening this material.");
+  const stored = await privateStorage().get(version.privateObjectKey);
+  const checksum = createHash("sha256").update(stored.bytes).digest("hex");
+  if (!version.checksum || checksum !== version.checksum) throw new Error("Stored material checksum mismatch.");
+  return {
+    bytes: stored.bytes,
+    contentType: version.contentType ?? "application/octet-stream",
+    fileName: version.originalFileName ?? `${material.title}.${material.type === "PDF" ? "pdf" : "bin"}`,
+  };
 }
 export async function updateMaterial(
   id: string,

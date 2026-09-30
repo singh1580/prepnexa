@@ -1,4 +1,4 @@
-# PrepNexa implementation audit — 2026-09-23
+# Prepstore implementation audit — 2026-09-23
 
 Evidence: inspected requirements, delivery plan, source routes/services/schema and merged PRs through #7. CI passed lint, TypeScript, 73 tests and the production build for the Phase 10 tree; the isolated Neon Phase 10 migration was also verified. This is not yet the final consolidated browser or production acceptance.
 
@@ -21,7 +21,7 @@ Exactly two roles and dashboards: Student and Admin. One Admin creates, publishe
 | Materials | Article/file metadata, version 1 and direct publish | Draft edit, HTTPS video validation, copy and guarded archive implemented. Actual PDF/file upload, reader/download and access protection remain Phase 9 |
 | CSV | Parsing, row errors and atomic draft import code; invalid job observed | CSV file picker implemented; valid import/rollback live acceptance required |
 | Student test engine — Phase 6 | On-demand student library, instructions, immutable snapshots, server deadline, responsive runner, versioned autosave, resume and submission implemented | Final browser visual acceptance is deferred; scoring/results remain Phase 7 |
-| Results — Phase 7 | Snapshot-based scoring, immediate mock result publication, section/topic breakdowns and protected answer review implemented and QA-tested | Cohort rank/percentile stays deferred with live tests and manual corrections stay in Admin operations |
+| Results — Phase 7 | Snapshot-based scoring, immediate mock result publication, section breakdowns, per-question timing, rank/percentile and protected answer review implemented and QA-tested | Scheduled live-test cohorts and manual result corrections remain deferred |
 | Coupons — Phase 8 | Admin create/edit/enable controls, validation, schedules, limits, product targeting and atomic reservations implemented | Final browser acceptance with the consolidated platform |
 | Orders/payments — Phase 8 | Server-priced checkout, mock adapter, verified idempotent capture, access, history and refunds implemented | Select a production gateway; provider invoice/reconciliation and production acceptance |
 | Protected materials — Phase 9 | Admin private upload/version/publish, Student library, signed delivery, current entitlement/revocation checks, checksum, PDF watermark and audit log implemented | Select/configure a production S3-compatible provider; consolidated browser acceptance |
@@ -87,7 +87,7 @@ See [PHASE_6_SCOPE.md](PHASE_6_SCOPE.md) for the exact security, migration and v
 
 ## Phase 7 scoring checkpoint
 
-See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). Submitted mock attempts now evaluate from immutable snapshots and publish an owner-scoped result with exact-choice, numeric-tolerance and text-answer rules, negative marks, totals, accuracy, time, section/topic breakdowns and post-submit explanations. The isolated Neon flow passed submit, result publication, score/explanation review, locking and cleanup. Lint, TypeScript, 59 unit tests and the 43-page production build pass. Ranking is not fabricated for on-demand papers without an enabled cohort; the existing schedule/rank snapshot model remains for deferred live testing.
+See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). Submitted mock attempts now evaluate from immutable snapshots and publish an owner-scoped result with exact-choice, numeric-tolerance and text-answer rules, negative marks, totals, accuracy, time, section breakdowns and post-submit explanations. On-demand test results now also show best-per-student rank/percentile and per-question time; scheduled live-test cohorts remain deferred.
 
 ## Phase 8 commerce checkpoint
 

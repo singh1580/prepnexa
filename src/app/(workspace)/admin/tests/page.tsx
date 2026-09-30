@@ -23,12 +23,21 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
   const auth = await requireAnyWorkspacePermission(access);
   const canManage = auth.permissions.includes(CONTENT_PERMISSIONS.manageTests);
   const result = await getManagedTests({ query: query || undefined, category: category || undefined, mode: mode || undefined, page, pageSize });
+  const pageHref = (target: number) => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (category) params.set("category", category);
+    if (mode) params.set("mode", mode);
+    params.set("page", String(target));
+    return `/admin/tests?${params.toString()}`;
+  };
   return (
     <WorkspaceShell admin name={auth.user.name} permissions={auth.permissions} section="tests">
       <header className="admin-page-header"><div><p className="admin-kicker">ASSESSMENT WORKSPACE</p><h1>Tests & practice sets</h1><p>Create papers, organise sections and add questions manually or with Excel.</p></div>{canManage && <AdminModal label="+ New test" title="Create test or practice set" description="Add the settings now, then build sections and questions." large><TestCreateForm /></AdminModal>}</header>
       <TestListFilters initial={{ query, category, mode }} />
       <div className="admin-toolbar"><span>{result.total} item{result.total === 1 ? "" : "s"}</span></div>
       {result.items.length ? <div className="test-card-grid">{result.items.map((test) => <Link className="test-list-card" href={`/admin/tests/${test.id}`} key={test.id}><span className="test-card-icon">▣</span><div><span>{test.mode === "PRACTICE" ? "Practice set" : "Mock test"} · {testCategoryLabel(test.category)}</span><h2>{test.title}</h2><p>{test.durationMinutes} minutes</p></div><dl><div><dt>Sections</dt><dd>{test.sectionCount}</dd></div><div><dt>Questions</dt><dd>{test.questionCount}</dd></div></dl><b>→</b></Link>)}</div> : <div className="admin-card clean-empty tall"><span className="empty-icon">▣</span><strong>No tests or practice sets</strong><span>Create your first item or change the active filters.</span></div>}
+      {result.totalPages > 1 && <nav className="admin-pagination" aria-label="Tests pagination"><Link className={`button secondary ${page <= 1 ? "disabled" : ""}`} aria-disabled={page <= 1} tabIndex={page <= 1 ? -1 : undefined} href={page <= 1 ? pageHref(1) : pageHref(page - 1)}>← Previous</Link><span>Page {page} of {result.totalPages}</span><Link className={`button secondary ${page >= result.totalPages ? "disabled" : ""}`} aria-disabled={page >= result.totalPages} tabIndex={page >= result.totalPages ? -1 : undefined} href={page >= result.totalPages ? pageHref(result.totalPages) : pageHref(page + 1)}>Next →</Link></nav>}
     </WorkspaceShell>
   );
 }

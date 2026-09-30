@@ -245,6 +245,7 @@ export async function saveAttemptAnswer(
     questionId: target.questionId,
     ...answer,
     markedForReview: input.markedForReview,
+    timeSpentSeconds: input.timeSpentSeconds,
     version: input.version,
   });
   if (!saved) throw staleAnswer();

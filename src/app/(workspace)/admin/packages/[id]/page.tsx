@@ -10,6 +10,7 @@ import {
 import { catalogIdSchema } from "@/features/admin-catalog/validation";
 import { requireWorkspacePermission } from "@/features/auth/page-access";
 import { AppError } from "@/lib/errors/app-error";
+import { AdminDeleteButton } from "@/components/admin-delete-button";
 
 export const metadata = { title: "Package bundle" };
 export default async function Page({
@@ -62,6 +63,7 @@ export default async function Page({
         availableTests={product.availableTests}
         availableMaterials={product.availableMaterials}
       />
+      <AdminDeleteButton endpoint={`/api/admin/catalog/products/${product.id}`} redirectTo="/admin/packages" label="Delete product" confirmation="Delete this offline product permanently? Products used in orders or student access cannot be deleted." />
     </WorkspaceShell>
   );
 }

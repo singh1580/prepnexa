@@ -13,6 +13,7 @@ type Breakdown = {
   correctCount: number;
   incorrectCount?: number;
   unansweredCount?: number;
+  timeSpentSeconds?: number;
 };
 type ReviewQuestion = {
   id: string;
@@ -27,6 +28,7 @@ type ReviewQuestion = {
   numericAnswer: string | null;
   isCorrect: boolean;
   awardedMarks: string;
+  timeSpentSeconds: number;
   answerConfig: Record<string, unknown>;
   sectionTitle: string;
   options: {
@@ -47,6 +49,12 @@ type ResultView = {
   timeSpentSeconds: number;
   sections: Breakdown[];
   questions: ReviewQuestion[];
+  testId: string;
+  maxAttempts: number;
+  attemptsUsed: number;
+  rank: number;
+  eligibleCount: number;
+  percentile: string;
 };
 
 export const metadata = { title: "Result review" };
@@ -117,6 +125,8 @@ export default async function Page({
               {result.timeSpentSeconds % 60}s
             </dd>
           </div>
+          <div><dt>Rank</dt><dd>#{result.rank} / {result.eligibleCount}</dd></div>
+          <div><dt>Percentile</dt><dd>{result.percentile}</dd></div>
         </dl>
       </section>
       <div className="result-breakdowns">
@@ -129,6 +139,7 @@ export default async function Page({
                 <span>
                   {item.correctCount} correct · {item.incorrectCount} incorrect
                   · {item.unansweredCount} unanswered
+                  {typeof item.timeSpentSeconds === "number" ? ` · ${Math.floor(item.timeSpentSeconds / 60)}m ${item.timeSpentSeconds % 60}s` : ""}
                 </span>
               </div>
               <b>
@@ -156,6 +167,7 @@ export default async function Page({
                 {question.awardedMarks} / {question.marks}
               </strong>
             </div>
+            <p className="question-time">Time spent: {Math.floor(question.timeSpentSeconds / 60)}m {question.timeSpentSeconds % 60}s</p>
             <h3>{question.stem}</h3>
             {question.options.length > 0 && (
               <div className="review-options">
@@ -206,6 +218,7 @@ export default async function Page({
           </article>
         ))}
       </section>
+      {result.attemptsUsed < result.maxAttempts && <div className="result-actions"><Link className="button" href={`/tests/${result.testId}${courseSlug ? `?course=${encodeURIComponent(courseSlug)}` : ""}`}>Retake test</Link><span>{result.maxAttempts - result.attemptsUsed} attempt{result.maxAttempts - result.attemptsUsed === 1 ? "" : "s"} remaining</span></div>}
     </WorkspaceShell>
   );
 }

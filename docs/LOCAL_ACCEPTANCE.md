@@ -1,6 +1,6 @@
 # Local release-candidate acceptance
 
-This is the single Phase 11 workflow for running PrepNexa in VS Code and checking the real Student/Admin experience. Use the isolated `phase-11-browser-qa` Neon branch. Do not use the production branch.
+This is the single Phase 11 workflow for running Prepstore in VS Code and checking the real Student/Admin experience. Use the isolated `phase-11-browser-qa` Neon branch. Do not use the production branch.
 
 ## 1. Prepare the runtime
 
@@ -17,7 +17,7 @@ Set these values in `.env.local` without sharing or committing them:
 - `DATABASE_URL_UNPOOLED`: direct URL for the same isolated QA branch.
 - `AUTH_SECRET`, `PASSWORD_PEPPER`, `MFA_ENCRYPTION_KEY`: three different random values.
 - `RESEND_API_KEY`: the existing Resend key.
-- `EMAIL_FROM="PrepNexa <no-reply@prepstore.in>"`.
+- `EMAIL_FROM="Prepstore <no-reply@prepstore.in>"`.
 - `PAYMENT_PROVIDER=mock`: correct for this local review; real payment remains the final production step.
 - `STORAGE_PROVIDER=local`: correct for local upload/download testing.
 
@@ -62,7 +62,7 @@ Use a new email address you can open for the Student flow.
 
 ### Student
 
-1. Sign up and open the real verification email from `PrepNexa <no-reply@prepstore.in>`.
+1. Sign up and open the real verification email from `Prepstore <no-reply@prepstore.in>`.
 2. Verify, sign in, update the profile, and check active devices.
 3. Browse Exams, Packages, and Free tests on desktop and mobile widths.
 4. Complete a free or mock-payment checkout and confirm the order plus granted access.

@@ -8,6 +8,7 @@ import { TestBuilder } from "@/features/admin-tests/ui/forms";
 import { testIdSchema } from "@/features/admin-tests/validation";
 import { requireAnyWorkspacePermission } from "@/features/auth/page-access";
 import { AppError } from "@/lib/errors/app-error";
+import { AdminDeleteButton } from "@/components/admin-delete-button";
 
 const access = [
   CONTENT_PERMISSIONS.manageTests,
@@ -95,6 +96,7 @@ export default async function Page({
           CONTENT_PERMISSIONS.createQuestions,
         )}
       />
+      {canManage && <AdminDeleteButton endpoint={`/api/admin/tests/${test.id}`} redirectTo="/admin/tests" label="Delete test" confirmation="Delete this test permanently? This only works after it is removed from packages and has no student attempts." />}
     </WorkspaceShell>
   );
 }

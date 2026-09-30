@@ -54,6 +54,7 @@ export default async function Page({
                 </span>
                 <span>Version {material.latestVersion?.version ?? 0}</span>
               </div>
+              {material.latestVersion?.privateObjectKey && <a className="button secondary" href={`/api/admin/catalog/materials/${material.id}/preview`} target="_blank" rel="noreferrer">Preview file</a>}
               <MaterialUploadForm material={material} />
             </>
           ) : (

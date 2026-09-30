@@ -1,6 +1,6 @@
 # Authentication and Authorization
 
-PrepNexa owns its authentication data so sessions and RBAC remain explicit and auditable. HTTP routes only validate input and format responses; business rules live in `src/features/auth` and database access remains in its repository.
+Prepstore owns its authentication data so sessions and RBAC remain explicit and auditable. HTTP routes only validate input and format responses; business rules live in `src/features/auth` and database access remains in its repository.
 
 ## Security model
 

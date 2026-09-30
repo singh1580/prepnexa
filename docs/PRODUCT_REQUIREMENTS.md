@@ -1,8 +1,8 @@
-# PrepNexa MVP Product Requirements
+# Prepstore MVP Product Requirements
 
 Status: Revised for the approved single-admin workflow
 
-PrepNexa is a mobile-first placement-exam preparation platform for India. The first catalogue targets TCS-style placement preparation, while the data model and navigation must allow additional company exams without code duplication. PrepNexa is an independent preparation service and must not imply affiliation with an employer or examination body.
+Prepstore is a mobile-first placement-exam preparation platform for India. The first catalogue targets TCS-style placement preparation, while the data model and navigation must allow additional company exams without code duplication. Prepstore is an independent preparation service and must not imply affiliation with an employer or examination body.
 
 ## 1. Users and roles
 

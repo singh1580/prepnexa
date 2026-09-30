@@ -15,12 +15,12 @@ Phase 11 is the only active delivery phase. Phases 0–10 are implemented and me
 ## Resend checkpoint — 2026-09-23
 
 - `prepstore.in` is verified in Resend with sending and receiving enabled.
-- A real external delivery from `PrepNexa <no-reply@prepstore.in>` reached an external Gmail mailbox with Resend status `delivered`.
+- A real external delivery from `Prepstore <no-reply@prepstore.in>` reached an external Gmail mailbox with Resend status `delivered`.
 - The application environment example now uses that verified sender.
 - Environment validation requires `RESEND_API_KEY` and `EMAIL_FROM` together and rejects `@resend.dev` senders in production.
 - The API key remains a deployment secret and is never committed. Application-level signup, verification and password-reset acceptance still requires the key in the runtime environment.
 
-Receiving being enabled at the domain level does not by itself create an inbound support workflow. PrepNexa support remains the authenticated in-app ticket system unless a separate inbound-email feature is approved later.
+Receiving being enabled at the domain level does not by itself create an inbound support workflow. Prepstore support remains the authenticated in-app ticket system unless a separate inbound-email feature is approved later.
 
 ## Browser and accessibility checkpoint — 2026-09-23
 
@@ -45,7 +45,7 @@ The code-level Phase 11 release candidate is ready for local acceptance. Product
 
 ## Deferred, non-blocking product extensions
 
-- Live/cohort tests, rank and percentile.
+- Scheduled live/cohort test windows (on-demand mock rank and percentile are implemented).
 - Manual result correction workflows.
 - A separate inbound-email automation pipeline.
 - Broader standalone practice creation beyond the approved prepared sets.

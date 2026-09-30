@@ -1,4 +1,4 @@
-# PrepNexa
+# Prepstore
 
 Temporary working name for a secure India-focused placement exam preparation platform.
 

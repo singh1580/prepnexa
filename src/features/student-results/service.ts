@@ -16,7 +16,12 @@ export async function evaluateAttempt(attemptId: string, userId: string, request
   const created = await persistInitialResult({ attemptId, userId, requestId, timeSpentSeconds: seconds, score: scoring.score, maxScore: scoring.maxScore,
     correctCount: scoring.correctCount, incorrectCount: scoring.incorrectCount, unansweredCount: scoring.unansweredCount,
     questions: scoring.questions.map(item => ({ questionId: item.questionId, correct: item.correct, awardedMarks: item.awardedMarks })),
-    sections: scoring.sections });
+    sections: scoring.sections.map(section => ({
+      ...section,
+      timeSpentSeconds: attempt.questions
+        .filter(question => question.sectionId === section.sectionId)
+        .reduce((total, question) => total + (question.timeSpentSeconds ?? 0), 0),
+    })) });
   const id = created?.id ?? (await findResultIdByAttempt(attemptId, userId))?.id;
   if (!id) throw resultNotReady();
   await queueStudentNotification({ userId, type: "RESULT_PUBLISHED", deduplicationKey: `result-published:${id}`, title: "Your result is ready", body: "Your mock-test result and answer review are now available.", requestId });

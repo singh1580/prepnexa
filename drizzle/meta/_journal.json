@@ -127,6 +127,13 @@
       "when": 1790741625056,
       "tag": "0017_remove_legacy_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790788191038,
+      "tag": "0018_workable_puff_adder",
+      "breakpoints": true
     }
   ]
 }
