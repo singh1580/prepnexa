@@ -69,9 +69,9 @@ export default async function Page() {
       ) : (
         <section className="panel empty-state">
           <h2>No orders yet</h2>
-          <p>Choose a live package to start your preparation.</p>
+          <p>Choose a live course to start your preparation.</p>
           <Link className="button" href="/packages">
-            Browse packages
+            Explore courses
           </Link>
         </section>
       )}

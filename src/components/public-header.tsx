@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Brand } from "./brand";
 
 const links = [
-  { href: "/packages", label: "Packages" },
+  { href: "/packages", label: "Courses" },
   { href: "/free-tests", label: "Free tests" },
   { href: "/login", label: "Sign in" },
 ];

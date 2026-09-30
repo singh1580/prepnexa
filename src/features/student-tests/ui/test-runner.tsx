@@ -19,7 +19,7 @@ function formatTime(seconds: number) {
   return hours > 0 ? `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${rest.toString().padStart(2, "0")}` : `${minutes.toString().padStart(2, "0")}:${rest.toString().padStart(2, "0")}`;
 }
 
-export function TestRunner({ attempt }: { attempt: Attempt }) {
+export function TestRunner({ attempt, courseSlug }: { attempt: Attempt; courseSlug?: string }) {
   const [answers, setAnswers] = useState<Record<string, Answer>>(() => Object.fromEntries(attempt.questions.map(question => [question.id, question.answer])));
   const answersRef = useRef(answers); const versions = useRef(new Map(attempt.questions.map(question => [question.id, question.answer.version])));
   const queues = useRef(new Map<string, Promise<void>>()); const dirtyAnswers = useRef(new Set<string>()); const submitRef = useRef<(automatic?: boolean) => Promise<void>>(async () => {});
@@ -91,8 +91,10 @@ export function TestRunner({ attempt }: { attempt: Attempt }) {
     window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn);
   }, [submitted]);
 
-  if (submitted) return <section className="panel attempt-complete"><div className="large-icon" aria-hidden="true">✓</div><span className="eyebrow">ATTEMPT SUBMITTED</span><h1>Your result is ready</h1><p>Your score, topic analysis and answer explanations are available now.</p><Link className="button" href={resultId ? `/results/${resultId}` : "/dashboard/results"}>View result</Link></section>;
-  if (!question) return <section className="panel empty-state"><h1>This paper has no questions</h1><Link className="button" href="/dashboard/tests">Back to my tests</Link></section>;
+  const courseQuery = courseSlug ? `?course=${encodeURIComponent(courseSlug)}` : "";
+  const courseTestsHref = courseSlug ? `/dashboard/courses/${encodeURIComponent(courseSlug)}?view=tests` : "/dashboard/courses";
+  if (submitted) return <section className="panel attempt-complete"><div className="large-icon" aria-hidden="true">✓</div><span className="eyebrow">ATTEMPT SUBMITTED</span><h1>Your result is ready</h1><p>Your score, topic analysis and answer explanations are available now.</p><Link className="button" href={resultId ? `/results/${resultId}${courseQuery}` : courseTestsHref}>View result</Link></section>;
+  if (!question) return <section className="panel empty-state"><h1>This paper has no questions</h1><Link className="button" href={courseTestsHref}>Back to course</Link></section>;
   const answer = answers[question.id];
   return <div className="attempt-runner">
     <header className="attempt-toolbar"><div><span className="eyebrow">{attempt.examName}</span><h1>{attempt.title}</h1></div><div className={`attempt-timer ${remaining < 300 ? "ending" : ""}`} aria-live="polite"><small>TIME LEFT</small><strong>{formatTime(remaining)}</strong></div></header>

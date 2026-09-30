@@ -4,18 +4,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ApiFailure, ApiSuccess } from "@/lib/http/api-response";
 
-export function StartAttemptButton({ testId, activeAttemptId, disabled = false }: { testId: string; activeAttemptId: string | null; disabled?: boolean }) {
+export function StartAttemptButton({ testId, activeAttemptId, courseSlug, disabled = false }: { testId: string; activeAttemptId: string | null; courseSlug?: string; disabled?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function start() {
-    if (activeAttemptId) { router.push(`/attempts/${activeAttemptId}`); return; }
+    const courseQuery = courseSlug ? `?course=${encodeURIComponent(courseSlug)}` : "";
+    if (activeAttemptId) { router.push(`/attempts/${activeAttemptId}${courseQuery}`); return; }
     setBusy(true); setError("");
     try {
       const response = await fetch(`/api/tests/${testId}/attempts`, { method: "POST", credentials: "same-origin" });
       const payload = await response.json() as ApiSuccess<{ id: string }> | ApiFailure;
       if (!response.ok || "error" in payload) throw new Error("error" in payload ? payload.error.message : "Couldn't start this test.");
-      router.push(`/attempts/${payload.data.id}`); router.refresh();
+      router.push(`/attempts/${payload.data.id}${courseQuery}`); router.refresh();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Couldn't start this test."); }
     finally { setBusy(false); }
   }

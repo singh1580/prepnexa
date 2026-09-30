@@ -8,8 +8,10 @@ import { AppError } from "@/lib/errors/app-error";
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ course?: string }>;
 }) {
   const auth = await requireWorkspace();
   if (auth.admin) redirect("/admin");
@@ -22,15 +24,17 @@ export default async function Page({
     if (error instanceof AppError && error.status === 404) notFound();
     throw error;
   }
+  const courseSlug = (await searchParams).course;
+  const courseHref = courseSlug ? `/dashboard/courses/${encodeURIComponent(courseSlug)}?view=materials` : "/dashboard/courses";
   return (
     <WorkspaceShell
       admin={false}
       name={auth.user.name}
       permissions={auth.permissions}
-      section="library"
+      section="courses"
     >
-      <Link className="back-link" href="/dashboard/library">
-        ← My library
+      <Link className="back-link" href={courseHref}>
+        ← Course materials
       </Link>
       <header className="page-heading material-heading">
         <span className="eyebrow">
@@ -41,7 +45,7 @@ export default async function Page({
           Version {material.version} ·{" "}
           {material.accessSource === "FREE"
             ? "Free access"
-            : "Included in your purchased package"}
+            : "Included in your purchased course"}
         </p>
       </header>
       {material.type === "VIDEO" ? (

@@ -52,8 +52,10 @@ type ResultView = {
 export const metadata = { title: "Result review" };
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ course?: string }>;
 }) {
   const auth = await requireWorkspace();
   if (auth.admin) redirect("/admin");
@@ -67,14 +69,16 @@ export default async function Page({
     throw error;
   }
   const result = raw as unknown as ResultView;
+  const courseSlug = (await searchParams).course;
+  const courseHref = courseSlug ? `/dashboard/courses/${encodeURIComponent(courseSlug)}?view=results` : "/dashboard/courses";
   const attempted = result.correctCount + result.incorrectCount,
     accuracy = attempted
       ? Math.round((result.correctCount / attempted) * 100)
       : 0;
   return (
-    <WorkspaceShell admin={false} name={auth.user.name} section="results">
-      <Link className="back-link" href="/dashboard/results">
-        ← Results
+    <WorkspaceShell admin={false} name={auth.user.name} section="courses">
+      <Link className="back-link" href={courseHref}>
+        ← Course results
       </Link>
       <header className="page-heading">
         <span className="eyebrow">{result.examName}</span>
