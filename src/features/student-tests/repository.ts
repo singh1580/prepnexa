@@ -420,7 +420,7 @@ export async function saveAnswerRecord(input: {
     select a.id, q.question_id, ${JSON.stringify(input.selectedOptionIds)}::jsonb, ${input.textAnswer}, ${input.numericAnswer}::numeric, ${input.markedForReview}, ${input.timeSpentSeconds}, 1, now()
     from attempts a join attempt_question_snapshots q on q.attempt_id = a.id
     where a.id = ${input.attemptId} and a.user_id = ${input.userId} and q.id = ${input.snapshotId}
-      and a.status = 'IN_PROGRESS' and a.server_deadline_at > now() and ${input.version} = 0
+      and a.status = 'IN_PROGRESS' and a.server_deadline_at > now()
     on conflict (attempt_id, question_id) do update set selected_option_ids = excluded.selected_option_ids,
       text_answer = excluded.text_answer, numeric_answer = excluded.numeric_answer, marked_for_review = excluded.marked_for_review,
       time_spent_seconds = excluded.time_spent_seconds, version = attempt_answers.version + 1, saved_at = now()
