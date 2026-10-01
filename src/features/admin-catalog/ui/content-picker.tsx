@@ -18,6 +18,7 @@ function MultiSelect({
 }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return items.filter((item) =>
@@ -26,17 +27,14 @@ function MultiSelect({
   }, [items, query]);
   const chosen = new Set(selected);
   return (
-    <section className="content-select-panel">
-      <div className="section-heading">
-        <div><h3>{title}</h3><p>{hint}</p></div>
-        <span className="selection-count">{selected.length} selected</span>
+    <section className="package-multiselect">
+      <div className="multiselect-label"><strong>{title}</strong><span>{selected.length ? `${selected.length} selected` : hint}</span></div>
+      <div className="multiselect-control">
+        <input type="search" value={query} onFocus={() => setOpen(true)} onChange={(event) => { setQuery(event.target.value); setOpen(true); }} placeholder={`Search and select ${title.toLowerCase()}…`} />
+        <button type="button" aria-label={`Show ${title.toLowerCase()}`} onClick={() => setOpen((value) => !value)}>⌄</button>
       </div>
-      <label className="compact-search">
-        <span className="sr-only">Search {title.toLowerCase()}</span>
-        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${title.toLowerCase()}…`} />
-      </label>
       {selected.map((id) => <input key={id} type="hidden" name={field} value={id} />)}
-      <div className="content-choice-list">
+      {open && <div className="multiselect-menu">
         {visible.map((item) => (
           <label className="content-choice" key={item.id}>
             <input
@@ -48,7 +46,8 @@ function MultiSelect({
           </label>
         ))}
         {!visible.length && <p className="muted">{items.length ? "No matching items." : "Nothing available yet."}</p>}
-      </div>
+      </div>}
+      {selected.length > 0 && <div className="selected-content-chips">{selected.map((id) => { const item = items.find((candidate) => candidate.id === id); return item ? <span key={id}>{item.title}<button type="button" aria-label={`Remove ${item.title}`} onClick={() => setSelected((current) => current.filter((value) => value !== id))}>×</button></span> : null; })}</div>}
     </section>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { operationsRequest, OperationsApiError } from "./api";
+import { operationsRequest, operationsUpload, OperationsApiError } from "./api";
 
 function message(error: unknown) { return error instanceof OperationsApiError ? error.message : "Couldn't complete this request."; }
 
@@ -30,8 +30,8 @@ export function NewSupportTicketForm({ orders }: { orders: { id: string; label: 
 
 export function SupportReplyForm({ ticketId }: { ticketId: string }) {
   const router = useRouter(); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setBusy(true); setError(""); const form = event.currentTarget; const data = new FormData(form); try { await operationsRequest(`support/${ticketId}/messages`, { body: data.get("body") }); form.reset(); router.refresh(); } catch (value) { setError(message(value)); } finally { setBusy(false); } }
-  return <form className="admin-form support-reply" onSubmit={submit}><fieldset disabled={busy}><label className="field"><span>Reply</span><textarea name="body" minLength={2} maxLength={4000} rows={4} required /></label><button className="button" type="submit">{busy ? "Sending…" : "Send reply"}</button></fieldset>{error && <p className="notice danger" role="alert">{error}</p>}</form>;
+  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setBusy(true); setError(""); const form = event.currentTarget; const data = new FormData(form); try { await operationsUpload(`support/${ticketId}/messages`,data); form.reset(); router.refresh(); } catch (value) { setError(message(value)); } finally { setBusy(false); } }
+  return <form className="admin-form support-reply" onSubmit={submit}><fieldset disabled={busy}><label className="field"><span>Reply</span><textarea name="body" minLength={2} maxLength={4000} rows={4} required /></label><label className="attachment-button">⌕ Attach image or PDF<input name="attachment" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" /></label><button className="button" type="submit">{busy ? "Sending…" : "Send reply"}</button></fieldset>{error && <p className="notice danger" role="alert">{error}</p>}</form>;
 }
 
 function deviceName(userAgent: string | null) {

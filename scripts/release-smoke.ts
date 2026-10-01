@@ -25,7 +25,7 @@ async function request(path: string, expected: number | number[]) {
 }
 
 async function main() {
-  console.log(`\nPrepNexa HTTP smoke check: ${baseUrl}\n`);
+  console.log(`\nPrepstore HTTP smoke check: ${baseUrl}\n`);
   try {
     await fetch(`${baseUrl}/api/ready`, { signal: AbortSignal.timeout(30_000) });
     for (const route of publicRoutes) await request(route, 200);

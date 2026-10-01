@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { logger } from "@/lib/logger";
 import { calculateDiscount, normalizeCouponCode } from "./pricing";
 import { checkoutConflict, commerceNotFound, couponUnavailable, invalidCommerceState, paymentUnavailable, paymentVerificationFailed } from "./errors";
-import { evaluateCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProduct, findManagedCoupon, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findStudentOrder, findStudentPaymentAttempt, insertCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCouponRecord } from "./repository";
+import { evaluateCartCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProducts, findManagedCoupon, findManagedOrder, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findStudentOrder, findStudentPaymentAttempt, insertCartCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCouponRecord } from "./repository";
 import { getPaymentProvider, type VerifiedPaymentEvent } from "./providers";
 import type { CheckoutInput, CouponInput, RefundInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
@@ -55,23 +55,27 @@ export async function setCouponActive(id: string, active: boolean, actor: Actor)
   return result;
 }
 
-async function priceCheckout(productId: string, couponCode: string | null, userId: string) {
-  const product = await findCheckoutProduct(productId, userId);
-  if (!product) throw commerceNotFound("Live product");
-  if (product.alreadyOwned) throw checkoutConflict("You already have active access to this product.");
-  if (!couponCode) return { product, coupon: null, discountPaise: 0, totalPaise: product.pricePaise };
+async function priceCheckout(productIds: string[], couponCode: string | null, userId: string) {
+  const products = await findCheckoutProducts(productIds, userId);
+  if (products.length !== productIds.length) throw commerceNotFound("Live product");
+  if (products.some((product) => product.alreadyOwned)) throw checkoutConflict("You already have active access to one of these products.");
+  const currencies = new Set(products.map((product) => product.currency));
+  if (currencies.size !== 1) throw checkoutConflict("All cart products must use the same currency.");
+  const subtotalPaise = products.reduce((sum, product) => sum + product.pricePaise, 0); const currency = products[0]?.currency ?? "INR";
+  if (!couponCode) { const taxPaise = Math.floor(subtotalPaise * .18); return { products, coupon: null, subtotalPaise, discountPaise: 0, taxPaise, totalPaise: subtotalPaise + taxPaise, currency }; }
   const code = normalizeCouponCode(couponCode);
-  const coupon = await evaluateCoupon(code, product.id, userId, product.pricePaise, product.currency);
+  const coupon = await evaluateCartCoupon(code, productIds, userId, subtotalPaise, currency);
   if (!coupon || coupon.totalLimit !== null && coupon.totalUsed >= coupon.totalLimit || coupon.userUsed >= coupon.perUserLimit) throw couponUnavailable();
-  const discountPaise = calculateDiscount(product.pricePaise, coupon);
+  const discountPaise = calculateDiscount(coupon.eligibleSubtotal, coupon);
   if (discountPaise <= 0) throw couponUnavailable("This coupon does not reduce the price of this product.");
-  return { product, coupon, discountPaise, totalPaise: product.pricePaise - discountPaise };
+  const taxPaise=Math.floor((subtotalPaise-discountPaise)*.18);
+  return { products, coupon, subtotalPaise, discountPaise, taxPaise, totalPaise: subtotalPaise - discountPaise + taxPaise, currency };
 }
 
-export async function previewCheckout(productId: string, couponCode: string | null, userId: string) {
+export async function previewCheckout(productIds: string[] | string, couponCode: string | null, userId: string) {
   await releaseExpiredCommerce();
-  const priced = await priceCheckout(productId, couponCode, userId);
-  return { product: priced.product, couponCode: priced.coupon?.code ?? null, subtotalPaise: priced.product.pricePaise, discountPaise: priced.discountPaise, totalPaise: priced.totalPaise, currency: priced.product.currency };
+  const priced = await priceCheckout(Array.isArray(productIds) ? productIds : [productIds], couponCode, userId);
+  return { products: priced.products, couponCode: priced.coupon?.code ?? null, subtotalPaise: priced.subtotalPaise, discountPaise: priced.discountPaise, taxPaise: priced.taxPaise, totalPaise: priced.totalPaise, currency: priced.currency };
 }
 
 async function startProviderCheckout(order: NonNullable<Awaited<ReturnType<typeof findOrderByIdempotency>>>, student: StudentActor) {
@@ -95,13 +99,14 @@ async function startProviderCheckout(order: NonNullable<Awaited<ReturnType<typeo
   }
 }
 
-export async function createCheckout(input: CheckoutInput, student: StudentActor) {
+export async function createCheckout(input: CheckoutInput | {productId:string;couponCode:string|null;idempotencyKey:string}, student: StudentActor) {
   await releaseExpiredCommerce();
+  const productIds="productIds" in input?input.productIds:[input.productId];
   const scopedKey = `${student.userId}:${input.idempotencyKey}`.slice(0, 100);
   const existing = await findOrderByIdempotency(student.userId, scopedKey);
   if (existing) return startProviderCheckout(existing, student);
-  const priced = await priceCheckout(input.productId, input.couponCode, student.userId);
-  const created = await insertCheckoutOrder({ userId: student.userId, productId: input.productId, idempotencyKey: scopedKey, couponId: priced.coupon?.id ?? null, couponCode: priced.coupon?.code ?? null, requestId: student.requestId });
+  const priced = await priceCheckout(productIds, input.couponCode, student.userId);
+  const created = await insertCartCheckoutOrder({ userId: student.userId, productIds, idempotencyKey: scopedKey, couponId: priced.coupon?.id ?? null, couponCode: priced.coupon?.code ?? null, requestId: student.requestId });
   if (!created) {
     const raced = await findOrderByIdempotency(student.userId, scopedKey);
     if (raced) return startProviderCheckout(raced, student);
@@ -138,6 +143,7 @@ export async function confirmMockPayment(attemptId: string, student: StudentActo
 export async function getStudentOrders(userId: string) { await releaseExpiredCommerce(); return listStudentOrders(userId); }
 export async function getStudentOrder(orderId: string, userId: string) { await releaseExpiredCommerce(); return findStudentOrder(orderId, userId); }
 export async function getManagedOrders() { await releaseExpiredCommerce(); return listManagedOrders(); }
+export async function getManagedOrder(orderId: string) { await releaseExpiredCommerce(); const order=await findManagedOrder(orderId);if(!order)throw commerceNotFound("Order");return order; }
 
 export async function refundPayment(paymentId: string, input: RefundInput, actor: Actor) {
   const scopedKey = createHash("sha256").update(`${paymentId}:${input.idempotencyKey}`).digest("hex");

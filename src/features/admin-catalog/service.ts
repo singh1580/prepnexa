@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { AppError } from "@/lib/errors/app-error";
 import { privateStorage } from "@/features/materials/storage";
 import {
   contentConflict,
@@ -31,6 +32,7 @@ import {
   type ProductInput,
   type ProductCreationInput,
   type StoredFileMetadata,
+  setProductCoverRecord,
 } from "./repository";
 type Actor = { userId: string; requestId: string };
 async function write<T>(
@@ -170,6 +172,40 @@ export async function updateProduct(
       requestId: actor.requestId,
     }),
   );
+}
+
+export async function uploadProductCover(
+  id: string,
+  file: File,
+  actor: Actor,
+) {
+  const product = await findProduct(id);
+  if (!product) throw contentNotFound("Product");
+  const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!allowed.has(file.type))
+    throw invalidContentState("Upload a JPG, PNG or WebP package cover.");
+  if (file.size <= 0 || file.size > 5 * 1024 * 1024)
+    throw invalidContentState("Package cover must be smaller than 5 MB.");
+  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const objectKey = `product-covers/${id}/${randomUUID()}.${extension}`;
+  const storage = privateStorage();
+  await storage.put(objectKey, new Uint8Array(await file.arrayBuffer()), file.type);
+  try {
+    const result = await setProductCoverRecord(id, { objectKey, fileName: file.name.slice(0, 255), contentType: file.type }, { actorUserId: actor.userId, requestId: actor.requestId });
+    if (!result) throw contentNotFound("Product");
+    if (product.coverObjectKey) await storage.delete(product.coverObjectKey).catch(() => undefined);
+    return result;
+  } catch (error) {
+    await storage.delete(objectKey).catch(() => undefined);
+    throw error;
+  }
+}
+
+export async function getProductCover(id: string) {
+  const product = await findProduct(id);
+  if (!product?.coverObjectKey) throw new AppError("CONTENT_NOT_FOUND", "Product cover was not found.", 404);
+  const stored = await privateStorage().get(product.coverObjectKey);
+  return { bytes: stored.bytes, contentType: product.coverContentType ?? stored.contentType ?? "image/jpeg" };
 }
 export async function deleteProduct(id: string, actor: Actor) {
   const before = await findProduct(id);

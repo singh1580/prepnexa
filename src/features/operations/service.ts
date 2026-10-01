@@ -6,17 +6,22 @@ import {
 } from "./errors";
 import {
   findManagedSupportTicket,
+  findManagedStudent,
+  findSupportAttachment,
   findNotificationDelivery,
   findStudentSupportTicket,
   getOperationsSummary,
   getStudentOperationsSummary,
   insertManagedSupportReply,
+  insertNotificationCampaign,
   insertNotification,
   insertStudentSupportReply,
   insertStudentSupportTicket,
   listActiveSessions,
   listAuditActivity,
   listManagedNotificationDeliveries,
+  listNotificationCampaignOptions,
+  listNotificationCampaigns,
   listManagedStudents,
   listManagedSupportTickets,
   listStudentNotifications,
@@ -29,7 +34,9 @@ import {
   updateManagedSupportTicket,
 } from "./repository";
 import { sendOperationsEmail } from "./notifier";
-import type { CreateSupportTicketInput, SupportReplyInput } from "./validation";
+import type { CreateSupportTicketInput, ManagedSupportReplyInput, NotificationCampaignInput, SupportReplyInput } from "./validation";
+import type { SupportAttachment } from "./support-attachments";
+import { privateStorage } from "@/features/materials/storage";
 
 export async function getActiveSessions(
   userId: string,
@@ -107,6 +114,7 @@ export async function replyToStudentSupportTicket(
   ticketId: string,
   input: SupportReplyInput,
   actor: { userId: string; requestId: string },
+  attachment: SupportAttachment | null = null,
 ) {
   const ticket = await findStudentSupportTicket(ticketId, actor.userId);
   if (!ticket) throw operationNotFound("Support ticket");
@@ -115,6 +123,7 @@ export async function replyToStudentSupportTicket(
     ticketId,
     actor.userId,
     input.body,
+    attachment,
     actor.requestId,
   );
   if (!message) throw closedTicket();
@@ -154,6 +163,11 @@ export async function queueStudentNotification(input: {
 }
 
 export const getManagedStudents = () => listManagedStudents();
+export async function getManagedStudent(studentId: string) {
+  const value = await findManagedStudent(studentId);
+  if (!value) throw operationNotFound("Student");
+  return value;
+}
 export async function setManagedStudentStatus(
   studentId: string,
   status: "ACTIVE" | "SUSPENDED",
@@ -171,15 +185,16 @@ export async function getManagedSupportTicket(ticketId: string) {
 }
 export async function replyToManagedSupportTicket(
   ticketId: string,
-  input: SupportReplyInput,
+  input: ManagedSupportReplyInput,
   actor: { userId: string; requestId: string },
+  attachment: SupportAttachment | null = null,
 ) {
   const ticket = await findManagedSupportTicket(ticketId);
   if (!ticket) throw operationNotFound("Support ticket");
   if (ticket.status === "CLOSED") throw closedTicket();
-  const value = await insertManagedSupportReply(ticketId, input.body, actor);
+  const value = await insertManagedSupportReply(ticketId, input.body, input.internal, attachment, actor);
   if (!value) throw closedTicket();
-  await queueStudentNotification({
+  if (!input.internal) await queueStudentNotification({
     userId: value.userId,
     type: "SUPPORT_UPDATED",
     deduplicationKey: `support-reply:${ticketId}:${value.id}`,
@@ -216,6 +231,16 @@ export async function setManagedSupportTicket(
 }
 export const getManagedNotificationDeliveries = () =>
   listManagedNotificationDeliveries();
+export async function getSupportAttachment(messageId:string,userId:string,canManage:boolean){const attachment=await findSupportAttachment(messageId,userId,canManage);if(!attachment)throw operationNotFound("Support attachment");const stored=await privateStorage().get(attachment.objectKey);return{bytes:stored.bytes,fileName:attachment.fileName??"support-attachment",contentType:attachment.contentType??stored.contentType??"application/octet-stream"};}
+export const getNotificationCampaigns = () => listNotificationCampaigns();
+export const getNotificationCampaignOptions = () => listNotificationCampaignOptions();
+export async function createNotificationCampaign(input: NotificationCampaignInput, actor: { userId:string;requestId:string }) {
+  const result = await insertNotificationCampaign(input, actor);
+  if (input.channel === "EMAIL") {
+    for (const deliveryId of result.deliveryIds) await deliverNotification(deliveryId, actor.requestId);
+  }
+  return { id: result.id, recipientCount: result.recipientCount };
+}
 export const getAuditActivity = () => listAuditActivity();
 export const getAdminOperationsSummary = () => getOperationsSummary();
 export const getStudentDashboardSummary = (userId: string) =>

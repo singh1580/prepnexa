@@ -48,6 +48,7 @@ export default async function Page({
               {item.mine ? "YOU" : "PREPSTORE SUPPORT"}
             </span>
             <p>{item.body}</p>
+            {item.attachmentObjectKey && <a className="message-attachment" href={`/api/operations/support/messages/${item.id}/attachment`} target="_blank" rel="noreferrer">⌕ {item.attachmentFileName ?? "Open attachment"}</a>}
             <small>{new Date(item.createdAt).toLocaleString("en-IN")}</small>
           </article>
         ))}

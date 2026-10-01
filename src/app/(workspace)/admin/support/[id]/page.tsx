@@ -29,48 +29,26 @@ export default async function Page({
       permissions={auth.permissions}
       section="support"
     >
-      <Link className="back-link" href="/admin/support">
-        ← Support queue
-      </Link>
-      <header className="page-heading">
-        <span className="eyebrow">
-          {ticket.category} · {ticket.priority}
-        </span>
-        <h1>{ticket.subject}</h1>
-        <p>
-          {ticket.studentName} · {ticket.email}
-        </p>
-      </header>
-      <div className="admin-two-column">
-        <section className="support-thread">
+      <Link className="back-link" href="/admin/support">← Support tickets</Link>
+      <section className="admin-ticket-panel">
+        <header className="ticket-detail-heading"><div><span className="eyebrow">#{ticket.id.slice(0, 8)}</span><h1>{ticket.subject}</h1></div><span className={`status-pill content-${ticket.status.toLowerCase()}`}>{ticket.status.replaceAll("_", " ")}</span></header>
+        <div className="ticket-student-strip"><span className="avatar">{ticket.studentName.slice(0,1)}</span><div><strong>{ticket.studentName}</strong><small>{ticket.email}</small></div>{ticket.orderId && <div><small>Related order</small><strong>#{ticket.orderId.slice(0,8)}</strong></div>}<div><small>Created</small><strong>{new Date(ticket.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</strong></div></div>
+        <section className="support-thread admin-conversation">
           {ticket.messages.map((item) => (
             <article
               className={
-                item.student
-                  ? "panel support-message mine"
-                  : "panel support-message"
+                item.internal ? "support-message internal-note" : item.student ? "support-message student-message" : "support-message admin-message"
               }
               key={item.id}
             >
-              <span className="eyebrow">
-                {item.student ? "STUDENT" : "PREPSTORE SUPPORT"}
-                {item.internal ? " · INTERNAL" : ""}
-              </span>
+              <header><span className="avatar">{item.student ? ticket.studentName.slice(0,1) : "A"}</span><strong>{item.internal ? "Internal note" : item.student ? ticket.studentName : "Admin"}</strong><small>{new Date(item.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</small></header>
               <p>{item.body}</p>
-              <small>{new Date(item.createdAt).toLocaleString("en-IN")}</small>
+              {item.attachmentObjectKey && <a className="message-attachment" href={`/api/operations/support/messages/${item.id}/attachment`} target="_blank" rel="noreferrer">⌕ {item.attachmentFileName ?? "Open attachment"}</a>}
             </article>
           ))}
         </section>
-        <aside className="panel sticky-panel">
-          <span className="eyebrow">TICKET CONTROL</span>
-          <h2>{ticket.status.replaceAll("_", " ")}</h2>
-          <ManagedTicketActions
-            ticketId={ticket.id}
-            status={ticket.status}
-            priority={ticket.priority}
-          />
-        </aside>
-      </div>
+        <ManagedTicketActions ticketId={ticket.id} status={ticket.status} priority={ticket.priority} />
+      </section>
     </WorkspaceShell>
   );
 }

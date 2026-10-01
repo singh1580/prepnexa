@@ -66,6 +66,24 @@ export async function listManagedStudents() {
   return rows<{ id:string;name:string;email:string;status:string;emailVerifiedAt:Date|null;lastLoginAt:Date|null;createdAt:Date;activeSessions:number;orderCount:number;openTickets:number }>(result);
 }
 
+export async function findManagedStudent(studentId: string) {
+  const result = await db.execute(sql`
+    select u.id,u.name,u.email,u.status,u.email_verified_at as "emailVerifiedAt",u.last_login_at as "lastLoginAt",u.created_at as "createdAt",
+      (select count(*)::int from sessions s where s.user_id=u.id and s.revoked_at is null and s.expires_at>now()) as "activeSessions",
+      (select count(*)::int from orders o where o.user_id=u.id) as "orderCount",
+      (select count(*)::int from support_tickets t where t.user_id=u.id and t.status not in('RESOLVED','CLOSED')) as "openTickets"
+    from users u where u.id=${studentId}
+      and exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key='STUDENT') limit 1
+  `);
+  const student = rows<{id:string;name:string;email:string;status:string;emailVerifiedAt:Date|null;lastLoginAt:Date|null;createdAt:Date;activeSessions:number;orderCount:number;openTickets:number}>(result)[0];
+  if (!student) return undefined;
+  const [accessResult, orderResult] = await Promise.all([
+    db.execute(sql`select e.id,e.status,e.starts_at as "startsAt",e.expires_at as "expiresAt",p.name,p.slug from entitlements e join products p on p.id=e.product_id where e.user_id=${studentId} order by e.created_at desc limit 20`),
+    db.execute(sql`select o.id,o.status,o.total_paise as "totalPaise",o.currency,o.created_at as "createdAt" from orders o where o.user_id=${studentId} order by o.created_at desc limit 10`),
+  ]);
+  return {...student,access:rows<{id:string;status:string;startsAt:Date;expiresAt:Date;name:string;slug:string}>(accessResult),orders:rows<{id:string;status:string;totalPaise:number;currency:string;createdAt:Date}>(orderResult)};
+}
+
 export async function updateManagedStudentStatus(studentId: string, status: "ACTIVE" | "SUSPENDED", actor: { userId: string; requestId: string }) {
   const result = await db.execute(sql`
     with target as (
@@ -95,6 +113,7 @@ export async function listManagedSupportTickets() {
   return rows<{id:string;subject:string;category:string;priority:string;status:string;createdAt:Date;updatedAt:Date;studentName:string;email:string;messageCount:number}>(result);
 }
 
+type MessageAttachment = { objectKey: string; fileName: string; contentType: string } | null;
 export async function findManagedSupportTicket(ticketId: string) {
   const result = await db.execute(sql`
     select t.id,t.user_id as "userId",t.subject,t.category,t.priority,t.status,t.order_id as "orderId",t.assigned_to as "assignedTo",t.created_at as "createdAt",t.updated_at as "updatedAt",u.name as "studentName",u.email
@@ -103,22 +122,68 @@ export async function findManagedSupportTicket(ticketId: string) {
   const ticket = rows<{id:string;userId:string;subject:string;category:string;priority:string;status:string;orderId:string|null;assignedTo:string|null;createdAt:Date;updatedAt:Date;studentName:string;email:string}>(result)[0];
   if (!ticket) return undefined;
   const messages = await db.execute(sql`
-    select m.id,m.body,m.internal,m.created_at as "createdAt",m.author_id=t.user_id as "student"
+    select m.id,m.body,m.internal,m.attachment_object_key as "attachmentObjectKey",m.attachment_file_name as "attachmentFileName",m.attachment_content_type as "attachmentContentType",m.created_at as "createdAt",m.author_id=t.user_id as "student"
     from support_messages m join support_tickets t on t.id=m.ticket_id where m.ticket_id=${ticketId} order by m.created_at
   `);
-  return { ...ticket, messages: rows<{id:string;body:string;internal:boolean;createdAt:Date;student:boolean}>(messages) };
+  return { ...ticket, messages: rows<{id:string;body:string;internal:boolean;attachmentObjectKey:string|null;attachmentFileName:string|null;attachmentContentType:string|null;createdAt:Date;student:boolean}>(messages) };
 }
 
-export async function insertManagedSupportReply(ticketId: string, body: string, actor: { userId: string; requestId: string }) {
+export async function insertManagedSupportReply(ticketId: string, body: string, internal: boolean, attachment: MessageAttachment, actor: { userId: string; requestId: string }) {
   const messageId=randomUUID();
   const result=await db.execute(sql`
     with target as (select id,user_id from support_tickets where id=${ticketId} and status<>'CLOSED' for update),
-    created as (insert into support_messages(id,ticket_id,author_id,body,internal,created_at) select ${messageId}::uuid,id,${actor.userId}::uuid,${body},false,now() from target returning id,ticket_id),
-    changed as (update support_tickets set assigned_to=${actor.userId}::uuid,status='WAITING_FOR_STUDENT',updated_at=now() where id in(select ticket_id from created) returning id,user_id),
-    audit as (insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id) select ${actor.userId}::uuid,'support.admin_replied','support_ticket',id::text,${actor.requestId} from changed)
-    select id,user_id as "userId" from changed
+    created as (insert into support_messages(id,ticket_id,author_id,body,attachment_object_key,attachment_file_name,attachment_content_type,internal,created_at) select ${messageId}::uuid,id,${actor.userId}::uuid,${body},${attachment?.objectKey ?? null},${attachment?.fileName ?? null},${attachment?.contentType ?? null},${internal},now() from target returning id,ticket_id),
+    changed as (update support_tickets set assigned_to=${actor.userId}::uuid,status=case when ${internal} then status else 'WAITING_FOR_STUDENT'::ticket_status end,updated_at=now() where id in(select ticket_id from created) returning id,user_id),
+    audit as (insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id) select ${actor.userId}::uuid,case when ${internal} then 'support.internal_note' else 'support.admin_replied' end,'support_ticket',id::text,${actor.requestId} from changed)
+    select created.id,changed.user_id as "userId" from created join changed on changed.id=created.ticket_id
   `);
   return rows<{id:string;userId:string}>(result)[0];
+}
+
+export async function listNotificationCampaignOptions() {
+  const result = await db.execute(sql`select id,name from products order by name`);
+  return rows<{ id: string; name: string }>(result);
+}
+
+export async function listNotificationCampaigns() {
+  const result = await db.execute(sql`
+    select c.id,c.audience,c.title,c.body,c.channel,c.recipient_count as "recipientCount",c.created_at as "createdAt",p.name as "productName"
+    from notification_campaigns c left join products p on p.id=c.product_id
+    order by c.created_at desc limit 100
+  `);
+  return rows<{id:string;audience:string;title:string;body:string;channel:string;recipientCount:number;createdAt:Date;productName:string|null}>(result);
+}
+
+export async function insertNotificationCampaign(input: { audience:string;productId?:string|null;title:string;body:string;channel:"EMAIL"|"IN_APP" }, actor: { userId:string;requestId:string }) {
+  const campaignId = randomUUID();
+  const result = await db.execute(sql`
+    with campaign as (
+      insert into notification_campaigns(id,audience,product_id,title,body,channel,created_by,created_at)
+      values(${campaignId}::uuid,${input.audience},${input.productId ?? null}::uuid,${input.title},${input.body},${input.channel},${actor.userId}::uuid,now()) returning id
+    ), recipients as (
+      select distinct u.id from users u
+      where exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key='STUDENT')
+        and u.status='ACTIVE'
+        and (${input.audience}<>'PACKAGE_CUSTOMERS' or exists(select 1 from entitlements e where e.user_id=u.id and e.product_id=${input.productId ?? null}::uuid and e.status='ACTIVE'))
+        and (${input.audience}<>'INACTIVE_STUDENTS' or u.last_login_at is null or u.last_login_at < now()-interval '30 days')
+    ), created as (
+      insert into notifications(id,user_id,type,deduplication_key,title,body,created_at)
+      select gen_random_uuid(),r.id,'ADMIN_ANNOUNCEMENT','campaign:'||${campaignId}::text||':'||r.id::text,${input.title},${input.body},now() from recipients r
+      on conflict(deduplication_key) do nothing returning id
+    ), deliveries as (
+      insert into notification_deliveries(id,notification_id,channel,status,attempts,created_at)
+      select gen_random_uuid(),id,'EMAIL','PENDING',0,now() from created where ${input.channel}='EMAIL'
+      returning id
+    ), counted as (
+      update notification_campaigns set recipient_count=(select count(*) from created) where id=${campaignId}::uuid returning recipient_count
+    ), audit as (
+      insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,after)
+      values(${actor.userId}::uuid,'notification.campaign_sent','notification_campaign',${campaignId},${actor.requestId},jsonb_build_object('audience',${input.audience},'channel',${input.channel},'title',${input.title}))
+    ) select id,"recipientCount" from deliveries cross join lateral (select recipient_count as "recipientCount" from counted) c
+  `);
+  const deliveryRows = rows<{id:string;recipientCount:number}>(result);
+  const countResult = await db.execute(sql`select recipient_count as "recipientCount" from notification_campaigns where id=${campaignId}::uuid`);
+  return { id: campaignId, recipientCount: rows<{recipientCount:number}>(countResult)[0]?.recipientCount ?? 0, deliveryIds: deliveryRows.map((row) => row.id) };
 }
 
 export async function updateManagedSupportTicket(ticketId:string,input:{status:string;priority:string},actor:{userId:string;requestId:string}) {
@@ -190,10 +255,10 @@ export async function findStudentSupportTicket(ticketId: string, userId: string)
   const ticket = rows<{ id: string; subject: string; category: string; priority: string; status: string; orderId: string | null; createdAt: Date; updatedAt: Date }>(result)[0];
   if (!ticket) return undefined;
   const messages = await db.execute(sql`
-    select m.id, m.body, m.created_at as "createdAt", m.author_id=${userId}::uuid as "mine"
+    select m.id,m.body,m.attachment_object_key as "attachmentObjectKey",m.attachment_file_name as "attachmentFileName",m.attachment_content_type as "attachmentContentType",m.created_at as "createdAt",m.author_id=${userId}::uuid as "mine"
     from support_messages m where m.ticket_id=${ticketId} and not m.internal order by m.created_at
   `);
-  return { ...ticket, messages: rows<{ id: string; body: string; createdAt: Date; mine: boolean }>(messages) };
+  return { ...ticket, messages: rows<{ id:string;body:string;attachmentObjectKey:string|null;attachmentFileName:string|null;attachmentContentType:string|null;createdAt:Date;mine:boolean }>(messages) };
 }
 
 export async function insertStudentSupportTicket(userId: string, input: CreateSupportTicketInput, requestId: string) {
@@ -219,14 +284,14 @@ export async function insertStudentSupportTicket(userId: string, input: CreateSu
   return rows<{ id: string }>(result)[0];
 }
 
-export async function insertStudentSupportReply(ticketId: string, userId: string, body: string, requestId: string) {
+export async function insertStudentSupportReply(ticketId: string, userId: string, body: string, attachment: MessageAttachment, requestId: string) {
   const messageId = randomUUID();
   const result = await db.execute(sql`
     with owned_ticket as (
       select id,status from support_tickets where id=${ticketId} and user_id=${userId} and status <> 'CLOSED'
     ), created_message as (
-      insert into support_messages (id,ticket_id,author_id,body,internal,created_at)
-      select ${messageId}::uuid,id,${userId}::uuid,${body},false,now() from owned_ticket returning id,ticket_id
+      insert into support_messages (id,ticket_id,author_id,body,attachment_object_key,attachment_file_name,attachment_content_type,internal,created_at)
+      select ${messageId}::uuid,id,${userId}::uuid,${body},${attachment?.objectKey ?? null},${attachment?.fileName ?? null},${attachment?.contentType ?? null},false,now() from owned_ticket returning id,ticket_id
     ), updated_ticket as (
       update support_tickets set status=case when status='WAITING_FOR_STUDENT' then 'OPEN' else status end,updated_at=now()
       where id in (select ticket_id from created_message) returning id
@@ -236,4 +301,13 @@ export async function insertStudentSupportReply(ticketId: string, userId: string
     ) select id from created_message
   `);
   return rows<{ id: string }>(result)[0];
+}
+
+export async function findSupportAttachment(messageId: string, userId: string, canManage: boolean) {
+  const result = await db.execute(sql`
+    select m.attachment_object_key as "objectKey",m.attachment_file_name as "fileName",m.attachment_content_type as "contentType"
+    from support_messages m join support_tickets t on t.id=m.ticket_id
+    where m.id=${messageId} and m.attachment_object_key is not null and (${canManage} or t.user_id=${userId}) limit 1
+  `);
+  return rows<{objectKey:string;fileName:string|null;contentType:string|null}>(result)[0];
 }

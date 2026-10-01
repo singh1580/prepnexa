@@ -82,6 +82,9 @@ export function ProductCreateForm({
     name: string;
     slug: string;
     description: string | null;
+    syllabus: string | null;
+    language: string;
+    coverObjectKey: string | null;
     mrpPaise: number | null;
     pricePaise: number;
     accessDays: number;
@@ -98,6 +101,8 @@ export function ProductCreateForm({
           name: String(data.get("name")),
           slug: product?.slug ?? "",
           description: String(data.get("description") ?? ""),
+          syllabus: String(data.get("syllabus") ?? ""),
+          language: String(data.get("language") ?? "BILINGUAL"),
           mrpPaise: Math.round(Number(data.get("mrpRupees")) * 100),
           pricePaise: Math.round(Number(data.get("priceRupees")) * 100),
           accessDays: Number(data.get("accessDays")),
@@ -111,58 +116,44 @@ export function ProductCreateForm({
         product ? "PATCH" : "POST",
       ),
     );
+    const cover = data.get("cover");
+    if (result && cover instanceof File && cover.size > 0) {
+      const coverBody = new FormData();
+      coverBody.set("file", cover);
+      await mutate("cover", () => upload(`products/${result.id}/cover`, coverBody));
+    }
     if (result) router.push(`/admin/packages/${result.id}`);
   }
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   return (
-    <form className="admin-form" onSubmit={submit}>
+    <form className="admin-form product-create-form" onSubmit={submit}>
       <fieldset disabled={Boolean(busy)}>
-        <Field
-          id="product-name"
-          label="Product / bundle name"
-          name="name"
-          defaultValue={product?.name}
-          required
-        />
-        <div className="question-grid">
-          <Field id="product-mrp" label="MRP (INR)" name="mrpRupees" defaultValue={product ? (product.mrpPaise ?? product.pricePaise) / 100 : undefined} type="number" min={0} step="0.01" required />
-          <Field
-            id="product-price"
-            label="Price (INR)"
-            name="priceRupees"
-            defaultValue={product ? product.pricePaise / 100 : undefined}
-            type="number"
-            min={0}
-            step="0.01"
-            required
-          />
-          <Field
-            id="product-days"
-            label="Access days"
-            name="accessDays"
-            type="number"
-            min={1}
-            max={3650}
-            defaultValue={product?.accessDays ?? 90}
-            required
-          />
+        <div className="product-form-top">
+          <div className="product-form-fields">
+            <Field id="product-name" label="Package title" name="name" defaultValue={product?.name} required />
+            <label className="field">
+              <span>Short description</span>
+              <textarea name="description" defaultValue={product?.description ?? ""} maxLength={4000} rows={4} required />
+            </label>
+          </div>
+          <label className="cover-upload-field">
+            <span>Cover image</span>
+            <span className="cover-preview">
+              {coverPreview ? <img src={coverPreview} alt="Selected package cover preview" /> : product?.coverObjectKey ? <img src={`/api/catalog/products/${product.id}/cover`} alt={`${product.name} cover`} /> : <b>Upload package cover</b>}
+            </span>
+            <input name="cover" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.currentTarget.files?.[0]; setCoverPreview(file ? URL.createObjectURL(file) : null); }} />
+            <small>JPG, PNG or WebP · up to 5 MB</small>
+          </label>
         </div>
-        <label className="field">
-          <span>Description</span>
-          <textarea
-            name="description"
-            defaultValue={product?.description ?? ""}
-            maxLength={4000}
-            rows={3}
-          />
-        </label>
+        <div className="product-pricing-grid">
+          <Field id="product-mrp" label="MRP (₹)" name="mrpRupees" defaultValue={product ? (product.mrpPaise ?? product.pricePaise) / 100 : undefined} type="number" min={0} step="0.01" required />
+          <Field id="product-price" label="Selling price (₹)" name="priceRupees" defaultValue={product ? product.pricePaise / 100 : undefined} type="number" min={0} step="0.01" required />
+          <label className="field"><span>Language</span><select name="language" defaultValue={product?.language ?? "BILINGUAL"}><option value="ENGLISH">English</option><option value="HINDI">Hindi</option><option value="BILINGUAL">Bilingual</option></select></label>
+          <Field id="product-days" label="Access days" name="accessDays" type="number" min={1} max={3650} defaultValue={product?.accessDays ?? 365} required />
+        </div>
         {!product && items && <ContentPicker items={items} />}
-        <button className="button" type="submit">
-          {busy
-            ? "Saving…"
-            : product
-              ? "Save package"
-              : "Create product package"}
-        </button>
+        <label className="field"><span>Syllabus (optional)</span><textarea name="syllabus" defaultValue={product?.syllabus ?? ""} maxLength={12000} rows={4} placeholder="Add topics or sections included in this package" /></label>
+        <div className="dialog-form-footer"><button className="button" type="submit">{busy ? "Saving…" : product ? "Save package" : "Create product"}</button></div>
       </fieldset>
       {error && (
         <p className="notice danger" role="alert">

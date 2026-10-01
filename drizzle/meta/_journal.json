@@ -134,6 +134,41 @@
       "when": 1790788191038,
       "tag": "0018_workable_puff_adder",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790859604572,
+      "tag": "0019_productive_manta",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790859942705,
+      "tag": "0020_young_young_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790860201073,
+      "tag": "0021_deep_grey_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790860648639,
+      "tag": "0022_long_sumo",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790860822429,
+      "tag": "0023_pale_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

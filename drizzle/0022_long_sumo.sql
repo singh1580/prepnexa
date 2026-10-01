@@ -1,0 +1,3 @@
+ALTER TABLE "orders" DROP CONSTRAINT "orders_amounts_check";--> statement-breakpoint
+ALTER TABLE "orders" ADD COLUMN "tax_paise" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "orders" ADD CONSTRAINT "orders_amounts_check" CHECK ("orders"."subtotal_paise" >= 0 and "orders"."discount_paise" >= 0 and "orders"."tax_paise" >= 0 and "orders"."total_paise" >= 0 and "orders"."total_paise" = "orders"."subtotal_paise" - "orders"."discount_paise" + "orders"."tax_paise");

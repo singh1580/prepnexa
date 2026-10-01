@@ -17,6 +17,8 @@ export type ProductInput = {
   name: string;
   slug: string;
   description: string;
+  syllabus: string;
+  language: "ENGLISH" | "HINDI" | "BILINGUAL";
   mrpPaise?: number | null;
   pricePaise: number;
   accessDays: number;
@@ -41,10 +43,13 @@ export function listProducts() {
       id: products.id,
       name: products.name,
       slug: products.slug,
+      description: products.description,
       pricePaise: products.pricePaise,
       mrpPaise: products.mrpPaise,
       accessDays: products.accessDays,
       isLive: products.isLive,
+      language: products.language,
+      coverObjectKey: products.coverObjectKey,
       testCount: countDistinct(productTests.testId),
       materialCount: countDistinct(productMaterials.materialId),
     })
@@ -165,8 +170,8 @@ export async function insertProduct(input: ProductCreationInput, audit: Audit) {
     with selected_tests as (select jsonb_array_elements_text(${JSON.stringify(testIds)}::jsonb)::uuid as id),
     selected_materials as (select jsonb_array_elements_text(${JSON.stringify(materialIds)}::jsonb)::uuid as id),
     created as (
-      insert into products (id, name, slug, description, mrp_paise, price_paise, access_days, is_live)
-      select ${id}::uuid, ${input.name}, ${input.slug}, ${input.description || null}, ${input.mrpPaise ?? null}, ${input.pricePaise}, ${input.accessDays}, false
+      insert into products (id, name, slug, description, syllabus, language, mrp_paise, price_paise, access_days, is_live)
+      select ${id}::uuid, ${input.name}, ${input.slug}, ${input.description || null}, ${input.syllabus || null}, ${input.language}, ${input.mrpPaise ?? null}, ${input.pricePaise}, ${input.accessDays}, false
       where not exists (select 1 from selected_tests s where not exists (
         select 1 from tests t where t.id = s.id
       )) and not exists (select 1 from selected_materials s where not exists (
@@ -322,6 +327,33 @@ export async function patchProduct(
     }),
   ]);
   return { id: before.id };
+}
+
+export async function setProductCoverRecord(
+  id: string,
+  cover: { objectKey: string; fileName: string; contentType: string },
+  audit: Audit,
+) {
+  const [updated] = await db
+    .update(products)
+    .set({
+      coverObjectKey: cover.objectKey,
+      coverFileName: cover.fileName,
+      coverContentType: cover.contentType,
+      updatedAt: new Date(),
+    })
+    .where(eq(products.id, id))
+    .returning({ id: products.id });
+  if (!updated) return undefined;
+  await db.insert(auditLogs).values({
+    actorUserId: audit.actorUserId,
+    action: "product.cover_updated",
+    entityType: "product",
+    entityId: id,
+    requestId: audit.requestId,
+    after: { fileName: cover.fileName, contentType: cover.contentType },
+  });
+  return updated;
 }
 
 export async function patchMaterial(

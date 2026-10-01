@@ -28,7 +28,7 @@ async function loadLocalEnvironment() {
 }
 
 async function main() {
-  console.log("\nPrepNexa release-candidate preflight\n");
+  console.log("\nPrepstore release-candidate preflight\n");
   if (!(await loadLocalEnvironment())) return;
 
   const { envSchema } = await import("../src/config/env");

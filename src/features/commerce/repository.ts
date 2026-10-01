@@ -108,9 +108,34 @@ export async function evaluateCoupon(code: string, productId: string, userId: st
   return rows<{ id:string;code:string;type:"FIXED"|"PERCENT";value:number;maxDiscountPaise:number|null;minOrderPaise:number;totalLimit:number|null;perUserLimit:number;totalUsed:number;userUsed:number }>(result)[0];
 }
 
+export async function findCheckoutProducts(productIds: string[], userId: string) {
+  const result = await db.execute(sql`
+    with selected as (select jsonb_array_elements_text(${JSON.stringify(productIds)}::jsonb)::uuid as id)
+    select p.id,p.slug,p.name,p.description,p.price_paise as "pricePaise",p.currency,p.access_days as "accessDays",p.refund_policy as "refundPolicy",
+      exists(select 1 from entitlements e where e.user_id=${userId} and e.product_id=p.id and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now()) as "alreadyOwned"
+    from selected s join products p on p.id=s.id where p.is_live=true
+  `);
+  return rows<{id:string;slug:string;name:string;description:string|null;pricePaise:number;currency:string;accessDays:number;refundPolicy:string;alreadyOwned:boolean}>(result);
+}
+
+export async function evaluateCartCoupon(code: string, productIds: string[], userId: string, subtotalPaise: number, currency: string) {
+  const result = await db.execute(sql`
+    with selected as (select jsonb_array_elements_text(${JSON.stringify(productIds)}::jsonb)::uuid as id), eligible as (
+      select c.id,coalesce(sum(p.price_paise) filter(where not exists(select 1 from coupon_products x where x.coupon_id=c.id) or exists(select 1 from coupon_products x where x.coupon_id=c.id and x.product_id=p.id)),0)::int as "eligibleSubtotal"
+      from coupons c cross join selected s join products p on p.id=s.id where c.code=${code} group by c.id
+    )
+    select c.id,c.code,c.type,c.value,c.max_discount_paise as "maxDiscountPaise",c.min_order_paise as "minOrderPaise",c.total_limit as "totalLimit",c.per_user_limit as "perUserLimit",e."eligibleSubtotal",
+      (select count(*)::int from coupon_redemptions cr where cr.coupon_id=c.id and (cr.status='CONSUMED' or (cr.status='RESERVED' and cr.expires_at>now()))) as "totalUsed",
+      (select count(*)::int from coupon_redemptions cr where cr.coupon_id=c.id and cr.user_id=${userId} and (cr.status='CONSUMED' or (cr.status='RESERVED' and cr.expires_at>now()))) as "userUsed"
+    from coupons c join eligible e on e.id=c.id where c.code=${code} and c.active=true and (c.starts_at is null or c.starts_at<=now()) and (c.ends_at is null or c.ends_at>now())
+      and c.min_order_paise<=${subtotalPaise} and (c.currency is null or c.currency=${currency}) and e."eligibleSubtotal">0 limit 1
+  `);
+  return rows<{id:string;code:string;type:"FIXED"|"PERCENT";value:number;maxDiscountPaise:number|null;minOrderPaise:number;totalLimit:number|null;perUserLimit:number;eligibleSubtotal:number;totalUsed:number;userUsed:number}>(result)[0];
+}
+
 export async function findOrderByIdempotency(userId: string, idempotencyKey: string) {
   const result = await db.execute(sql`
-    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.total_paise as "totalPaise",o.currency,
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,
       o.coupon_code as "couponCode",o.expires_at as "expiresAt",pa.id as "paymentAttemptId",pa.provider,pa.checkout_reference as "checkoutReference"
     from orders o left join lateral (select * from payment_attempts x where x.order_id=o.id order by x.created_at desc limit 1) pa on true
     where o.user_id=${userId} and o.idempotency_key=${idempotencyKey} limit 1
@@ -118,7 +143,7 @@ export async function findOrderByIdempotency(userId: string, idempotencyKey: str
   return rows<CheckoutOrder>(result)[0];
 }
 
-export type CheckoutOrder = { id:string;status:string;subtotalPaise:number;discountPaise:number;totalPaise:number;currency:string;couponCode:string|null;expiresAt:Date;paymentAttemptId:string|null;provider:string|null;checkoutReference:string|null };
+export type CheckoutOrder = { id:string;status:string;subtotalPaise:number;discountPaise:number;taxPaise:number;totalPaise:number;currency:string;couponCode:string|null;expiresAt:Date;paymentAttemptId:string|null;provider:string|null;checkoutReference:string|null };
 
 export async function insertCheckoutOrder(input: { userId:string;productId:string;idempotencyKey:string;couponId:string|null;couponCode:string|null;requestId:string }) {
   const orderId = randomUUID();
@@ -170,6 +195,28 @@ export async function insertCheckoutOrder(input: { userId:string;productId:strin
     ) select id,status,subtotal_paise as "subtotalPaise",discount_paise as "discountPaise",total_paise as "totalPaise",currency,coupon_code as "couponCode",expires_at as "expiresAt",null::uuid as "paymentAttemptId",null::text as provider,null::text as "checkoutReference" from created_order
   `);
   return rows<CheckoutOrder>(result)[0];
+}
+
+export async function insertCartCheckoutOrder(input:{userId:string;productIds:string[];idempotencyKey:string;couponId:string|null;couponCode:string|null;requestId:string}){
+  const orderId=randomUUID();const expiresAt=new Date(Date.now()+30*60_000);const ids=JSON.stringify(input.productIds);
+  const result=input.couponId?await db.execute(sql`
+    with selected as (select jsonb_array_elements_text(${ids}::jsonb)::uuid as id),
+    priced as (select p.* from selected s join products p on p.id=s.id where p.is_live=true and not exists(select 1 from entitlements e where e.user_id=${input.userId} and e.product_id=p.id and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())),
+    locked_coupon as (select c.* from coupons c where c.id=${input.couponId} and c.code=${input.couponCode} and c.active=true and (c.starts_at is null or c.starts_at<=now()) and (c.ends_at is null or c.ends_at>now()) for update),
+    totals as (select sum(price_paise)::int subtotal,min(currency) currency,count(*)::int item_count from priced),
+    eligible as (select coalesce(sum(p.price_paise) filter(where not exists(select 1 from coupon_products cp where cp.coupon_id=c.id) or exists(select 1 from coupon_products cp where cp.coupon_id=c.id and cp.product_id=p.id)),0)::int amount from priced p cross join locked_coupon c),
+    final_price as (select t.subtotal,t.currency,c.id coupon_id,c.code coupon_code,least(e.amount,case when c.type='FIXED' then c.value else floor(e.amount*c.value/10000.0)::int end,coalesce(c.max_discount_paise,e.amount))::int discount from totals t cross join locked_coupon c cross join eligible e where t.item_count=${input.productIds.length} and t.subtotal>=c.min_order_paise and (c.currency is null or c.currency=t.currency) and e.amount>0 and (c.total_limit is null or (select count(*) from coupon_redemptions r where r.coupon_id=c.id and (r.status='CONSUMED' or(r.status='RESERVED' and r.expires_at>now())))<c.total_limit) and (select count(*) from coupon_redemptions r where r.coupon_id=c.id and r.user_id=${input.userId} and (r.status='CONSUMED' or(r.status='RESERVED' and r.expires_at>now())))<c.per_user_limit),
+    created_order as (insert into orders(id,user_id,status,subtotal_paise,discount_paise,tax_paise,total_paise,currency,coupon_code,idempotency_key,expires_at,created_at,updated_at) select ${orderId}::uuid,${input.userId}::uuid,case when subtotal-discount=0 then 'CREATED'::order_status else 'PENDING'::order_status end,subtotal,discount,floor((subtotal-discount)*.18)::int,subtotal-discount+floor((subtotal-discount)*.18)::int,currency,coupon_code,${input.idempotencyKey},${expiresAt},now(),now() from final_price on conflict(idempotency_key) do nothing returning *),
+    created_items as (insert into order_items(order_id,product_id,product_name,unit_price_paise,access_days,quantity) select o.id,p.id,p.name,p.price_paise,p.access_days,1 from created_order o cross join priced p returning order_id),
+    reserved as (insert into coupon_redemptions(coupon_id,user_id,order_id,status,discount_paise,expires_at,created_at) select f.coupon_id,${input.userId}::uuid,o.id,'RESERVED',f.discount,${expiresAt},now() from created_order o cross join final_price f returning order_id),
+    logged as (insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,after) select ${input.userId}::uuid,'order.created','order',id::text,${input.requestId},jsonb_build_object('productIds',${ids}::jsonb,'couponCode',${input.couponCode}::text) from created_order)
+    select id,status,subtotal_paise as "subtotalPaise",discount_paise as "discountPaise",tax_paise as "taxPaise",total_paise as "totalPaise",currency,coupon_code as "couponCode",expires_at as "expiresAt",null::uuid as "paymentAttemptId",null::text provider,null::text as "checkoutReference" from created_order
+  `):await db.execute(sql`
+    with selected as (select jsonb_array_elements_text(${ids}::jsonb)::uuid as id),priced as (select p.* from selected s join products p on p.id=s.id where p.is_live=true and not exists(select 1 from entitlements e where e.user_id=${input.userId} and e.product_id=p.id and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())),totals as (select sum(price_paise)::int subtotal,min(currency) currency,count(*)::int item_count from priced),
+    created_order as (insert into orders(id,user_id,status,subtotal_paise,discount_paise,tax_paise,total_paise,currency,idempotency_key,expires_at,created_at,updated_at) select ${orderId}::uuid,${input.userId}::uuid,case when subtotal=0 then 'CREATED'::order_status else 'PENDING'::order_status end,subtotal,0,floor(subtotal*.18)::int,subtotal+floor(subtotal*.18)::int,currency,${input.idempotencyKey},${expiresAt},now(),now() from totals where item_count=${input.productIds.length} on conflict(idempotency_key) do nothing returning *),
+    created_items as (insert into order_items(order_id,product_id,product_name,unit_price_paise,access_days,quantity) select o.id,p.id,p.name,p.price_paise,p.access_days,1 from created_order o cross join priced p returning order_id),logged as (insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,after) select ${input.userId}::uuid,'order.created','order',id::text,${input.requestId},jsonb_build_object('productIds',${ids}::jsonb) from created_order)
+    select id,status,subtotal_paise as "subtotalPaise",discount_paise as "discountPaise",tax_paise as "taxPaise",total_paise as "totalPaise",currency,coupon_code as "couponCode",expires_at as "expiresAt",null::uuid as "paymentAttemptId",null::text provider,null::text as "checkoutReference" from created_order
+  `);return rows<CheckoutOrder>(result)[0];
 }
 
 export async function finalizeFreeOrder(orderId: string, userId: string, requestId: string) {
@@ -283,7 +330,7 @@ export async function processPaymentEvent(provider: string, event: VerifiedPayme
 
 export async function listStudentOrders(userId: string) {
   const result = await db.execute(sql`
-    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",
       coalesce(jsonb_agg(jsonb_build_object('productId',oi.product_id,'name',oi.product_name,'pricePaise',oi.unit_price_paise,'accessDays',oi.access_days) order by oi.id),'[]'::jsonb) as items
     from orders o join order_items oi on oi.order_id=o.id where o.user_id=${userId} group by o.id order by o.created_at desc
   `);
@@ -292,7 +339,7 @@ export async function listStudentOrders(userId: string) {
 
 export async function findStudentOrder(orderId: string, userId: string) {
   const result = await db.execute(sql`
-    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",
       p.provider,p.provider_payment_id as "providerPaymentId",p.status as "paymentStatus",
       coalesce(jsonb_agg(jsonb_build_object('productId',oi.product_id,'name',oi.product_name,'pricePaise',oi.unit_price_paise,'accessDays',oi.access_days) order by oi.id),'[]'::jsonb) as items
     from orders o join order_items oi on oi.order_id=o.id
@@ -305,7 +352,7 @@ export async function findStudentOrder(orderId: string, userId: string) {
 
 export async function listManagedOrders() {
   const result = await db.execute(sql`
-    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",
       o.created_at as "createdAt",o.paid_at as "paidAt",u.name as "studentName",u.email,
       coalesce((select string_agg(oi.product_name,', ' order by oi.product_name) from order_items oi where oi.order_id=o.id),'') as products,
       p.id as "paymentId",p.status as "paymentStatus",p.amount_paise as "paymentAmountPaise",
@@ -315,6 +362,19 @@ export async function listManagedOrders() {
     order by o.created_at desc limit 200
   `);
   return rows<Record<string,unknown>>(result);
+}
+
+export async function findManagedOrder(orderId: string) {
+  const result = await db.execute(sql`
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",u.name as "studentName",u.email,
+      p.id as "paymentId",p.status as "paymentStatus",p.provider,p.provider_payment_id as "providerPaymentId",p.amount_paise as "paymentAmountPaise",
+      coalesce((select sum(r.amount_paise)::int from refunds r where r.payment_id=p.id and r.status in('PROCESSING','SUCCEEDED')),0) as "refundedPaise",
+      coalesce(jsonb_agg(jsonb_build_object('productId',oi.product_id,'name',oi.product_name,'pricePaise',oi.unit_price_paise,'accessDays',oi.access_days) order by oi.id),'[]'::jsonb) as items
+    from orders o join users u on u.id=o.user_id join order_items oi on oi.order_id=o.id
+    left join lateral (select x.* from payments x where x.order_id=o.id order by x.created_at desc limit 1) p on true
+    where o.id=${orderId} group by o.id,u.name,u.email,p.id,p.status,p.provider,p.provider_payment_id,p.amount_paise limit 1
+  `);
+  return rows<Record<string,unknown>>(result)[0];
 }
 
 export async function findRefundTarget(paymentId: string) {

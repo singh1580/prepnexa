@@ -10,12 +10,12 @@ const base = {
 };
 
 describe("email environment validation", () => {
-  it("accepts the verified PrepNexa sender with a Resend key", () => {
+  it("accepts the verified Prepstore sender with a Resend key", () => {
     expect(envSchema.safeParse({
       ...base,
       NODE_ENV: "production",
       RESEND_API_KEY: "re_test_key",
-      EMAIL_FROM: "PrepNexa <no-reply@prepstore.in>",
+      EMAIL_FROM: "Prepstore <no-reply@prepstore.in>",
     }).success).toBe(true);
   });
 
@@ -29,7 +29,7 @@ describe("email environment validation", () => {
       ...base,
       NODE_ENV: "production",
       RESEND_API_KEY: "re_test_key",
-      EMAIL_FROM: "PrepNexa <onboarding@resend.dev>",
+      EMAIL_FROM: "Prepstore <onboarding@resend.dev>",
     });
     expect(result.success).toBe(false);
   });
