@@ -101,7 +101,7 @@ export async function createSession(input: typeof sessions.$inferInsert, maxActi
 export function findActiveSession(tokenHash: string) {
   return db.select({
     sessionId: sessions.id, expiresAt: sessions.expiresAt,
-    userId: users.id, userName: users.name, userEmail: users.email, userStatus: users.status, emailVerifiedAt: users.emailVerifiedAt,
+    userId: users.id, userName: users.name, userEmail: users.email, userPhone: users.phone, userStatus: users.status, emailVerifiedAt: users.emailVerifiedAt,
   }).from(sessions).innerJoin(users, eq(sessions.userId, users.id)).where(
     and(eq(sessions.tokenHash, tokenHash), isNull(sessions.revokedAt), gt(sessions.expiresAt, new Date())),
   ).limit(1).then((rows) => rows[0]);

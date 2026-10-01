@@ -1,16 +1,10 @@
 "use client";
-import { useRef, useState, type FormEvent } from "react";
+
 import { useRouter } from "next/navigation";
-import { formatMoney } from "../pricing";
-import { commerceRequest, CommerceApiError } from "./api";
-import { AddToCartButton } from "./cart-workflow";
+import { AddToCartButton, addCartItem } from "./cart-workflow";
 
-type Preview={subtotalPaise:number;discountPaise:number;taxPaise:number;totalPaise:number;currency:string;couponCode:string|null};
-type Checkout=Preview&{id:string;status:string;paymentRequired:boolean;paymentAttemptId:string|null;checkoutReference:string|null};
-
-export function CheckoutCard({productId,slug,pricePaise,currency,initialCoupon=""}:{productId:string;slug:string;pricePaise:number;currency:string;initialCoupon?:string}){
-  const router=useRouter();const key=useRef("");const[couponCode,setCouponCode]=useState(initialCoupon);const tax=Math.floor(pricePaise*.18);const[preview,setPreview]=useState<Preview>({subtotalPaise:pricePaise,discountPaise:0,taxPaise:tax,totalPaise:pricePaise+tax,currency,couponCode:null});const[busy,setBusy]=useState<"coupon"|"checkout"|null>(null);const[error,setError]=useState("");
-  async function applyCoupon(event:FormEvent){event.preventDefault();setBusy("coupon");setError("");try{setPreview(await commerceRequest<Preview>("commerce/checkout/preview",{productId,couponCode}));}catch(value){const issue=value as CommerceApiError;if(issue.code==="UNAUTHENTICATED")router.push(`/login?next=${encodeURIComponent(`/packages/${slug}`)}`);else setError(issue.message);}finally{setBusy(null);}}
-  async function checkout(){setBusy("checkout");setError("");try{key.current||=crypto.randomUUID();const result=await commerceRequest<Checkout>("commerce/checkout",{productId,couponCode:preview.couponCode,idempotencyKey:key.current});if(!result.paymentRequired){router.push(`/invoice/${result.id}`);return;}if(result.checkoutReference?.startsWith("/"))router.push(result.checkoutReference);else if(result.checkoutReference)window.location.assign(result.checkoutReference);else router.push("/dashboard/orders");}catch(value){const issue=value as CommerceApiError;if(issue.code==="UNAUTHENTICATED")router.push(`/login?next=${encodeURIComponent(`/packages/${slug}`)}`);else setError(issue.message);}finally{setBusy(null);}}
-  return <section className="panel checkout-card"><div><span className="eyebrow">SECURE CHECKOUT</span><h2>{preview.totalPaise===0?"Get access":formatMoney(preview.totalPaise,preview.currency)}</h2><p>Final price is verified securely before the order is created.</p></div><dl className="checkout-totals"><div><dt>Package</dt><dd>{formatMoney(preview.subtotalPaise,preview.currency)}</dd></div>{preview.discountPaise>0&&<div><dt>Coupon {preview.couponCode}</dt><dd>− {formatMoney(preview.discountPaise,preview.currency)}</dd></div>}<div><dt>GST (18%)</dt><dd>{formatMoney(preview.taxPaise,preview.currency)}</dd></div><div><dt>Total</dt><dd>{formatMoney(preview.totalPaise,preview.currency)}</dd></div></dl><form className="coupon-apply" onSubmit={applyCoupon}><label className="field"><span>Coupon code</span><input value={couponCode} onChange={event=>setCouponCode(event.target.value.toUpperCase())} maxLength={60} placeholder="Optional"/></label><button className="button secondary" disabled={!couponCode.trim()||Boolean(busy)}>{busy==="coupon"?"Checking…":"Apply"}</button></form><div className="purchase-actions"><AddToCartButton productId={productId}/><button className="button full" type="button" onClick={checkout} disabled={Boolean(busy)}>{busy==="checkout"?"Starting securely…":preview.totalPaise===0?"Get access":"Buy now"}</button></div>{error&&<p className="notice danger" role="alert">{error}</p>}</section>;
+export function CheckoutCard({productId,pricePaise}:{productId:string;pricePaise:number}){
+  const router=useRouter();
+  function buyNow(){addCartItem(productId);router.push("/checkout");}
+  return <div className="reference-purchase-actions"><AddToCartButton productId={productId} className="reference-add-cart"/><button className="reference-buy-now" type="button" onClick={buyNow}>{pricePaise===0?"Get access":"Buy now"}</button><small>Final payable price, including GST, is verified securely at checkout.</small></div>;
 }
