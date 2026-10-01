@@ -2,13 +2,13 @@ import Link from "next/link";
 import { Brand } from "./brand";
 
 const links = [
-  { href: "/packages", label: "Courses" },
+  { href: "/packages", label: "Packages" },
   { href: "/free-tests", label: "Free tests" },
   { href: "/login", label: "Sign in" },
 ];
 
 function NavigationLinks() {
-  return <>{links.map((link) => <Link href={link.href} key={link.href}>{link.label}</Link>)}<Link className="button small" href="/signup">Create account</Link></>;
+  return <>{links.map((link) => <Link href={link.href} key={link.href}>{link.label}</Link>)}<Link className="button small" href="/signup">Start learning</Link></>;
 }
 
 export function PublicHeader() {

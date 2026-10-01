@@ -25,6 +25,7 @@
     "@neondatabase/serverless": "^1.0.2",
     "@node-rs/argon2": "^2.2.1",
     "drizzle-orm": "^0.45.2",
+    "geist": "^1.7.2",
     "next": "16.3.5",
     "otpauth": "^9.5.2",
     "pdf-lib": "^1.17.1",

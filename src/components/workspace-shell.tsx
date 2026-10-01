@@ -6,33 +6,50 @@ import { OPERATIONS_PERMISSIONS } from "@/features/operations/permissions";
 
 type NavItem = { key: string; href: string; label: string; icon: string };
 
+function NavIcon({ name }: { name: string }) {
+  const paths: Record<string, React.ReactNode> = {
+    dashboard: <><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></>,
+    library: <><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z" /><path d="M4 5.5v16" /></>,
+    tests: <><path d="M9 4h6" /><path d="M9 8h6" /><rect x="4" y="2" width="16" height="20" rx="3" /><path d="m8 14 2 2 5-5" /></>,
+    product: <><path d="m12 2 9 5-9 5-9-5z" /><path d="m3 12 9 5 9-5" /><path d="m3 17 9 5 9-5" /></>,
+    coupon: <><path d="M3 9a3 3 0 0 0 0 6v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a3 3 0 0 0 0-6V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z" /><path d="m9 9 6 6" /><path d="M15 9h.01M9 15h.01" /></>,
+    orders: <><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z" /><path d="M9 7h6M9 11h6" /></>,
+    users: <><circle cx="9" cy="8" r="4" /><path d="M2 21a7 7 0 0 1 14 0" /><path d="M16 4a4 4 0 0 1 0 8M17 14a7 7 0 0 1 5 7" /></>,
+    support: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.6 2.6 0 1 1 4.2 2c-1 .7-1.7 1.2-1.7 2.5" /><path d="M12 17h.01" /></>,
+    notifications: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></>,
+    profile: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+    search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></>,
+  };
+  return <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name] ?? paths.dashboard}</svg>;
+}
+
 function adminNavigation(permissions: readonly string[]): NavItem[] {
   return [
-    { key: "overview", href: "/admin", label: "Dashboard", icon: "◈" },
-    ...(permissions.includes(CONTENT_PERMISSIONS.manageMaterials) ? [{ key: "materials", href: "/admin/materials", label: "Store & materials", icon: "▤" }] : []),
-    ...([CONTENT_PERMISSIONS.manageTests, CONTENT_PERMISSIONS.manageSchedules].some((permission) => permissions.includes(permission)) ? [{ key: "tests", href: "/admin/tests", label: "Tests & practice sets", icon: "▣" }] : []),
-    ...(permissions.includes(CONTENT_PERMISSIONS.manageProducts) ? [{ key: "packages", href: "/admin/packages", label: "Product package builder", icon: "◇" }] : []),
-    { key: "coupons", href: "/admin/coupons", label: "Coupons", icon: "%" },
-    { key: "orders", href: "/admin/orders", label: "Orders & payments", icon: "₹" },
-    ...(permissions.includes(OPERATIONS_PERMISSIONS.readStudents) ? [{ key: "students", href: "/admin/students", label: "Students", icon: "○" }] : []),
-    ...(permissions.includes(OPERATIONS_PERMISSIONS.manageSupport) ? [{ key: "support", href: "/admin/support", label: "Support", icon: "?" }] : []),
-    ...(permissions.includes(OPERATIONS_PERMISSIONS.manageNotifications) ? [{ key: "notifications", href: "/admin/notifications", label: "Notifications", icon: "!" }] : []),
-    { key: "profile", href: "/account/profile", label: "Profile & security", icon: "○" },
+    { key: "overview", href: "/admin", label: "Dashboard", icon: "dashboard" },
+    ...(permissions.includes(CONTENT_PERMISSIONS.manageMaterials) ? [{ key: "materials", href: "/admin/materials", label: "Store & materials", icon: "library" }] : []),
+    ...([CONTENT_PERMISSIONS.manageTests, CONTENT_PERMISSIONS.manageSchedules].some((permission) => permissions.includes(permission)) ? [{ key: "tests", href: "/admin/tests", label: "Tests & practice sets", icon: "tests" }] : []),
+    ...(permissions.includes(CONTENT_PERMISSIONS.manageProducts) ? [{ key: "packages", href: "/admin/packages", label: "Product package builder", icon: "product" }] : []),
+    { key: "coupons", href: "/admin/coupons", label: "Coupons", icon: "coupon" },
+    { key: "orders", href: "/admin/orders", label: "Orders & payments", icon: "orders" },
+    ...(permissions.includes(OPERATIONS_PERMISSIONS.readStudents) ? [{ key: "students", href: "/admin/students", label: "Students", icon: "users" }] : []),
+    ...(permissions.includes(OPERATIONS_PERMISSIONS.manageSupport) ? [{ key: "support", href: "/admin/support", label: "Support", icon: "support" }] : []),
+    ...(permissions.includes(OPERATIONS_PERMISSIONS.manageNotifications) ? [{ key: "notifications", href: "/admin/notifications", label: "Notifications", icon: "notifications" }] : []),
+    { key: "profile", href: "/account/profile", label: "Profile & security", icon: "profile" },
   ];
 }
 
 const studentNavigation: NavItem[] = [
-  { key: "overview", href: "/dashboard", label: "Dashboard", icon: "◈" },
-  { key: "courses", href: "/dashboard/courses", label: "My courses", icon: "▣" },
-  { key: "explore", href: "/packages", label: "Explore courses", icon: "⌕" },
-  { key: "orders", href: "/dashboard/orders", label: "My orders", icon: "₹" },
-  { key: "notifications", href: "/dashboard/notifications", label: "Notifications", icon: "!" },
-  { key: "support", href: "/dashboard/support", label: "Support", icon: "?" },
-  { key: "profile", href: "/account/profile", label: "My account", icon: "○" },
+  { key: "overview", href: "/dashboard", label: "Dashboard", icon: "dashboard" },
+  { key: "courses", href: "/dashboard/courses", label: "My packages", icon: "library" },
+  { key: "explore", href: "/packages", label: "Explore packages", icon: "search" },
+  { key: "orders", href: "/dashboard/orders", label: "My orders", icon: "orders" },
+  { key: "notifications", href: "/dashboard/notifications", label: "Notifications", icon: "notifications" },
+  { key: "support", href: "/dashboard/support", label: "Support", icon: "support" },
+  { key: "profile", href: "/account/profile", label: "My account", icon: "profile" },
 ];
 
 function Navigation({ items, section }: { items: NavItem[]; section: string }) {
-  return <nav aria-label="Workspace">{items.map((item) => <Link key={item.key} href={item.href} className={section === item.key ? "nav-item active" : "nav-item"} aria-current={section === item.key ? "page" : undefined}><span aria-hidden="true">{item.icon}</span>{item.label}</Link>)}</nav>;
+  return <nav aria-label="Workspace">{items.map((item) => <Link key={item.key} href={item.href} className={section === item.key ? "nav-item active" : "nav-item"} aria-current={section === item.key ? "page" : undefined}><NavIcon name={item.icon} /><span>{item.label}</span></Link>)}</nav>;
 }
 
 export function WorkspaceShell({ admin, name, permissions = [], section, children }: { admin: boolean; name: string; permissions?: readonly string[]; section: string; children: React.ReactNode }) {
@@ -40,6 +57,6 @@ export function WorkspaceShell({ admin, name, permissions = [], section, childre
   return <div className={admin ? "workspace admin-workspace" : "workspace student-workspace"}>
     <a className="skip-link" href="#main-content">Skip to main content</a>
     <aside className="sidebar"><Brand /><div className="sidebar-label">{admin ? "ADMIN WORKSPACE" : "LEARNING WORKSPACE"}</div><Navigation items={nav} section={section} /><div className="sidebar-bottom"><span className="avatar">{name.slice(0, 1).toUpperCase()}</span><div><strong>{name}</strong><small>{admin ? "Administrator" : "Student"}</small></div></div></aside>
-    <div className="workspace-body"><header className="workspace-header"><div className="mobile-brand"><Brand /></div><span>{admin ? "Prepstore administration" : "Prepstore learning"}</span><LogoutButton /></header><details className={admin ? "admin-mobile-menu" : "student-mobile-menu"}><summary><span aria-hidden="true">☰</span> {admin ? "Admin menu" : "Student menu"}</summary><Navigation items={nav} section={section} /></details><main id="main-content" className="workspace-main">{children}</main></div>
+    <div className="workspace-body"><header className="workspace-header"><div className="mobile-brand"><Brand /></div><div className="workspace-context"><span>{admin ? "ADMINISTRATION" : "LEARNING WORKSPACE"}</span><strong>{admin ? "Prepstore operations" : "Your preparation, organised"}</strong></div><LogoutButton /></header><details className={admin ? "admin-mobile-menu" : "student-mobile-menu"}><summary><span aria-hidden="true">☰</span> {admin ? "Admin menu" : "Student menu"}</summary><Navigation items={nav} section={section} /></details><main id="main-content" className="workspace-main">{children}</main></div>
   </div>;
 }
