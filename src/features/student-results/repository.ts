@@ -114,25 +114,5 @@ export async function findStudentResult(resultId: string, userId: string) {
       where q.attempt_id=${attemptId} order by q.position
     `),
   ]);
-  const rankResult = await db.execute(sql`
-    with latest as (
-      select distinct on (a.id) a.user_id, a.test_id, r.score
-      from attempts a join results r on r.attempt_id=a.id
-      where a.test_id=${summary.testId as string} and r.status in ('PUBLISHED','REVISED')
-      order by a.id, r.version desc
-    ), best as (
-      select user_id, max(score) as score from latest group by user_id
-    ), standing as (
-      select (1 + count(*) filter (where score > ${summary.score as string}::numeric))::int as rank,
-        (1 + count(*))::int as "eligibleCount"
-      from best where user_id <> ${userId}
-    )
-    select rank, "eligibleCount",
-      case when "eligibleCount" <= 1 then 100
-        else round(100.0 * ("eligibleCount" - rank) / ("eligibleCount" - 1), 2)
-      end as percentile
-    from standing
-  `);
-  const ranking = rows<{ rank: number; eligibleCount: number; percentile: string }>(rankResult)[0] ?? { rank: 1, eligibleCount: 1, percentile: "100" };
-  return { ...summary, ...ranking, sections: rows<Record<string, unknown>>(sectionsResult), questions: rows<Record<string, unknown>>(questionsResult) };
+  return { ...summary, sections: rows<Record<string, unknown>>(sectionsResult), questions: rows<Record<string, unknown>>(questionsResult) };
 }

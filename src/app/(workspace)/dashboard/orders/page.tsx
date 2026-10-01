@@ -61,6 +61,7 @@ export default async function Page() {
                   <strong>
                     {formatMoney(value.totalPaise, value.currency)}
                   </strong>
+                  <Link className="button secondary small" href={`/dashboard/orders/${value.id}`}>View order</Link>
                 </div>
               </article>
             );

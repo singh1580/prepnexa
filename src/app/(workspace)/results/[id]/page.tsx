@@ -52,9 +52,6 @@ type ResultView = {
   testId: string;
   maxAttempts: number;
   attemptsUsed: number;
-  rank: number;
-  eligibleCount: number;
-  percentile: string;
 };
 
 export const metadata = { title: "Result review" };
@@ -83,6 +80,9 @@ export default async function Page({
     accuracy = attempted
       ? Math.round((result.correctCount / attempted) * 100)
       : 0;
+  const sectionInsights = result.sections.map((item) => ({...item, percentage: Number(item.maxScore) ? Math.round(Number(item.score) / Number(item.maxScore) * 100) : 0}));
+  const strengths = sectionInsights.filter((item) => item.percentage >= 70).sort((a,b)=>b.percentage-a.percentage);
+  const needsWork = sectionInsights.filter((item) => item.percentage < 70).sort((a,b)=>a.percentage-b.percentage);
   return (
     <WorkspaceShell admin={false} name={auth.user.name} section="courses">
       <Link className="back-link" href={courseHref}>
@@ -125,8 +125,6 @@ export default async function Page({
               {result.timeSpentSeconds % 60}s
             </dd>
           </div>
-          <div><dt>Rank</dt><dd>#{result.rank} / {result.eligibleCount}</dd></div>
-          <div><dt>Percentile</dt><dd>{result.percentile}</dd></div>
         </dl>
       </section>
       <div className="result-breakdowns">
@@ -145,15 +143,17 @@ export default async function Page({
               <b>
                 {item.score} / {item.maxScore}
               </b>
+              <span className="performance-bar"><i style={{width:`${Number(item.maxScore) ? Math.max(2, Number(item.score)/Number(item.maxScore)*100) : 0}%`}} /></span>
             </div>
           ))}
         </section>
+        <aside className="insight-grid"><section className="panel insight-card strength"><span className="eyebrow">STRENGTHS</span><h2>Keep building on</h2>{strengths.length?strengths.map((item)=><div key={item.title}><strong>{item.title}</strong><span>{item.percentage}%</span></div>):<p className="muted">Score 70% or more in a section to add it here.</p>}</section><section className="panel insight-card needs-work"><span className="eyebrow">NEEDS WORK</span><h2>Focus next on</h2>{needsWork.length?needsWork.map((item)=><div key={item.title}><strong>{item.title}</strong><span>{item.percentage}%</span></div>):<p className="muted">No weak section detected in this attempt.</p>}</section></aside>
       </div>
       <section className="result-review">
         <div className="section-heading">
           <div>
             <span className="eyebrow">ANSWER REVIEW</span>
-            <h2>Question by question</h2>
+            <h2>Question review</h2>
           </div>
         </div>
         {result.questions.map((question) => (

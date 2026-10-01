@@ -5,6 +5,7 @@ import { WorkspaceShell } from "@/components/workspace-shell";
 import { requireWorkspace } from "@/features/auth/page-access";
 import { getStudentMaterial } from "@/features/materials/service";
 import { AppError } from "@/lib/errors/app-error";
+import { getStudentCourse } from "@/features/student-courses/service";
 
 export default async function Page({
   params,
@@ -26,6 +27,7 @@ export default async function Page({
   }
   const courseSlug = (await searchParams).course;
   const courseHref = courseSlug ? `/dashboard/courses/${encodeURIComponent(courseSlug)}?view=materials` : "/dashboard/courses";
+  const course = courseSlug ? await getStudentCourse(courseSlug, auth.user.id) : null;
   return (
     <WorkspaceShell
       admin={false}
@@ -36,22 +38,12 @@ export default async function Page({
       <Link className="back-link" href={courseHref}>
         ← Course materials
       </Link>
-      <header className="page-heading material-heading">
-        <span className="eyebrow">
-          {material.examName} · {material.type}
-        </span>
-        <h1>{material.title}</h1>
-        <p>
-          Version {material.version} ·{" "}
-          {material.accessSource === "FREE"
-            ? "Free access"
-            : "Included in your purchased course"}
-        </p>
-      </header>
+      <header className="material-titlebar"><div><span className="eyebrow">{course?.name ?? material.examName} · {material.type}</span><h1>{material.title}</h1><p>Version {material.version} · {material.accessSource === "FREE" ? "Free access" : "Included in your purchased package"}</p></div><span className="quiet-tag">{material.allowDownload ? "Download available" : "Online viewing"}</span></header>
+      <div className="lesson-layout">{course?<aside className="course-outline"><div><span className="eyebrow">COURSE OUTLINE</span><h2>{course.name}</h2></div><nav>{course.materials.map((item,index)=><Link className={item.id===material.id?"active":""} href={`/library/${item.id}?course=${encodeURIComponent(course.slug)}`} key={item.id}><span>{String(index+1).padStart(2,"0")}</span><div><strong>{item.title}</strong><small>{item.type}</small></div></Link>)}</nav><Link className="outline-tests" href={`/dashboard/courses/${course.slug}?view=tests`}>Tests & practice <span>→</span></Link></aside>:null}<div className="lesson-content">
       {material.type === "VIDEO" ? (
-        <section className="panel">
-          <h2>Video lesson</h2>
-          <p>This lesson opens on its secure HTTPS source.</p>
+        <section className="panel video-lesson">
+          <span className="video-placeholder" aria-hidden="true">▶</span><h2>Video lesson</h2>
+          <p>This lesson opens on its secure source in a new tab.</p>
           <a
             className="button"
             href={material.body ?? "#"}
@@ -114,6 +106,7 @@ export default async function Page({
           )}
         </section>
       )}
+      </div></div>
     </WorkspaceShell>
   );
 }

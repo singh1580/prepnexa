@@ -1,16 +1,10 @@
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, asc, countDistinct, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { materials, productMaterials, products, productTests, tests } from "@/db/schema";
 
-export async function listFreeTests() {
-  return db.selectDistinct({ id: tests.id, title: tests.title, durationMinutes: tests.durationMinutes, mode: tests.mode })
-    .from(tests).innerJoin(productTests, eq(productTests.testId, tests.id)).innerJoin(products, eq(products.id, productTests.productId))
-    .where(and(eq(products.isLive, true), eq(products.pricePaise, 0))).orderBy(asc(tests.title));
-}
-
 export async function listAvailableProducts() {
-  return db.select({ id: products.id, slug: products.slug, name: products.name, description: products.description, pricePaise: products.pricePaise, accessDays: products.accessDays, testCount: count(productTests.testId) })
-    .from(products).leftJoin(productTests, eq(productTests.productId, products.id)).where(eq(products.isLive, true))
+  return db.select({ id: products.id, slug: products.slug, name: products.name, description: products.description, mrpPaise: products.mrpPaise, pricePaise: products.pricePaise, accessDays: products.accessDays, testCount: countDistinct(productTests.testId), materialCount: countDistinct(productMaterials.materialId) })
+    .from(products).leftJoin(productTests, eq(productTests.productId, products.id)).leftJoin(productMaterials, eq(productMaterials.productId, products.id)).where(eq(products.isLive, true))
     .groupBy(products.id).orderBy(asc(products.pricePaise), asc(products.name));
 }
 

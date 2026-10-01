@@ -290,6 +290,19 @@ export async function listStudentOrders(userId: string) {
   return rows<Record<string,unknown>>(result);
 }
 
+export async function findStudentOrder(orderId: string, userId: string) {
+  const result = await db.execute(sql`
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",
+      p.provider,p.provider_payment_id as "providerPaymentId",p.status as "paymentStatus",
+      coalesce(jsonb_agg(jsonb_build_object('productId',oi.product_id,'name',oi.product_name,'pricePaise',oi.unit_price_paise,'accessDays',oi.access_days) order by oi.id),'[]'::jsonb) as items
+    from orders o join order_items oi on oi.order_id=o.id
+    left join lateral (select px.* from payments px where px.order_id=o.id order by px.created_at desc limit 1) p on true
+    where o.id=${orderId} and o.user_id=${userId}
+    group by o.id,p.provider,p.provider_payment_id,p.status limit 1
+  `);
+  return rows<Record<string,unknown>>(result)[0];
+}
+
 export async function listManagedOrders() {
   const result = await db.execute(sql`
     select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { logger } from "@/lib/logger";
 import { calculateDiscount, normalizeCouponCode } from "./pricing";
 import { checkoutConflict, commerceNotFound, couponUnavailable, invalidCommerceState, paymentUnavailable, paymentVerificationFailed } from "./errors";
-import { evaluateCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProduct, findManagedCoupon, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findStudentPaymentAttempt, insertCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCouponRecord } from "./repository";
+import { evaluateCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProduct, findManagedCoupon, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findStudentOrder, findStudentPaymentAttempt, insertCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCouponRecord } from "./repository";
 import { getPaymentProvider, type VerifiedPaymentEvent } from "./providers";
 import type { CheckoutInput, CouponInput, RefundInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
@@ -136,6 +136,7 @@ export async function confirmMockPayment(attemptId: string, student: StudentActo
 }
 
 export async function getStudentOrders(userId: string) { await releaseExpiredCommerce(); return listStudentOrders(userId); }
+export async function getStudentOrder(orderId: string, userId: string) { await releaseExpiredCommerce(); return findStudentOrder(orderId, userId); }
 export async function getManagedOrders() { await releaseExpiredCommerce(); return listManagedOrders(); }
 
 export async function refundPayment(paymentId: string, input: RefundInput, actor: Actor) {
