@@ -3,7 +3,7 @@ import { db } from "@/db/client";
 import { materials, productMaterials, products, productTests, tests } from "@/db/schema";
 
 export async function listAvailableProducts() {
-  return db.select({ id: products.id, slug: products.slug, name: products.name, description: products.description, syllabus: products.syllabus, language: products.language, coverObjectKey: products.coverObjectKey, mrpPaise: products.mrpPaise, pricePaise: products.pricePaise, accessDays: products.accessDays, testCount: countDistinct(productTests.testId), materialCount: countDistinct(productMaterials.materialId),rating:sql<number>`coalesce((select round(avg(rating)::numeric,1) from product_reviews r where r.product_id=${products.id}),0)`,reviewCount:sql<number>`(select count(*)::int from product_reviews r where r.product_id=${products.id})` })
+  return db.select({ id: products.id, slug: products.slug, name: products.name, description: products.description, syllabus: products.syllabus, language: products.language, coverObjectKey: products.coverObjectKey, mrpPaise: products.mrpPaise, pricePaise: products.pricePaise, accessDays: products.accessDays, testCount: countDistinct(productTests.testId), materialCount: countDistinct(productMaterials.materialId),rating:sql<number>`coalesce((select round(avg(rating)::numeric,1) from product_reviews r where r.product_id=${products.id}),0)::double precision`,reviewCount:sql<number>`(select count(*)::int from product_reviews r where r.product_id=${products.id})` })
     .from(products).leftJoin(productTests, eq(productTests.productId, products.id)).leftJoin(productMaterials, eq(productMaterials.productId, products.id)).where(eq(products.isLive, true))
     .groupBy(products.id).orderBy(asc(products.pricePaise), asc(products.name));
 }
