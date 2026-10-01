@@ -1,17 +1,6 @@
-import { PublicHeader } from "@/components/public-header";
 import Link from "next/link";
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <PublicHeader />
-      <div id="main-content" tabIndex={-1}>
-        {children}
-      </div>
-      <footer className="public-footer">
-        <div className="footer-brand"><strong><span>Prep</span>store</strong><p>Focused digital preparation for serious learners.</p></div>
-        <nav aria-label="Footer navigation"><div><b>Explore</b><Link href="/packages">All packages</Link></div><div><b>Account</b><Link href="/login">Sign in</Link><Link href="/signup">Create account</Link></div><div><b>Support</b><Link href="/login?next=%2Fdashboard%2Fsupport">Help centre</Link></div></nav>
-        <small>© {new Date().getFullYear()} Prepstore. All rights reserved.</small>
-      </footer>
-    </>
-  );
-}
+import { Brand } from "@/components/brand";
+import { PublicHeader } from "@/components/public-header";
+
+function SocialIcon({kind}:{kind:"youtube"|"instagram"|"linkedin"}){return kind==="youtube"?<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>:kind==="instagram"?<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="3.5"/><circle cx="17.5" cy="6.5" r=".8"/></svg>:<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9v10M6 5.5v.5M10 19v-6c0-2 1.2-3.3 3-3.3s3 1.3 3 3.3v6M10 10v9"/></svg>}
+export default function Layout({children}:{children:React.ReactNode}){return <><PublicHeader/><div id="main-content" tabIndex={-1}>{children}</div><footer className="public-footer"><div className="footer-brand"><Brand/><p>Quality study material for India&apos;s competitive exams.</p><div className="footer-socials"><a href="#" aria-label="YouTube"><SocialIcon kind="youtube"/></a><a href="#" aria-label="Instagram"><SocialIcon kind="instagram"/></a><a href="#" aria-label="LinkedIn"><SocialIcon kind="linkedin"/></a></div></div><nav aria-label="Footer navigation"><div><b>Packages</b><Link href="/packages">All packages</Link><Link href="/packages?format=tests">Test series</Link><Link href="/packages?format=pdf">Study material</Link><Link href="/packages?sort=latest">New arrivals</Link></div><div><b>Support</b><Link href="/login?next=%2Fdashboard%2Fsupport">Help centre</Link><Link href="/login?next=%2Fdashboard%2Fsupport">Contact us</Link><Link href="/dashboard/orders">Order tracking</Link><Link href="/login?next=%2Fdashboard%2Fsupport">Refund policy</Link></div><div><b>Legal</b><Link href="#">Terms of service</Link><Link href="#">Privacy policy</Link><Link href="#">Cancellation & refund</Link><Link href="#">Fair use policy</Link></div><div><b>Your account</b><Link href="/login">Sign in</Link><Link href="/signup">Create account</Link><Link href="/dashboard/orders">My orders</Link><Link href="/dashboard/courses">My packages</Link></div></nav><small>© {new Date().getFullYear()} Prepstore. All rights reserved.</small></footer></>}
