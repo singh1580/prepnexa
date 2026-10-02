@@ -113,10 +113,11 @@ export function TestCreateForm() {
     setBusy(true);
     setError("");
     try {
+      const data=new FormData(event.currentTarget);
       const result = await request<{ id: string }>(
         "",
         "POST",
-        payload(new FormData(event.currentTarget)),
+        {...payload(data),sections:String(data.get("sections")??"").split(/\r?\n/).map(value=>value.trim()).filter(Boolean)},
       );
       router.push(`/admin/tests/${result.id}`);
       router.refresh();
@@ -147,6 +148,7 @@ export function TestCreateForm() {
           maxLength={200}
           placeholder="Full-length mock test 01"
         />
+        <label className="field"><span>Sections</span><textarea name="sections" rows={4} defaultValue="General" required/><small>Enter one section per line. You can edit sections and add questions after creation.</small></label>
         <div className="question-grid">
           <Field
             id="new-test-duration"
@@ -182,7 +184,7 @@ export function TestCreateForm() {
           <textarea name="instructions" maxLength={10000} rows={4} />
         </label>
         <button className="button" type="submit">
-          {busy ? "Creating…" : "Create test"}
+          {busy ? "Creating…" : "Create test & add questions"}
         </button>
       </fieldset>
       {error && (
@@ -303,7 +305,7 @@ export function TestBuilder({
         </div>
       )}
       {editable && (
-        <details className="panel">
+        <details className="panel" id="settings" open>
           <summary>Test settings — duration, instructions and attempts</summary>
           <span className="eyebrow">CONFIGURATION</span>
           <h2>Test settings</h2>

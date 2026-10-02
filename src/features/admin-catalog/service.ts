@@ -105,7 +105,7 @@ export async function createUploadedMaterial(
 }
 export async function uploadMaterialVersion(
   id: string,
-  input: { title: string; allowDownload: boolean },
+  input: { title: string;subject:string;topic:string;allowDownload: boolean },
   file: StoredFileMetadata,
   actor: Actor,
 ) {
@@ -279,6 +279,8 @@ export async function duplicateMaterial(id: string, actor: Actor) {
     insertMaterial(
       {
         title: before.title.slice(0, 190) + " (copy)",
+        subject:before.subject,
+        topic:before.topic,
         type: before.type,
         body: before.body ?? "",
         privateObjectKey: before.privateObjectKey ?? "",

@@ -25,6 +25,8 @@ export type ProductInput = {
 };
 export type MaterialInput = {
   title: string;
+  subject: string;
+  topic: string;
   type: "PDF" | "VIDEO" | "FILE";
   body: string;
   privateObjectKey: string;
@@ -64,6 +66,8 @@ export function listMaterials() {
     .select({
       id: materials.id,
       title: materials.title,
+      subject:materials.subject,
+      topic:materials.topic,
       type: materials.type,
       allowDownload: materials.allowDownload,
       updatedAt: materials.updatedAt,
@@ -205,6 +209,8 @@ export async function insertMaterial(
   const values = {
     id,
     title: input.title,
+    subject:input.subject,
+    topic:input.topic,
     type: input.type,
     body: input.body || null,
     privateObjectKey: objectKey,
@@ -373,6 +379,8 @@ export async function patchMaterial(
       .update(materials)
       .set({
         title: input.title,
+        subject:input.subject,
+        topic:input.topic,
         type: input.type,
         body: input.body || null,
         privateObjectKey: input.privateObjectKey || before.privateObjectKey,
@@ -404,7 +412,7 @@ export async function patchMaterial(
 export async function appendMaterialFileVersion(
   before: NonNullable<Awaited<ReturnType<typeof findMaterial>>>,
   file: StoredFileMetadata,
-  input: { title: string; allowDownload: boolean },
+  input: { title: string;subject:string;topic:string;allowDownload: boolean },
   audit: Audit,
 ) {
   const [latest] = await db
@@ -419,6 +427,8 @@ export async function appendMaterialFileVersion(
       .update(materials)
       .set({
         title: input.title,
+        subject:input.subject,
+        topic:input.topic,
         type: file.contentType === "application/pdf" ? "PDF" : "FILE",
         privateObjectKey: file.objectKey,
         allowDownload: input.allowDownload,

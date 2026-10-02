@@ -6,6 +6,7 @@ export const testInputSchema = z.object({
   durationMinutes: z.coerce.number().int().min(1).max(600), instructions: z.string().trim().max(10_000).optional().default(""),
   maxAttempts: z.coerce.number().int().min(1).max(100), shuffleQuestions: z.boolean().default(true), shuffleOptions: z.boolean().default(true),
 }).strict();
+export const testCreateInputSchema=testInputSchema.extend({sections:z.array(z.string().trim().min(2).max(160)).min(1).max(20)}).strict();
 export const sectionInputSchema = z.object({ title: z.string().trim().min(2).max(160), durationMinutes: z.number().int().min(1).max(600).nullable().default(null), sortOrder: z.coerce.number().int().min(0).max(1_000) }).strict();
 export const assignmentInputSchema = z.object({ questionId: z.uuid(), sortOrder: z.coerce.number().int().min(0).max(10_000) }).strict();
 export const scheduleInputSchema = z.object({ startsAt: z.iso.datetime(), endsAt: z.iso.datetime(), lateJoinMinutes: z.coerce.number().int().min(0).max(180), resultReleaseAt: z.iso.datetime().nullable().default(null), rankingEnabled: z.boolean().default(false), cohortKey: z.string().trim().max(100).optional().default("") }).strict().superRefine((value, context) => {

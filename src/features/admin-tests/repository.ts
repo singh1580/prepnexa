@@ -13,6 +13,7 @@ import {
 import { db } from "@/db/client";
 import {
   auditLogs,
+  attempts,
   products,
   productTests,
   questions,
@@ -75,10 +76,12 @@ export async function listManagedTests(filters: ManagedTestFilters) {
         durationMinutes: tests.durationMinutes,
         sectionCount: countDistinct(testSections.id),
         questionCount: countDistinct(testQuestions.questionId),
+        attemptCount:countDistinct(attempts.id),
       })
       .from(tests)
       .leftJoin(testSections, eq(testSections.testId, tests.id))
       .leftJoin(testQuestions, eq(testQuestions.testId, tests.id))
+      .leftJoin(attempts,eq(attempts.testId,tests.id))
       .where(where)
       .groupBy(tests.id)
       .orderBy(desc(tests.updatedAt), desc(tests.id))
@@ -184,30 +187,26 @@ export async function findAvailableQuestion(id: string) {
   return question;
 }
 
-export async function insertTest(input: TestInput, audit: Audit) {
+export async function insertTest(input: TestInput&{sections:string[]}, audit: Audit) {
   const id = randomUUID();
   const now = new Date();
+  const{sections,...settings}=input;
   await db.batch([
     db.insert(tests).values({
       id,
-      ...input,
-      instructions: input.instructions || null,
+      ...settings,
+      instructions: settings.instructions || null,
       createdAt: now,
       updatedAt: now,
     }),
-    db.insert(testSections).values({
-      id: randomUUID(),
-      testId: id,
-      title: "Questions",
-      sortOrder: 0,
-    }),
+    db.insert(testSections).values(sections.map((title,sortOrder)=>({id:randomUUID(),testId:id,title,sortOrder}))),
     db.insert(auditLogs).values({
       actorUserId: audit.actorUserId,
       action: "test.created",
       entityType: "test",
       entityId: id,
       requestId: audit.requestId,
-      after: input,
+      after: {...settings,sections},
     }),
   ]);
   return { id };

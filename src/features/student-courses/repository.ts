@@ -40,11 +40,15 @@ export type CourseTest = {
 export type CourseMaterial = {
   id: string;
   title: string;
+  subject:string;
+  topic:string;
   type: "PDF" | "VIDEO" | "FILE";
   allowDownload: boolean;
   version: number | null;
   originalFileName: string | null;
   sizeBytes: number | null;
+  lastAccessed:Date|null;
+  viewed:boolean;
 };
 
 export type CourseResult = {
@@ -147,8 +151,10 @@ export async function findAccessibleCourse(slug: string, userId: string) {
       where pt.product_id=${course.id}::uuid order by t.title
     `),
     db.execute(sql`
-      select m.id, m.title, m.type, m.allow_download as "allowDownload", version.version,
-        version.original_file_name as "originalFileName", version.size_bytes as "sizeBytes"
+      select m.id, m.title,m.subject,m.topic, m.type, m.allow_download as "allowDownload", version.version,
+        version.original_file_name as "originalFileName", version.size_bytes as "sizeBytes",
+        (select max(mal.created_at) from material_access_logs mal where mal.material_id=m.id and mal.user_id=${userId}::uuid) as "lastAccessed",
+        exists(select 1 from material_access_logs mal where mal.material_id=m.id and mal.user_id=${userId}::uuid) as viewed
       from product_materials pm join materials m on m.id=pm.material_id
       left join lateral (
         select mv.version, mv.original_file_name, mv.size_bytes from material_versions mv

@@ -30,6 +30,8 @@ export default async function Page({
   const course = courseSlug ? await getStudentCourse(courseSlug, auth.user.id) : null;
   const activeIndex=course?.materials.findIndex(item=>item.id===material.id)??-1;
   const nextMaterial=course&&activeIndex>=0?course.materials[activeIndex+1]:undefined;
+  const subjectGroups=course?Array.from(new Set(course.materials.map(item=>item.subject))).map(subject=>({subject,items:course.materials.filter(item=>item.subject===subject)})):[];
+  const activeCourseMaterial=course?.materials.find(item=>item.id===material.id);
   return (
     <WorkspaceShell
       admin={false}
@@ -37,8 +39,8 @@ export default async function Page({
       permissions={auth.permissions}
       section="courses"
     >
-      <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{course?<Link href={courseHref}>{course.name}</Link>:null}<span>›</span><b>{material.title}</b></nav>
-      <div className="lesson-layout reference-reader-layout">{course?<details className="course-outline" open><summary><b>⌄ &nbsp; Course Outline</b><span aria-label="Close course outline">×</span></summary><nav>{course.materials.map((item,index)=><Link className={item.id===material.id?"active":""} href={`/library/${item.id}?course=${encodeURIComponent(course.slug)}`} key={item.id}><i className={item.id===material.id?"current":"done"}>{item.id===material.id?"○":"✓"}</i><div><strong>{index+1}. {item.title}</strong><small>{item.type}{item.sizeBytes?` · ${Math.ceil(item.sizeBytes/1024)} KB`:""}</small></div></Link>)}</nav></details>:null}<div className="lesson-content">
+      <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{course?<Link href={courseHref}>{course.name}</Link>:null}<span>›</span>{activeCourseMaterial?<span>{activeCourseMaterial.subject}</span>:null}<span>›</span><b>{material.title}</b></nav>
+      <div className="lesson-layout reference-reader-layout">{course?<details className="course-outline" open><summary><b>⌄ &nbsp; Course Outline</b><span aria-label="Close course outline">×</span></summary><nav>{subjectGroups.map((group,groupIndex)=><details className="outline-subject" open={group.items.some(item=>item.id===material.id)} key={group.subject}><summary><span>{groupIndex+1}. {group.subject}</span><small>{group.items.filter(item=>item.viewed).length}/{group.items.length}</small></summary>{group.items.map((item,index)=><Link className={item.id===material.id?"active":""} href={`/library/${item.id}?course=${encodeURIComponent(course.slug)}`} key={item.id}><i className={item.id===material.id?"current":item.viewed?"done":""}>{item.id===material.id?"○":item.viewed?"✓":""}</i><div><strong>{groupIndex+1}.{index+1} {item.title}</strong><small>{item.type}{item.sizeBytes?` · ${Math.ceil(item.sizeBytes/1024)} KB`:""}</small></div></Link>)}</details>)}</nav></details>:null}<div className="lesson-content">
       {material.type === "VIDEO" ? (
         <section className="panel video-lesson">
           <span className="video-placeholder" aria-hidden="true">▶</span><h2>Video lesson</h2>

@@ -170,6 +170,8 @@ export function MaterialCreateForm({
   material?: {
     id: string;
     title: string;
+    subject:string;
+    topic:string;
     type: string;
     body: string | null;
     privateObjectKey: string | null;
@@ -187,6 +189,8 @@ export function MaterialCreateForm({
         material ? `materials/${material.id}` : "materials",
         {
           title: String(data.get("title")),
+          subject:String(data.get("subject")),
+          topic:String(data.get("topic")),
           type,
           body: String(data.get("body") ?? ""),
           privateObjectKey: "",
@@ -207,6 +211,7 @@ export function MaterialCreateForm({
           defaultValue={material?.title}
           required
         />
+        <div className="question-grid"><Field id="material-subject" label="Subject" name="subject" defaultValue={material?.subject??"General"} required/><Field id="material-topic" label="Topic" name="topic" defaultValue={material?.topic??"General"} required/></div>
         <label className="field">
           <span>HTTPS video URL</span>
           <textarea name="body" defaultValue={material?.body ?? ""} rows={4} />
@@ -227,7 +232,7 @@ export function MaterialCreateForm({
 export function MaterialUploadForm({
   material,
 }: {
-  material?: { id: string; title: string; allowDownload: boolean };
+  material?: { id: string; title: string; allowDownload: boolean;subject?:string;topic?:string };
 }) {
   const { router, busy, error, mutate } = useMutation();
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -256,6 +261,7 @@ export function MaterialUploadForm({
           defaultValue={material?.title}
           required
         />
+        <div className="question-grid"><Field id="upload-subject" label="Subject" name="subject" defaultValue={material?.subject??"General"} required/><Field id="upload-topic" label="Topic" name="topic" defaultValue={material?.topic??"General"} required/></div>
         <label className="field">
           <span>Study file</span>
           <input

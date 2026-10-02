@@ -169,6 +169,13 @@
       "when": 1790860822429,
       "tag": "0023_pale_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790934337046,
+      "tag": "0024_gray_lightspeed",
+      "breakpoints": true
     }
   ]
 }

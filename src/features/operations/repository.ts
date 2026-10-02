@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { notifications, sessions } from "@/db/schema";
+import { auditLogs, notifications, orders, sessions, supportMessages, supportTickets } from "@/db/schema";
 import type { CreateSupportTicketInput } from "./validation";
 
 function rows<T>(value: Awaited<ReturnType<typeof db.execute>>) { return value.rows as T[]; }
@@ -263,25 +263,14 @@ export async function findStudentSupportTicket(ticketId: string, userId: string)
 
 export async function insertStudentSupportTicket(userId: string, input: CreateSupportTicketInput, requestId: string) {
   const ticketId = randomUUID(); const messageId = randomUUID();
-  const result = await db.execute(sql`
-    with owned_order as (
-      select id from orders where id=${input.orderId ?? null}::uuid and user_id=${userId}
-    ), created_ticket as (
-      insert into support_tickets (id,user_id,order_id,subject,category,priority,status,created_at,updated_at)
-      select ${ticketId}::uuid,${userId}::uuid,
-        case when ${input.orderId ?? null}::uuid is null then null else (select id from owned_order) end,
-        ${input.subject},${input.category},'NORMAL','OPEN',now(),now()
-      where ${input.orderId ?? null}::uuid is null or exists(select 1 from owned_order)
-      returning id
-    ), created_message as (
-      insert into support_messages (id,ticket_id,author_id,body,internal,created_at)
-      select ${messageId}::uuid,id,${userId}::uuid,${input.message},false,now() from created_ticket returning id
-    ), audit as (
-      insert into audit_logs (actor_user_id,action,entity_type,entity_id,request_id,after)
-      select ${userId}::uuid,'support.ticket_created','support_ticket',id::text,${requestId},jsonb_build_object('category',${input.category}) from created_ticket
-    ) select id from created_ticket
-  `);
-  return rows<{ id: string }>(result)[0];
+  if(input.orderId){const[owned]=await db.select({id:orders.id}).from(orders).where(and(eq(orders.id,input.orderId),eq(orders.userId,userId))).limit(1);if(!owned)return undefined;}
+  const now=new Date();
+  await db.batch([
+    db.insert(supportTickets).values({id:ticketId,userId,orderId:input.orderId??null,subject:input.subject,category:input.category,priority:"NORMAL",status:"OPEN",createdAt:now,updatedAt:now}),
+    db.insert(supportMessages).values({id:messageId,ticketId,authorId:userId,body:input.message,internal:false,createdAt:now}),
+    db.insert(auditLogs).values({actorUserId:userId,action:"support.ticket_created",entityType:"support_ticket",entityId:ticketId,requestId,after:{category:input.category}}),
+  ]);
+  return {id:ticketId};
 }
 
 export async function insertStudentSupportReply(ticketId: string, userId: string, body: string, attachment: MessageAttachment, requestId: string) {

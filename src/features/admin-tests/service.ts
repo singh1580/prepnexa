@@ -57,7 +57,7 @@ export async function getManagedTest(id: string) {
   if (!test) throw testNotFound("Test");
   return test;
 }
-export async function createTest(input: TestInput, actor: Actor) {
+export async function createTest(input: TestInput&{sections:string[]}, actor: Actor) {
   return write("test_create", actor, () =>
     insertTest(input, {
       actorUserId: actor.userId,

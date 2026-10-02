@@ -13,7 +13,6 @@ export function TestListFilters({ initial }: { initial: { query: string; categor
           <div className="form-actions"><button className="button" type="submit">Apply</button><Link className="button secondary" href="/admin/tests">Clear</Link></div>
         </div>
       </details>
-      <button className="button" type="submit">Search</button>
     </form>
   );
 }

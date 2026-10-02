@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const form = await request.formData();
     const upload = form.get("file");
     if (!(upload instanceof File)) throw new AppError("MATERIAL_FILE_REQUIRED", "Choose a study material file.", 400);
-    const input = materialVersionUploadFieldsSchema.parse({ title: form.get("title"), allowDownload: form.get("allowDownload") ?? "false" });
+    const input = materialVersionUploadFieldsSchema.parse({ title: form.get("title"),subject:form.get("subject"),topic:form.get("topic"),allowDownload: form.get("allowDownload") ?? "false" });
     const file = await validateMaterialFile(upload, id);
     const storage = privateStorage();
     await storage.put(file.objectKey, file.bytes, file.contentType);
