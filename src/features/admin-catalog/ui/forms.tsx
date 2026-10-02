@@ -229,6 +229,32 @@ export function MaterialCreateForm({
   );
 }
 
+export function MaterialCreateWorkspace() {
+  const [kind, setKind] = useState<"FILE" | "VIDEO">("FILE");
+  return (
+    <div className="material-workspace-form">
+      <ol className="workspace-steps" aria-label="Material creation steps">
+        <li className="active"><b>1</b><span><strong>Resource type</strong><small>Choose file or video</small></span></li>
+        <li className="active"><b>2</b><span><strong>Details</strong><small>Name and organise</small></span></li>
+        <li><b>3</b><span><strong>Save to store</strong><small>Use later in packages</small></span></li>
+      </ol>
+      <section className="resource-type-picker" aria-label="Resource type">
+        <button type="button" className={kind === "FILE" ? "active" : ""} onClick={() => setKind("FILE")} aria-pressed={kind === "FILE"}>
+          <i aria-hidden="true">▤</i><span><strong>PDF or study file</strong><small>PDF, notes, slides, ZIP or document</small></span>
+        </button>
+        <button type="button" className={kind === "VIDEO" ? "active" : ""} onClick={() => setKind("VIDEO")} aria-pressed={kind === "VIDEO"}>
+          <i aria-hidden="true">▶</i><span><strong>Video resource</strong><small>Save a secure HTTPS video link</small></span>
+        </button>
+      </section>
+      <div className="material-form-surface">
+        <header><div><span className="eyebrow">STORE RESOURCE</span><h3>{kind === "FILE" ? "Upload study material" : "Add video material"}</h3></div><span className="store-only-badge">Stored only · not live</span></header>
+        {kind === "FILE" ? <MaterialUploadForm /> : <MaterialCreateForm />}
+      </div>
+      <p className="material-workspace-note">Saving here never publishes this resource. It becomes available to select inside Product Package Builder.</p>
+    </div>
+  );
+}
+
 export function MaterialUploadForm({
   material,
 }: {

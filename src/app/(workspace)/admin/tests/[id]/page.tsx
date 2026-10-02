@@ -53,10 +53,7 @@ export default async function Page({
             {test.mode === "PRACTICE" ? "Practice set" : "Mock test"} · {testCategoryLabel(test.category)}
           </span>
           <h1>{test.title}</h1>
-          <p>
-            {test.durationMinutes} minutes · {test.maxAttempts} maximum attempt
-            {test.maxAttempts === 1 ? "" : "s"}
-          </p>
+          <p>Manage settings, sections and questions in one assessment workspace.</p>
         </div>
       </header>
       <TestBuilder
@@ -96,7 +93,7 @@ export default async function Page({
           CONTENT_PERMISSIONS.createQuestions,
         )}
       />
-      {canManage && <AdminDeleteButton endpoint={`/api/admin/tests/${test.id}`} redirectTo="/admin/tests" label="Delete test" confirmation="Delete this test permanently? This only works after it is removed from packages and has no student attempts." />}
+      {canManage && <div className="danger-zone-row"><div><strong>Delete test</strong><span>Only possible after it is removed from packages and has no student attempts.</span></div><AdminDeleteButton endpoint={`/api/admin/tests/${test.id}`} redirectTo="/admin/tests" label="Delete test" confirmation="Delete this test permanently? This only works after it is removed from packages and has no student attempts." /></div>}
     </WorkspaceShell>
   );
 }

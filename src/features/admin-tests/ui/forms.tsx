@@ -129,7 +129,13 @@ export function TestCreateForm() {
     }
   }
   return (
-    <form className="admin-form" onSubmit={submit}>
+    <form className="admin-form test-create-workspace" onSubmit={submit}>
+      <ol className="workspace-steps" aria-label="Test creation steps">
+        <li className="active"><b>1</b><span><strong>Test setup</strong><small>Format and rules</small></span></li>
+        <li><b>2</b><span><strong>Sections</strong><small>Build paper structure</small></span></li>
+        <li><b>3</b><span><strong>Questions</strong><small>Manual or spreadsheet</small></span></li>
+      </ol>
+      <div className="test-create-intro"><span className="eyebrow">NEW ASSESSMENT</span><h3>Test setup</h3><p>Set the test rules and initial sections. The next workspace keeps settings, sections and questions together.</p></div>
       <fieldset disabled={busy}>
         <label className="field">
           <span>Format</span>
@@ -183,9 +189,7 @@ export function TestCreateForm() {
           <span>Instructions</span>
           <textarea name="instructions" maxLength={10000} rows={4} />
         </label>
-        <button className="button" type="submit">
-          {busy ? "Creating…" : "Create test & add questions"}
-        </button>
+        <div className="dialog-form-footer"><span>Nothing is published from this screen.</span><button className="button" type="submit">{busy ? "Creating…" : "Create & continue to questions →"}</button></div>
       </fieldset>
       {error && (
         <p className="notice danger" role="alert">
@@ -213,6 +217,7 @@ export function TestBuilder({
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const editable = canManage;
+  const totalQuestions = sections.reduce((total, section) => total + section.questions.length, 0);
   async function mutate(
     event: FormEvent<HTMLFormElement>,
     path: string,
@@ -292,8 +297,16 @@ export function TestBuilder({
   }
   return (
     <div className="test-builder">
+      <section className="test-workspace-overview">
+        <ol className="workspace-steps" aria-label="Test editor sections">
+          <li className="active"><b>1</b><span><strong>Setup</strong><small>Rules and timing</small></span></li>
+          <li className="active"><b>2</b><span><strong>Build paper</strong><small>Sections and questions</small></span></li>
+          <li className={totalQuestions ? "active" : ""}><b>3</b><span><strong>Review</strong><small>Check final structure</small></span></li>
+        </ol>
+        <div className="test-workspace-stats"><span><small>Format</small><strong>{test.mode === "MOCK" ? "Mock test" : "Practice set"}</strong></span><span><small>Sections</small><strong>{sections.length}</strong></span><span><small>Questions</small><strong>{totalQuestions}</strong></span><span><small>Duration</small><strong>{test.durationMinutes} min</strong></span></div>
+      </section>
       {canManage && (
-        <div className="form-actions">
+        <div className="form-actions test-workspace-actions">
           <button
             type="button"
             className="button secondary"
@@ -305,7 +318,7 @@ export function TestBuilder({
         </div>
       )}
       {editable && (
-        <details className="panel" id="settings" open>
+        <details className="admin-card test-settings-card" id="settings" open>
           <summary>Test settings — duration, instructions and attempts</summary>
           <span className="eyebrow">CONFIGURATION</span>
           <h2>Test settings</h2>
@@ -384,18 +397,18 @@ export function TestBuilder({
           </form>
         </details>
       )}
-      <section>
+      <section className="test-paper-workspace">
         <div className="section-heading">
           <div>
             <span className="eyebrow">PAPER STRUCTURE</span>
-            <h2>Sections and questions</h2>
+            <h2>Sections &amp; questions</h2><p>Open a section to edit its settings, write questions or import a spreadsheet.</p>
           </div>
         </div>
         {sections.length ? (
           <div className="taxonomy-list">
             {sections.map((section) => (
-              <article className="taxonomy-card" key={section.id}>
-                <h3>{section.title}</h3>
+              <article className="taxonomy-card test-section-card" key={section.id}>
+                <header className="test-section-heading"><div><span>SECTION {section.sortOrder + 1}</span><h3>{section.title}</h3></div><strong>{section.questions.length} questions</strong></header>
                 {editable && (
                   <details>
                     <summary>Edit section settings</summary>
@@ -460,10 +473,7 @@ export function TestBuilder({
                     Remove empty section
                   </button>
                 )}
-                <p className="muted">
-                  {section.questions.length} questions · order{" "}
-                  {section.sortOrder}
-                </p>
+                <p className="muted section-summary">{section.durationMinutes ? `${section.durationMinutes} minutes · ` : ""}{section.questions.length ? "Questions are shown in the student exam order below." : "Add the first question manually or import Excel / CSV."}</p>
                 {section.questions.map((question, index) => (
                   <div className="assigned-question" key={question.questionId}>
                     <span>{question.sortOrder + 1}</span>
@@ -616,7 +626,7 @@ export function TestBuilder({
         )}
         {editable && (
           <form
-            className="panel inline-admin-form"
+            className="admin-card inline-admin-form add-section-card"
             onSubmit={(event) =>
               mutate(
                 event,
