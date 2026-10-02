@@ -9,7 +9,7 @@ export const registerInputSchema = z.object({
   password,
 });
 
-export const loginInputSchema = z.object({ email, password });
+export const loginInputSchema = z.object({ email: z.string().trim().max(320).refine(value=>email.safeParse(value).success||/^\+?[0-9 ()-]{7,20}$/.test(value),"Enter a valid email address or phone number."), password });
 export const emailInputSchema = z.object({ email });
 export const tokenInputSchema = z.object({ token: z.string().min(32).max(200) });
 export const resetPasswordInputSchema = tokenInputSchema.extend({ password });

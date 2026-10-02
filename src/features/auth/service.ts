@@ -3,11 +3,11 @@ import { env } from "@/config/env";
 import { createOpaqueToken, hashIdentifier, hashPassword, normalizeEmail, verifyPassword } from "./crypto";
 import { authNotifier } from "./notifier";
 import { ADMIN_ROLE_KEYS, TOKEN_PURPOSE } from "./constants";
-import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin } from "./repository";
+import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, findUserByLogin, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin } from "./repository";
 import type { EmailInput, LoginInput, RegisterInput, ResetPasswordInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
 
-const genericCredentialsError = () => new AppError("INVALID_CREDENTIALS", "Email or password is incorrect.", 401);
+const genericCredentialsError = () => new AppError("INVALID_CREDENTIALS", "Email, phone number or password is incorrect.", 401);
 
 export async function register(input: RegisterInput) {
   const email = normalizeEmail(input.email);
@@ -19,12 +19,12 @@ export async function register(input: RegisterInput) {
 }
 
 export async function login(input: LoginInput, context: { ip?: string; userAgent?: string; requestId?: string }) {
-  const email = normalizeEmail(input.email);
-  const emailHash = hashIdentifier(email);
+  const identifier = input.email.includes("@")?normalizeEmail(input.email):input.email.trim();
+  const emailHash = hashIdentifier(identifier);
   const ipHash = context.ip ? hashIdentifier(context.ip) : undefined;
   const since = new Date(Date.now() - env.LOGIN_WINDOW_MINUTES * 60_000);
   const failedAttempts = await countRecentFailedAttempts(emailHash, ipHash, since);
-  const user = await findUserByEmail(email);
+  const user = await findUserByLogin(identifier);
   if (failedAttempts.email >= env.LOGIN_MAX_ATTEMPTS || failedAttempts.ip >= env.LOGIN_IP_MAX_ATTEMPTS) {
     if (user?.status === "ACTIVE") await queueSuspiciousLogin(user.id, emailHash, context.requestId ?? crypto.randomUUID());
     throw new AppError("TOO_MANY_LOGIN_ATTEMPTS", "Too many login attempts. Please try again later.", 429);

@@ -28,6 +28,8 @@ export default async function Page({
   const courseSlug = (await searchParams).course;
   const courseHref = courseSlug ? `/dashboard/courses/${encodeURIComponent(courseSlug)}?view=materials` : "/dashboard/courses";
   const course = courseSlug ? await getStudentCourse(courseSlug, auth.user.id) : null;
+  const activeIndex=course?.materials.findIndex(item=>item.id===material.id)??-1;
+  const nextMaterial=course&&activeIndex>=0?course.materials[activeIndex+1]:undefined;
   return (
     <WorkspaceShell
       admin={false}
@@ -35,11 +37,8 @@ export default async function Page({
       permissions={auth.permissions}
       section="courses"
     >
-      <Link className="back-link" href={courseHref}>
-        ← Course materials
-      </Link>
-      <header className="material-titlebar"><div><span className="eyebrow">{course?.name ?? material.examName} · {material.type}</span><h1>{material.title}</h1><p>Version {material.version} · {material.accessSource === "FREE" ? "Free access" : "Included in your purchased package"}</p></div><span className="quiet-tag">{material.allowDownload ? "Download available" : "Online viewing"}</span></header>
-      <div className="lesson-layout">{course?<aside className="course-outline"><div><span className="eyebrow">COURSE OUTLINE</span><h2>{course.name}</h2></div><nav>{course.materials.map((item,index)=><Link className={item.id===material.id?"active":""} href={`/library/${item.id}?course=${encodeURIComponent(course.slug)}`} key={item.id}><span>{String(index+1).padStart(2,"0")}</span><div><strong>{item.title}</strong><small>{item.type}</small></div></Link>)}</nav><Link className="outline-tests" href={`/dashboard/courses/${course.slug}?view=tests`}>Tests & practice <span>→</span></Link></aside>:null}<div className="lesson-content">
+      <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{course?<Link href={courseHref}>{course.name}</Link>:null}<span>›</span><b>{material.title}</b></nav>
+      <div className="lesson-layout reference-reader-layout">{course?<details className="course-outline" open><summary><b>⌄ &nbsp; Course Outline</b><span aria-label="Close course outline">×</span></summary><nav>{course.materials.map((item,index)=><Link className={item.id===material.id?"active":""} href={`/library/${item.id}?course=${encodeURIComponent(course.slug)}`} key={item.id}><i className={item.id===material.id?"current":"done"}>{item.id===material.id?"○":"✓"}</i><div><strong>{index+1}. {item.title}</strong><small>{item.type}{item.sizeBytes?` · ${Math.ceil(item.sizeBytes/1024)} KB`:""}</small></div></Link>)}</nav></details>:null}<div className="lesson-content">
       {material.type === "VIDEO" ? (
         <section className="panel video-lesson">
           <span className="video-placeholder" aria-hidden="true">▶</span><h2>Video lesson</h2>
@@ -54,15 +53,10 @@ export default async function Page({
           </a>
         </section>
       ) : (
-        <section className="material-reader">
+        <section className="material-reader"><header className="reader-heading"><div><i>⌑</i><div><h1>{material.originalFileName??material.title}</h1><p>{material.examName} · {material.type}</p></div></div>{nextMaterial?<Link className="button" href={`/library/${nextMaterial.id}?course=${encodeURIComponent(course?.slug??"")}`}>Next lesson →</Link>:<Link className="button secondary" href={courseHref}>Back to materials</Link>}</header>
           <div className="panel material-reader-toolbar">
             <div>
-              <strong>{material.originalFileName ?? material.title}</strong>
-              <small>
-                {material.sizeBytes
-                  ? `${(material.sizeBytes / 1024 / 1024).toFixed(2)} MB`
-                  : "Protected file"}
-              </small>
+              <strong>Secure document viewer</strong><small>{material.sizeBytes?`${(material.sizeBytes/1024/1024).toFixed(2)} MB`:`Version ${material.version}`}</small>
             </div>
             {material.allowDownload ? (
               <a

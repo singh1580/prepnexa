@@ -1,11 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { and, count, eq, gt, gte, isNull, sql } from "drizzle-orm";
+import { and, count, eq, gt, gte, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { loginAttempts, mfaFactors, permissions, recoveryCodes, rolePermissions, roles, sessions, userRoles, users, verificationTokens } from "@/db/schema";
 import type { TokenPurpose } from "./constants";
 
 export function findUserByEmail(email: string) {
   return db.query.users.findFirst({ where: eq(users.email, email) });
+}
+
+export function findUserByLogin(identifier:string){
+  return db.query.users.findFirst({where:or(eq(users.email,identifier),eq(users.phone,identifier))});
 }
 
 export async function updateProfile(userId: string, input:{name:string;phone:string|null}) {
