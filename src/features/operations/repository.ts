@@ -277,7 +277,7 @@ export async function insertStudentSupportReply(ticketId: string, userId: string
   const messageId = randomUUID();
   const result = await db.execute(sql`
     with owned_ticket as (
-      select id,status from support_tickets where id=${ticketId} and user_id=${userId} and status <> 'CLOSED'
+      select id,status from support_tickets where id=${ticketId} and user_id=${userId} and status not in ('CLOSED','RESOLVED')
     ), created_message as (
       insert into support_messages (id,ticket_id,author_id,body,attachment_object_key,attachment_file_name,attachment_content_type,internal,created_at)
       select ${messageId}::uuid,id,${userId}::uuid,${body},${attachment?.objectKey ?? null},${attachment?.fileName ?? null},${attachment?.contentType ?? null},false,now() from owned_ticket returning id,ticket_id
@@ -290,6 +290,18 @@ export async function insertStudentSupportReply(ticketId: string, userId: string
     ) select id from created_message
   `);
   return rows<{ id: string }>(result)[0];
+}
+
+export async function resolveOwnedSupportTicket(ticketId:string,userId:string,requestId:string){
+  const[ticket]=await db.select({id:supportTickets.id,status:supportTickets.status}).from(supportTickets).where(and(eq(supportTickets.id,ticketId),eq(supportTickets.userId,userId))).limit(1);
+  if(!ticket)return undefined;
+  if(ticket.status==="RESOLVED"||ticket.status==="CLOSED")return ticket;
+  const now=new Date();
+  await db.batch([
+    db.update(supportTickets).set({status:"RESOLVED",resolvedAt:now,updatedAt:now}).where(and(eq(supportTickets.id,ticketId),eq(supportTickets.userId,userId))),
+    db.insert(auditLogs).values({actorUserId:userId,action:"support.student_resolved",entityType:"support_ticket",entityId:ticketId,requestId,before:{status:ticket.status},after:{status:"RESOLVED"}}),
+  ]);
+  return{id:ticketId,status:"RESOLVED" as const};
 }
 
 export async function findSupportAttachment(messageId: string, userId: string, canManage: boolean) {

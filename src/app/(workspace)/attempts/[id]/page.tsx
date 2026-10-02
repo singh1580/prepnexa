@@ -12,5 +12,5 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const [attempt,notifications] = await Promise.all([findAttempt((await params).id, auth.user.id),getStudentNotifications(auth.user.id)]);
   if (!attempt) notFound();
   const courseSlug = (await searchParams).course;
-  return <WorkspaceShell admin={false} name={auth.user.name} section="courses" unreadNotifications={notifications.unreadCount}><TestRunner attempt={attempt} courseSlug={courseSlug} /></WorkspaceShell>;
+  return <WorkspaceShell admin={false} name={auth.user.name} section="courses" unreadNotifications={notifications.unreadCount} activePackageSlug={courseSlug} activePackageView="tests"><TestRunner attempt={attempt} courseSlug={courseSlug} /></WorkspaceShell>;
 }

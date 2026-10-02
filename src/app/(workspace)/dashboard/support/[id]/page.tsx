@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { requireWorkspace } from "@/features/auth/page-access";
 import { getStudentSupportTicket } from "@/features/operations/service";
-import { SupportReplyForm } from "@/features/operations/ui/student-actions";
+import { SupportReplyForm, SupportResolveButton } from "@/features/operations/ui/student-actions";
 import { AppError } from "@/lib/errors/app-error";
 
 export const metadata = { title: "Support ticket" };
@@ -25,7 +25,7 @@ export default async function Page({
     <WorkspaceShell admin={false} name={auth.user.name} section="support">
       <nav className="student-breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span><Link href="/dashboard/support">Support</Link><span>›</span><b>Ticket #{String(ticket.id).slice(0,8).toUpperCase()}</b></nav>
       <Link className="back-link" href="/dashboard/support">← Back to Support</Link>
-      <section className="reference-ticket"><header><div><h1>{String(ticket.subject)}</h1><p>Created on {new Date(ticket.createdAt as Date).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})} &nbsp;·&nbsp; Related to: {String(ticket.category).replaceAll("_"," ")}</p></div><span className={`support-status ${String(ticket.status).toLowerCase()}`}>● {String(ticket.status).replaceAll("_", " ")}</span></header>
+      <section className="reference-ticket"><header><div className="ticket-title-block"><div><h1>Ticket #{String(ticket.id).slice(0,8).toUpperCase()}</h1><span className={`support-status ${String(ticket.status).toLowerCase()}`}>● {String(ticket.status).replaceAll("_", " ")}</span></div><p>Created on {new Date(ticket.createdAt as Date).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})} &nbsp;·&nbsp; Related to: {String(ticket.subject)}</p></div><div className="ticket-header-actions">{!['RESOLVED','CLOSED'].includes(String(ticket.status))?<SupportResolveButton ticketId={String(ticket.id)}/>:null}<details className="ticket-more"><summary aria-label="Ticket details">⋮</summary><div><strong>{String(ticket.subject)}</strong><span>{String(ticket.category).replaceAll("_"," ")}</span></div></details></div></header>
       <div className="support-thread">
         {ticket.messages.map((item) => (
           <article
@@ -38,8 +38,8 @@ export default async function Page({
           </article>
         ))}
       </div>
-      {ticket.status === "CLOSED" ? (
-        <p className="notice">This ticket is closed.</p>
+      {ticket.status === "CLOSED" || ticket.status === "RESOLVED" ? (
+        <p className="ticket-closed-note">This ticket is {String(ticket.status).toLowerCase()}. Create a new ticket if you need more help.</p>
       ) : (
         <section className="ticket-reply-box">
           <SupportReplyForm ticketId={String(ticket.id)} />

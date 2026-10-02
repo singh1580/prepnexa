@@ -4,6 +4,8 @@ import { LogoutButton } from "@/features/account/account-actions";
 import { CONTENT_PERMISSIONS } from "@/features/admin-content/permissions";
 import { OPERATIONS_PERMISSIONS } from "@/features/operations/permissions";
 import { PublicSearch } from "./public-search";
+import { getCurrentAuth } from "@/features/auth/authorization";
+import { getStudentCourse, getStudentCourses } from "@/features/student-courses/service";
 
 type NavItem = { key: string; href: string; label: string; icon: string };
 
@@ -41,24 +43,39 @@ function adminNavigation(permissions: readonly string[]): NavItem[] {
 
 const studentNavigation: NavItem[] = [
   { key: "overview", href: "/dashboard", label: "Dashboard", icon: "dashboard" },
-  { key: "courses", href: "/dashboard/courses", label: "My packages", icon: "library" },
   { key: "explore", href: "/packages", label: "Explore packages", icon: "search" },
   { key: "orders", href: "/dashboard/orders", label: "My orders", icon: "orders" },
   { key: "notifications", href: "/dashboard/notifications", label: "Notifications", icon: "notifications" },
   { key: "support", href: "/dashboard/support", label: "Support", icon: "support" },
-  { key: "profile", href: "/account/profile", label: "My account", icon: "profile" },
 ];
 
-function Navigation({ items, section, unread=0,accountSubnav=false }: { items: NavItem[]; section: string; unread?:number;accountSubnav?:boolean }) {
-  return <nav aria-label="Workspace">{items.map((item) => <div className="nav-group" key={item.key}><Link href={item.href} className={section === item.key ? "nav-item active" : "nav-item"} aria-current={section === item.key ? "page" : undefined}><NavIcon name={item.icon} /><span>{item.label}</span>{item.key==="notifications"&&unread>0?<b className="nav-count">{unread}</b>:null}</Link>{accountSubnav&&item.key==="profile"&&section==="profile"?<details className="account-sidebar-menu" open><summary>Account sections <span>⌃</span></summary><div className="account-sidebar-links"><a href="#profile">Profile details</a><a href="#contact">Contact information</a><a href="#security">Password &amp; security</a><a href="#sessions">Active sessions</a><a href="#preferences">Notification preferences</a></div></details>:null}</div>)}</nav>;
+type PackageSummary={id:string;slug:string;name:string};
+type ActiveCourse=Awaited<ReturnType<typeof getStudentCourse>>;
+type PackageView="overview"|"materials"|"tests"|"results";
+
+function StudentPackageMenu({packages,activeCourse,activePackageSlug,activePackageView="overview",activeMaterialId}:{packages:PackageSummary[];activeCourse:ActiveCourse;activePackageSlug?:string;activePackageView?:PackageView;activeMaterialId?:string}){
+  const groups=activeCourse?Array.from(new Set(activeCourse.materials.map(item=>item.subject))).map(subject=>({subject,items:activeCourse.materials.filter(item=>item.subject===subject)})):[];
+  const sections:[PackageView,string][]=[["overview","Overview"],["materials","Study materials"],["tests","Tests & practice sets"],["results","Results & analysis"]];
+  return <details className="package-sidebar-menu" open={Boolean(activePackageSlug)}>
+    <summary className={activePackageSlug?"nav-item active":"nav-item"}><NavIcon name="library"/><span>My packages</span><i aria-hidden="true">⌄</i></summary>
+    <div className="package-sidebar-list"><Link className="package-view-all" href="/dashboard/courses">View all packages</Link>{packages.map(course=><details className="sidebar-course" open={course.slug===activePackageSlug} key={course.id}><summary><span>{course.name}</span><i aria-hidden="true">⌄</i></summary><div className="sidebar-course-links">{sections.map(([key,label])=><Link className={course.slug===activePackageSlug&&key===activePackageView?"active":""} aria-current={course.slug===activePackageSlug&&key===activePackageView?"page":undefined} href={`/dashboard/courses/${course.slug}?view=${key}`} key={key}>{label}</Link>)}{course.slug===activePackageSlug&&activePackageView==="materials"&&groups.length?<details className="sidebar-course-outline" open><summary>Course outline <i aria-hidden="true">⌄</i></summary>{groups.map(group=><details open={group.items.some(item=>item.id===activeMaterialId)} key={group.subject}><summary>{group.subject}<small>{group.items.filter(item=>item.viewed).length}/{group.items.length}</small></summary>{group.items.map(item=><Link className={item.id===activeMaterialId?"active material-active":""} href={`/library/${item.id}?course=${encodeURIComponent(course.slug)}`} key={item.id}><span>{item.viewed?"✓":"○"}</span>{item.title}</Link>)}</details>)}</details>:null}</div></details>)}</div>
+  </details>;
 }
 
-export function WorkspaceShell({ admin, name, permissions = [], section, unreadNotifications=0, children }: { admin: boolean; name: string; permissions?: readonly string[]; section: string; unreadNotifications?:number; children: React.ReactNode }) {
+function Navigation({ items, section, unread=0,packages=[],activeCourse,activePackageSlug,activePackageView,activeMaterialId }: { items: NavItem[]; section: string; unread?:number;packages?:PackageSummary[];activeCourse?:ActiveCourse;activePackageSlug?:string;activePackageView?:PackageView;activeMaterialId?:string }) {
+  const student=!items.some(item=>item.key==="overview"&&item.href==="/admin");
+  return <nav aria-label="Workspace">{items.map((item,index) => <div className="nav-entry" key={item.key}><div className="nav-group"><Link href={item.href} className={section === item.key ? "nav-item active" : "nav-item"} aria-current={section === item.key ? "page" : undefined}><NavIcon name={item.icon} /><span>{item.label}</span>{item.key==="notifications"&&unread>0?<b className="nav-count">{unread}</b>:null}</Link></div>{student&&index===0?<StudentPackageMenu packages={packages} activeCourse={activeCourse} activePackageSlug={activePackageSlug} activePackageView={activePackageView} activeMaterialId={activeMaterialId}/>:null}</div>)}</nav>;
+}
+
+export async function WorkspaceShell({ admin, name, permissions = [], section, unreadNotifications=0, activePackageSlug,activePackageView,activeMaterialId,children }: { admin: boolean; name: string; permissions?: readonly string[]; section: string; unreadNotifications?:number;activePackageSlug?:string;activePackageView?:PackageView;activeMaterialId?:string;children: React.ReactNode }) {
   const nav = admin ? adminNavigation(permissions) : studentNavigation;
-  const current=nav.find(item=>item.key===section)?.label??(admin?"Administration":"Dashboard");
+  const current=section==="courses"?"My packages":nav.find(item=>item.key===section)?.label??(admin?"Administration":"Dashboard");
+  const auth=!admin?await getCurrentAuth():null;
+  const [packages,activeCourse]=auth?await Promise.all([getStudentCourses(auth.user.id),activePackageSlug?getStudentCourse(activePackageSlug,auth.user.id):Promise.resolve(undefined)]):[[],undefined];
+  const navigationProps={items:nav,section,unread:unreadNotifications,packages,activeCourse,activePackageSlug,activePackageView,activeMaterialId};
   return <div className={admin ? "workspace admin-workspace" : "workspace student-workspace"}>
     <a className="skip-link" href="#main-content">Skip to main content</a>
-    <aside className="sidebar"><Brand /><div className="sidebar-label">{admin ? "ADMIN WORKSPACE" : "LEARNING WORKSPACE"}</div><Navigation items={nav} section={section} unread={unreadNotifications} accountSubnav={!admin}/><div className="sidebar-bottom"><span className="avatar">{name.slice(0, 1).toUpperCase()}</span><div><strong>{name}</strong><small>{admin ? "Administrator" : "Student"}</small></div></div></aside>
-    <div className="workspace-body"><header className="workspace-header"><div className="mobile-brand"><Brand /></div>{admin?<div className="workspace-context"><span>ADMINISTRATION</span><strong>Prepstore operations</strong></div>:<><strong className="student-header-title">{current}</strong><PublicSearch/><Link className="student-header-bell" href="/dashboard/notifications" aria-label={`${unreadNotifications} unread notifications`}><NavIcon name="notifications"/>{unreadNotifications>0?<span>{unreadNotifications}</span>:null}</Link><Link className="student-header-account" href="/account/profile"><span className="avatar">{name.slice(0,1).toUpperCase()}</span><b>{name}</b></Link></>}<LogoutButton /></header><details className={admin ? "admin-mobile-menu" : "student-mobile-menu"}><summary><span aria-hidden="true">☰</span> {admin ? "Admin menu" : "Student menu"}</summary><Navigation items={nav} section={section} unread={unreadNotifications} accountSubnav={!admin}/></details><main id="main-content" className="workspace-main">{children}</main></div>
+    <aside className="sidebar"><Brand /><div className="sidebar-label">{admin ? "ADMIN WORKSPACE" : "LEARNING WORKSPACE"}</div><Navigation {...navigationProps}/><Link className="sidebar-bottom" href="/account/profile"><span className="avatar">{name.slice(0, 1).toUpperCase()}</span><div><strong>{name}</strong><small>{admin ? "Profile & security" : "My account"}</small></div><NavIcon name="profile"/></Link></aside>
+    <div className="workspace-body"><header className="workspace-header"><div className="mobile-brand"><Brand /></div>{admin?<><strong className="admin-header-title">{current}</strong><PublicSearch/><Link className="student-header-bell" href="/admin/notifications" aria-label="Admin notifications"><NavIcon name="notifications"/></Link><Link className="student-header-account" href="/account/profile"><span className="avatar">{name.slice(0,1).toUpperCase()}</span><b>{name}</b></Link></>:<><strong className="student-header-title">{current}</strong><PublicSearch/><Link className="student-header-bell" href="/dashboard/notifications" aria-label={`${unreadNotifications} unread notifications`}><NavIcon name="notifications"/>{unreadNotifications>0?<span>{unreadNotifications}</span>:null}</Link><Link className="student-header-account" href="/account/profile"><span className="avatar">{name.slice(0,1).toUpperCase()}</span><b>{name}</b></Link></>}<LogoutButton /></header><details className={admin ? "admin-mobile-menu" : "student-mobile-menu"}><summary><span aria-hidden="true">☰</span> {admin ? "Admin menu" : "Student menu"}</summary><Navigation {...navigationProps}/>{!admin?<Link className="mobile-account-link" href="/account/profile"><NavIcon name="profile"/> My account</Link>:null}</details><main id="main-content" className="workspace-main">{children}</main></div>
   </div>;
 }

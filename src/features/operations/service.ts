@@ -29,6 +29,7 @@ import {
   markAllOwnedNotificationsRead,
   markOwnedNotificationRead,
   revokeOwnedSession,
+  resolveOwnedSupportTicket,
   saveNotificationDelivery,
   updateManagedStudentStatus,
   updateManagedSupportTicket,
@@ -118,7 +119,7 @@ export async function replyToStudentSupportTicket(
 ) {
   const ticket = await findStudentSupportTicket(ticketId, actor.userId);
   if (!ticket) throw operationNotFound("Support ticket");
-  if (ticket.status === "CLOSED") throw closedTicket();
+  if (ticket.status === "CLOSED" || ticket.status === "RESOLVED") throw closedTicket();
   const message = await insertStudentSupportReply(
     ticketId,
     actor.userId,
@@ -128,6 +129,11 @@ export async function replyToStudentSupportTicket(
   );
   if (!message) throw closedTicket();
   return message;
+}
+export async function resolveStudentSupportTicket(ticketId:string,actor:{userId:string;requestId:string}){
+  const ticket=await resolveOwnedSupportTicket(ticketId,actor.userId,actor.requestId);
+  if(!ticket)throw operationNotFound("Support ticket");
+  return ticket;
 }
 
 export async function queueStudentNotification(input: {
