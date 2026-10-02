@@ -3,6 +3,7 @@ import { Brand } from "./brand";
 import { LogoutButton } from "@/features/account/account-actions";
 import { CONTENT_PERMISSIONS } from "@/features/admin-content/permissions";
 import { OPERATIONS_PERMISSIONS } from "@/features/operations/permissions";
+import { PublicSearch } from "./public-search";
 
 type NavItem = { key: string; href: string; label: string; icon: string };
 
@@ -48,15 +49,16 @@ const studentNavigation: NavItem[] = [
   { key: "profile", href: "/account/profile", label: "My account", icon: "profile" },
 ];
 
-function Navigation({ items, section }: { items: NavItem[]; section: string }) {
-  return <nav aria-label="Workspace">{items.map((item) => <Link key={item.key} href={item.href} className={section === item.key ? "nav-item active" : "nav-item"} aria-current={section === item.key ? "page" : undefined}><NavIcon name={item.icon} /><span>{item.label}</span></Link>)}</nav>;
+function Navigation({ items, section, unread=0 }: { items: NavItem[]; section: string; unread?:number }) {
+  return <nav aria-label="Workspace">{items.map((item) => <Link key={item.key} href={item.href} className={section === item.key ? "nav-item active" : "nav-item"} aria-current={section === item.key ? "page" : undefined}><NavIcon name={item.icon} /><span>{item.label}</span>{item.key==="notifications"&&unread>0?<b className="nav-count">{unread}</b>:null}</Link>)}</nav>;
 }
 
-export function WorkspaceShell({ admin, name, permissions = [], section, children }: { admin: boolean; name: string; permissions?: readonly string[]; section: string; children: React.ReactNode }) {
+export function WorkspaceShell({ admin, name, permissions = [], section, unreadNotifications=0, children }: { admin: boolean; name: string; permissions?: readonly string[]; section: string; unreadNotifications?:number; children: React.ReactNode }) {
   const nav = admin ? adminNavigation(permissions) : studentNavigation;
+  const current=nav.find(item=>item.key===section)?.label??(admin?"Administration":"Dashboard");
   return <div className={admin ? "workspace admin-workspace" : "workspace student-workspace"}>
     <a className="skip-link" href="#main-content">Skip to main content</a>
-    <aside className="sidebar"><Brand /><div className="sidebar-label">{admin ? "ADMIN WORKSPACE" : "LEARNING WORKSPACE"}</div><Navigation items={nav} section={section} /><div className="sidebar-bottom"><span className="avatar">{name.slice(0, 1).toUpperCase()}</span><div><strong>{name}</strong><small>{admin ? "Administrator" : "Student"}</small></div></div></aside>
-    <div className="workspace-body"><header className="workspace-header"><div className="mobile-brand"><Brand /></div><div className="workspace-context"><span>{admin ? "ADMINISTRATION" : "LEARNING WORKSPACE"}</span><strong>{admin ? "Prepstore operations" : "Your preparation, organised"}</strong></div><LogoutButton /></header><details className={admin ? "admin-mobile-menu" : "student-mobile-menu"}><summary><span aria-hidden="true">☰</span> {admin ? "Admin menu" : "Student menu"}</summary><Navigation items={nav} section={section} /></details><main id="main-content" className="workspace-main">{children}</main></div>
+    <aside className="sidebar"><Brand /><div className="sidebar-label">{admin ? "ADMIN WORKSPACE" : "LEARNING WORKSPACE"}</div><Navigation items={nav} section={section} unread={unreadNotifications}/><div className="sidebar-bottom"><span className="avatar">{name.slice(0, 1).toUpperCase()}</span><div><strong>{name}</strong><small>{admin ? "Administrator" : "Student"}</small></div></div></aside>
+    <div className="workspace-body"><header className="workspace-header"><div className="mobile-brand"><Brand /></div>{admin?<div className="workspace-context"><span>ADMINISTRATION</span><strong>Prepstore operations</strong></div>:<><strong className="student-header-title">{current}</strong><PublicSearch/><Link className="student-header-bell" href="/dashboard/notifications" aria-label={`${unreadNotifications} unread notifications`}><NavIcon name="notifications"/>{unreadNotifications>0?<span>{unreadNotifications}</span>:null}</Link><Link className="student-header-account" href="/account/profile"><span className="avatar">{name.slice(0,1).toUpperCase()}</span><b>{name}</b></Link></>}<LogoutButton /></header><details className={admin ? "admin-mobile-menu" : "student-mobile-menu"}><summary><span aria-hidden="true">☰</span> {admin ? "Admin menu" : "Student menu"}</summary><Navigation items={nav} section={section} unread={unreadNotifications}/></details><main id="main-content" className="workspace-main">{children}</main></div>
   </div>;
 }

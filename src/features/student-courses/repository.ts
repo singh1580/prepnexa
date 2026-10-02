@@ -6,6 +6,8 @@ export type StudentCourse = {
   slug: string;
   name: string;
   description: string | null;
+  syllabus: string | null;
+  coverObjectKey: string | null;
   pricePaise: number;
   currency: string;
   accessDays: number;
@@ -17,6 +19,7 @@ export type StudentCourse = {
   completedAttempts: number;
   activeAttemptId: string | null;
   activeTestTitle: string | null;
+  accessStatus?: "ACTIVE" | "EXPIRED";
 };
 
 export type CourseTest = {
@@ -65,7 +68,7 @@ function rows<T>(value: Awaited<ReturnType<typeof db.execute>>) {
 
 export async function listAccessibleCourses(userId: string) {
   const result = await db.execute(sql`
-    select p.id, p.slug, p.name, p.description, p.price_paise as "pricePaise", p.currency,
+    select p.id, p.slug, p.name, p.description, p.syllabus, p.cover_object_key as "coverObjectKey", p.price_paise as "pricePaise", p.currency,
       p.access_days as "accessDays",
       case when p.price_paise = 0 then 'FREE' else 'PURCHASED' end as "accessSource",
       access.starts_at as "startsAt", access.expires_at as "expiresAt",
@@ -95,7 +98,7 @@ export async function listAccessibleCourses(userId: string) {
 
 export async function findAccessibleCourse(slug: string, userId: string) {
   const courseResult = await db.execute(sql`
-    select p.id, p.slug, p.name, p.description, p.price_paise as "pricePaise", p.currency,
+    select p.id, p.slug, p.name, p.description, p.syllabus, p.cover_object_key as "coverObjectKey", p.price_paise as "pricePaise", p.currency,
       p.access_days as "accessDays",
       case when p.price_paise=0 then 'FREE' else 'PURCHASED' end as "accessSource",
       access.starts_at as "startsAt", access.expires_at as "expiresAt",
@@ -178,8 +181,8 @@ export async function findAccessibleCourse(slug: string, userId: string) {
 }
 
 export async function getStudentCourseDashboard(userId: string) {
-  const courses = await listAccessibleCourses(userId);
-  const summaryResult = await db.execute(sql`
+  const coursesPromise = listAccessibleCourses(userId);
+  const summaryPromise = db.execute(sql`
     select
       (select count(*)::int from notifications where user_id=${userId}::uuid and read_at is null) as "unreadNotifications",
       (select count(*)::int from orders where user_id=${userId}::uuid) as orders,
@@ -199,6 +202,14 @@ export async function getStudentCourseDashboard(userId: string) {
       order by r.published_at desc limit 1
     ) latest on true
   `);
+  const recentPromise=db.execute(sql`
+    select r.id,r.score,r.max_score as "maxScore",r.published_at as "publishedAt",t.title,p.slug
+    from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id
+    join product_tests pt on pt.test_id=t.id join products p on p.id=pt.product_id
+    where a.user_id=${userId}::uuid and r.status in('PUBLISHED','REVISED')
+    order by r.published_at desc limit 5
+  `);
+  const[courses,summaryResult,recentResult]=await Promise.all([coursesPromise,summaryPromise,recentPromise]);
   const summary = rows<{
     unreadNotifications: number;
     orders: number;
@@ -210,5 +221,20 @@ export async function getStudentCourseDashboard(userId: string) {
     latestResultMaxScore: string | null;
     latestResultPublishedAt: Date | null;
   }>(summaryResult)[0];
-  return { courses, summary };
+  const recentResults=rows<{id:string;score:string;maxScore:string;publishedAt:Date;title:string;slug:string}>(recentResult);
+  return { courses, summary, recentResults };
+}
+
+export async function listOwnedCourses(userId:string){
+  const result=await db.execute(sql`
+    select p.id,p.slug,p.name,p.description,p.syllabus,p.cover_object_key as "coverObjectKey",p.price_paise as "pricePaise",p.currency,p.access_days as "accessDays",'PURCHASED' as "accessSource",
+      e.starts_at as "startsAt",e.expires_at as "expiresAt",case when e.status='ACTIVE' and e.expires_at>now() then 'ACTIVE' else 'EXPIRED' end as "accessStatus",
+      (select count(*)::int from product_tests pt where pt.product_id=p.id) as "testCount",
+      (select count(*)::int from product_materials pm where pm.product_id=p.id) as "materialCount",
+      (select count(*)::int from attempts a join product_tests pt on pt.test_id=a.test_id where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
+      active.id as "activeAttemptId",active.title as "activeTestTitle"
+    from products p join lateral(select x.* from entitlements x where x.product_id=p.id and x.user_id=${userId}::uuid order by x.expires_at desc limit 1)e on true
+    left join lateral(select a.id,t.title from attempts a join tests t on t.id=a.test_id join product_tests pt on pt.test_id=t.id where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status in('CREATED','IN_PROGRESS') order by a.updated_at desc limit 1)active on true
+    order by (e.status='ACTIVE' and e.expires_at>now()) desc,e.expires_at desc,p.name
+  `);return rows<StudentCourse>(result);
 }
