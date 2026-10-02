@@ -13,7 +13,7 @@ export function LogoutButton() {
     catch { setError("Couldn't sign out. Please try again."); setBusy(false); }
   }}>{busy ? "Signing out…" : "Sign out"}</button>{error && <p role="alert">{error}</p>}</>;
 }
-export function ProfileForm({ name, email, verified }: { name: string; email: string; verified: boolean }) {
+export function ProfileForm({ name, email, phone, verified }: { name: string; email: string; phone:string|null; verified: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false); const [message, setMessage] = useState(""); const [error, setError] = useState("");
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -22,5 +22,5 @@ export function ProfileForm({ name, email, verified }: { name: string; email: st
     catch(e) { if(e instanceof ClientApiError && e.code === "UNAUTHENTICATED") router.push("/login?reason=session"); else setError(e instanceof Error ? e.message : "Couldn't save changes."); }
     finally { setBusy(false); }
   }
-  return <form className="profile-form" onSubmit={submit}><fieldset disabled={busy}><Field label="Full name" name="name" defaultValue={name} autoComplete="name" required minLength={2} maxLength={120} /><Field label="Email address" name="email" value={email} readOnly hint={verified ? "Verified email. Email changes aren't available here." : "Email verification is pending."} /><button className="button">{busy ? "Saving…" : "Save changes"}</button></fieldset>{message && <p className="notice success" role="status">{message}</p>}{error && <p className="notice danger" role="alert">{error}</p>}</form>;
+  return <form className="profile-form" onSubmit={submit}><fieldset disabled={busy}><div className="profile-form-grid"><Field label="Full name" name="name" defaultValue={name} autoComplete="name" required minLength={2} maxLength={120} /><Field label="Phone number" name="phone" defaultValue={phone??""} autoComplete="tel" minLength={7} maxLength={20} /></div><Field label="Email address" name="email" value={email} readOnly hint={verified ? "Verified email. Email changes aren't available here." : "Email verification is pending."} /><button className="button">{busy ? "Saving…" : "Save changes"}</button></fieldset>{message && <p className="notice success" role="status">{message}</p>}{error && <p className="notice danger" role="alert">{error}</p>}</form>;
 }

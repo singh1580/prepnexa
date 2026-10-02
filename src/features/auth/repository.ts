@@ -8,8 +8,8 @@ export function findUserByEmail(email: string) {
   return db.query.users.findFirst({ where: eq(users.email, email) });
 }
 
-export async function updateProfileName(userId: string, name: string) {
-  await db.update(users).set({ name, updatedAt: new Date() }).where(eq(users.id, userId));
+export async function updateProfile(userId: string, input:{name:string;phone:string|null}) {
+  await db.update(users).set({ name:input.name,phone:input.phone,updatedAt: new Date() }).where(eq(users.id, userId));
 }
 
 export async function createUserWithVerification(input: { name: string; email: string; passwordHash: string; tokenHash: string; expiresAt: Date }) {

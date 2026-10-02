@@ -17,7 +17,7 @@ export const mfaCodeSchema = z.string().trim().regex(/^\d{6}$/);
 export const mfaConfirmInputSchema = z.object({ code: mfaCodeSchema });
 export const mfaEnrollmentInputSchema = z.object({ challengeToken: z.string().min(32).max(200) });
 export const mfaEnrollmentConfirmSchema = mfaEnrollmentInputSchema.extend({ code: mfaCodeSchema });
-export const profileInputSchema = z.object({ name: z.string().trim().min(2).max(120) });
+export const profileInputSchema = z.object({ name: z.string().trim().min(2).max(120), phone:z.union([z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/),z.literal("")]).optional().transform(value=>value||null) });
 export const mfaLoginInputSchema = z.object({
   challengeToken: z.string().min(32).max(200),
   code: mfaCodeSchema.optional(),

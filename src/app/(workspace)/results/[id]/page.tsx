@@ -2,223 +2,35 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { requireWorkspace } from "@/features/auth/page-access";
+import { getStudentNotifications } from "@/features/operations/service";
+import { ResultReviewTable, type ReviewQuestionView } from "@/features/student-results/result-review-table";
 import { getStudentResult } from "@/features/student-results/service";
-import { AppError } from "@/lib/errors/app-error";
 import { entityIdSchema } from "@/features/student-tests/validation";
+import { AppError } from "@/lib/errors/app-error";
 
-type Breakdown = {
-  title?: string;
-  score: string;
-  maxScore: string;
-  correctCount: number;
-  incorrectCount?: number;
-  unansweredCount?: number;
-  timeSpentSeconds?: number;
-};
-type ReviewQuestion = {
-  id: string;
-  position: number;
-  stem: string;
-  explanation: string | null;
-  type: string;
-  marks: string;
-  negativeMarks: string;
-  selectedOptionIds: string[] | null;
-  textAnswer: string | null;
-  numericAnswer: string | null;
-  isCorrect: boolean;
-  awardedMarks: string;
-  timeSpentSeconds: number;
-  answerConfig: Record<string, unknown>;
-  sectionTitle: string;
-  options: {
-    id: string;
-    body: string;
-    isCorrect: boolean;
-    selected: boolean;
-  }[];
-};
-type ResultView = {
-  title: string;
-  examName: string;
-  score: string;
-  maxScore: string;
-  correctCount: number;
-  incorrectCount: number;
-  unansweredCount: number;
-  timeSpentSeconds: number;
-  sections: Breakdown[];
-  questions: ReviewQuestion[];
-  testId: string;
-  maxAttempts: number;
-  attemptsUsed: number;
-};
+type Breakdown={title:string;score:string;maxScore:string;correctCount:number;incorrectCount:number;unansweredCount:number;timeSpentSeconds:number};
+type ResultView={title:string;examName:string;score:string;maxScore:string;correctCount:number;incorrectCount:number;unansweredCount:number;timeSpentSeconds:number;publishedAt:Date;sections:Breakdown[];questions:ReviewQuestionView[];testId:string;maxAttempts:number;attemptsUsed:number};
+export const metadata={title:"Result analysis"};
+function ActionIcon({name}:{name:"back"|"retake"}){return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{name==="back"?<><path d="m15 18-6-6 6-6"/><path d="M9 12h11"/></>:<><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></>}</svg>}
 
-export const metadata = { title: "Result review" };
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ course?: string }>;
-}) {
-  const auth = await requireWorkspace();
-  if (auth.admin) redirect("/admin");
-  const parsedId = entityIdSchema.safeParse((await params).id);
-  if (!parsedId.success) notFound();
-  let raw;
-  try {
-    raw = await getStudentResult(parsedId.data, auth.user.id);
-  } catch (error) {
-    if (error instanceof AppError && error.status === 404) notFound();
-    throw error;
-  }
-  const result = raw as unknown as ResultView;
-  const courseSlug = (await searchParams).course;
-  const courseHref = courseSlug ? `/dashboard/courses/${encodeURIComponent(courseSlug)}?view=results` : "/dashboard/courses";
-  const attempted = result.correctCount + result.incorrectCount,
-    accuracy = attempted
-      ? Math.round((result.correctCount / attempted) * 100)
-      : 0;
-  const sectionInsights = result.sections.map((item) => ({...item, percentage: Number(item.maxScore) ? Math.round(Number(item.score) / Number(item.maxScore) * 100) : 0}));
-  const strengths = sectionInsights.filter((item) => item.percentage >= 70).sort((a,b)=>b.percentage-a.percentage);
-  const needsWork = sectionInsights.filter((item) => item.percentage < 70).sort((a,b)=>a.percentage-b.percentage);
-  return (
-    <WorkspaceShell admin={false} name={auth.user.name} section="courses">
-      <Link className="back-link" href={courseHref}>
-        ← Course results
-      </Link>
-      <header className="page-heading">
-        <span className="eyebrow">{result.examName}</span>
-        <h1>{result.title}</h1>
-        <p>Complete performance and answer review</p>
-      </header>
-      <section className="result-hero panel">
-        <div>
-          <span>YOUR SCORE</span>
-          <strong>
-            {result.score}
-            <small> / {result.maxScore}</small>
-          </strong>
-        </div>
-        <dl>
-          <div>
-            <dt>Accuracy</dt>
-            <dd>{accuracy}%</dd>
-          </div>
-          <div>
-            <dt>Correct</dt>
-            <dd>{result.correctCount}</dd>
-          </div>
-          <div>
-            <dt>Incorrect</dt>
-            <dd>{result.incorrectCount}</dd>
-          </div>
-          <div>
-            <dt>Unanswered</dt>
-            <dd>{result.unansweredCount}</dd>
-          </div>
-          <div>
-            <dt>Time</dt>
-            <dd>
-              {Math.floor(result.timeSpentSeconds / 60)}m{" "}
-              {result.timeSpentSeconds % 60}s
-            </dd>
-          </div>
-        </dl>
-      </section>
-      <div className="result-breakdowns">
-        <section className="panel">
-          <span className="eyebrow">SECTION PERFORMANCE</span>
-          {result.sections.map((item) => (
-            <div className="breakdown-row" key={item.title}>
-              <div>
-                <strong>{item.title}</strong>
-                <span>
-                  {item.correctCount} correct · {item.incorrectCount} incorrect
-                  · {item.unansweredCount} unanswered
-                  {typeof item.timeSpentSeconds === "number" ? ` · ${Math.floor(item.timeSpentSeconds / 60)}m ${item.timeSpentSeconds % 60}s` : ""}
-                </span>
-              </div>
-              <b>
-                {item.score} / {item.maxScore}
-              </b>
-              <span className="performance-bar"><i style={{width:`${Number(item.maxScore) ? Math.max(2, Number(item.score)/Number(item.maxScore)*100) : 0}%`}} /></span>
-            </div>
-          ))}
-        </section>
-        <aside className="insight-grid"><section className="panel insight-card strength"><span className="eyebrow">STRENGTHS</span><h2>Keep building on</h2>{strengths.length?strengths.map((item)=><div key={item.title}><strong>{item.title}</strong><span>{item.percentage}%</span></div>):<p className="muted">Score 70% or more in a section to add it here.</p>}</section><section className="panel insight-card needs-work"><span className="eyebrow">NEEDS WORK</span><h2>Focus next on</h2>{needsWork.length?needsWork.map((item)=><div key={item.title}><strong>{item.title}</strong><span>{item.percentage}%</span></div>):<p className="muted">No weak section detected in this attempt.</p>}</section></aside>
-      </div>
-      <section className="result-review">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">ANSWER REVIEW</span>
-            <h2>Question review</h2>
-          </div>
-        </div>
-        {result.questions.map((question) => (
-          <article
-            className={`panel review-question ${question.isCorrect ? "correct" : question.selectedOptionIds?.length || question.textAnswer || question.numericAnswer ? "incorrect" : "unanswered"}`}
-            key={question.id}
-          >
-            <div className="question-topline">
-              <span>Question {question.position + 1} · {question.sectionTitle}</span>
-              <strong>
-                {question.awardedMarks} / {question.marks}
-              </strong>
-            </div>
-            <p className="question-time">Time spent: {Math.floor(question.timeSpentSeconds / 60)}m {question.timeSpentSeconds % 60}s</p>
-            <h3>{question.stem}</h3>
-            {question.options.length > 0 && (
-              <div className="review-options">
-                {question.options.map((option) => (
-                  <div
-                    key={option.id}
-                    className={`${option.isCorrect ? "correct-answer" : ""} ${option.selected ? "selected-answer" : ""}`}
-                  >
-                    <span>
-                      {option.selected
-                        ? "Your answer"
-                        : option.isCorrect
-                          ? "Correct answer"
-                          : ""}
-                    </span>
-                    <p>{option.body}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-            {question.type === "NUMERIC" && (
-              <p className="answer-line">
-                Your answer:{" "}
-                <strong>{question.numericAnswer ?? "Not answered"}</strong> ·
-                Correct answer:{" "}
-                <strong>{String(question.answerConfig.value ?? "")}</strong>
-              </p>
-            )}
-            {question.type === "TEXT" && (
-              <p className="answer-line">
-                Your answer:{" "}
-                <strong>{question.textAnswer || "Not answered"}</strong> ·
-                Accepted:{" "}
-                <strong>
-                  {Array.isArray(question.answerConfig.acceptedAnswers)
-                    ? question.answerConfig.acceptedAnswers.join(", ")
-                    : ""}
-                </strong>
-              </p>
-            )}
-            <div className="explanation">
-              <strong>Explanation</strong>
-              <p>
-                {question.explanation ||
-                  "No explanation was provided for this question."}
-              </p>
-            </div>
-          </article>
-        ))}
-      </section>
-      {result.attemptsUsed < result.maxAttempts && <div className="result-actions"><Link className="button" href={`/tests/${result.testId}${courseSlug ? `?course=${encodeURIComponent(courseSlug)}` : ""}`}>Retake test</Link><span>{result.maxAttempts - result.attemptsUsed} attempt{result.maxAttempts - result.attemptsUsed === 1 ? "" : "s"} remaining</span></div>}
-    </WorkspaceShell>
-  );
+export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{course?:string}>}){
+  const auth=await requireWorkspace();if(auth.admin)redirect("/admin");
+  const parsed=entityIdSchema.safeParse((await params).id);if(!parsed.success)notFound();
+  const notificationsPromise=getStudentNotifications(auth.user.id);
+  let raw;try{raw=await getStudentResult(parsed.data,auth.user.id)}catch(error){if(error instanceof AppError&&error.status===404)notFound();throw error}
+  const[result,notifications]=[raw as unknown as ResultView,await notificationsPromise];
+  const courseSlug=(await searchParams).course;const courseHref=courseSlug?`/dashboard/courses/${encodeURIComponent(courseSlug)}?view=results`:"/dashboard/courses";
+  const attempted=result.correctCount+result.incorrectCount;const accuracy=attempted?Math.round(result.correctCount/attempted*100):0;
+  const sections=result.sections.map(section=>{const total=section.correctCount+section.incorrectCount+section.unansweredCount;return{...section,total,accuracy:total?Math.round(section.correctCount/total*100):0}});
+  const strengths=sections.filter(section=>section.accuracy>=70).sort((a,b)=>b.accuracy-a.accuracy);
+  const needsWork=sections.filter(section=>section.accuracy<70).sort((a,b)=>a.accuracy-b.accuracy);
+  return <WorkspaceShell admin={false} name={auth.user.name} section="courses" unreadNotifications={notifications.unreadCount}>
+    <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{courseSlug?<Link href={courseHref}>{courseSlug.replaceAll("-"," ")}</Link>:null}<span>›</span><b>{result.title}</b></nav>
+    <header className="result-reference-heading"><h1>{result.title}</h1><p>Completed on {new Date(result.publishedAt).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})}<i/>Time taken: {Math.floor(result.timeSpentSeconds/60)} minutes</p></header>
+    <section className="reference-performance"><h2>Your performance</h2><div><article><strong>{result.score}</strong><span>Score<br/>(out of {result.maxScore})</span></article><article><strong>{accuracy}%</strong><span>Accuracy</span></article><article><strong>{result.correctCount}</strong><span>Correct</span></article><article><strong>{result.incorrectCount}</strong><span>Incorrect</span></article><article><strong>{result.unansweredCount}</strong><span>Unanswered</span></article></div></section>
+    <section className="reference-section-performance"><h2>Section-wise performance</h2><div className="section-performance-table"><div className="section-performance-head"><span>Section</span><span>Correct / Total</span><span>Accuracy</span><span>Score (out of)</span></div>{sections.map(section=><article key={section.title}><strong>{section.title}</strong><div><span>{section.correctCount} / {section.total}</span><i><b style={{width:`${section.accuracy}%`}}/></i></div><span>{section.accuracy}%</span><span>{section.score} / {section.maxScore}</span></article>)}</div></section>
+    <section className="reference-insights"><h2>Strengths and areas to work on</h2><div><article className="strength"><h3>↑ <span>Strengths</span></h3>{strengths.length?<ul>{strengths.map(section=><li key={section.title}>Good accuracy in {section.title} ({section.accuracy}%)</li>)}</ul>:<p>Complete more correct answers to build a strong section.</p>}</article><article className="needs-work"><h3>↓ <span>Needs work</span></h3>{needsWork.length?<ul>{needsWork.map(section=><li key={section.title}>Improve accuracy in {section.title} ({section.accuracy}%)</li>)}</ul>:<p>No weak section detected in this attempt.</p>}</article></div></section>
+    <ResultReviewTable questions={result.questions}/>
+    <footer className="reference-result-actions"><Link href={courseHref}><ActionIcon name="back"/>Back to package</Link>{result.attemptsUsed<result.maxAttempts?<Link className="retake" href={`/tests/${result.testId}${courseSlug?`?course=${encodeURIComponent(courseSlug)}`:""}`}><ActionIcon name="retake"/>Retake test</Link>:null}</footer>
+  </WorkspaceShell>;
 }

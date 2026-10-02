@@ -203,11 +203,13 @@ export async function getStudentCourseDashboard(userId: string) {
     ) latest on true
   `);
   const recentPromise=db.execute(sql`
-    select r.id,r.score,r.max_score as "maxScore",r.published_at as "publishedAt",t.title,p.slug
-    from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id
-    join product_tests pt on pt.test_id=t.id join products p on p.id=pt.product_id
-    where a.user_id=${userId}::uuid and r.status in('PUBLISHED','REVISED')
-    order by r.published_at desc limit 5
+    select recent.id,recent.score,recent."maxScore",recent."publishedAt",recent.title,recent.slug from (
+      select distinct on (r.id) r.id,r.score,r.max_score as "maxScore",r.published_at as "publishedAt",t.title,p.slug
+      from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id
+      join product_tests pt on pt.test_id=t.id join products p on p.id=pt.product_id
+      where a.user_id=${userId}::uuid and r.status in('PUBLISHED','REVISED')
+      order by r.id,r.published_at desc,p.slug
+    ) recent order by recent."publishedAt" desc limit 5
   `);
   const[courses,summaryResult,recentResult]=await Promise.all([coursesPromise,summaryPromise,recentPromise]);
   const summary = rows<{

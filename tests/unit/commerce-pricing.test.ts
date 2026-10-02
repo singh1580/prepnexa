@@ -24,6 +24,7 @@ describe("commerce pricing", () => {
   it("requires a client idempotency key for checkout", () => {
     const productId = crypto.randomUUID();
     expect(checkoutInputSchema.safeParse({ productId, couponCode: "save10", idempotencyKey: crypto.randomUUID() }).success).toBe(true);
+    expect(checkoutInputSchema.safeParse({ productId, couponCode: null, idempotencyKey: crypto.randomUUID() }).success).toBe(true);
     expect(checkoutInputSchema.safeParse({ productId, idempotencyKey: "short" }).success).toBe(false);
   });
 });

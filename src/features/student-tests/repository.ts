@@ -23,6 +23,7 @@ export type StudentTestAccess = {
   shuffleOptions: boolean;
   examName: string;
   questionCount: number;
+  sectionCount: number;
   hasAccess: boolean;
   attemptsUsed: number;
   activeAttemptId: string | null;
@@ -103,6 +104,7 @@ export async function listStudentTests(userId: string) {
     select t.id, t.title, t.category, t.duration_minutes as "durationMinutes", t.max_attempts as "maxAttempts",
       'Prepstore' as "examName",
       (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
+      (select count(*)::int from test_sections ts where ts.test_id=t.id) as "sectionCount",
       (select count(*)::int from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
       (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId"
     from tests t
@@ -128,6 +130,7 @@ export async function findStudentTestAccess(
     select t.id, t.title, t.category, t.duration_minutes as "durationMinutes", t.instructions,
       t.max_attempts as "maxAttempts", t.shuffle_questions as "shuffleQuestions", t.shuffle_options as "shuffleOptions",
       'Prepstore' as "examName", (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
+      (select count(*)::int from test_sections ts where ts.test_id=t.id) as "sectionCount",
       (select count(*)::int from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
       (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId",
       (exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)

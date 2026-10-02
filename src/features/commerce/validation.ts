@@ -30,10 +30,10 @@ export const couponStatusSchema = z.object({ active: z.boolean() }).strict();
 export const checkoutInputSchema = z.object({
   productId: z.uuid().optional(),
   productIds: z.array(z.uuid()).min(1).max(20).optional(),
-  couponCode: z.union([couponCodeSchema, z.literal("")]).optional().transform(value => value || null),
+  couponCode: z.union([couponCodeSchema, z.literal(""), z.null()]).optional().transform(value => value || null),
   idempotencyKey: z.string().trim().min(16).max(100).regex(/^[A-Za-z0-9:_-]+$/),
 }).strict().superRefine((value, context) => { if (!value.productId && !value.productIds?.length) context.addIssue({ code: "custom", path: ["productIds"], message: "Choose at least one product." }); }).transform((value) => ({ ...value, productIds: [...new Set(value.productIds ?? (value.productId ? [value.productId] : []))] }));
-export const checkoutPreviewSchema = z.object({ productId:z.uuid().optional(),productIds:z.array(z.uuid()).min(1).max(20).optional(),couponCode:z.union([couponCodeSchema,z.literal("")]).optional().transform(value=>value||null) }).strict().superRefine((value,context)=>{if(!value.productId&&!value.productIds?.length)context.addIssue({code:"custom",path:["productIds"],message:"Choose at least one product."});}).transform(value=>({...value,productIds:[...new Set(value.productIds??(value.productId?[value.productId]:[]))]}));
+export const checkoutPreviewSchema = z.object({ productId:z.uuid().optional(),productIds:z.array(z.uuid()).min(1).max(20).optional(),couponCode:z.union([couponCodeSchema,z.literal(""),z.null()]).optional().transform(value=>value||null) }).strict().superRefine((value,context)=>{if(!value.productId&&!value.productIds?.length)context.addIssue({code:"custom",path:["productIds"],message:"Choose at least one product."});}).transform(value=>({...value,productIds:[...new Set(value.productIds??(value.productId?[value.productId]:[]))]}));
 
 export const refundInputSchema = z.object({
   amountPaise: z.coerce.number().int().positive(),
