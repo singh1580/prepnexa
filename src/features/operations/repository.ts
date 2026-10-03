@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { auditLogs, notifications, orders, sessions, supportMessages, supportTickets } from "@/db/schema";
+import { auditLogs, notifications, orders, sessions, supportMessages, supportTickets, users } from "@/db/schema";
 import type { CreateSupportTicketInput } from "./validation";
 
 function rows<T>(value: Awaited<ReturnType<typeof db.execute>>) { return value.rows as T[]; }
@@ -21,7 +21,7 @@ export async function revokeOwnedSession(userId: string, sessionId: string) {
 
 export async function listStudentNotifications(userId: string) {
   const items = await db.select({ id: notifications.id, type: notifications.type, title: notifications.title, body: notifications.body, readAt: notifications.readAt, createdAt: notifications.createdAt })
-    .from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt)).limit(50);
+    .from(notifications).innerJoin(users,eq(users.id,notifications.userId)).where(and(eq(notifications.userId, userId),eq(users.inAppNotifications,true))).orderBy(desc(notifications.createdAt)).limit(50);
   return { items, unreadCount: items.filter((item) => !item.readAt).length };
 }
 
@@ -41,13 +41,16 @@ export async function markAllOwnedNotificationsRead(userId: string) {
 
 export async function insertNotification(input: { userId: string; type: string; deduplicationKey: string; title: string; body: string; email: boolean }) {
   const result = await db.execute(sql`
-    with created as (
+    with preferences as (
+      select email_notifications,in_app_notifications from users where id=${input.userId}::uuid
+    ), created as (
       insert into notifications (id,user_id,type,deduplication_key,title,body,created_at)
-      values(${randomUUID()}::uuid,${input.userId}::uuid,${input.type},${input.deduplicationKey},${input.title},${input.body},now())
+      select ${randomUUID()}::uuid,${input.userId}::uuid,${input.type},${input.deduplicationKey},${input.title},${input.body},now() from preferences
+      where in_app_notifications or (${input.email} and email_notifications)
       on conflict(deduplication_key) do nothing returning id
     ), delivery as (
       insert into notification_deliveries (id,notification_id,channel,status,attempts,created_at)
-      select ${randomUUID()}::uuid,id,'EMAIL','PENDING',0,now() from created where ${input.email}
+      select ${randomUUID()}::uuid,created.id,'EMAIL','PENDING',0,now() from created cross join preferences where ${input.email} and preferences.email_notifications
       on conflict(notification_id,channel) do nothing returning id
     ) select created.id,delivery.id as "deliveryId" from created left join delivery on true
   `);
@@ -165,6 +168,8 @@ export async function insertNotificationCampaign(input: { audience:string;produc
       select distinct u.id from users u
       where exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key='STUDENT')
         and u.status='ACTIVE'
+        and (${input.channel}<>'EMAIL' or u.email_notifications)
+        and (${input.channel}<>'IN_APP' or u.in_app_notifications)
         and (${input.audience}<>'PACKAGE_CUSTOMERS' or exists(select 1 from entitlements e where e.user_id=u.id and e.product_id=${input.productId ?? null}::uuid and e.status='ACTIVE'))
         and (${input.audience}<>'INACTIVE_STUDENTS' or u.last_login_at is null or u.last_login_at < now()-interval '30 days')
     ), created as (

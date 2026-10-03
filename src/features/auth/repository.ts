@@ -14,8 +14,18 @@ export function findUserByLogin(identifier:string){
   return db.query.users.findFirst({where:or(eq(users.email,identifier),eq(users.phone,identifier))});
 }
 
-export async function updateProfile(userId: string, input:{name:string;phone:string|null}) {
-  await db.update(users).set({ name:input.name,phone:input.phone,updatedAt: new Date() }).where(eq(users.id, userId));
+export async function updateProfile(userId: string, input:{name:string;phone:string|null;classLevel:string|null;board:string|null;targetExam:string|null;dateOfBirth:string|null;emailNotifications?:boolean;inAppNotifications?:boolean}) {
+  await db.update(users).set({
+    name:input.name,
+    phone:input.phone,
+    classLevel:input.classLevel,
+    board:input.board,
+    targetExam:input.targetExam,
+    dateOfBirth:input.dateOfBirth,
+    ...(input.emailNotifications === undefined ? {} : {emailNotifications:input.emailNotifications}),
+    ...(input.inAppNotifications === undefined ? {} : {inAppNotifications:input.inAppNotifications}),
+    updatedAt: new Date(),
+  }).where(eq(users.id, userId));
 }
 
 export async function updatePassword(userId:string,passwordHash:string,currentSessionId:string){
@@ -114,7 +124,7 @@ export async function createSession(input: typeof sessions.$inferInsert, maxActi
 export function findActiveSession(tokenHash: string) {
   return db.select({
     sessionId: sessions.id, expiresAt: sessions.expiresAt,
-    userId: users.id, userName: users.name, userEmail: users.email, userPhone: users.phone, userStatus: users.status, emailVerifiedAt: users.emailVerifiedAt,
+    userId: users.id, userName: users.name, userEmail: users.email, userPhone: users.phone, userClassLevel:users.classLevel, userBoard:users.board, userTargetExam:users.targetExam, userDateOfBirth:users.dateOfBirth, userEmailNotifications:users.emailNotifications, userInAppNotifications:users.inAppNotifications, userStatus: users.status, emailVerifiedAt: users.emailVerifiedAt,
   }).from(sessions).innerJoin(users, eq(sessions.userId, users.id)).where(
     and(eq(sessions.tokenHash, tokenHash), isNull(sessions.revokedAt), gt(sessions.expiresAt, new Date())),
   ).limit(1).then((rows) => rows[0]);

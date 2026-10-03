@@ -13,7 +13,7 @@ export async function getCurrentAuth() {
   return {
     sessionId: session.sessionId,
     expiresAt: session.expiresAt,
-    user: { id: session.userId, name: session.userName, email: session.userEmail, phone: session.userPhone, emailVerified: Boolean(session.emailVerifiedAt) },
+    user: { id: session.userId, name: session.userName, email: session.userEmail, phone: session.userPhone, classLevel:session.userClassLevel, board:session.userBoard, targetExam:session.userTargetExam, dateOfBirth:session.userDateOfBirth, emailNotifications:session.userEmailNotifications, inAppNotifications:session.userInAppNotifications, emailVerified: Boolean(session.emailVerifiedAt) },
     roles: [...new Set(grants.map((grant) => grant.role))],
     permissions: [...new Set(grants.flatMap((grant) => grant.permission ? [grant.permission] : []))],
   };

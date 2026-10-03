@@ -6,6 +6,7 @@ import {
 } from "./content-picker";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Field } from "@/features/auth/ui/field";
 import type { ApiFailure, ApiSuccess } from "@/lib/http/api-response";
 
@@ -139,7 +140,7 @@ export function ProductCreateForm({
           <label className="cover-upload-field">
             <span>Cover image</span>
             <span className="cover-preview">
-              {coverPreview ? <img src={coverPreview} alt="Selected package cover preview" /> : product?.coverObjectKey ? <img src={`/api/catalog/products/${product.id}/cover`} alt={`${product.name} cover`} /> : <b>Upload package cover</b>}
+              {coverPreview ? <Image src={coverPreview} alt="Selected package cover preview" fill sizes="224px" unoptimized /> : product?.coverObjectKey ? <Image src={`/api/catalog/products/${product.id}/cover`} alt={`${product.name} cover`} fill sizes="224px" /> : <b>Upload package cover</b>}
             </span>
             <input name="cover" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.currentTarget.files?.[0]; setCoverPreview(file ? URL.createObjectURL(file) : null); }} />
             <small>JPG, PNG or WebP · up to 5 MB</small>

@@ -189,7 +189,7 @@ export function TestCreateForm() {
           <span>Instructions</span>
           <textarea name="instructions" maxLength={10000} rows={4} />
         </label>
-        <div className="dialog-form-footer"><span>Nothing is published from this screen.</span><button className="button" type="submit">{busy ? "Creating…" : "Create & continue to questions →"}</button></div>
+        <div className="dialog-form-footer"><span>Save the test here, then add it to a product package when it is ready for students.</span><button className="button" type="submit">{busy ? "Creating…" : "Create & continue to questions →"}</button></div>
       </fieldset>
       {error && (
         <p className="notice danger" role="alert">

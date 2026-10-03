@@ -26,6 +26,9 @@ describe("auth validation", () => {
     expect(mfaEnrollmentConfirmSchema.parse({ challengeToken, code: "123456" }).code).toBe("123456");
     expect(() => mfaEnrollmentConfirmSchema.parse({ challengeToken, code: "12345" })).toThrow();
     expect(profileInputSchema.parse({ name: "  Learner Name  " }).name).toBe("Learner Name");
+    const profile=profileInputSchema.parse({name:"Learner Name",classLevel:" B.Tech ",board:"MAKAUT",targetExam:"TCS NQT",dateOfBirth:"2003-06-15",emailNotifications:false,inAppNotifications:true});
+    expect(profile).toMatchObject({classLevel:"B.Tech",board:"MAKAUT",targetExam:"TCS NQT",dateOfBirth:"2003-06-15",emailNotifications:false,inAppNotifications:true});
+    expect(()=>profileInputSchema.parse({name:"Learner Name",dateOfBirth:"15-06-2003"})).toThrow();
     expect(() => profileInputSchema.parse({ name: "x" })).toThrow();
   });
 

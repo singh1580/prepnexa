@@ -17,7 +17,17 @@ export const mfaCodeSchema = z.string().trim().regex(/^\d{6}$/);
 export const mfaConfirmInputSchema = z.object({ code: mfaCodeSchema });
 export const mfaEnrollmentInputSchema = z.object({ challengeToken: z.string().min(32).max(200) });
 export const mfaEnrollmentConfirmSchema = mfaEnrollmentInputSchema.extend({ code: mfaCodeSchema });
-export const profileInputSchema = z.object({ name: z.string().trim().min(2).max(120), phone:z.union([z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/),z.literal("")]).optional().transform(value=>value||null) });
+const optionalProfileText = (maximum: number) => z.string().trim().max(maximum).optional().transform(value => value || null);
+export const profileInputSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  phone:z.union([z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/),z.literal("")]).optional().transform(value=>value||null),
+  classLevel: optionalProfileText(120),
+  board: optionalProfileText(120),
+  targetExam: optionalProfileText(160),
+  dateOfBirth: z.union([z.iso.date(), z.literal("")]).optional().transform(value => value || null),
+  emailNotifications: z.boolean().optional(),
+  inAppNotifications: z.boolean().optional(),
+});
 export const changePasswordInputSchema = z.object({ currentPassword:password,newPassword:password }).refine(input=>input.currentPassword!==input.newPassword,{path:["newPassword"],message:"Choose a password different from your current password."});
 export const mfaLoginInputSchema = z.object({
   challengeToken: z.string().min(32).max(200),

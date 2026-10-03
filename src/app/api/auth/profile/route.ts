@@ -8,6 +8,6 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticated();
     const input = profileInputSchema.parse(await request.json());
     await updateProfile(auth.user.id, input);
-    return successResponse({ name: input.name,phone:input.phone }, requestId);
+    return successResponse({ name: input.name,phone:input.phone,classLevel:input.classLevel,board:input.board,targetExam:input.targetExam,dateOfBirth:input.dateOfBirth,emailNotifications:input.emailNotifications,inAppNotifications:input.inAppNotifications }, requestId);
   });
 }
