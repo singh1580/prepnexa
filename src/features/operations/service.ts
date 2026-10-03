@@ -243,7 +243,11 @@ export const getNotificationCampaignOptions = () => listNotificationCampaignOpti
 export async function createNotificationCampaign(input: NotificationCampaignInput, actor: { userId:string;requestId:string }) {
   const result = await insertNotificationCampaign(input, actor);
   if (input.channel === "EMAIL") {
-    for (const deliveryId of result.deliveryIds) await deliverNotification(deliveryId, actor.requestId);
+    const concurrency = 8;
+    for (let index = 0; index < result.deliveryIds.length; index += concurrency) {
+      const batch = result.deliveryIds.slice(index, index + concurrency);
+      await Promise.allSettled(batch.map((deliveryId) => deliverNotification(deliveryId, actor.requestId)));
+    }
   }
   return { id: result.id, recipientCount: result.recipientCount };
 }

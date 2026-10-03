@@ -267,6 +267,7 @@ export function NotificationCampaignForm({
             onChange={(event) => setTitle(event.target.value)}
             minLength={3}
             maxLength={180}
+            placeholder="Enter notification title"
             required
           />
         </label>
@@ -279,12 +280,13 @@ export function NotificationCampaignForm({
             minLength={3}
             maxLength={500}
             rows={5}
+            placeholder="Write a clear message for students…"
             required
           />
           <small>{body.length}/500</small>
         </label>
-        <div className="notification-channel">
-          <span>Channel</span>
+        <div className="notification-channel" role="radiogroup" aria-label="Notification channel">
+          <strong>Channel</strong>
           <label>
             <input
               type="radio"

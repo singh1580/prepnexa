@@ -14,6 +14,17 @@ import {
 } from "@/features/operations/ui/admin-actions";
 
 export const metadata = { title: "Notifications" };
+function SearchIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>;
+}
+function FilterIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 6h16M7 12h10M10 18h4"/></svg>;
+}
+function ChannelIcon({ channel }: { channel: string }) {
+  return channel === "EMAIL"
+    ? <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+    : <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>;
+}
 const audienceLabel = (audience: string, product: string | null) =>
   audience === "PACKAGE_CUSTOMERS"
     ? `${product ?? "Package"} customers`
@@ -73,33 +84,36 @@ export default async function Page({
             Send announcements to students and review notification delivery.
           </p>
         </div>
-        <AdminModal label="✉ Send notification" title="Send Notification">
+        <AdminModal label="✉ Send notification" title="Send notification">
           <NotificationCampaignForm products={products} />
         </AdminModal>
       </header>
-      <section className="admin-card notification-campaigns-card">
-        <form className="list-filter-bar notification-filters">
-          <label>
-            <span>Search</span>
-            <input
-              name="q"
-              defaultValue={query.q}
-              type="search"
-              placeholder="Search notifications…"
-            />
-          </label>
-          <label>
-            <span>Audience</span>
-            <select name="audience" defaultValue={audience}>
-              <option value="ALL">All audiences</option>
-              <option value="ALL_STUDENTS">All students</option>
-              <option value="PACKAGE_CUSTOMERS">Package customers</option>
-              <option value="INACTIVE_STUDENTS">Inactive students</option>
-            </select>
-          </label>
-          <button className="button secondary small">Apply filters</button>
-          <span>{visible.length} notification{visible.length === 1 ? "" : "s"}</span>
-        </form>
+      <section className="admin-card notification-campaigns-card flush-card">
+        <div className="notification-toolbar">
+          <form className="notification-search" role="search">
+            <SearchIcon />
+            <input name="q" defaultValue={query.q} type="search" aria-label="Search notifications" placeholder="Search notifications…" />
+            {audience !== "ALL" ? <input name="audience" type="hidden" value={audience} /> : null}
+            <button className="sr-only" type="submit">Search</button>
+          </form>
+          <details className="notification-filter-menu">
+            <summary><FilterIcon /> Filters{audience !== "ALL" ? <b>1</b> : null}</summary>
+            <form>
+              {query.q ? <input name="q" type="hidden" value={query.q} /> : null}
+              <label>
+                <span>Audience</span>
+                <select name="audience" defaultValue={audience}>
+                  <option value="ALL">All audiences</option>
+                  <option value="ALL_STUDENTS">All students</option>
+                  <option value="PACKAGE_CUSTOMERS">Package customers</option>
+                  <option value="INACTIVE_STUDENTS">Inactive students</option>
+                </select>
+              </label>
+              <div><Link className="button secondary small" href="/admin/notifications">Clear</Link><button className="button small" type="submit">Apply</button></div>
+            </form>
+          </details>
+          <span className="notification-result-count">{visible.length} notification{visible.length === 1 ? "" : "s"}</span>
+        </div>
         {visible.length ? (
           <>
           <div className="table-scroll">
@@ -117,22 +131,21 @@ export default async function Page({
               <tbody>
                 {rows.map((item) => (
                   <tr key={item.id}>
-                    <td>{audienceLabel(item.audience, item.productName)}</td>
+                    <td><span className="notification-audience">{audienceLabel(item.audience, item.productName)}</span></td>
                     <td>
-                      <strong>{item.title}</strong>
-                      <small>{item.body}</small>
+                      <strong className="notification-title">{item.title}</strong>
+                      <small className="notification-message">{item.body}</small>
                     </td>
                     <td>
-                      <span className="status-pill">
+                      <span className={`notification-channel-badge ${item.channel.toLowerCase()}`}>
+                        <ChannelIcon channel={item.channel} />
                         {item.channel === "IN_APP" ? "In-app" : "Email"}
                       </span>
                     </td>
-                    <td>{item.recipientCount}</td>
-                    <td>
-                      {new Date(item.createdAt).toLocaleString("en-IN", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                    <td><strong className="notification-recipient-count">{item.recipientCount.toLocaleString("en-IN")}</strong></td>
+                    <td className="notification-sent-date">
+                      <strong>{new Date(item.createdAt).toLocaleDateString("en-IN", {dateStyle: "medium"})}</strong>
+                      <small>{new Date(item.createdAt).toLocaleTimeString("en-IN", {hour: "2-digit", minute: "2-digit"})}</small>
                     </td>
                     <td>
                       <details className="table-row-menu">
