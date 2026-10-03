@@ -50,7 +50,7 @@ export function CouponForm({ products, initial }: { products: ProductOption[]; i
         perUserLimit: 1,
         startsAt: null,
         endsAt: data.get("endsAt") ? new Date(String(data.get("endsAt"))).toISOString() : null,
-        active: initial?.active ?? true,
+        active: data.get("active") === "on",
         productIds: data.getAll("productIds"),
       }, initial ? "PATCH" : "POST");
       if (initial) router.push("/admin/coupons");
@@ -73,6 +73,7 @@ export function CouponForm({ products, initial }: { products: ProductOption[]; i
         <label className="field"><span>Total uses</span><input name="totalLimit" type="number" min="1" defaultValue={initial?.totalLimit ?? undefined} /></label>
         <label className="field"><span>Ends at</span><input name="endsAt" type="datetime-local" defaultValue={dateTimeLocal(initial?.endsAt ?? null)} /></label>
       </div>
+      <label className="coupon-active-control"><input name="active" type="checkbox" defaultChecked={initial?.active ?? true}/><span aria-hidden="true"><i/></span><b>Active</b><small>Coupon can be used by eligible students</small></label>
       <details className="coupon-scope">
         <summary>Limit to selected live products (optional)</summary>
         <p className="muted">Leave every package unchecked to allow this coupon on all live products.</p>
@@ -81,7 +82,7 @@ export function CouponForm({ products, initial }: { products: ProductOption[]; i
           {!products.length && <p className="muted">No live products available.</p>}
         </div>
       </details>
-      <button className="button" type="submit">{busy ? "Saving…" : initial ? "Save coupon" : "Create coupon"}</button>
+      <div className="dialog-form-footer"><button className="button secondary" type="button" onClick={(event)=>event.currentTarget.closest("dialog")?.close()}>Cancel</button><button className="button" type="submit">{busy ? "Saving…" : initial ? "Save coupon" : "Save coupon"}</button></div>
     </fieldset>
     {error ? <p className="notice danger" role="alert">{error}</p> : null}
   </form>;
@@ -103,5 +104,5 @@ export function CouponStatusButton({ id, active }: { id: string; active: boolean
       setBusy(false);
     }
   }
-  return <><button className="text-button" type="button" disabled={busy} onClick={toggle}>{busy ? "Saving…" : active ? "Disable" : "Enable"}</button>{error ? <small className="danger-text" role="alert">{error}</small> : null}</>;
+  return <div className="visibility-control"><button type="button" role="switch" aria-checked={active} className={active?"availability-toggle on":"availability-toggle"} disabled={busy} onClick={toggle}><i aria-hidden="true"/><span className="sr-only">{busy?"Saving":active?"Disable coupon":"Enable coupon"}</span></button>{error ? <small className="danger-text" role="alert">{error}</small> : null}</div>;
 }

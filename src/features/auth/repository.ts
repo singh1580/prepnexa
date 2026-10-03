@@ -8,12 +8,21 @@ export function findUserByEmail(email: string) {
   return db.query.users.findFirst({ where: eq(users.email, email) });
 }
 
+export function findUserById(userId:string){return db.query.users.findFirst({where:eq(users.id,userId)});}
+
 export function findUserByLogin(identifier:string){
   return db.query.users.findFirst({where:or(eq(users.email,identifier),eq(users.phone,identifier))});
 }
 
 export async function updateProfile(userId: string, input:{name:string;phone:string|null}) {
   await db.update(users).set({ name:input.name,phone:input.phone,updatedAt: new Date() }).where(eq(users.id, userId));
+}
+
+export async function updatePassword(userId:string,passwordHash:string,currentSessionId:string){
+  await db.batch([
+    db.update(users).set({passwordHash,updatedAt:new Date()}).where(eq(users.id,userId)),
+    db.update(sessions).set({revokedAt:new Date()}).where(and(eq(sessions.userId,userId),sql`${sessions.id} <> ${currentSessionId}`,isNull(sessions.revokedAt))),
+  ]);
 }
 
 export async function createUserWithVerification(input: { name: string; email: string; passwordHash: string; tokenHash: string; expiresAt: Date }) {

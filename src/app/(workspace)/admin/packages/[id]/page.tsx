@@ -41,7 +41,7 @@ export default async function Page({
       <Link className="back-link" href="/admin/packages">
         ← Packages & materials
       </Link>
-      <header className="admin-page-header">
+      <header className="admin-page-header reference-admin-heading">
         <div>
           <span className="eyebrow">{product.slug}</span>
           <h1>{product.name}</h1>
@@ -51,19 +51,18 @@ export default async function Page({
           </p>
         </div>
       </header>
-      <section className="panel">
+      <div className="package-editor-grid"><section className="admin-card package-editor-details">
           <h2>Package details</h2>
           <ProductCreateForm product={product} />
-      </section>
-      <ProductBundleControls
+      </section><section className="package-editor-contents"><ProductBundleControls
         id={product.id}
         isLive={product.isLive}
         linkedTests={product.linkedTests}
         linkedMaterials={product.linkedMaterials}
         availableTests={product.availableTests}
         availableMaterials={product.availableMaterials}
-      />
-      <AdminDeleteButton endpoint={`/api/admin/catalog/products/${product.id}`} redirectTo="/admin/packages" label="Delete product" confirmation="Delete this offline product permanently? Products used in orders or student access cannot be deleted." />
+      /></section></div>
+      <div className="danger-zone-row"><div><strong>Delete product package</strong><span>Only offline packages without orders or student access can be deleted.</span></div><AdminDeleteButton endpoint={`/api/admin/catalog/products/${product.id}`} redirectTo="/admin/packages" label="Delete product" confirmation="Delete this offline product permanently? Products used in orders or student access cannot be deleted." /></div>
     </WorkspaceShell>
   );
 }

@@ -3,7 +3,7 @@ import { env } from "@/config/env";
 import { createOpaqueToken, hashIdentifier, hashPassword, normalizeEmail, verifyPassword } from "./crypto";
 import { authNotifier } from "./notifier";
 import { ADMIN_ROLE_KEYS, TOKEN_PURPOSE } from "./constants";
-import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, findUserByLogin, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin } from "./repository";
+import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, findUserById, findUserByLogin, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin, updatePassword } from "./repository";
 import type { EmailInput, LoginInput, RegisterInput, ResetPasswordInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
 
@@ -98,4 +98,11 @@ export async function resetPassword(input: ResetPasswordInput) {
   const userId = await consumePasswordReset(hashIdentifier(input.token), await hashPassword(input.password));
   if (!userId) throw new AppError("INVALID_OR_EXPIRED_TOKEN", "This password reset link is invalid or expired.", 400);
   return { passwordReset: true };
+}
+
+export async function changePassword(userId:string,sessionId:string,input:{currentPassword:string;newPassword:string}){
+  const user=await findUserById(userId);
+  if(!user||!(await verifyPassword(user.passwordHash,input.currentPassword)))throw new AppError("INVALID_CURRENT_PASSWORD","Current password is incorrect.",400);
+  await updatePassword(userId,await hashPassword(input.newPassword),sessionId);
+  return{passwordChanged:true};
 }

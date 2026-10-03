@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginInputSchema, mfaEnrollmentConfirmSchema, mfaLoginInputSchema, profileInputSchema, registerInputSchema, resetPasswordInputSchema } from "../../src/features/auth/validation";
+import { changePasswordInputSchema, loginInputSchema, mfaEnrollmentConfirmSchema, mfaLoginInputSchema, profileInputSchema, registerInputSchema, resetPasswordInputSchema } from "../../src/features/auth/validation";
 
 describe("auth validation", () => {
   it("normalizes an email during registration", () => {
@@ -27,5 +27,10 @@ describe("auth validation", () => {
     expect(() => mfaEnrollmentConfirmSchema.parse({ challengeToken, code: "12345" })).toThrow();
     expect(profileInputSchema.parse({ name: "  Learner Name  " }).name).toBe("Learner Name");
     expect(() => profileInputSchema.parse({ name: "x" })).toThrow();
+  });
+
+  it("requires a new password that differs from the current password",()=>{
+    expect(changePasswordInputSchema.parse({currentPassword:"current-password",newPassword:"different-password"}).newPassword).toBe("different-password");
+    expect(()=>changePasswordInputSchema.parse({currentPassword:"same-password",newPassword:"same-password"})).toThrow();
   });
 });

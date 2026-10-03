@@ -19,5 +19,5 @@ export function AdminDeleteButton({ endpoint, redirectTo, label, confirmation }:
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Delete failed."); }
     finally { setBusy(false); }
   }
-  return <div className="danger-zone"><button className="button danger" type="button" disabled={busy} onClick={() => void remove()}>{busy ? "Deleting…" : label}</button>{error && <p className="notice danger" role="alert">{error}</p>}</div>;
+  return <div className="delete-action"><button className="button danger" type="button" disabled={busy} onClick={() => void remove()}>{busy ? "Deleting…" : label}</button>{error && <p className="notice danger" role="alert">{error}</p>}</div>;
 }

@@ -59,11 +59,12 @@ export async function listManagedStudents() {
     select u.id,u.name,u.email,u.status,u.email_verified_at as "emailVerifiedAt",u.last_login_at as "lastLoginAt",u.created_at as "createdAt",
       (select count(*)::int from sessions s where s.user_id=u.id and s.revoked_at is null and s.expires_at>now()) as "activeSessions",
       (select count(*)::int from orders o where o.user_id=u.id) as "orderCount",
+      (select count(*)::int from entitlements e where e.user_id=u.id and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now()) as "activePackages",
       (select count(*)::int from support_tickets t where t.user_id=u.id and t.status not in('RESOLVED','CLOSED')) as "openTickets"
     from users u where exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key='STUDENT')
     order by u.created_at desc limit 250
   `);
-  return rows<{ id:string;name:string;email:string;status:string;emailVerifiedAt:Date|null;lastLoginAt:Date|null;createdAt:Date;activeSessions:number;orderCount:number;openTickets:number }>(result);
+  return rows<{ id:string;name:string;email:string;status:string;emailVerifiedAt:Date|null;lastLoginAt:Date|null;createdAt:Date;activeSessions:number;activePackages:number;orderCount:number;openTickets:number }>(result);
 }
 
 export async function findManagedStudent(studentId: string) {
@@ -105,12 +106,12 @@ export async function updateManagedStudentStatus(studentId: string, status: "ACT
 
 export async function listManagedSupportTickets() {
   const result = await db.execute(sql`
-    select t.id,t.subject,t.category,t.priority,t.status,t.created_at as "createdAt",t.updated_at as "updatedAt",u.name as "studentName",u.email,
+    select t.id,t.subject,t.category,t.priority,t.status,t.order_id as "orderId",t.created_at as "createdAt",t.updated_at as "updatedAt",u.name as "studentName",u.email,
       (select count(*)::int from support_messages m where m.ticket_id=t.id and not m.internal) as "messageCount"
     from support_tickets t join users u on u.id=t.user_id
     order by case t.priority when 'URGENT' then 0 when 'HIGH' then 1 when 'NORMAL' then 2 else 3 end,t.updated_at desc limit 250
   `);
-  return rows<{id:string;subject:string;category:string;priority:string;status:string;createdAt:Date;updatedAt:Date;studentName:string;email:string;messageCount:number}>(result);
+  return rows<{id:string;subject:string;category:string;priority:string;status:string;orderId:string|null;createdAt:Date;updatedAt:Date;studentName:string;email:string;messageCount:number}>(result);
 }
 
 type MessageAttachment = { objectKey: string; fileName: string; contentType: string } | null;

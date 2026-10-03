@@ -465,6 +465,16 @@ export function ProductBundleControls({
   );
 }
 
+export function ProductVisibilityToggle({ id, isLive }: { id: string; isLive: boolean }) {
+  const { busy, error, mutate } = useMutation();
+  return <div className="visibility-control">
+    <button type="button" role="switch" aria-checked={isLive} className={isLive ? "availability-toggle on" : "availability-toggle"} disabled={Boolean(busy)} onClick={() => mutate("visibility", () => request(`products/${id}/status`, { isLive: !isLive }, "PATCH"))}>
+      <i aria-hidden="true"/><span>{busy ? "Updating…" : isLive ? "Available for students" : "Not available"}</span>
+    </button>
+    {error ? <small className="danger-text" role="alert">{error}</small> : null}
+  </div>;
+}
+
 export function CatalogActions({
   id,
   kind,
