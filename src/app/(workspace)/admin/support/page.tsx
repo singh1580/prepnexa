@@ -2,18 +2,254 @@ import Link from "next/link";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { requireWorkspacePermission } from "@/features/auth/page-access";
 import { OPERATIONS_PERMISSIONS } from "@/features/operations/permissions";
-import { getManagedSupportTicket, getManagedSupportTickets } from "@/features/operations/service";
+import {
+  getManagedSupportTicket,
+  getManagedSupportTickets,
+} from "@/features/operations/service";
 import { ManagedTicketActions } from "@/features/operations/ui/admin-actions";
 
 export const metadata = { title: "Support" };
-export default async function Page({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; ticket?: string }> }) {
-  const auth = await requireWorkspacePermission(OPERATIONS_PERMISSIONS.manageSupport);
-  const query = await searchParams; const tickets = await getManagedSupportTickets(); const q = query.q?.trim().toLowerCase() ?? ""; const status = query.status ?? "ALL";const selected=query.ticket?await getManagedSupportTicket(query.ticket).catch(()=>null):null;
-  const visible = tickets.filter((ticket) => (!q || `${ticket.subject} ${ticket.studentName} ${ticket.email}`.toLowerCase().includes(q)) && (status === "ALL" || ticket.status === status));
-  const counts = { ALL: tickets.length, OPEN: tickets.filter((ticket) => ticket.status === "OPEN").length, IN_PROGRESS: tickets.filter((ticket) => ticket.status === "IN_PROGRESS" || ticket.status === "WAITING_FOR_STUDENT").length, RESOLVED: tickets.filter((ticket) => ticket.status === "RESOLVED" || ticket.status === "CLOSED").length };
-  return <WorkspaceShell admin name={auth.user.name} permissions={auth.permissions} section="support">
-    <header className="admin-page-header"><div><h1>Support</h1><p>Manage student support tickets and respond to enquiries.</p></div><form className="support-search"><input name="q" defaultValue={query.q} placeholder="Search tickets…" /><button className="button secondary small">Filters</button></form></header>
-    <nav className="support-tabs" aria-label="Ticket status"><Link className={status === "ALL" ? "active" : ""} href="/admin/support">All tickets <b>{counts.ALL}</b></Link><Link className={status === "OPEN" ? "active" : ""} href="/admin/support?status=OPEN">Open <b>{counts.OPEN}</b></Link><Link className={status === "IN_PROGRESS" ? "active" : ""} href="/admin/support?status=IN_PROGRESS">In progress <b>{counts.IN_PROGRESS}</b></Link><Link className={status === "RESOLVED" ? "active" : ""} href="/admin/support?status=RESOLVED">Resolved <b>{counts.RESOLVED}</b></Link></nav>
-    <div className={selected?"admin-support-split has-ticket":"admin-support-split"}>{visible.length ? <section className="admin-card support-table-card"><div className="table-scroll"><table className="admin-table"><thead><tr><th>Subject</th><th>Category</th><th>Student</th><th>Order</th><th>Status</th><th>Updated</th></tr></thead><tbody>{visible.map((ticket) => <tr className={selected?.id===ticket.id?"selected-row":""} key={ticket.id}><td><Link href={`/admin/support?ticket=${ticket.id}${status!=="ALL"?`&status=${status}`:""}${q?`&q=${encodeURIComponent(query.q??"")}`:""}`}><strong>{ticket.subject}</strong><small>#{ticket.id.slice(0,6).toUpperCase()}</small></Link></td><td>{ticket.category.replaceAll("_", " ")}</td><td><strong>{ticket.studentName}</strong><small>{ticket.email}</small></td><td>—</td><td><span className={`status-pill content-${ticket.status.toLowerCase()}`}>{ticket.status.replaceAll("_", " ")}</span></td><td>{new Date(ticket.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</td></tr>)}</tbody></table></div></section> : <section className="panel empty-state"><h2>No matching tickets</h2><p>Try another search or ticket status.</p></section>}{selected?<aside className="admin-card support-split-detail"><header><div><h2>{selected.subject}</h2><small>#{selected.id.slice(0,8).toUpperCase()}</small></div><span className={`status-pill content-${selected.status.toLowerCase()}`}>{selected.status.replaceAll("_"," ")}</span><Link className="icon-button" href="/admin/support" aria-label="Close ticket">×</Link></header><div className="ticket-student-strip"><span className="avatar">{selected.studentName.slice(0,1)}</span><div><strong>{selected.studentName}</strong><small>{selected.email}</small></div>{selected.orderId?<Link href={`/admin/orders?order=${selected.orderId}`}><small>Related order</small><strong>#{selected.orderId.slice(0,8)}</strong></Link>:null}</div><section className="support-thread admin-conversation">{selected.messages.map(item=><article className={item.internal?"support-message internal-note":item.student?"support-message student-message":"support-message admin-message"} key={item.id}><header><span className="avatar">{item.student?selected.studentName.slice(0,1):"A"}</span><strong>{item.internal?"Internal note":item.student?selected.studentName:"Admin User"}</strong><small>{new Date(item.createdAt).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})}</small></header><p>{item.body}</p>{item.attachmentObjectKey?<a className="message-attachment" href={`/api/operations/support/messages/${item.id}/attachment`} target="_blank" rel="noreferrer">Open {item.attachmentFileName??"attachment"}</a>:null}</article>)}</section><ManagedTicketActions ticketId={selected.id} status={selected.status} priority={selected.priority}/></aside>:null}</div>
-  </WorkspaceShell>;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string; ticket?: string }>;
+}) {
+  const auth = await requireWorkspacePermission(
+    OPERATIONS_PERMISSIONS.manageSupport,
+  );
+  const query = await searchParams;
+  const tickets = await getManagedSupportTickets();
+  const q = query.q?.trim().toLowerCase() ?? "";
+  const status = query.status ?? "ALL";
+  const selected = query.ticket
+    ? await getManagedSupportTicket(query.ticket).catch(() => null)
+    : null;
+  const visible = tickets.filter(
+    (ticket) =>
+      (!q ||
+        `${ticket.subject} ${ticket.studentName} ${ticket.email}`
+          .toLowerCase()
+          .includes(q)) &&
+      (status === "ALL" || ticket.status === status),
+  );
+  const counts = {
+    ALL: tickets.length,
+    OPEN: tickets.filter((ticket) => ticket.status === "OPEN").length,
+    IN_PROGRESS: tickets.filter(
+      (ticket) =>
+        ticket.status === "IN_PROGRESS" ||
+        ticket.status === "WAITING_FOR_STUDENT",
+    ).length,
+    RESOLVED: tickets.filter(
+      (ticket) => ticket.status === "RESOLVED" || ticket.status === "CLOSED",
+    ).length,
+  };
+  return (
+    <WorkspaceShell
+      admin
+      name={auth.user.name}
+      permissions={auth.permissions}
+      section="support"
+    >
+      <header className="admin-page-header">
+        <div>
+          <h1>Support</h1>
+          <p>Manage student support tickets and respond to enquiries.</p>
+        </div>
+        <form className="support-search">
+          <input
+            name="q"
+            defaultValue={query.q}
+            placeholder="Search tickets…"
+          />
+          <button className="button secondary small">Filters</button>
+        </form>
+      </header>
+      <nav className="support-tabs" aria-label="Ticket status">
+        <Link
+          className={status === "ALL" ? "active" : ""}
+          href="/admin/support"
+        >
+          All tickets <b>{counts.ALL}</b>
+        </Link>
+        <Link
+          className={status === "OPEN" ? "active" : ""}
+          href="/admin/support?status=OPEN"
+        >
+          Open <b>{counts.OPEN}</b>
+        </Link>
+        <Link
+          className={status === "IN_PROGRESS" ? "active" : ""}
+          href="/admin/support?status=IN_PROGRESS"
+        >
+          In progress <b>{counts.IN_PROGRESS}</b>
+        </Link>
+        <Link
+          className={status === "RESOLVED" ? "active" : ""}
+          href="/admin/support?status=RESOLVED"
+        >
+          Resolved <b>{counts.RESOLVED}</b>
+        </Link>
+      </nav>
+      <div
+        className={
+          selected ? "admin-support-split has-ticket" : "admin-support-split"
+        }
+      >
+        {visible.length ? (
+          <section className="admin-card support-table-card">
+            <div className="table-scroll">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Category</th>
+                    <th>Student</th>
+                    <th>Order</th>
+                    <th>Status</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((ticket) => (
+                    <tr
+                      className={
+                        selected?.id === ticket.id ? "selected-row" : ""
+                      }
+                      key={ticket.id}
+                    >
+                      <td>
+                        <Link
+                          href={`/admin/support?ticket=${ticket.id}${status !== "ALL" ? `&status=${status}` : ""}${q ? `&q=${encodeURIComponent(query.q ?? "")}` : ""}`}
+                        >
+                          <strong>{ticket.subject}</strong>
+                          <small>#{ticket.id.slice(0, 6).toUpperCase()}</small>
+                        </Link>
+                      </td>
+                      <td>{ticket.category.replaceAll("_", " ")}</td>
+                      <td>
+                        <strong>{ticket.studentName}</strong>
+                        <small>{ticket.email}</small>
+                      </td>
+                  <td>
+                    {ticket.orderId ? (
+                      <Link href={`/admin/orders?order=${ticket.orderId}`}>
+                        <strong>#{ticket.orderId.slice(0, 8).toUpperCase()}</strong>
+                      </Link>
+                    ) : (
+                      <span aria-label="No related order">—</span>
+                    )}
+                  </td>
+                      <td>
+                        <span
+                          className={`status-pill content-${ticket.status.toLowerCase()}`}
+                        >
+                          {ticket.status.replaceAll("_", " ")}
+                        </span>
+                      </td>
+                      <td>
+                        {new Date(ticket.updatedAt).toLocaleString("en-IN", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : (
+          <section className="panel empty-state">
+            <h2>No matching tickets</h2>
+            <p>Try another search or ticket status.</p>
+          </section>
+        )}
+        {selected ? (
+          <aside className="admin-card support-split-detail">
+            <header>
+              <div>
+                <h2>{selected.subject}</h2>
+                <small>#{selected.id.slice(0, 8).toUpperCase()}</small>
+              </div>
+              <span
+                className={`status-pill content-${selected.status.toLowerCase()}`}
+              >
+                {selected.status.replaceAll("_", " ")}
+              </span>
+              <Link
+                className="icon-button"
+                href="/admin/support"
+                aria-label="Close ticket"
+              >
+                ×
+              </Link>
+            </header>
+            <div className="ticket-student-strip">
+              <span className="avatar">{selected.studentName.slice(0, 1)}</span>
+              <div>
+                <strong>{selected.studentName}</strong>
+                <small>{selected.email}</small>
+              </div>
+              {selected.orderId ? (
+                <Link href={`/admin/orders?order=${selected.orderId}`}>
+                  <small>Related order</small>
+                  <strong>#{selected.orderId.slice(0, 8)}</strong>
+                </Link>
+              ) : null}
+            </div>
+            <section className="support-thread admin-conversation">
+              {selected.messages.map((item) => (
+                <article
+                  className={
+                    item.internal
+                      ? "support-message internal-note"
+                      : item.student
+                        ? "support-message student-message"
+                        : "support-message admin-message"
+                  }
+                  key={item.id}
+                >
+                  <header>
+                    <span className="avatar">
+                      {item.student ? selected.studentName.slice(0, 1) : "A"}
+                    </span>
+                    <strong>
+                      {item.internal
+                        ? "Internal note"
+                        : item.student
+                          ? selected.studentName
+                          : "Admin User"}
+                    </strong>
+                    <small>
+                      {new Date(item.createdAt).toLocaleString("en-IN", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </small>
+                  </header>
+                  <p>{item.body}</p>
+                  {item.attachmentObjectKey ? (
+                    <a
+                      className="message-attachment"
+                      href={`/api/operations/support/messages/${item.id}/attachment`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open {item.attachmentFileName ?? "attachment"}
+                    </a>
+                  ) : null}
+                </article>
+              ))}
+            </section>
+            <ManagedTicketActions
+              ticketId={selected.id}
+              status={selected.status}
+              priority={selected.priority}
+            />
+          </aside>
+        ) : null}
+      </div>
+    </WorkspaceShell>
+  );
 }
