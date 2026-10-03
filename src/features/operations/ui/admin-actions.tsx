@@ -315,6 +315,9 @@ export function NotificationCampaignForm({
           </article>
         </section>
         <div className="dialog-form-footer">
+          <button className="button secondary" type="button" onClick={(event) => event.currentTarget.closest("dialog")?.close()}>
+            Cancel
+          </button>
           <button className="button" type="submit">
             {busy ? "Sending…" : "Send notification"}
           </button>

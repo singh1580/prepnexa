@@ -9,6 +9,7 @@ import {
   getStudentCourse,
   getStudentCourses,
 } from "@/features/student-courses/service";
+import type { StudentCourse } from "@/features/student-courses/repository";
 
 type NavItem = { key: string; href: string; label: string; icon: string };
 
@@ -443,9 +444,11 @@ export async function WorkspaceShell({
   permissions = [],
   section,
   unreadNotifications = 0,
+  userId,
   activePackageSlug,
   activePackageView,
   activeMaterialId,
+  navigationPackages,
   children,
 }: {
   admin: boolean;
@@ -453,9 +456,11 @@ export async function WorkspaceShell({
   permissions?: readonly string[];
   section: string;
   unreadNotifications?: number;
+  userId?: string;
   activePackageSlug?: string;
   activePackageView?: PackageView;
   activeMaterialId?: string;
+  navigationPackages?: StudentCourse[];
   children: React.ReactNode;
 }) {
   const nav = admin ? adminNavigation(permissions) : studentNavigation;
@@ -464,12 +469,14 @@ export async function WorkspaceShell({
       ? "My packages"
       : (nav.find((item) => item.key === section)?.label ??
         (admin ? "Administration" : "Dashboard"));
-  const auth = !admin ? await getCurrentAuth() : null;
-  const [packages, activeCourse] = auth
+  const resolvedUserId = !admin
+    ? (userId ?? (await getCurrentAuth())?.user.id)
+    : undefined;
+  const [packages, activeCourse] = resolvedUserId
     ? await Promise.all([
-        getStudentCourses(auth.user.id),
+        navigationPackages ?? getStudentCourses(resolvedUserId),
         activePackageSlug
-          ? getStudentCourse(activePackageSlug, auth.user.id)
+          ? getStudentCourse(activePackageSlug, resolvedUserId)
           : Promise.resolve(undefined),
       ])
     : [[], undefined];
