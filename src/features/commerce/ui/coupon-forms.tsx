@@ -3,6 +3,10 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { commerceRequest } from "./api";
+import {
+  indiaDateTimeLocalToIso,
+  toIndiaDateTimeLocal,
+} from "@/lib/date-time";
 
 type ProductOption = {
   id: string;
@@ -24,13 +28,6 @@ export type CouponFormValue = {
   active: boolean;
   products: { id: string }[];
 };
-
-function dateTimeLocal(value: Date | string | null) {
-  if (!value) return "";
-  const date = new Date(value);
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
 
 export function CouponForm({
   products,
@@ -69,7 +66,7 @@ export function CouponForm({
           perUserLimit: 1,
           startsAt: null,
           endsAt: data.get("endsAt")
-            ? new Date(String(data.get("endsAt"))).toISOString()
+            ? indiaDateTimeLocalToIso(String(data.get("endsAt")))
             : null,
           active: data.get("active") === "on",
           productIds: data.getAll("productIds"),
@@ -148,7 +145,7 @@ export function CouponForm({
             <input
               name="endsAt"
               type="datetime-local"
-              defaultValue={dateTimeLocal(initial?.endsAt ?? null)}
+              defaultValue={toIndiaDateTimeLocal(initial?.endsAt ?? null)}
             />
           </label>
         </div>

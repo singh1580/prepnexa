@@ -139,7 +139,12 @@ export async function findIncompleteProductItems(id: string) {
   const result = await db.execute(sql`
     select
       coalesce((select jsonb_agg(t.title order by t.title) from ${productTests} pt join ${tests} t on t.id=pt.test_id
-        where pt.product_id=${id} and not exists(select 1 from test_questions tq where tq.test_id=t.id)),'[]'::jsonb) as tests,
+        where pt.product_id=${id} and (
+          not exists(select 1 from test_sections ts where ts.test_id=t.id)
+          or exists(select 1 from test_sections ts where ts.test_id=t.id and not exists(
+            select 1 from test_questions tq where tq.section_id=ts.id
+          ))
+        )),'[]'::jsonb) as tests,
       coalesce((select jsonb_agg(m.title order by m.title) from ${productMaterials} pm join ${materials} m on m.id=pm.material_id
         where pm.product_id=${id} and not exists(select 1 from ${materialVersions} mv where mv.material_id=m.id)),'[]'::jsonb) as materials
   `);

@@ -111,7 +111,7 @@ export async function listStudentTests(userId: string) {
     where (
       exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)
       or exists (select 1 from product_tests pt join products p on p.id = pt.product_id join entitlements en on en.product_id = p.id
-        where pt.test_id = t.id and p.is_live = true and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())
+        where pt.test_id = t.id and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())
     ) order by t.title
   `);
   return rows<
@@ -135,7 +135,7 @@ export async function findStudentTestAccess(
       (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId",
       (exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)
         or exists (select 1 from product_tests pt join products p on p.id = pt.product_id join entitlements en on en.product_id = p.id
-          where pt.test_id = t.id and p.is_live = true and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())) as "hasAccess"
+          where pt.test_id = t.id and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())) as "hasAccess"
     from tests t
     where t.id = ${testId} limit 1
   `);

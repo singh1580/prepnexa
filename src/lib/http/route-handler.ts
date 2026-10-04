@@ -14,6 +14,10 @@ export async function executeRoute(request: Request, handler: Handler) {
       logger.warn({ requestId, module: "http", action: "validation_failed", issues: error.issues }, "Request validation failed");
       return errorResponse("VALIDATION_ERROR", error.issues[0]?.message ?? "The request contains invalid data.", 400, requestId, error.flatten());
     }
+    if (error instanceof SyntaxError) {
+      logger.warn({ requestId, module: "http", action: "invalid_json" }, "Request body is not valid JSON");
+      return errorResponse("INVALID_JSON", "The request body must be valid JSON.", 400, requestId);
+    }
     if (error instanceof AppError) {
       logger.warn({ requestId, module: "http", action: "application_error", code: error.code, status: error.status }, error.message);
       return errorResponse(error.code, error.message, error.status, requestId, error.details);

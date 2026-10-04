@@ -1,4 +1,5 @@
 import { logger } from "@/lib/logger";
+import { toDate, toIsoString, toOptionalIsoString } from "@/lib/date-time";
 import { evaluateAttempt } from "@/features/student-results/service";
 import { normalizeAnswerForQuestion, type AnswerInput } from "./validation";
 import {
@@ -69,7 +70,11 @@ export async function startOrResumeAttempt(testId: string, actor: Actor) {
   if (
     !context.sections.length ||
     !context.questions.length ||
-    context.questions.length !== context.questionCount
+    context.questions.length !== context.questionCount ||
+    context.sections.some(
+      (section) =>
+        !context.questions.some((question) => question.sectionId === section.id),
+    )
   )
     throw attemptConflict(
       "This test is not ready to start. Contact the administrator.",
@@ -160,29 +165,33 @@ export async function startOrResumeAttempt(testId: string, actor: Actor) {
 export async function getAttempt(attemptId: string, userId: string) {
   const attempt = await findAttemptForStudent(attemptId, userId);
   if (!attempt) throw attemptNotFound();
+  return serializeAttempt(attempt);
+}
+
+function serializeAttempt(
+  attempt: NonNullable<Awaited<ReturnType<typeof findAttemptForStudent>>>,
+) {
+  const serverTime = toDate(attempt.serverTime);
+  const serverDeadlineAt = attempt.serverDeadlineAt
+    ? toDate(attempt.serverDeadlineAt)
+    : null;
   return {
     ...attempt,
-    startedAt: attempt.startedAt?.toISOString() ?? null,
-    serverDeadlineAt: attempt.serverDeadlineAt?.toISOString() ?? null,
-    submittedAt: attempt.submittedAt?.toISOString() ?? null,
-    serverTime: attempt.serverTime.toISOString(),
-    remainingSeconds: attempt.serverDeadlineAt
+    startedAt: toOptionalIsoString(attempt.startedAt),
+    serverDeadlineAt: toOptionalIsoString(attempt.serverDeadlineAt),
+    submittedAt: toOptionalIsoString(attempt.submittedAt),
+    serverTime: serverTime.toISOString(),
+    remainingSeconds: serverDeadlineAt
       ? Math.max(
           0,
-          Math.ceil(
-            (attempt.serverDeadlineAt.getTime() -
-              attempt.serverTime.getTime()) /
-              1000,
-          ),
+          Math.ceil((serverDeadlineAt.getTime() - serverTime.getTime()) / 1000),
         )
       : 0,
     questions: attempt.questions.map((question) => ({
       ...question,
       answer: {
         ...question.answer,
-        savedAt: question.answer.savedAt
-          ? new Date(question.answer.savedAt).toISOString()
-          : null,
+        savedAt: toOptionalIsoString(question.answer.savedAt),
       },
     })),
   };
@@ -191,32 +200,7 @@ export async function getAttempt(attemptId: string, userId: string) {
 export async function findAttempt(attemptId: string, userId: string) {
   const attempt = await findAttemptForStudent(attemptId, userId);
   if (!attempt) return null;
-  return {
-    ...attempt,
-    startedAt: attempt.startedAt?.toISOString() ?? null,
-    serverDeadlineAt: attempt.serverDeadlineAt?.toISOString() ?? null,
-    submittedAt: attempt.submittedAt?.toISOString() ?? null,
-    serverTime: attempt.serverTime.toISOString(),
-    remainingSeconds: attempt.serverDeadlineAt
-      ? Math.max(
-          0,
-          Math.ceil(
-            (attempt.serverDeadlineAt.getTime() -
-              attempt.serverTime.getTime()) /
-              1000,
-          ),
-        )
-      : 0,
-    questions: attempt.questions.map((question) => ({
-      ...question,
-      answer: {
-        ...question.answer,
-        savedAt: question.answer.savedAt
-          ? new Date(question.answer.savedAt).toISOString()
-          : null,
-      },
-    })),
-  };
+  return serializeAttempt(attempt);
 }
 
 export async function saveAttemptAnswer(
@@ -228,7 +212,7 @@ export async function saveAttemptAnswer(
   const target = await findAnswerTarget(attemptId, snapshotId, actor.userId);
   if (!target) throw attemptNotFound();
   if (target.status !== "IN_PROGRESS") throw attemptClosed();
-  if (new Date(target.serverDeadlineAt) <= new Date()) {
+  if (toDate(target.serverDeadlineAt) <= new Date()) {
     await submitAttemptRecord(attemptId, actor.userId, actor.requestId);
     throw attemptExpired();
   }
@@ -251,7 +235,7 @@ export async function saveAttemptAnswer(
   if (!saved) throw staleAnswer();
   return {
     version: saved.version,
-    savedAt: new Date(saved.savedAt).toISOString(),
+    savedAt: toIsoString(saved.savedAt),
   };
 }
 
@@ -280,7 +264,7 @@ export async function submitAttempt(attemptId: string, actor: Actor) {
     );
     return {
       ...submitted,
-      submittedAt: new Date(submitted.submittedAt).toISOString(),
+      submittedAt: toIsoString(submitted.submittedAt),
       resultId: result.id,
     };
   }
@@ -299,7 +283,7 @@ export async function submitAttempt(attemptId: string, actor: Actor) {
     return {
       id: existing.id,
       status: existing.status,
-      submittedAt: existing.submittedAt?.toISOString() ?? null,
+      submittedAt: toOptionalIsoString(existing.submittedAt),
       resultId: result.id,
     };
   }

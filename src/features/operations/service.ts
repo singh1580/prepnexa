@@ -10,8 +10,6 @@ import {
   findSupportAttachment,
   findNotificationDelivery,
   findStudentSupportTicket,
-  getOperationsSummary,
-  getStudentOperationsSummary,
   insertManagedSupportReply,
   insertNotificationCampaign,
   insertNotification,
@@ -252,10 +250,6 @@ export async function createNotificationCampaign(input: NotificationCampaignInpu
   return { id: result.id, recipientCount: result.recipientCount };
 }
 export const getAuditActivity = () => listAuditActivity();
-export const getAdminOperationsSummary = () => getOperationsSummary();
-export const getStudentDashboardSummary = (userId: string) =>
-  getStudentOperationsSummary(userId);
-
 export async function deliverNotification(
   deliveryId: string,
   requestId: string,

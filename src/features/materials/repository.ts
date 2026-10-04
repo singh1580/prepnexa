@@ -25,10 +25,10 @@ const accessSql = (userId: string) => sql`
   join lateral (
     select en.id as entitlement_id
     from product_materials pm
-    join products p on p.id = pm.product_id and p.is_live = true
+    join products p on p.id = pm.product_id
     left join entitlements en on en.product_id = p.id and en.user_id = ${userId}::uuid
       and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now()
-    where pm.material_id = m.id and (p.price_paise = 0 or en.id is not null)
+    where pm.material_id = m.id and ((p.is_live = true and p.price_paise = 0) or en.id is not null)
     order by (en.id is not null) desc limit 1
   ) access on true
 `;

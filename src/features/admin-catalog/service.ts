@@ -147,7 +147,7 @@ export async function setProductLive(id: string, isLive: boolean, actor: Actor) 
   if (isLive) {
     const incomplete = await findIncompleteProductItems(id);
     if (incomplete.tests.length)
-      throw invalidContentState(`Add questions to these tests before going live: ${incomplete.tests.join(", ")}.`);
+      throw invalidContentState(`Add at least one question to every section in these tests before going live: ${incomplete.tests.join(", ")}.`);
     if (incomplete.materials.length)
       throw invalidContentState(`Complete these materials before going live: ${incomplete.materials.join(", ")}.`);
   }

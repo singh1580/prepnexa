@@ -94,7 +94,7 @@ export async function listAccessibleCourses(userId: string) {
       where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status in ('CREATED','IN_PROGRESS')
       order by a.updated_at desc limit 1
     ) active on true
-    where p.is_live=true and (p.price_paise=0 or access.expires_at is not null)
+    where (p.is_live=true and p.price_paise=0) or access.expires_at is not null
     order by active.id is not null desc, p.name
   `);
   return rows<StudentCourse>(result);
@@ -124,7 +124,7 @@ export async function findAccessibleCourse(slug: string, userId: string) {
       where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status in ('CREATED','IN_PROGRESS')
       order by a.updated_at desc limit 1
     ) active on true
-    where p.slug=${slug} and p.is_live=true and (p.price_paise=0 or access.expires_at is not null)
+    where p.slug=${slug} and ((p.is_live=true and p.price_paise=0) or access.expires_at is not null)
     limit 1
   `);
   const course = rows<StudentCourse>(courseResult)[0];
@@ -201,10 +201,11 @@ export async function getStudentCourseDashboard(userId: string) {
       select r.id, r.score, r.max_score, r.published_at, t.title, p.slug
       from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id
       join product_tests pt on pt.test_id=t.id join products p on p.id=pt.product_id
-      left join entitlements e on e.product_id=p.id and e.user_id=${userId}::uuid and e.status='ACTIVE'
-        and e.starts_at<=now() and e.expires_at>now()
-      where a.user_id=${userId}::uuid and r.status in ('PUBLISHED','REVISED') and p.is_live=true
-        and (p.price_paise=0 or e.id is not null)
+      where a.user_id=${userId}::uuid and r.status in ('PUBLISHED','REVISED')
+        and ((p.is_live=true and p.price_paise=0) or exists(
+          select 1 from entitlements e where e.product_id=p.id and e.user_id=${userId}::uuid
+            and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now()
+        ))
       order by r.published_at desc limit 1
     ) latest on true
   `);

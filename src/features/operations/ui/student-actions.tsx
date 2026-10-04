@@ -2,12 +2,13 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { operationsRequest, operationsUpload, OperationsApiError } from "./api";
+import { formatIndiaDate, formatIndiaDateTime } from "@/lib/date-time";
 
 function message(error: unknown) { return error instanceof OperationsApiError ? error.message : "Couldn't complete this request."; }
 
 export function SessionList({ sessions }: { sessions: { id: string; userAgent: string | null; createdAt: Date; expiresAt: Date; current: boolean }[] }) {
   const router = useRouter(); const [busy, setBusy] = useState(""); const [error, setError] = useState("");
-  return <div className="security-list">{sessions.map((session) => <section className="panel security-row" key={session.id}><span className="security-icon" aria-hidden="true">□</span><div><h2>{session.current ? "Current session" : deviceName(session.userAgent)}</h2><p>Signed in {new Date(session.createdAt).toLocaleString("en-IN")} · expires {new Date(session.expiresAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}</p></div>{session.current ? <span className="status-pill">This device</span> : <button className="button secondary" disabled={busy === session.id} onClick={async () => { setBusy(session.id); setError(""); try { await operationsRequest(`sessions/${session.id}`, undefined, "DELETE"); router.refresh(); } catch (value) { setError(message(value)); } finally { setBusy(""); } }}>{busy === session.id ? "Revoking…" : "Revoke"}</button>}</section>)}{error && <p className="notice danger" role="alert">{error}</p>}</div>;
+  return <div className="security-list">{sessions.map((session) => <section className="panel security-row" key={session.id}><span className="security-icon" aria-hidden="true">□</span><div><h2>{session.current ? "Current session" : deviceName(session.userAgent)}</h2><p>Signed in {formatIndiaDateTime(session.createdAt)} · expires {formatIndiaDate(session.expiresAt)}</p></div>{session.current ? <span className="status-pill">This device</span> : <button className="button secondary" disabled={busy === session.id} onClick={async () => { setBusy(session.id); setError(""); try { await operationsRequest(`sessions/${session.id}`, undefined, "DELETE"); router.refresh(); } catch (value) { setError(message(value)); } finally { setBusy(""); } }}>{busy === session.id ? "Revoking…" : "Revoke"}</button>}</section>)}{error && <p className="notice danger" role="alert">{error}</p>}</div>;
 }
 
 export function NotificationActions({ unreadIds }: { unreadIds: string[] }) {

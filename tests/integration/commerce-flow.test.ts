@@ -5,6 +5,7 @@ const run=process.env.RUN_COMMERCE_INTEGRATION==="true";
 const timeout=Number(process.env.INTEGRATION_TIMEOUT_MS??60_000);
 const adminId=randomUUID();const studentId=randomUUID();const secondStudentId=randomUUID();
 const productId=randomUUID();const freeProductId=randomUUID();const code=`QA${randomUUID().replaceAll("-","").slice(0,12).toUpperCase()}`;
+const materialId=randomUUID();const materialVersionId=randomUUID();
 const email=`commerce-${randomUUID()}@example.com`;
 let couponId:string|undefined;let orderId:string|undefined;let freeOrderId:string|undefined;let paymentId:string|undefined;let paymentAttemptId:string|undefined;
 
@@ -14,6 +15,7 @@ describe.skipIf(!run)("provider-neutral commerce flow",()=>{
     if(freeOrderId){await db.delete(schema.entitlements).where(eq(schema.entitlements.orderId,freeOrderId));await db.delete(schema.orders).where(eq(schema.orders.id,freeOrderId));}
     if(couponId)await db.delete(schema.coupons).where(eq(schema.coupons.id,couponId));
     await db.delete(schema.products).where(inArray(schema.products.id,[productId,freeProductId]));
+    await db.delete(schema.materials).where(eq(schema.materials.id,materialId));
     if(paymentAttemptId)await db.delete(schema.webhookEvents).where(eq(schema.webhookEvents.providerEventId,`mock-capture:${paymentAttemptId}`));
     await db.delete(schema.auditLogs).where(or(eq(schema.auditLogs.actorUserId,adminId),eq(schema.auditLogs.actorUserId,studentId),eq(schema.auditLogs.actorUserId,secondStudentId)));
     await db.delete(schema.users).where(inArray(schema.users.id,[adminId,studentId,secondStudentId]));
@@ -21,7 +23,10 @@ describe.skipIf(!run)("provider-neutral commerce flow",()=>{
 
   it("reserves a coupon, captures once, grants access, refunds and completes a free order",async()=>{const[{db},schema,commerce,{eq}]=await Promise.all([import("../../src/db/client"),import("../../src/db/schema"),import("../../src/features/commerce/service"),import("drizzle-orm")]);
     await db.insert(schema.users).values([{id:adminId,email:`admin-${email}`,name:"QA Admin",passwordHash:"integration",status:"ACTIVE",emailVerifiedAt:new Date()},{id:studentId,email,name:"QA Student",passwordHash:"integration",status:"ACTIVE",emailVerifiedAt:new Date()},{id:secondStudentId,email:`second-${email}`,name:"QA Student Two",passwordHash:"integration",status:"ACTIVE",emailVerifiedAt:new Date()}]);
+    await db.insert(schema.materials).values({id:materialId,title:"QA Commerce Guide",type:"FILE",body:"Integration content",createdBy:adminId});
+    await db.insert(schema.materialVersions).values({id:materialVersionId,materialId,version:1,title:"QA Commerce Guide",body:"Integration content",createdBy:adminId});
     await db.insert(schema.products).values([{id:productId,slug:`paid-${productId}`,name:"QA Quant Pack",description:"QA only",pricePaise:20_000,currency:"INR",accessDays:30,isLive:true},{id:freeProductId,slug:`free-${freeProductId}`,name:"QA Free Pack",description:"QA only",pricePaise:0,currency:"INR",accessDays:7,isLive:true}]);
+    await db.insert(schema.productMaterials).values([{productId,materialId},{productId:freeProductId,materialId}]);
     couponId=(await commerce.createCoupon({code,type:"PERCENT",value:2500,currency:"INR",maxDiscountPaise:4_000,minOrderPaise:10_000,totalLimit:1,perUserLimit:1,startsAt:null,endsAt:null,active:true,productIds:[productId]},{userId:adminId,requestId:randomUUID()})).id;
     const student={userId:studentId,email,name:"QA Student",requestId:randomUUID()};const idempotencyKey=randomUUID();
     const checkout=await commerce.createCheckout({productId,couponCode:code,idempotencyKey},student);orderId=checkout.id;paymentAttemptId=checkout.paymentAttemptId??undefined;

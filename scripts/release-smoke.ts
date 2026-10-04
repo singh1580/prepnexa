@@ -1,8 +1,37 @@
 const baseUrl = (process.env.QA_BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const maximumLatencyMs = Number(process.env.QA_MAX_LATENCY_MS ?? 5_000);
 
-const publicRoutes = ["/", "/packages", "/free-tests", "/login", "/signup", "/forgot-password", "/api/health", "/api/ready"];
-const protectedRoutes = ["/dashboard", "/admin"];
+const publicRoutes = [
+  "/",
+  "/packages",
+  "/cart",
+  "/checkout",
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+  "/access-denied",
+  "/api/health",
+  "/api/ready",
+  "/api/catalog/search?q=tcs",
+];
+const protectedRoutes = [
+  "/dashboard",
+  "/dashboard/courses",
+  "/dashboard/orders",
+  "/dashboard/notifications",
+  "/dashboard/support",
+  "/admin",
+  "/admin/materials",
+  "/admin/tests",
+  "/admin/packages",
+  "/admin/coupons",
+  "/admin/orders",
+  "/admin/students",
+  "/admin/support",
+  "/admin/notifications",
+];
 
 async function request(path: string, expected: number | number[]) {
   try {

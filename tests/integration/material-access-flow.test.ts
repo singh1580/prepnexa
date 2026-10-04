@@ -39,9 +39,11 @@ describe.skipIf(!run)("protected material access flow", () => {
     const delivered = await materials.deliverStudentMaterial(token, { id: userId, name: "Material QA", email: `materials-${userId}@example.invalid` }, { requestId: randomUUID() });
     expect(delivered.bytes.byteLength).toBeGreaterThan(file.bytes.byteLength);
     expect(await db.select().from(schema.materialAccessLogs).where(eq(schema.materialAccessLogs.materialId, materialId))).toHaveLength(1);
+    await db.update(schema.products).set({ isLive: false }).where(eq(schema.products.id, productId));
+    expect((await materials.getStudentMaterial(materialId, userId)).accessSource).toBe("ENTITLEMENT");
     await db.update(schema.entitlements).set({ status: "REVOKED", revokedAt: new Date() }).where(eq(schema.entitlements.id, entitlementId));
     await expect(materials.getStudentMaterial(materialId, userId)).rejects.toMatchObject({ code: "MATERIAL_NOT_FOUND" });
-    await db.update(schema.products).set({ pricePaise: 0 }).where(eq(schema.products.id, productId));
+    await db.update(schema.products).set({ pricePaise: 0, isLive: true }).where(eq(schema.products.id, productId));
     expect((await materials.getStudentMaterial(materialId, userId)).accessSource).toBe("FREE");
   }, timeout * 12);
 });

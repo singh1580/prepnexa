@@ -21,3 +21,19 @@ it("returns the specific validation message to the form", async () => {
   expect(response.status).toBe(400);
   await expect(response.json()).resolves.toMatchObject({ error: { code: "VALIDATION_ERROR", message: "Select a correct answer." } });
 });
+
+it("returns a client error for malformed JSON instead of an internal error", async () => {
+  const request = new Request("http://localhost/api/test", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: "{broken",
+  });
+  const response = await executeRoute(request, async () => {
+    await request.json();
+    return new Response();
+  });
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toMatchObject({
+    error: { code: "INVALID_JSON" },
+  });
+});

@@ -64,11 +64,32 @@ async function main() {
           where r.key = 'ADMIN'
         ) as admin_count,
         (
+          select count(*)::int from users u
+          where not exists (select 1 from user_roles ur where ur.user_id = u.id)
+        ) as users_without_roles,
+        (
+          select count(*)::int from products p where p.is_live = true and (
+            (not exists(select 1 from product_tests pt where pt.product_id=p.id)
+              and not exists(select 1 from product_materials pm where pm.product_id=p.id))
+            or exists(select 1 from product_tests pt where pt.product_id=p.id and (
+              not exists(select 1 from test_sections ts where ts.test_id=pt.test_id)
+              or exists(select 1 from test_sections ts where ts.test_id=pt.test_id
+                and not exists(select 1 from test_questions tq where tq.section_id=ts.id))
+            ))
+            or exists(select 1 from product_materials pm where pm.product_id=p.id
+              and not exists(select 1 from material_versions mv where mv.material_id=pm.material_id))
+          ))
+        ) as incomplete_live_products,
+        (
+          select count(*)::int from sessions
+          where revoked_at is null and expires_at <= now()
+        ) as expired_open_sessions,
+        (
           select count(*)::int
           from information_schema.tables
           where table_schema = 'public' and table_name = any(${requiredTables})
         ) as critical_table_count
-    ` as Array<{ role_keys: string[] | null; admin_count: number; critical_table_count: number }>;
+    ` as Array<{ role_keys: string[] | null; admin_count: number; users_without_roles: number; incomplete_live_products: number; expired_open_sessions: number; critical_table_count: number }>;
     const roleKeys = databaseState?.role_keys ?? [];
     const expectedRoles = ["ADMIN", "STUDENT"];
     if (JSON.stringify(roleKeys) !== JSON.stringify(expectedRoles)) {
@@ -83,6 +104,27 @@ async function main() {
       process.exitCode = 1;
     } else {
       report("PASS", "Admin", "exactly one Admin account is assigned");
+    }
+
+    if (databaseState?.users_without_roles) {
+      report("FAIL", "User roles", `${databaseState.users_without_roles} users have no assigned role; run pending migrations`);
+      process.exitCode = 1;
+    } else {
+      report("PASS", "User roles", "every user has an assigned role");
+    }
+
+    if (databaseState?.incomplete_live_products) {
+      report("FAIL", "Live packages", `${databaseState.incomplete_live_products} live packages contain incomplete tests or materials`);
+      process.exitCode = 1;
+    } else {
+      report("PASS", "Live packages", "all live packages have consumable content");
+    }
+
+    if (databaseState?.expired_open_sessions) {
+      report("FAIL", "Sessions", `${databaseState.expired_open_sessions} expired sessions are not revoked; run pending migrations`);
+      process.exitCode = 1;
+    } else {
+      report("PASS", "Sessions", "no expired sessions remain open");
     }
 
     if (databaseState?.critical_table_count !== requiredTables.length) {

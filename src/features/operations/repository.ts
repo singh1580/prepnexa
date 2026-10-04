@@ -226,24 +226,6 @@ export async function listAuditActivity() {
   return rows<{id:string;action:string;entityType:string;entityId:string|null;createdAt:Date;actorName:string|null;actorEmail:string|null}>(result);
 }
 
-export async function getOperationsSummary() {
-  const result=await db.execute(sql`select (select count(*)::int from users u where exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key='STUDENT')) as students,(select count(*)::int from support_tickets where status not in('RESOLVED','CLOSED')) as "openTickets",(select count(*)::int from notification_deliveries where status in('PENDING','FAILED')) as "pendingDeliveries",(select count(*)::int from orders where status='PAID') as "paidOrders"`);
-  return rows<{students:number;openTickets:number;pendingDeliveries:number;paidOrders:number}>(result)[0];
-}
-
-export async function getStudentOperationsSummary(userId:string) {
-  const result=await db.execute(sql`
-    select
-      (select count(*)::int from tests t where t.status='PUBLISHED' and (exists(select 1 from product_tests pt join products p on p.id=pt.product_id where pt.test_id=t.id and p.is_live=true and p.price_paise=0) or exists(select 1 from product_tests pt join products p on p.id=pt.product_id join entitlements e on e.product_id=pt.product_id where pt.test_id=t.id and p.is_live=true and e.user_id=${userId} and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now()))) as tests,
-      (select count(*)::int from materials m where m.status='PUBLISHED' and exists(select 1 from product_materials pm join products p on p.id=pm.product_id left join entitlements e on e.product_id=p.id and e.user_id=${userId} and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now() where pm.material_id=m.id and p.is_live=true and (p.price_paise=0 or e.id is not null))) as materials,
-      (select count(distinct a.id)::int from attempts a join results r on r.attempt_id=a.id where a.user_id=${userId} and r.status in('PUBLISHED','REVISED')) as results,
-      (select count(*)::int from orders where user_id=${userId}) as orders,
-      (select count(*)::int from notifications where user_id=${userId} and read_at is null) as "unreadNotifications",
-      (select count(*)::int from support_tickets where user_id=${userId} and status not in('RESOLVED','CLOSED')) as "openTickets"
-  `);
-  return rows<{tests:number;materials:number;results:number;orders:number;unreadNotifications:number;openTickets:number}>(result)[0];
-}
-
 export async function listStudentSupportTickets(userId: string) {
   const result = await db.execute(sql`
     select t.id, t.subject, t.category, t.priority, t.status, t.order_id as "orderId", t.created_at as "createdAt", t.updated_at as "updatedAt",
