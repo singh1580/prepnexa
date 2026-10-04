@@ -182,10 +182,10 @@ export async function failPaymentAttempt(attemptId: string, code: string) {
 export async function findStudentPaymentAttempt(attemptId: string, userId: string) {
   const result = await db.execute(sql`
     select pa.id as "attemptId",pa.order_id as "orderId",pa.provider,pa.provider_order_id as "providerOrderId",pa.status,
-      pa.amount_paise as "amountPaise",pa.currency,o.user_id as "userId",o.status as "orderStatus"
+      pa.amount_paise as "amountPaise",pa.currency,pa.expires_at as "expiresAt",o.user_id as "userId",o.status as "orderStatus"
     from payment_attempts pa join orders o on o.id=pa.order_id where pa.id=${attemptId} and o.user_id=${userId} limit 1
   `);
-  return rows<{attemptId:string;orderId:string;provider:string;providerOrderId:string|null;status:string;amountPaise:number;currency:string;userId:string;orderStatus:string}>(result)[0];
+  return rows<{attemptId:string;orderId:string;provider:string;providerOrderId:string|null;status:string;amountPaise:number;currency:string;expiresAt:Date|null;userId:string;orderStatus:string}>(result)[0];
 }
 
 export async function findProviderAttempt(provider: string, providerOrderId: string) {
@@ -206,7 +206,7 @@ export async function processPaymentEvent(provider: string, event: VerifiedPayme
     ), target as (
       select pa.*,o.user_id from payment_attempts pa join orders o on o.id=pa.order_id join received r on true
       where pa.provider=${provider} and pa.provider_order_id=${event.providerOrderId} and pa.amount_paise=${event.amountPaise} and pa.currency=${event.currency}
-        and pa.status in('CREATED','PENDING') and o.status in('CREATED','PENDING') for update of pa,o
+        and pa.status in('CREATED','PENDING','FAILED') and o.status in('CREATED','PENDING','FAILED','CANCELLED') for update of pa,o
     ), captured as (
       insert into payments(id,order_id,provider,provider_order_id,provider_payment_id,idempotency_key,status,amount_paise,currency,verified_at,raw_metadata,created_at,updated_at)
       select ${paymentId}::uuid,t.order_id,${provider},${event.providerOrderId},${event.providerPaymentId},${`webhook:${provider}:${event.eventId}`},'CAPTURED',${event.amountPaise},${event.currency},now(),${JSON.stringify(event.payload)}::jsonb,now(),now() from target t
@@ -216,7 +216,7 @@ export async function processPaymentEvent(provider: string, event: VerifiedPayme
     ), paid as (
       update orders set status='PAID',paid_at=now(),updated_at=now() where id in(select order_id from captured) returning id,user_id
     ), consumed as (
-      update coupon_redemptions set status='CONSUMED',consumed_at=now() where order_id in(select id from paid) and status='RESERVED' returning order_id
+      update coupon_redemptions set status='CONSUMED',consumed_at=now(),released_at=null where order_id in(select id from paid) and status in('RESERVED','RELEASED') returning order_id
     ), granted as (
       insert into entitlements(user_id,product_id,order_id,status,starts_at,expires_at,created_at)
       select p.user_id,oi.product_id,p.id,'ACTIVE',now(),now()+make_interval(days=>oi.access_days),now() from paid p join order_items oi on oi.order_id=p.id
@@ -233,12 +233,13 @@ export async function processPaymentEvent(provider: string, event: VerifiedPayme
       values(${provider},${event.eventId},${event.type},true,${JSON.stringify(event.payload)}::jsonb,now())
       on conflict(provider,provider_event_id) do nothing returning id
     ), failed_attempt as (
-      update payment_attempts set status='FAILED',failure_code='PROVIDER_FAILED',updated_at=now()
-      where provider=${provider} and provider_order_id=${event.providerOrderId} and exists(select 1 from received) returning order_id
+      update payment_attempts set status=case when ${provider}='razorpay' then 'PENDING' else 'FAILED' end,failure_code='PROVIDER_FAILED',updated_at=now()
+      where provider=${provider} and provider_order_id=${event.providerOrderId} and status in('CREATED','PENDING') and exists(select 1 from received) returning order_id
     ), failed_order as (
-      update orders set status='FAILED',updated_at=now() where id in(select order_id from failed_attempt) and status in('CREATED','PENDING') returning id
+      update orders set status=case when ${provider}='razorpay' then status else 'FAILED'::order_status end,updated_at=now()
+      where id in(select order_id from failed_attempt) and status in('CREATED','PENDING') returning id
     ), released as (
-      update coupon_redemptions set status='RELEASED',released_at=now() where order_id in(select id from failed_order) and status='RESERVED' returning order_id
+      update coupon_redemptions set status='RELEASED',released_at=now() where order_id in(select id from failed_order) and status='RESERVED' and ${provider}<>'razorpay' returning order_id
     ), finished as (
       update webhook_events set processed_at=now() where id in(select id from received) returning id
     ) select id from failed_order

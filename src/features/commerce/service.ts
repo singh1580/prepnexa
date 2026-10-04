@@ -5,7 +5,9 @@ import { checkoutConflict, commerceNotFound, couponUnavailable, invalidCommerceS
 import { evaluateCartCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProducts, findManagedCoupon, findManagedOrder, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findStudentOrder, findStudentPaymentAttempt, insertCartCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCouponRecord } from "./repository";
 import { getPaymentProvider, type VerifiedPaymentEvent } from "./providers";
 import type { CheckoutInput, CouponInput, RefundInput } from "./validation";
+import type { RazorpayConfirmationInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
+import { env } from "@/config/env";
 
 type Actor = { userId: string; requestId: string };
 type StudentActor = Actor & { email: string; name: string };
@@ -137,6 +139,42 @@ export async function confirmMockPayment(attemptId: string, student: StudentActo
   const result = await processPaymentEvent("mock", event, student.requestId);
   if (!result) throw invalidCommerceState("The test payment could not be completed.");
   if (!result.duplicate) await queueStudentNotification({ userId: student.userId, type: "PURCHASE_CONFIRMED", deduplicationKey: `order-paid:${result.orderId}`, title: "Payment confirmed", body: "Your payment is confirmed and purchased access is active.", requestId: student.requestId });
+  return result;
+}
+
+export async function getRazorpayCheckout(attemptId: string, student: StudentActor) {
+  const attempt = await findStudentPaymentAttempt(attemptId, student.userId);
+  if (!attempt) throw commerceNotFound("Payment attempt");
+  if (attempt.provider !== "razorpay" || !attempt.providerOrderId) throw invalidCommerceState("This is not a Razorpay checkout.");
+  if (attempt.orderStatus === "PAID") return { paid: true as const, orderId: attempt.orderId };
+  if (!new Set(["CREATED", "PENDING", "FAILED"]).has(attempt.status) || !new Set(["CREATED", "PENDING", "FAILED"]).has(attempt.orderStatus)) throw invalidCommerceState("This payment is no longer available.");
+  if (attempt.expiresAt && new Date(attempt.expiresAt) <= new Date()) throw invalidCommerceState("This checkout has expired. Please create a new order.");
+  if (!env.RAZORPAY_KEY_ID) throw paymentUnavailable("Razorpay is not configured.");
+  return {
+    paid: false as const,
+    attemptId: attempt.attemptId,
+    orderId: attempt.orderId,
+    providerOrderId: attempt.providerOrderId,
+    keyId: env.RAZORPAY_KEY_ID,
+    amountPaise: attempt.amountPaise,
+    currency: attempt.currency,
+    expiresAt: attempt.expiresAt?.toISOString() ?? null,
+    customer: { name: student.name, email: student.email },
+  };
+}
+
+export async function confirmRazorpayPayment(input: RazorpayConfirmationInput, student: StudentActor) {
+  const attempt = await findStudentPaymentAttempt(input.attemptId, student.userId);
+  if (!attempt) throw commerceNotFound("Payment attempt");
+  if (attempt.provider !== "razorpay" || !attempt.providerOrderId || attempt.providerOrderId !== input.razorpay_order_id) throw paymentVerificationFailed();
+  const provider = getPaymentProvider("razorpay");
+  if (!provider.verifyPaymentConfirmation) throw paymentUnavailable();
+  const event = await provider.verifyPaymentConfirmation({ providerOrderId: attempt.providerOrderId, providerPaymentId: input.razorpay_payment_id, signature: input.razorpay_signature });
+  if (event.amountPaise !== attempt.amountPaise || event.currency !== attempt.currency) throw paymentVerificationFailed();
+  const result = await processPaymentEvent(provider.key, event, student.requestId);
+  if (!result) throw invalidCommerceState("The payment could not be applied to this order.");
+  if (!result.duplicate) await queueStudentNotification({ userId: student.userId, type: "PURCHASE_CONFIRMED", deduplicationKey: `order-paid:${result.orderId}`, title: "Payment confirmed", body: "Your Razorpay payment is confirmed and purchased access is active.", requestId: student.requestId });
+  logger.info({ requestId: student.requestId, module: "commerce", action: "razorpay_checkout_confirmed", provider: provider.key, orderId: result.orderId, duplicate: result.duplicate }, "Razorpay checkout confirmed");
   return result;
 }
 

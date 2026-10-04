@@ -35,6 +35,13 @@ export const checkoutInputSchema = z.object({
 }).strict().superRefine((value, context) => { if (!value.productId && !value.productIds?.length) context.addIssue({ code: "custom", path: ["productIds"], message: "Choose at least one product." }); }).transform((value) => ({ ...value, productIds: [...new Set(value.productIds ?? (value.productId ? [value.productId] : []))] }));
 export const checkoutPreviewSchema = z.object({ productId:z.uuid().optional(),productIds:z.array(z.uuid()).min(1).max(20).optional(),couponCode:z.union([couponCodeSchema,z.literal(""),z.null()]).optional().transform(value=>value||null) }).strict().superRefine((value,context)=>{if(!value.productId&&!value.productIds?.length)context.addIssue({code:"custom",path:["productIds"],message:"Choose at least one product."});}).transform(value=>({...value,productIds:[...new Set(value.productIds??(value.productId?[value.productId]:[]))]}));
 
+export const razorpayConfirmationSchema = z.object({
+  attemptId: z.uuid(),
+  razorpay_order_id: z.string().trim().regex(/^order_[A-Za-z0-9]+$/).max(100),
+  razorpay_payment_id: z.string().trim().regex(/^pay_[A-Za-z0-9]+$/).max(100),
+  razorpay_signature: z.string().trim().regex(/^[a-fA-F0-9]{64}$/),
+}).strict();
+
 export const refundInputSchema = z.object({
   amountPaise: z.coerce.number().int().positive(),
   reason: z.string().trim().min(3).max(1000),
@@ -44,4 +51,5 @@ export const refundInputSchema = z.object({
 
 export type CouponInput = z.infer<typeof couponInputSchema>;
 export type CheckoutInput = z.infer<typeof checkoutInputSchema>;
+export type RazorpayConfirmationInput = z.infer<typeof razorpayConfirmationSchema>;
 export type RefundInput = z.infer<typeof refundInputSchema>;

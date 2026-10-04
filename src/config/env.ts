@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const optionalSecret = z.preprocess(value => typeof value === "string" && value.trim() === "" ? undefined : value, z.string().trim().min(8).optional());
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development","test","production"]).default("development"),
   NEXT_PUBLIC_APP_NAME: z.string().default("Prepstore"), NEXT_PUBLIC_APP_URL: z.url(),
@@ -14,7 +16,8 @@ export const envSchema = z.object({
   LOGIN_WINDOW_MINUTES: z.coerce.number().int().min(1).max(60).default(15),
   MFA_ENCRYPTION_KEY: z.string().min(32).optional(),
   MFA_CHALLENGE_TTL_MINUTES: z.coerce.number().int().min(2).max(15).default(5),
-  PAYMENT_PROVIDER: z.string().default("mock"), PAYMENT_API_KEY: z.string().optional(), PAYMENT_WEBHOOK_SECRET: z.string().optional(),
+  PAYMENT_PROVIDER: z.enum(["mock","razorpay"]).default("mock"), PAYMENT_API_KEY: z.string().optional(), PAYMENT_WEBHOOK_SECRET: z.string().optional(),
+  RAZORPAY_KEY_ID: optionalSecret, RAZORPAY_KEY_SECRET: optionalSecret, RAZORPAY_WEBHOOK_SECRET: optionalSecret,
   RESEND_API_KEY: z.string().trim().min(1).optional(), EMAIL_FROM: z.string().trim().min(1).optional(),
   STORAGE_PROVIDER: z.enum(["local","s3"]).default("local"), STORAGE_BUCKET: z.string().optional(), STORAGE_REGION: z.string().optional(),
   STORAGE_ENDPOINT_URL: z.url().optional(), STORAGE_ACCESS_KEY_ID: z.string().optional(), STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
@@ -35,6 +38,12 @@ export const envSchema = z.object({
       path: ["EMAIL_FROM"],
       message: "A verified sender domain is required in production.",
     });
+  }
+
+  if (value.PAYMENT_PROVIDER === "razorpay") {
+    if (!value.RAZORPAY_KEY_ID) context.addIssue({ code: "custom", path: ["RAZORPAY_KEY_ID"], message: "RAZORPAY_KEY_ID is required when Razorpay is selected." });
+    if (!value.RAZORPAY_KEY_SECRET) context.addIssue({ code: "custom", path: ["RAZORPAY_KEY_SECRET"], message: "RAZORPAY_KEY_SECRET is required when Razorpay is selected." });
+    if (value.NODE_ENV === "production" && !value.RAZORPAY_WEBHOOK_SECRET) context.addIssue({ code: "custom", path: ["RAZORPAY_WEBHOOK_SECRET"], message: "RAZORPAY_WEBHOOK_SECRET is required in production." });
   }
 });
 

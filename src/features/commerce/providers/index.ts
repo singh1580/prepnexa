@@ -1,9 +1,10 @@
 import { env } from "@/config/env";
 import { paymentUnavailable } from "../errors";
 import { mockPaymentProvider } from "./mock";
+import { razorpayPaymentProvider } from "./razorpay";
 import type { PaymentProvider } from "./types";
 
-const providers: Record<string, PaymentProvider> = { mock: mockPaymentProvider };
+const providers: Record<string, PaymentProvider> = { mock: mockPaymentProvider, razorpay: razorpayPaymentProvider };
 
 export function getPaymentProvider(key = env.PAYMENT_PROVIDER.toLowerCase()) {
   const provider = providers[key];
@@ -12,4 +13,4 @@ export function getPaymentProvider(key = env.PAYMENT_PROVIDER.toLowerCase()) {
   return provider;
 }
 
-export type { PaymentProvider, ProviderCheckout, ProviderCheckoutInput, ProviderRefund, ProviderRefundInput, VerifiedPaymentEvent } from "./types";
+export type { PaymentProvider, ProviderCheckout, ProviderCheckoutInput, ProviderPaymentConfirmation, ProviderRefund, ProviderRefundInput, VerifiedPaymentEvent } from "./types";

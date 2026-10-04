@@ -34,3 +34,15 @@ describe("email environment validation", () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe("payment environment validation", () => {
+  it("requires Razorpay credentials when the provider is selected", () => {
+    expect(envSchema.safeParse({ ...base, PAYMENT_PROVIDER: "razorpay" }).success).toBe(false);
+    expect(envSchema.safeParse({ ...base, PAYMENT_PROVIDER: "razorpay", RAZORPAY_KEY_ID: "rzp_test_example", RAZORPAY_KEY_SECRET: "test_secret_value" }).success).toBe(true);
+  });
+
+  it("requires a Razorpay webhook secret in production", () => {
+    expect(envSchema.safeParse({ ...base, NODE_ENV: "production", PAYMENT_PROVIDER: "razorpay", RAZORPAY_KEY_ID: "rzp_live_example", RAZORPAY_KEY_SECRET: "live_secret_value" }).success).toBe(false);
+    expect(envSchema.safeParse({ ...base, NODE_ENV: "production", PAYMENT_PROVIDER: "razorpay", RAZORPAY_KEY_ID: "rzp_live_example", RAZORPAY_KEY_SECRET: "live_secret_value", RAZORPAY_WEBHOOK_SECRET: "webhook_secret_value" }).success).toBe(true);
+  });
+});

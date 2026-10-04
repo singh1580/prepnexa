@@ -48,7 +48,13 @@ async function main() {
   } else {
     report("WARN", "Email", "not configured; real signup/reset email testing will be unavailable");
   }
-  report(env.PAYMENT_PROVIDER === "mock" ? "PASS" : "WARN", "Payment", `${env.PAYMENT_PROVIDER} provider selected`);
+  if (env.PAYMENT_PROVIDER === "razorpay") {
+    report("PASS", "Payment", `Razorpay configured with ${env.RAZORPAY_KEY_ID?.startsWith("rzp_test_") ? "test" : "live"} credentials`);
+    report(env.RAZORPAY_WEBHOOK_SECRET ? "PASS" : "WARN", "Payment webhook", env.RAZORPAY_WEBHOOK_SECRET ? "Razorpay webhook verification configured" : "not configured; checkout confirmation works, but webhook recovery is unavailable");
+  } else {
+    report(env.NODE_ENV === "production" ? "FAIL" : "PASS", "Payment", "mock provider selected");
+    if (env.NODE_ENV === "production") process.exitCode = 1;
+  }
   report(env.STORAGE_PROVIDER === "local" ? "PASS" : "WARN", "Storage", `${env.STORAGE_PROVIDER} provider selected`);
 
   try {

@@ -37,9 +37,16 @@ export type ProviderRefundInput = {
 
 export type ProviderRefund = { providerRefundId: string; status: "SUCCEEDED" | "PROCESSING"; metadata?: Record<string, unknown> };
 
+export type ProviderPaymentConfirmation = {
+  providerOrderId: string;
+  providerPaymentId: string;
+  signature: string;
+};
+
 export interface PaymentProvider {
   readonly key: string;
   createCheckout(input: ProviderCheckoutInput): Promise<ProviderCheckout>;
   verifyWebhook(rawBody: string, headers: Headers): Promise<VerifiedPaymentEvent>;
+  verifyPaymentConfirmation?(input: ProviderPaymentConfirmation): Promise<VerifiedPaymentEvent>;
   refund(input: ProviderRefundInput): Promise<ProviderRefund>;
 }
