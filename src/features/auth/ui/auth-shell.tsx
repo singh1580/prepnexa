@@ -1,10 +1,38 @@
-"use client";
 import { Brand } from "@/components/brand";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
-  const path=usePathname();const signup=path==="/signup";const forgot=path==="/forgot-password"||path==="/reset-password";const verify=path==="/verify-email";
-  const story=signup?{title:"Your next step forward.",description:"Create your Prepstore account to access courses, test series and notes across all your devices.",points:["Learn from expert-designed content","Practice with exam-focused questions","Track your progress anytime, anywhere"]}:forgot?{title:"Reset your password",description:"No worries. We’ll help you get securely back into your account.",points:["Quick and secure","Reset instructions arrive in your inbox","Your account stays protected"]}:verify?{title:"Almost there!",description:"Complete this final step to keep your Prepstore account secure.",points:["This helps keep your account secure","Verification links expire for safety","You can request a fresh link anytime"]}:{title:"Prepare with purpose.",description:"Structured courses, test series and notes to help you go further.",points:["Learn at your pace with expert-designed content","Practice with real exam patterns and detailed solutions","Track progress and build consistency"]};
-  return <div className="auth-page"><header className="auth-site-header"><Brand/><nav><Link href="/packages">Exams</Link><Link href="/packages">Courses</Link><Link href="/packages">Test Series</Link><Link href="/packages">Notes</Link><Link href="/">Back to store</Link><Link className="auth-signin-link" href="/login">Sign in</Link></nav></header><div className="auth-shell"><aside className="auth-story"><div className="story-copy"><h1>{story.title}</h1><p>{story.description}</p><ul>{story.points.map((point,index)=><li key={point}><i>{index===0?"⌾":index===1?"✓":"↗"}</i><span>{point}</span></li>)}</ul></div></aside><main id="main-content" className="auth-main"><div className="auth-card">{children}</div><footer className="auth-footer">▢ &nbsp; This helps keep your account and data secure.</footer></main></div></div>;
+  return (
+    <div className="auth-shell">
+      <aside className="auth-story">
+        <Brand />
+        <div className="story-copy">
+          <span className="eyebrow">PREPARATION, REFINED</span>
+          <h1>
+            Turn effort into
+            <br />
+            measurable progress.
+          </h1>
+          <p>
+            Focused tests, organised material and meaningful analysis in one
+            calm learning workspace.
+          </p>
+          <div className="auth-orbit" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
+        </div>
+        <p className="story-footer">PREPSTORE · LEARN WITH INTENT</p>
+      </aside>
+      <main id="main-content" className="auth-main">
+        <div className="mobile-brand">
+          <Brand />
+        </div>
+        <div className="auth-card">{children}</div>
+        <footer className="auth-footer">
+          Secure access to your Prepstore workspace.
+        </footer>
+      </main>
+    </div>
+  );
 }

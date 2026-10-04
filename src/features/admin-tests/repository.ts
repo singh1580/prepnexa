@@ -13,6 +13,8 @@ import {
 import { db } from "@/db/client";
 import {
   auditLogs,
+  attemptQuestionSnapshots,
+  attemptSectionStates,
   attempts,
   products,
   productTests,
@@ -21,6 +23,7 @@ import {
   testSchedules,
   testSections,
   tests,
+  sectionResults,
 } from "@/db/schema";
 
 type Audit = { actorUserId: string; requestId: string };
@@ -318,7 +321,11 @@ export async function removeTestContent(
   const removal = questionId
     ? sql`delete from ${testQuestions} where section_id = ${sectionId} and question_id = ${questionId} and test_id in (select id from locked_test) returning test_id`
     : sql`delete from ${testSections} where id = ${sectionId} and test_id in (select id from locked_test)
-        and not exists (select 1 from ${testQuestions} where section_id = ${sectionId}) returning test_id`;
+        and not exists (select 1 from ${testQuestions} where section_id = ${sectionId})
+        and not exists (select 1 from ${attemptQuestionSnapshots} where section_id = ${sectionId})
+        and not exists (select 1 from ${attemptSectionStates} where section_id = ${sectionId})
+        and not exists (select 1 from ${sectionResults} where section_id = ${sectionId})
+        returning test_id`;
   const result = await db.execute(sql`
     with locked_test as (
       select id from ${tests} where id = (select test_id from ${testSections} where id = ${sectionId}) for update

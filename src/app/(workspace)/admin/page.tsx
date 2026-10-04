@@ -159,10 +159,7 @@ function RevenueChart({
           const [x, y] = points.split(" ")[index].split(",");
           return (
             <circle key={String(item.day)} cx={x} cy={y} r="3.5" fill="#ef4b17">
-              <title>
-                {chartDate(item.day, true)}:{" "}
-                {formatMoney(item.revenuePaise, "INR")}
-              </title>
+              <title>{`${chartDate(item.day, true)}: ${formatMoney(item.revenuePaise, "INR")}`}</title>
             </circle>
           );
         })}

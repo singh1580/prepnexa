@@ -124,7 +124,9 @@ export async function removeTestItem(
   });
   if (!removed)
     throw testStateConflict(
-      "The item could not be removed. Remove a section's questions first.",
+      questionId
+        ? "The question could not be removed from this section."
+        : "This section cannot be removed while it contains questions or is linked to student attempt history.",
     );
   return { removed: true };
 }
