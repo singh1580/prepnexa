@@ -13,7 +13,7 @@ export function StartAttemptButton({ testId, activeAttemptId, courseSlug, disabl
     if (activeAttemptId) { router.push(`/attempts/${activeAttemptId}${courseQuery}`); return; }
     setBusy(true); setError("");
     try {
-      const response = await fetch(`/api/tests/${testId}/attempts`, { method: "POST", credentials: "same-origin" });
+      const response = await fetch(`/api/tests/${testId}/attempts`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ courseSlug }) });
       const payload = await response.json() as ApiSuccess<{ id: string }> | ApiFailure;
       if (!response.ok || "error" in payload) throw new Error("error" in payload ? payload.error.message : "Couldn't start this test.");
       router.push(`/attempts/${payload.data.id}${courseQuery}`); router.refresh();

@@ -8,7 +8,7 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
     ]);
     const userId = randomUUID();
     const questionId = randomUUID(), revisionId = randomUUID(), testId = randomUUID(), secondTestId = randomUUID();
-    const sectionId = randomUUID(), secondSectionId = randomUUID(), productId = randomUUID();
+    const sectionId = randomUUID(), secondSectionId = randomUUID(), productId = randomUUID(), secondProductId = randomUUID();
     const requestId = randomUUID();
     try {
       await db.batch([
@@ -31,20 +31,23 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
           { testId, sectionId, questionId, sortOrder: 0 },
           { testId: secondTestId, sectionId: secondSectionId, questionId, sortOrder: 0 },
         ]),
-        db.insert(schema.products).values({ id: productId, slug: productId, name: "Attempt QA Free", pricePaise: 0, accessDays: 30, isLive: true }),
-        db.insert(schema.productTests).values([{ productId, testId }, { productId, testId: secondTestId }]),
+        db.insert(schema.products).values([
+          { id: productId, slug: productId, name: "Attempt QA Free", pricePaise: 0, accessDays: 30, isLive: true },
+          { id: secondProductId, slug: secondProductId, name: "Attempt QA Second Package", pricePaise: 0, accessDays: 30, isLive: true },
+        ]),
+        db.insert(schema.productTests).values([{ productId, testId }, { productId, testId: secondTestId }, { productId: secondProductId, testId }]),
       ]);
 
-      const started = await service.startOrResumeAttempt(testId, { userId, requestId });
+      const started = await service.startOrResumeAttempt(testId, productId, { userId, requestId });
       expect(started.resumed).toBe(false);
-      expect(await service.startOrResumeAttempt(testId, { userId, requestId })).toEqual({ id: started.id, resumed: true });
+      expect(await service.startOrResumeAttempt(testId, productId, { userId, requestId })).toEqual({ id: started.id, resumed: true });
       const attempt = await service.getAttempt(started.id, userId);
       expect(attempt.status).toBe("IN_PROGRESS");
       expect(attempt.questions).toHaveLength(1);
       expect(attempt.questions[0]).toMatchObject({ stem: "What is fifty percent of ten?", type: "SINGLE_CHOICE" });
       expect(attempt.questions[0]).not.toHaveProperty("explanation");
       expect(attempt.questions[0].options[0]).not.toHaveProperty("isCorrect");
-      await expect(service.startOrResumeAttempt(secondTestId, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CONFLICT", status: 409 });
+      await expect(service.startOrResumeAttempt(secondTestId, productId, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CONFLICT", status: 409 });
 
       const correctOption = attempt.questions[0].options.find(option => option.body === "5");
       expect(correctOption).toBeDefined();
@@ -61,11 +64,15 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
       expect(result.questions[0]).toMatchObject({ isCorrect: true, awardedMarks: "1.00", explanation: "Five is half of ten." });
       expect((result.questions[0].options as { isCorrect: boolean }[]).some(option => option.isCorrect)).toBe(true);
       await expect(service.saveAttemptAnswer(started.id, attempt.questions[0].id, { selectedOptionIds, textAnswer: null, numericAnswer: null, markedForReview: false, timeSpentSeconds: 12, version: 2 }, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CLOSED", status: 409 });
-      await expect(service.startOrResumeAttempt(testId, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CONFLICT", status: 409 });
+      await expect(service.startOrResumeAttempt(testId, productId, { userId, requestId })).rejects.toMatchObject({ code: "ATTEMPT_CONFLICT", status: 409 });
+      const sameTestInSecondPackage = await service.startOrResumeAttempt(testId, secondProductId, { userId, requestId });
+      expect(sameTestInSecondPackage).toMatchObject({ id: expect.any(String), resumed: false });
+      expect(sameTestInSecondPackage.id).not.toBe(started.id);
     } finally {
       await db.batch([
         db.delete(schema.attempts).where(eq(schema.attempts.userId, userId)),
         db.delete(schema.products).where(eq(schema.products.id, productId)),
+        db.delete(schema.products).where(eq(schema.products.id, secondProductId)),
         db.delete(schema.tests).where(eq(schema.tests.id, testId)),
         db.delete(schema.tests).where(eq(schema.tests.id, secondTestId)),
         db.delete(schema.questions).where(eq(schema.questions.id, questionId)),

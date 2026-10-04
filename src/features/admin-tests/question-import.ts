@@ -72,7 +72,7 @@ export async function addTestQuestions(
         "answerConfig" jsonb, position integer)
     ), locked_test as (
       select t.id from tests t join test_sections s on s.test_id = t.id
-      where s.id = ${sectionId}::uuid
+      where s.id = ${sectionId}::uuid and s.is_active = true
       for update of t
     ), locked_assignment as (
       select a.* from test_questions a join locked_test t on t.id = a.test_id

@@ -16,16 +16,16 @@ export default async function Page({
 }) {
   const auth = await requireWorkspace();
   if (auth.admin) redirect("/admin");
+  const courseSlug = (await searchParams).course;
   const parsed = z.uuid().safeParse((await params).id);
   if (!parsed.success) notFound();
   let material: Awaited<ReturnType<typeof getStudentMaterial>>;
   try {
-    material = await getStudentMaterial(parsed.data, auth.user.id);
+    material = await getStudentMaterial(parsed.data, auth.user.id, courseSlug);
   } catch (error) {
     if (error instanceof AppError && error.status === 404) notFound();
     throw error;
   }
-  const courseSlug = (await searchParams).course;
   const courseHref = courseSlug ? `/dashboard/courses/${encodeURIComponent(courseSlug)}?view=materials` : "/dashboard/courses";
   const course = courseSlug ? await getStudentCourse(courseSlug, auth.user.id) : null;
   const activeIndex=course?.materials.findIndex(item=>item.id===material.id)??-1;
@@ -65,7 +65,7 @@ export default async function Page({
             {material.allowDownload ? (
               <a
                 className="button secondary"
-                href={`/api/materials/${material.id}/access?action=download`}
+                href={`/api/materials/${material.id}/access?action=download${courseSlug?`&course=${encodeURIComponent(courseSlug)}`:""}`}
               >
                 Download protected copy
               </a>
@@ -76,7 +76,7 @@ export default async function Page({
           {material.contentType === "application/pdf" ? (
             <iframe
               title={material.title}
-              src={`/api/materials/${material.id}/access?action=view`}
+              src={`/api/materials/${material.id}/access?action=view${courseSlug?`&course=${encodeURIComponent(courseSlug)}`:""}`}
               className="pdf-reader"
             />
           ) : material.allowDownload ? (
@@ -88,7 +88,7 @@ export default async function Page({
               </p>
               <a
                 className="button"
-                href={`/api/materials/${material.id}/access?action=download`}
+                href={`/api/materials/${material.id}/access?action=download${courseSlug?`&course=${encodeURIComponent(courseSlug)}`:""}`}
               >
                 Download file
               </a>

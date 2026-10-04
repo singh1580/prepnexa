@@ -406,9 +406,9 @@ export function TestBuilder({
         </div>
         {sections.length ? (
           <div className="taxonomy-list">
-            {sections.map((section) => (
+            {sections.map((section, sectionIndex) => (
               <article className="taxonomy-card test-section-card" key={section.id}>
-                <header className="test-section-heading"><div><span>SECTION {section.sortOrder + 1}</span><h3>{section.title}</h3></div><strong>{section.questions.length} questions</strong></header>
+                <header className="test-section-heading"><div><span>SECTION {sectionIndex + 1}</span><h3>{section.title}</h3></div><strong>{section.questions.length} questions</strong></header>
                 {editable && (
                   <details>
                     <summary>Edit section settings</summary>
@@ -424,7 +424,7 @@ export function TestBuilder({
                             durationMinutes: data.get("durationMinutes")
                               ? Number(data.get("durationMinutes"))
                               : null,
-                            sortOrder: Number(data.get("sortOrder")),
+                            sortOrder: Number(data.get("sortOrder")) - 1,
                           }),
                           `edit-${section.id}`,
                         )
@@ -452,8 +452,8 @@ export function TestBuilder({
                           label="Section order"
                           name="sortOrder"
                           type="number"
-                          min={0}
-                          defaultValue={section.sortOrder}
+                          min={1}
+                          defaultValue={sectionIndex + 1}
                           required
                         />
                         <button className="button secondary" type="submit">
@@ -637,7 +637,7 @@ export function TestBuilder({
                   durationMinutes: data.get("durationMinutes")
                     ? Number(data.get("durationMinutes"))
                     : null,
-                  sortOrder: Number(data.get("sortOrder")),
+                  sortOrder: Number(data.get("sortOrder")) - 1,
                 }),
                 "section",
               )
@@ -665,11 +665,8 @@ export function TestBuilder({
                   label="Order"
                   name="sortOrder"
                   type="number"
-                  min={0}
-                  defaultValue={sections.reduce(
-                    (next, section) => Math.max(next, section.sortOrder + 1),
-                    0,
-                  )}
+                  min={1}
+                  defaultValue={sections.length + 1}
                   required
                 />
               </div>

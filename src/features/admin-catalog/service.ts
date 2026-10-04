@@ -212,7 +212,7 @@ export async function deleteProduct(id: string, actor: Actor) {
   if (!before) throw contentNotFound("Product");
   if (before.isLive) throw invalidContentState("Make this product offline before deleting it.");
   const removed = await write("product_delete", actor, () => deleteProductRecord(id, { actorUserId: actor.userId, requestId: actor.requestId }));
-  if (!removed) throw invalidContentState("Products used by an order or student entitlement must be retained.");
+  if (!removed) throw invalidContentState("Products used by an order, student entitlement, test attempt or material access history must be retained.");
   return removed;
 }
 export async function getMaterial(id: string) {

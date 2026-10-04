@@ -11,7 +11,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const auth = await requireStudent();
     const id = idSchema.parse((await params).id);
     const action = actionSchema.parse(new URL(request.url).searchParams.get("action") ?? "view").toUpperCase() as "VIEW" | "DOWNLOAD";
-    const token = await createStudentMaterialLink(id, action, auth.user.id);
+    const courseSlug = new URL(request.url).searchParams.get("course") ?? undefined;
+    const token = await createStudentMaterialLink(id, action, auth.user.id, courseSlug);
     const suffix = action === "DOWNLOAD" ? "&download=1" : "";
     return Response.redirect(new URL(`/api/materials/${id}/content?token=${encodeURIComponent(token)}${suffix}`, request.url), 303);
   });

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getCurrentAuth } from "@/features/auth/authorization";
+import { ADMIN_ROLE_KEYS } from "@/features/auth/constants";
 
 const documents = {
   terms: {
@@ -58,5 +60,11 @@ export async function generateMetadata({ params }: { params: Promise<{ document:
 export default async function Page({ params }: { params: Promise<{ document: string }> }) {
   const document = documents[(await params).document as DocumentKey];
   if (!document) notFound();
-  return <main className="legal-page"><nav className="store-breadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><span>›</span><b>{document.title}</b></nav><header><span className="eyebrow">PREPSTORE POLICIES</span><h1>{document.title}</h1><p>{document.intro}</p><small>Last updated: 4 October 2026</small></header><div className="legal-sections">{document.sections.map(([title, body]) => <section key={title}><h2>{title}</h2><p>{body}</p></section>)}</div><aside><strong>Need help with an account or order?</strong><Link href="/login?next=%2Fdashboard%2Fsupport">Contact support</Link></aside></main>;
+  const auth = await getCurrentAuth();
+  const supportHref = auth
+    ? auth.roles.some((role) => ADMIN_ROLE_KEYS.has(role))
+      ? "/admin/support"
+      : "/dashboard/support"
+    : "/login?next=%2Fdashboard%2Fsupport";
+  return <main className="legal-page"><nav className="store-breadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><span>›</span><b>{document.title}</b></nav><header><span className="eyebrow">PREPSTORE POLICIES</span><h1>{document.title}</h1><p>{document.intro}</p><small>Last updated: 4 October 2026</small></header><div className="legal-sections">{document.sections.map(([title, body]) => <section key={title}><h2>{title}</h2><p>{body}</p></section>)}</div><aside><strong>Need help with an account or order?</strong><Link href={supportHref}>Contact support</Link></aside></main>;
 }

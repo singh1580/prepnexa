@@ -20,7 +20,6 @@ import {
   findAttemptOwnerStatus,
   findStartContext,
   findStudentTestAccess,
-  listStudentTests,
   randomUUID,
   saveAnswerRecord,
   stableOrder,
@@ -40,29 +39,26 @@ function databaseCode(error: unknown) {
       : undefined;
 }
 
-export async function getStudentTests(userId: string) {
+export async function getStudentTest(testId: string, userId: string, productSlug?: string) {
   await expireStudentAttempts(userId);
-  return listStudentTests(userId);
-}
-
-export async function getStudentTest(testId: string, userId: string) {
-  await expireStudentAttempts(userId);
-  const test = await findStudentTestAccess(testId, userId);
+  const test = await findStudentTestAccess(testId, userId, productSlug);
   if (!test) throw studentTestNotFound();
   return test;
 }
 
-export async function startOrResumeAttempt(testId: string, actor: Actor) {
+export async function startOrResumeAttempt(testId: string, productSlug: string | undefined, actor: Actor) {
   await expireStudentAttempts(actor.userId);
+  const context = await findStartContext(testId, actor.userId, productSlug);
+  if (!context) throw studentTestNotFound();
+  if (!context.hasAccess || !context.productId || !context.productSlug)
+    throw testAccessRequired();
   const active = await findActiveAttempt(actor.userId);
-  if (active?.testId === testId) return { id: active.id, resumed: true };
+  if (active?.testId === testId && active.productId === context.productId)
+    return { id: active.id, resumed: true };
   if (active)
     throw attemptConflict(
       "Finish or submit your active test before starting another one.",
     );
-  const context = await findStartContext(testId, actor.userId);
-  if (!context) throw studentTestNotFound();
-  if (!context.hasAccess) throw testAccessRequired();
   if (context.attemptsUsed >= context.maxAttempts)
     throw attemptConflict(
       "You have used all attempts available for this test.",
@@ -130,6 +126,7 @@ export async function startOrResumeAttempt(testId: string, actor: Actor) {
       attemptId,
       userId: actor.userId,
       testId,
+      productId: context.productId,
       sequence: context.attemptsUsed + 1,
       deadline,
       sections: context.sections,
@@ -152,7 +149,10 @@ export async function startOrResumeAttempt(testId: string, actor: Actor) {
   } catch (error) {
     if (databaseCode(error) === "23505") {
       const concurrent = await findActiveAttempt(actor.userId);
-      if (concurrent?.testId === testId)
+      if (
+        concurrent?.testId === testId &&
+        concurrent.productId === context.productId
+      )
         return { id: concurrent.id, resumed: true };
       throw attemptConflict(
         "Another test attempt is already active for this account.",

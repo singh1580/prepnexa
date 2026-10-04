@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import {
   attemptAnswers,
   attempts,
+  products,
   questionRevisionOptions,
   questionRevisions,
   questions,
@@ -14,6 +15,8 @@ import {
 
 export type StudentTestAccess = {
   id: string;
+  productId: string | null;
+  productSlug: string | null;
   title: string;
   category: "FULL_MOCK" | "SUBJECT_TEST" | "TOPIC_SET" | null;
   durationMinutes: number;
@@ -99,44 +102,29 @@ export async function expireStudentAttempts(userId: string) {
     );
 }
 
-export async function listStudentTests(userId: string) {
-  const result = await db.execute(sql`
-    select t.id, t.title, t.category, t.duration_minutes as "durationMinutes", t.max_attempts as "maxAttempts",
-      'Prepstore' as "examName",
-      (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
-      (select count(*)::int from test_sections ts where ts.test_id=t.id) as "sectionCount",
-      (select count(*)::int from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
-      (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId"
-    from tests t
-    where (
-      exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)
-      or exists (select 1 from product_tests pt join products p on p.id = pt.product_id join entitlements en on en.product_id = p.id
-        where pt.test_id = t.id and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())
-    ) order by t.title
-  `);
-  return rows<
-    Omit<
-      StudentTestAccess,
-      "instructions" | "shuffleQuestions" | "shuffleOptions" | "hasAccess"
-    >
-  >(result);
-}
-
 export async function findStudentTestAccess(
   testId: string,
   userId: string,
+  productSlug?: string,
 ): Promise<StudentTestAccess | undefined> {
   const result = await db.execute(sql`
     select t.id, t.title, t.category, t.duration_minutes as "durationMinutes", t.instructions,
       t.max_attempts as "maxAttempts", t.shuffle_questions as "shuffleQuestions", t.shuffle_options as "shuffleOptions",
+      selected.id as "productId", selected.slug as "productSlug",
       'Prepstore' as "examName", (select count(*)::int from test_questions tq where tq.test_id = t.id) as "questionCount",
-      (select count(*)::int from test_sections ts where ts.test_id=t.id) as "sectionCount",
-      (select count(*)::int from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
-      (select a.id from attempts a where a.user_id = ${userId} and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId",
-      (exists (select 1 from product_tests pt join products p on p.id = pt.product_id where pt.test_id = t.id and p.is_live = true and p.price_paise = 0)
-        or exists (select 1 from product_tests pt join products p on p.id = pt.product_id join entitlements en on en.product_id = p.id
-          where pt.test_id = t.id and en.user_id = ${userId} and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now())) as "hasAccess"
+      (select count(*)::int from test_sections ts where ts.test_id=t.id and ts.is_active=true) as "sectionCount",
+      (select count(*)::int from attempts a where a.user_id = ${userId} and a.product_id=selected.id and a.test_id = t.id and a.status <> 'VOID') as "attemptsUsed",
+      (select a.id from attempts a where a.user_id = ${userId} and a.product_id=selected.id and a.test_id = t.id and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1) as "activeAttemptId",
+      (selected.id is not null) as "hasAccess"
     from tests t
+    left join lateral (
+      select p.id,p.slug from product_tests pt join products p on p.id=pt.product_id
+      left join entitlements en on en.product_id=p.id and en.user_id=${userId}::uuid
+        and en.status='ACTIVE' and en.starts_at<=now() and en.expires_at>now()
+      where pt.test_id=t.id and (${productSlug ?? null}::text is null or p.slug=${productSlug ?? null})
+        and ((p.is_live=true and p.price_paise=0) or en.id is not null)
+      order by case when p.slug=${productSlug ?? null} then 0 else 1 end,p.name limit 1
+    ) selected on true
     where t.id = ${testId} limit 1
   `);
   return rows<StudentTestAccess>(result)[0];
@@ -155,8 +143,9 @@ export async function findActiveAttempt(userId: string) {
 export async function findStartContext(
   testId: string,
   userId: string,
+  productSlug?: string,
 ): Promise<StartContext | undefined> {
-  const access = await findStudentTestAccess(testId, userId);
+  const access = await findStudentTestAccess(testId, userId, productSlug);
   if (!access) return undefined;
   const [sections, revisionRows] = await Promise.all([
     db
@@ -166,7 +155,7 @@ export async function findStartContext(
         sortOrder: testSections.sortOrder,
       })
       .from(testSections)
-      .where(eq(testSections.testId, testId))
+      .where(and(eq(testSections.testId, testId), eq(testSections.isActive, true)))
       .orderBy(asc(testSections.sortOrder)),
     db
       .select({
@@ -193,7 +182,12 @@ export async function findStartContext(
           sql`${questionRevisions.version} = (select max(qr.version) from question_revisions qr where qr.question_id = ${questions.id})`,
         ),
       )
-      .where(eq(testQuestions.testId, testId))
+      .where(
+        and(
+          eq(testQuestions.testId, testId),
+          eq(testSections.isActive, true),
+        ),
+      )
       .orderBy(asc(testSections.sortOrder), asc(testQuestions.sortOrder)),
   ]);
   const revisionIds = revisionRows.map((item) => item.revisionId);
@@ -217,6 +211,7 @@ export async function createAttemptWithSnapshots(input: {
   attemptId: string;
   userId: string;
   testId: string;
+  productId: string;
   sequence: number;
   deadline: Date;
   sections: StartContext["sections"];
@@ -250,8 +245,8 @@ export async function createAttemptWithSnapshots(input: {
   );
   const result = await db.execute(sql`
     with inserted_attempt as (
-      insert into attempts (id, user_id, test_id, status, sequence, started_at, server_deadline_at, created_at, updated_at)
-      values (${input.attemptId}::uuid, ${input.userId}::uuid, ${input.testId}::uuid, 'IN_PROGRESS', ${input.sequence}, now(), ${input.deadline}, now(), now())
+      insert into attempts (id, user_id, test_id, product_id, status, sequence, started_at, server_deadline_at, created_at, updated_at)
+      values (${input.attemptId}::uuid, ${input.userId}::uuid, ${input.testId}::uuid, ${input.productId}::uuid, 'IN_PROGRESS', ${input.sequence}, now(), ${input.deadline}, now(), now())
       returning id
     ), inserted_sections as (
       insert into attempt_section_states (attempt_id, section_id, started_at, deadline_at)
@@ -272,7 +267,7 @@ export async function createAttemptWithSnapshots(input: {
     ), audit as (
       insert into audit_logs (actor_user_id, action, entity_type, entity_id, request_id, after)
       select ${input.userId}::uuid, 'attempt.started', 'attempt', id::text, ${input.requestId}::text,
-        jsonb_build_object('testId', ${input.testId}::text, 'sequence', ${input.sequence}::integer)
+        jsonb_build_object('testId', ${input.testId}::text, 'productId', ${input.productId}::text, 'sequence', ${input.sequence}::integer)
       from inserted_attempt returning id
     ) select id from inserted_attempt
   `);
@@ -299,6 +294,8 @@ export async function findAttemptForStudent(attemptId: string, userId: string) {
     .select({
       id: attempts.id,
       testId: attempts.testId,
+      productId: attempts.productId,
+      productSlug: products.slug,
       status: attempts.status,
       sequence: attempts.sequence,
       startedAt: attempts.startedAt,
@@ -310,6 +307,7 @@ export async function findAttemptForStudent(attemptId: string, userId: string) {
     })
     .from(attempts)
     .innerJoin(tests, eq(tests.id, attempts.testId))
+    .leftJoin(products, eq(products.id, attempts.productId))
     .where(and(eq(attempts.id, attemptId), eq(attempts.userId, userId)))
     .limit(1);
   if (!attempt) return undefined;

@@ -14,21 +14,22 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const auth = await requireWorkspace();
   if (auth.admin) redirect("/admin");
   const notificationsPromise=getStudentNotifications(auth.user.id);
+  const courseSlug = (await searchParams).course;
   let test;
-  try { test = await getStudentTest((await params).id, auth.user.id); }
+  try { test = await getStudentTest((await params).id, auth.user.id, courseSlug); }
   catch (error) { if (error instanceof AppError && error.status === 404) notFound(); throw error; }
   const notifications=await notificationsPromise;
   const exhausted = test.attemptsUsed >= test.maxAttempts && !test.activeAttemptId;
-  const courseSlug = (await searchParams).course;
-  const courseHref = courseSlug ? `/dashboard/courses/${encodeURIComponent(courseSlug)}?view=tests` : "/dashboard/courses";
+  const resolvedCourseSlug = test.productSlug ?? courseSlug;
+  const courseHref = resolvedCourseSlug ? `/dashboard/courses/${encodeURIComponent(resolvedCourseSlug)}?view=tests` : "/dashboard/courses";
   const sectionCount=test.sectionCount;
-  return <WorkspaceShell admin={false} name={auth.user.name} section="courses" unreadNotifications={notifications.unreadCount} activePackageSlug={courseSlug} activePackageView="tests">
-    <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{courseSlug?<Link href={courseHref}>{courseSlug.replaceAll("-"," ")}</Link>:null}<span>›</span><b>{test.title}</b></nav>
+  return <WorkspaceShell admin={false} name={auth.user.name} section="courses" unreadNotifications={notifications.unreadCount} activePackageSlug={resolvedCourseSlug} activePackageView="tests">
+    <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{resolvedCourseSlug?<><Link href={courseHref}>{resolvedCourseSlug.replaceAll("-"," ")}</Link><span>›</span></>:null}<b>{test.title}</b></nav>
     <header className="reference-test-heading"><h1>{test.title}</h1><p>{test.instructions?.split("\n").find(Boolean)||"Full-length mock test designed to simulate the actual exam pattern and difficulty level."}</p></header>
     {!test.hasAccess?<section className="student-empty-package"><h2>Access required</h2><p>This test is not included in your active packages.</p><Link href="/packages">Explore packages</Link></section>:<>
       <section className="test-fact-row"><article><i><TestIcon name="time"/></i><div><strong>{test.durationMinutes} minutes</strong><span>Duration</span></div></article><article><i><TestIcon name="questions"/></i><div><strong>{test.questionCount} questions</strong><span>Total questions</span></div></article><article><i><TestIcon name="marks"/></i><div><strong>Per question</strong><span>Marks shown in test</span></div></article><article><i><TestIcon name="attempt"/></i><div><strong>{test.maxAttempts} attempt{test.maxAttempts===1?"":"s"}</strong><span>Allowed</span></div></article></section>
       <section className="reference-instructions"><h2>Important instructions</h2><div className="instruction-items"><article><i><TestIcon name="format"/></i><div><h3>Test format</h3><p>The test consists of {sectionCount||"multiple"} section{sectionCount===1?"":"s"}{sectionCount?` and ${test.questionCount} questions`:""}. Use the section tabs during the test to move between sections.</p></div></article><article><i><TestIcon name="marks"/></i><div><h3>Marking scheme</h3><p>Marks and negative marks are displayed with each question. Read them before selecting your answer.</p></div></article><article><i><TestIcon name="time"/></i><div><h3>Time management</h3><p>Total duration is {test.durationMinutes} minutes. You can switch between sections any time before submission.</p></div></article><article><i><TestIcon name="attempt"/></i><div><h3>Attempt policy</h3><p>You have {test.maxAttempts} attempt{test.maxAttempts===1?"":"s"} for this test. Submitted attempts cannot be reopened.</p></div></article><article><i><TestIcon name="rules"/></i><div><h3>General guidelines</h3><ul><li>Ensure a stable internet connection.</li><li>Do not refresh or close the browser during submission.</li><li>Your answers are auto-saved as you continue.</li><li>Follow all on-screen instructions carefully.</li></ul></div></article></div></section>
-      <div className="instruction-page-actions"><TestInstructionsStart testId={test.id} activeAttemptId={test.activeAttemptId} courseSlug={courseSlug} exhausted={exhausted}/></div>
+      <div className="instruction-page-actions"><TestInstructionsStart testId={test.id} activeAttemptId={test.activeAttemptId} courseSlug={resolvedCourseSlug} exhausted={exhausted}/></div>
     </>}
   </WorkspaceShell>;
 }

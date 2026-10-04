@@ -126,7 +126,7 @@ export async function removeTestItem(
     throw testStateConflict(
       questionId
         ? "The question could not be removed from this section."
-        : "This section cannot be removed while it contains questions or is linked to student attempt history.",
+        : "Remove every question from this section before removing the section.",
     );
   return { removed: true };
 }

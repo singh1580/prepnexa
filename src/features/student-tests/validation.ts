@@ -2,6 +2,9 @@ import { z } from "zod";
 import { attemptConflict } from "./errors";
 
 export const entityIdSchema = z.uuid();
+export const attemptStartInputSchema = z.object({
+  courseSlug: z.string().trim().min(1).max(160).optional(),
+}).strict();
 export const answerInputSchema = z.object({
   selectedOptionIds: z.array(z.uuid()).max(20).default([]),
   textAnswer: z.string().trim().max(10_000).nullable().default(null),

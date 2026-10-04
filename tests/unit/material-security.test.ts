@@ -16,7 +16,7 @@ describe("protected material primitives", () => {
   });
 
   it("signs scoped expiring material links and rejects tampering", () => {
-    const input = { userId: crypto.randomUUID(), materialId: crypto.randomUUID(), versionId: crypto.randomUUID(), action: "VIEW" as const };
+    const input = { userId: crypto.randomUUID(), materialId: crypto.randomUUID(), productId: crypto.randomUUID(), versionId: crypto.randomUUID(), action: "VIEW" as const };
     const token = createMaterialToken(input);
     expect(verifyMaterialToken(token)).toMatchObject(input);
     const [payload, signature] = token.split(".");

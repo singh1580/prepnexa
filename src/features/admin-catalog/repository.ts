@@ -140,8 +140,8 @@ export async function findIncompleteProductItems(id: string) {
     select
       coalesce((select jsonb_agg(t.title order by t.title) from ${productTests} pt join ${tests} t on t.id=pt.test_id
         where pt.product_id=${id} and (
-          not exists(select 1 from test_sections ts where ts.test_id=t.id)
-          or exists(select 1 from test_sections ts where ts.test_id=t.id and not exists(
+          not exists(select 1 from test_sections ts where ts.test_id=t.id and ts.is_active=true)
+          or exists(select 1 from test_sections ts where ts.test_id=t.id and ts.is_active=true and not exists(
             select 1 from test_questions tq where tq.section_id=ts.id
           ))
         )),'[]'::jsonb) as tests,
@@ -579,6 +579,8 @@ export async function deleteProductRecord(id: string, audit: Audit) {
         and not p.is_live
         and not exists(select 1 from order_items oi where oi.product_id=p.id)
         and not exists(select 1 from entitlements e where e.product_id=p.id)
+        and not exists(select 1 from attempts a where a.product_id=p.id)
+        and not exists(select 1 from material_access_logs mal where mal.product_id=p.id)
       returning p.id
     )
     insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,"after")

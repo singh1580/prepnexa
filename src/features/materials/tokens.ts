@@ -4,8 +4,8 @@ import { env } from "@/config/env";
 import { AppError } from "@/lib/errors/app-error";
 import { invalidMaterialLink } from "./errors";
 
-export type MaterialTokenPayload = { userId: string; materialId: string; versionId: string; action: "VIEW" | "DOWNLOAD"; expiresAt: number };
-const payloadSchema = z.object({ userId: z.uuid(), materialId: z.uuid(), versionId: z.uuid(), action: z.enum(["VIEW", "DOWNLOAD"]), expiresAt: z.number().int().positive() }).strict();
+export type MaterialTokenPayload = { userId: string; materialId: string; productId: string; versionId: string; action: "VIEW" | "DOWNLOAD"; expiresAt: number };
+const payloadSchema = z.object({ userId: z.uuid(), materialId: z.uuid(), productId: z.uuid(), versionId: z.uuid(), action: z.enum(["VIEW", "DOWNLOAD"]), expiresAt: z.number().int().positive() }).strict();
 
 function signature(payload: string) {
   return createHmac("sha256", env.AUTH_SECRET).update(`material-access:${payload}`).digest("base64url");

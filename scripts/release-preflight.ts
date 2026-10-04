@@ -72,8 +72,8 @@ async function main() {
             (not exists(select 1 from product_tests pt where pt.product_id=p.id)
               and not exists(select 1 from product_materials pm where pm.product_id=p.id))
             or exists(select 1 from product_tests pt where pt.product_id=p.id and (
-              not exists(select 1 from test_sections ts where ts.test_id=pt.test_id)
-              or exists(select 1 from test_sections ts where ts.test_id=pt.test_id
+              not exists(select 1 from test_sections ts where ts.test_id=pt.test_id and ts.is_active=true)
+              or exists(select 1 from test_sections ts where ts.test_id=pt.test_id and ts.is_active=true
                 and not exists(select 1 from test_questions tq where tq.section_id=ts.id))
             ))
             or exists(select 1 from product_materials pm where pm.product_id=p.id

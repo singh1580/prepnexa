@@ -78,8 +78,8 @@ export async function listAccessibleCourses(userId: string) {
       access.starts_at as "startsAt", access.expires_at as "expiresAt",
       (select count(*)::int from product_tests pt where pt.product_id=p.id) as "testCount",
       (select count(*)::int from product_materials pm where pm.product_id=p.id) as "materialCount",
-      (select count(*)::int from attempts a join product_tests pt on pt.test_id=a.test_id
-        where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
+      (select count(*)::int from attempts a
+        where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
       active.id as "activeAttemptId", active.title as "activeTestTitle"
     from products p
     left join lateral (
@@ -90,8 +90,8 @@ export async function listAccessibleCourses(userId: string) {
     ) access on true
     left join lateral (
       select a.id, t.title from attempts a
-      join tests t on t.id=a.test_id join product_tests pt on pt.test_id=t.id
-      where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status in ('CREATED','IN_PROGRESS')
+      join tests t on t.id=a.test_id
+      where a.product_id=p.id and a.user_id=${userId}::uuid and a.status in ('CREATED','IN_PROGRESS')
       order by a.updated_at desc limit 1
     ) active on true
     where (p.is_live=true and p.price_paise=0) or access.expires_at is not null
@@ -108,8 +108,8 @@ export async function findAccessibleCourse(slug: string, userId: string) {
       access.starts_at as "startsAt", access.expires_at as "expiresAt",
       (select count(*)::int from product_tests pt where pt.product_id=p.id) as "testCount",
       (select count(*)::int from product_materials pm where pm.product_id=p.id) as "materialCount",
-      (select count(*)::int from attempts a join product_tests pt on pt.test_id=a.test_id
-        where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
+      (select count(*)::int from attempts a
+        where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
       active.id as "activeAttemptId", active.title as "activeTestTitle"
     from products p
     left join lateral (
@@ -120,8 +120,7 @@ export async function findAccessibleCourse(slug: string, userId: string) {
     ) access on true
     left join lateral (
       select a.id, t.title from attempts a join tests t on t.id=a.test_id
-      join product_tests pt on pt.test_id=t.id
-      where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status in ('CREATED','IN_PROGRESS')
+      where a.product_id=p.id and a.user_id=${userId}::uuid and a.status in ('CREATED','IN_PROGRESS')
       order by a.updated_at desc limit 1
     ) active on true
     where p.slug=${slug} and ((p.is_live=true and p.price_paise=0) or access.expires_at is not null)
@@ -135,17 +134,17 @@ export async function findAccessibleCourse(slug: string, userId: string) {
       select t.id, t.title, t.category, t.mode, t.duration_minutes as "durationMinutes",
         t.max_attempts as "maxAttempts",
         (select count(*)::int from test_questions tq where tq.test_id=t.id) as "questionCount",
-        (select count(*)::int from attempts a where a.user_id=${userId}::uuid and a.test_id=t.id and a.status<>'VOID') as "attemptsUsed",
+        (select count(*)::int from attempts a where a.user_id=${userId}::uuid and a.product_id=${course.id}::uuid and a.test_id=t.id and a.status<>'VOID') as "attemptsUsed",
         active.id as "activeAttemptId", latest.id as "latestResultId", latest.score as "latestScore",
         latest.max_score as "latestMaxScore"
       from product_tests pt join tests t on t.id=pt.test_id
       left join lateral (
-        select a.id from attempts a where a.user_id=${userId}::uuid and a.test_id=t.id
+        select a.id from attempts a where a.user_id=${userId}::uuid and a.product_id=${course.id}::uuid and a.test_id=t.id
           and a.status in ('CREATED','IN_PROGRESS') order by a.created_at desc limit 1
       ) active on true
       left join lateral (
         select r.id, r.score, r.max_score from attempts a join results r on r.attempt_id=a.id
-        where a.user_id=${userId}::uuid and a.test_id=t.id and r.status in ('PUBLISHED','REVISED')
+        where a.user_id=${userId}::uuid and a.product_id=${course.id}::uuid and a.test_id=t.id and r.status in ('PUBLISHED','REVISED')
         order by r.published_at desc, r.version desc limit 1
       ) latest on true
       where pt.product_id=${course.id}::uuid order by t.title
@@ -153,8 +152,8 @@ export async function findAccessibleCourse(slug: string, userId: string) {
     db.execute(sql`
       select m.id, m.title,m.subject,m.topic, m.type, m.allow_download as "allowDownload", version.version,
         version.original_file_name as "originalFileName", version.size_bytes as "sizeBytes",
-        (select max(mal.created_at) from material_access_logs mal where mal.material_id=m.id and mal.user_id=${userId}::uuid) as "lastAccessed",
-        exists(select 1 from material_access_logs mal where mal.material_id=m.id and mal.user_id=${userId}::uuid) as viewed
+        (select max(mal.created_at) from material_access_logs mal where mal.material_id=m.id and mal.product_id=${course.id}::uuid and mal.user_id=${userId}::uuid) as "lastAccessed",
+        exists(select 1 from material_access_logs mal where mal.material_id=m.id and mal.product_id=${course.id}::uuid and mal.user_id=${userId}::uuid) as viewed
       from product_materials pm join materials m on m.id=pm.material_id
       left join lateral (
         select mv.version, mv.original_file_name, mv.size_bytes from material_versions mv
@@ -169,7 +168,7 @@ export async function findAccessibleCourse(slug: string, userId: string) {
         r.time_spent_seconds as "timeSpentSeconds", r.published_at as "publishedAt"
       from product_tests pt join tests t on t.id=pt.test_id join attempts a on a.test_id=t.id
       join results r on r.attempt_id=a.id
-      where pt.product_id=${course.id}::uuid and a.user_id=${userId}::uuid
+      where pt.product_id=${course.id}::uuid and a.product_id=${course.id}::uuid and a.user_id=${userId}::uuid
         and r.status in ('PUBLISHED','REVISED')
       order by a.id, r.version desc
     `),
@@ -200,7 +199,7 @@ export async function getStudentCourseDashboard(userId: string) {
     left join lateral (
       select r.id, r.score, r.max_score, r.published_at, t.title, p.slug
       from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id
-      join product_tests pt on pt.test_id=t.id join products p on p.id=pt.product_id
+      join products p on p.id=a.product_id
       where a.user_id=${userId}::uuid and r.status in ('PUBLISHED','REVISED')
         and ((p.is_live=true and p.price_paise=0) or exists(
           select 1 from entitlements e where e.product_id=p.id and e.user_id=${userId}::uuid
@@ -213,7 +212,7 @@ export async function getStudentCourseDashboard(userId: string) {
     select recent.id,recent.score,recent."maxScore",recent."publishedAt",recent.title,recent.slug from (
       select distinct on (r.id) r.id,r.score,r.max_score as "maxScore",r.published_at as "publishedAt",t.title,p.slug
       from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id
-      join product_tests pt on pt.test_id=t.id join products p on p.id=pt.product_id
+      join products p on p.id=a.product_id
       where a.user_id=${userId}::uuid and r.status in('PUBLISHED','REVISED')
       order by r.id,r.published_at desc,p.slug
     ) recent order by recent."publishedAt" desc limit 5
@@ -240,10 +239,10 @@ export async function listOwnedCourses(userId:string){
       e.starts_at as "startsAt",e.expires_at as "expiresAt",case when e.status='ACTIVE' and e.expires_at>now() then 'ACTIVE' else 'EXPIRED' end as "accessStatus",
       (select count(*)::int from product_tests pt where pt.product_id=p.id) as "testCount",
       (select count(*)::int from product_materials pm where pm.product_id=p.id) as "materialCount",
-      (select count(*)::int from attempts a join product_tests pt on pt.test_id=a.test_id where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
+      (select count(*)::int from attempts a where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
       active.id as "activeAttemptId",active.title as "activeTestTitle"
     from products p join lateral(select x.* from entitlements x where x.product_id=p.id and x.user_id=${userId}::uuid order by x.expires_at desc limit 1)e on true
-    left join lateral(select a.id,t.title from attempts a join tests t on t.id=a.test_id join product_tests pt on pt.test_id=t.id where pt.product_id=p.id and a.user_id=${userId}::uuid and a.status in('CREATED','IN_PROGRESS') order by a.updated_at desc limit 1)active on true
+    left join lateral(select a.id,t.title from attempts a join tests t on t.id=a.test_id where a.product_id=p.id and a.user_id=${userId}::uuid and a.status in('CREATED','IN_PROGRESS') order by a.updated_at desc limit 1)active on true
     order by (e.status='ACTIVE' and e.expires_at>now()) desc,e.expires_at desc,p.name
   `);return rows<StudentCourse>(result);
 }

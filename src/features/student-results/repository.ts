@@ -93,9 +93,10 @@ export async function findStudentResult(resultId: string, userId: string) {
     select r.id, r.attempt_id as "attemptId", r.version, r.status, r.score, r.max_score as "maxScore", r.correct_count as "correctCount",
       r.incorrect_count as "incorrectCount", r.unanswered_count as "unansweredCount", r.time_spent_seconds as "timeSpentSeconds",
       r.published_at as "publishedAt", t.id as "testId", t.title, 'Prepstore' as "examName", a.sequence,
+      p.id as "productId", p.slug as "productSlug",
       t.max_attempts as "maxAttempts",
-      (select count(*)::int from attempts ax where ax.user_id=a.user_id and ax.test_id=a.test_id and ax.status <> 'VOID') as "attemptsUsed"
-    from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id
+      (select count(*)::int from attempts ax where ax.user_id=a.user_id and ax.product_id=a.product_id and ax.test_id=a.test_id and ax.status <> 'VOID') as "attemptsUsed"
+    from results r join attempts a on a.id=r.attempt_id join tests t on t.id=a.test_id left join products p on p.id=a.product_id
     where r.id=${resultId} and a.user_id=${userId} and r.status in ('PUBLISHED','REVISED') limit 1
   `);
   const summary = rows<Record<string, unknown>>(summaryResult)[0];

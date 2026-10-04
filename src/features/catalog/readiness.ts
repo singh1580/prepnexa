@@ -15,10 +15,10 @@ export function productReadySql(productId: SQLWrapper) {
       select 1 from product_tests ready_pt
       where ready_pt.product_id=${productId}
         and (
-          not exists(select 1 from test_sections ready_ts where ready_ts.test_id=ready_pt.test_id)
+          not exists(select 1 from test_sections ready_ts where ready_ts.test_id=ready_pt.test_id and ready_ts.is_active=true)
           or exists(
             select 1 from test_sections ready_ts
-            where ready_ts.test_id=ready_pt.test_id
+            where ready_ts.test_id=ready_pt.test_id and ready_ts.is_active=true
               and not exists(select 1 from test_questions ready_tq where ready_tq.section_id=ready_ts.id)
           )
         )

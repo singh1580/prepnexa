@@ -82,7 +82,10 @@ export async function listManagedTests(filters: ManagedTestFilters) {
         attemptCount:countDistinct(attempts.id),
       })
       .from(tests)
-      .leftJoin(testSections, eq(testSections.testId, tests.id))
+      .leftJoin(
+        testSections,
+        and(eq(testSections.testId, tests.id), eq(testSections.isActive, true)),
+      )
       .leftJoin(testQuestions, eq(testQuestions.testId, tests.id))
       .leftJoin(attempts,eq(attempts.testId,tests.id))
       .where(where)
@@ -127,7 +130,7 @@ export async function findManagedTest(id: string) {
       db
         .select()
         .from(testSections)
-        .where(eq(testSections.testId, id))
+        .where(and(eq(testSections.testId, id), eq(testSections.isActive, true)))
         .orderBy(asc(testSections.sortOrder)),
       db
         .select({
@@ -180,7 +183,9 @@ export async function findManagedTest(id: string) {
 export const findTest = (id: string) =>
   db.query.tests.findFirst({ where: eq(tests.id, id) });
 export const findSection = (id: string) =>
-  db.query.testSections.findFirst({ where: eq(testSections.id, id) });
+  db.query.testSections.findFirst({
+    where: and(eq(testSections.id, id), eq(testSections.isActive, true)),
+  });
 export async function findAvailableQuestion(id: string) {
   const [question] = await db
     .select({ id: questions.id })
@@ -318,24 +323,50 @@ export async function removeTestContent(
   questionId: string | null,
   audit: Audit,
 ) {
-  const removal = questionId
-    ? sql`delete from ${testQuestions} where section_id = ${sectionId} and question_id = ${questionId} and test_id in (select id from locked_test) returning test_id`
-    : sql`delete from ${testSections} where id = ${sectionId} and test_id in (select id from locked_test)
-        and not exists (select 1 from ${testQuestions} where section_id = ${sectionId})
-        and not exists (select 1 from ${attemptQuestionSnapshots} where section_id = ${sectionId})
-        and not exists (select 1 from ${attemptSectionStates} where section_id = ${sectionId})
-        and not exists (select 1 from ${sectionResults} where section_id = ${sectionId})
-        returning test_id`;
-  const result = await db.execute(sql`
-    with locked_test as (
-      select id from ${tests} where id = (select test_id from ${testSections} where id = ${sectionId}) for update
-    ), removed as (${removal})
-    insert into ${auditLogs} ("actor_user_id", "action", "entity_type", "entity_id", "request_id", "after")
-    select ${audit.actorUserId}, ${questionId ? "test_question.removed" : "test_section.removed"},
-      'test', test_id::text, ${audit.requestId},
-      jsonb_build_object('sectionId', ${sectionId}::text, 'questionId', ${questionId}::text)
-    from removed returning entity_id
-  `);
+  const result = questionId
+    ? await db.execute(sql`
+        with locked_test as (
+          select id from ${tests} where id = (select test_id from ${testSections} where id = ${sectionId}) for update
+        ), removed as (
+          delete from ${testQuestions}
+          where section_id = ${sectionId} and question_id = ${questionId}
+            and test_id in (select id from locked_test)
+          returning test_id
+        )
+        insert into ${auditLogs} ("actor_user_id", "action", "entity_type", "entity_id", "request_id", "after")
+        select ${audit.actorUserId}, 'test_question.removed', 'test', test_id::text, ${audit.requestId},
+          jsonb_build_object('sectionId', ${sectionId}::text, 'questionId', ${questionId}::text)
+        from removed returning entity_id
+      `)
+    : await db.execute(sql`
+        with locked_test as (
+          select id from ${tests} where id = (select test_id from ${testSections} where id = ${sectionId}) for update
+        ), retired as (
+          update ${testSections} set is_active = false
+          where id = ${sectionId} and test_id in (select id from locked_test) and is_active = true
+            and not exists (select 1 from ${testQuestions} where section_id = ${sectionId})
+            and (
+              exists (select 1 from ${attemptQuestionSnapshots} where section_id = ${sectionId})
+              or exists (select 1 from ${attemptSectionStates} where section_id = ${sectionId})
+              or exists (select 1 from ${sectionResults} where section_id = ${sectionId})
+            )
+          returning test_id
+        ), removed as (
+          delete from ${testSections}
+          where id = ${sectionId} and test_id in (select id from locked_test) and is_active = true
+            and not exists (select 1 from ${testQuestions} where section_id = ${sectionId})
+            and not exists (select 1 from ${attemptQuestionSnapshots} where section_id = ${sectionId})
+            and not exists (select 1 from ${attemptSectionStates} where section_id = ${sectionId})
+            and not exists (select 1 from ${sectionResults} where section_id = ${sectionId})
+          returning test_id
+        ), changed as (
+          select test_id from retired union all select test_id from removed
+        )
+        insert into ${auditLogs} ("actor_user_id", "action", "entity_type", "entity_id", "request_id", "after")
+        select ${audit.actorUserId}, 'test_section.removed', 'test', test_id::text, ${audit.requestId},
+          jsonb_build_object('sectionId', ${sectionId}::text, 'questionId', null)
+        from changed returning entity_id
+      `);
   return result.rows.length > 0;
 }
 
