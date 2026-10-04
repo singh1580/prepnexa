@@ -78,7 +78,7 @@ async function main() {
             ))
             or exists(select 1 from product_materials pm where pm.product_id=p.id
               and not exists(select 1 from material_versions mv where mv.material_id=pm.material_id))
-          ))
+          )
         ) as incomplete_live_products,
         (
           select count(*)::int from sessions
