@@ -161,10 +161,7 @@ export async function listNotificationCampaigns() {
 export async function insertNotificationCampaign(input: { audience:string;productId?:string|null;title:string;body:string;channel:"EMAIL"|"IN_APP" }, actor: { userId:string;requestId:string }) {
   const campaignId = randomUUID();
   const result = await db.execute(sql`
-    with campaign as (
-      insert into notification_campaigns(id,audience,product_id,title,body,channel,created_by,created_at)
-      values(${campaignId}::uuid,${input.audience},${input.productId ?? null}::uuid,${input.title},${input.body},${input.channel},${actor.userId}::uuid,now()) returning id
-    ), recipients as (
+    with recipients as (
       select distinct u.id from users u
       where exists(select 1 from user_roles ur join roles r on r.id=ur.role_id where ur.user_id=u.id and r.key='STUDENT')
         and u.status='ACTIVE'
@@ -180,16 +177,20 @@ export async function insertNotificationCampaign(input: { audience:string;produc
       insert into notification_deliveries(id,notification_id,channel,status,attempts,created_at)
       select gen_random_uuid(),id,'EMAIL','PENDING',0,now() from created where ${input.channel}='EMAIL'
       returning id
-    ), counted as (
-      update notification_campaigns set recipient_count=(select count(*) from created) where id=${campaignId}::uuid returning recipient_count
+    ), campaign as (
+      insert into notification_campaigns(id,audience,product_id,title,body,channel,recipient_count,created_by,created_at)
+      select ${campaignId}::uuid,${input.audience},${input.productId ?? null}::uuid,${input.title},${input.body},${input.channel},count(*)::int,${actor.userId}::uuid,now()
+      from created
+      returning id,recipient_count
     ), audit as (
       insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,after)
-      values(${actor.userId}::uuid,'notification.campaign_sent','notification_campaign',${campaignId},${actor.requestId},jsonb_build_object('audience',${input.audience},'channel',${input.channel},'title',${input.title}))
-    ) select id,"recipientCount" from deliveries cross join lateral (select recipient_count as "recipientCount" from counted) c
+      select ${actor.userId}::uuid,'notification.campaign_sent','notification_campaign',campaign.id::text,${actor.requestId},
+        jsonb_build_object('audience',${input.audience}::text,'channel',${input.channel}::text,'title',${input.title}::text)
+      from campaign
+    ) select deliveries.id,campaign.recipient_count as "recipientCount" from campaign left join deliveries on true
   `);
-  const deliveryRows = rows<{id:string;recipientCount:number}>(result);
-  const countResult = await db.execute(sql`select recipient_count as "recipientCount" from notification_campaigns where id=${campaignId}::uuid`);
-  return { id: campaignId, recipientCount: rows<{recipientCount:number}>(countResult)[0]?.recipientCount ?? 0, deliveryIds: deliveryRows.map((row) => row.id) };
+  const campaignRows = rows<{id:string|null;recipientCount:number}>(result);
+  return { id: campaignId, recipientCount: campaignRows[0]?.recipientCount ?? 0, deliveryIds: campaignRows.flatMap((row) => row.id ? [row.id] : []) };
 }
 
 export async function updateManagedSupportTicket(ticketId:string,input:{status:string;priority:string},actor:{userId:string;requestId:string}) {

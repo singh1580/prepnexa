@@ -148,7 +148,9 @@ export async function getRazorpayCheckout(attemptId: string, student: StudentAct
   if (attempt.provider !== "razorpay" || !attempt.providerOrderId) throw invalidCommerceState("This is not a Razorpay checkout.");
   if (attempt.orderStatus === "PAID") return { paid: true as const, orderId: attempt.orderId };
   if (!new Set(["CREATED", "PENDING", "FAILED"]).has(attempt.status) || !new Set(["CREATED", "PENDING", "FAILED"]).has(attempt.orderStatus)) throw invalidCommerceState("This payment is no longer available.");
-  if (attempt.expiresAt && new Date(attempt.expiresAt) <= new Date()) throw invalidCommerceState("This checkout has expired. Please create a new order.");
+  const expiresAt = attempt.expiresAt ? new Date(attempt.expiresAt) : null;
+  if (expiresAt && Number.isNaN(expiresAt.getTime())) throw invalidCommerceState("This checkout has an invalid expiry. Please create a new order.");
+  if (expiresAt && expiresAt <= new Date()) throw invalidCommerceState("This checkout has expired. Please create a new order.");
   if (!env.RAZORPAY_KEY_ID) throw paymentUnavailable("Razorpay is not configured.");
   return {
     paid: false as const,
@@ -158,7 +160,7 @@ export async function getRazorpayCheckout(attemptId: string, student: StudentAct
     keyId: env.RAZORPAY_KEY_ID,
     amountPaise: attempt.amountPaise,
     currency: attempt.currency,
-    expiresAt: attempt.expiresAt?.toISOString() ?? null,
+    expiresAt: expiresAt?.toISOString() ?? null,
     customer: { name: student.name, email: student.email },
   };
 }
