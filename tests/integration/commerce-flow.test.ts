@@ -32,6 +32,7 @@ describe.skipIf(!run)("provider-neutral commerce flow",()=>{
     const checkout=await commerce.createCheckout({productId,couponCode:code,idempotencyKey},student);orderId=checkout.id;paymentAttemptId=checkout.paymentAttemptId??undefined;
     expect(checkout).toMatchObject({subtotalPaise:20_000,discountPaise:4_000,totalPaise:16_000,paymentRequired:true,provider:"mock"});
     const repeated=await commerce.createCheckout({productId,couponCode:code,idempotencyKey},{...student,requestId:randomUUID()});expect(repeated.id).toBe(orderId);
+    const resumed=await commerce.createCheckout({productId,couponCode:code,idempotencyKey:randomUUID()},{...student,requestId:randomUUID()});expect(resumed.id).toBe(orderId);
     await expect(commerce.previewCheckout(productId,code,secondStudentId)).rejects.toMatchObject({code:"COUPON_UNAVAILABLE",status:409});
     const first=await commerce.confirmMockPayment(checkout.paymentAttemptId!,{...student,requestId:randomUUID()});const duplicate=await commerce.confirmMockPayment(checkout.paymentAttemptId!,{...student,requestId:randomUUID()});expect(first.duplicate).toBe(false);expect(duplicate.duplicate).toBe(true);
     const [order]=await db.select().from(schema.orders).where(eq(schema.orders.id,orderId));expect(order.status).toBe("PAID");

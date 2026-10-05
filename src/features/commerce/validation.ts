@@ -41,6 +41,7 @@ export const razorpayConfirmationSchema = z.object({
   razorpay_payment_id: z.string().trim().regex(/^pay_[A-Za-z0-9]+$/).max(100),
   razorpay_signature: z.string().trim().regex(/^[a-fA-F0-9]{64}$/),
 }).strict();
+export const razorpayStatusSchema = z.object({ attemptId: z.uuid() }).strict();
 
 export const refundInputSchema = z.object({
   amountPaise: z.coerce.number().int().positive(),

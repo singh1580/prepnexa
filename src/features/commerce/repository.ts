@@ -121,6 +121,25 @@ export async function findOrderByIdempotency(userId: string, idempotencyKey: str
   return rows<CheckoutOrder>(result)[0];
 }
 
+export async function findReusableCheckoutOrder(userId: string, productIds: string[], couponCode: string | null) {
+  const ids = JSON.stringify([...new Set(productIds)].sort());
+  const result = await db.execute(sql`
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,
+      o.coupon_code as "couponCode",o.expires_at as "expiresAt",pa.id as "paymentAttemptId",pa.provider,pa.checkout_reference as "checkoutReference"
+    from orders o
+    left join lateral (select * from payment_attempts x where x.order_id=o.id order by x.created_at desc limit 1) pa on true
+    where o.user_id=${userId}
+      and o.status in ('CREATED','PENDING')
+      and o.expires_at>now()
+      and coalesce(o.coupon_code,'')=coalesce(${couponCode},'')
+      and (select array_agg(oi.product_id::text order by oi.product_id::text) from order_items oi where oi.order_id=o.id)
+        =(select array_agg(value order by value) from jsonb_array_elements_text(${ids}::jsonb) selected(value))
+    order by o.created_at desc
+    limit 1
+  `);
+  return rows<CheckoutOrder>(result)[0];
+}
+
 export type CheckoutOrder = { id:string;status:string;subtotalPaise:number;discountPaise:number;taxPaise:number;totalPaise:number;currency:string;couponCode:string|null;expiresAt:Date;paymentAttemptId:string|null;provider:string|null;checkoutReference:string|null };
 
 export async function insertCartCheckoutOrder(input:{userId:string;productIds:string[];idempotencyKey:string;couponId:string|null;couponCode:string|null;requestId:string}){
@@ -266,13 +285,15 @@ export async function listStudentOrders(userId: string) {
 
 export async function findStudentOrder(orderId: string, userId: string) {
   const result = await db.execute(sql`
-    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",o.expires_at as "expiresAt",(o.expires_at>now()) as "checkoutUnexpired",
       p.provider,p.provider_payment_id as "providerPaymentId",p.status as "paymentStatus",
+      pa.id as "paymentAttemptId",pa.checkout_reference as "checkoutReference",pa.status as "paymentAttemptStatus",
       coalesce(jsonb_agg(jsonb_build_object('productId',oi.product_id,'name',oi.product_name,'pricePaise',oi.unit_price_paise,'accessDays',oi.access_days) order by oi.id),'[]'::jsonb) as items
     from orders o join order_items oi on oi.order_id=o.id
     left join lateral (select px.* from payments px where px.order_id=o.id order by px.created_at desc limit 1) p on true
+    left join lateral (select pax.* from payment_attempts pax where pax.order_id=o.id order by pax.created_at desc limit 1) pa on true
     where o.id=${orderId} and o.user_id=${userId}
-    group by o.id,p.provider,p.provider_payment_id,p.status limit 1
+    group by o.id,p.provider,p.provider_payment_id,p.status,pa.id,pa.checkout_reference,pa.status limit 1
   `);
   return rows<Record<string,unknown>>(result)[0];
 }

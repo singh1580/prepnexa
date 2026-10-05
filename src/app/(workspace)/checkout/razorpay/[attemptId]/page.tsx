@@ -16,7 +16,7 @@ export default async function Page({ params }: { params: Promise<{ attemptId: st
   let checkout: Awaited<ReturnType<typeof getRazorpayCheckout>> | null = null;
   let unavailable = false;
   try {
-    checkout = await getRazorpayCheckout(parsed.data, { userId: auth.user.id, email: auth.user.email, name: auth.user.name, requestId: crypto.randomUUID() });
+    checkout = await getRazorpayCheckout(parsed.data, { userId: auth.user.id, email: auth.user.email, name: auth.user.name, phone: auth.user.phone, requestId: crypto.randomUUID() });
   } catch (error) {
     if (error instanceof AppError && error.status === 404) notFound();
     if (error instanceof AppError && error.code === "INVALID_COMMERCE_STATE") unavailable = true;

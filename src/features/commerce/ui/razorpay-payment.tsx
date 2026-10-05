@@ -21,13 +21,16 @@ type Checkout = {
   amountPaise: number;
   currency: string;
   expiresAt: string | null;
-  customer: { name: string; email: string };
+  customer: { name: string; email: string; phone: string | null };
 };
+
+const prepstoreCheckoutLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e94b16'/%3E%3Cpath d='M18 17h19c8 0 13 4 13 11s-5 12-13 12H28v8H18V17Zm10 8v7h9c2 0 4-1 4-4 0-2-2-3-4-3h-9Z' fill='white'/%3E%3C/svg%3E";
 
 export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
   const router = useRouter();
   const [scriptReady, setScriptReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
 
   async function confirm(response: CheckoutResponse) {
@@ -37,6 +40,20 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
     } catch (value) {
       setError(value instanceof Error ? value.message : "We could not verify this payment. Check My Orders before trying again.");
       setBusy(false);
+    }
+  }
+
+  async function checkPaymentStatus() {
+    setChecking(true);
+    setError("");
+    try {
+      const result = await commerceRequest<{ orderId: string; paid: boolean }>("commerce/razorpay/status", { attemptId: checkout.attemptId });
+      if (result.paid) router.replace(`/payment-success?order=${result.orderId}`);
+      else setError("Razorpay has not captured this payment yet. You can safely retry the checkout.");
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "We could not check this payment yet. Please try again.");
+    } finally {
+      setChecking(false);
     }
   }
 
@@ -53,14 +70,15 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
       amount: checkout.amountPaise,
       currency: checkout.currency,
       name: "Prepstore",
+      image: prepstoreCheckoutLogo,
       description: `Order #${checkout.orderId.slice(0, 12).toUpperCase()}`,
       order_id: checkout.providerOrderId,
-      prefill: { name: checkout.customer.name, email: checkout.customer.email },
-      readonly: { name: true, email: true },
+      prefill: { name: checkout.customer.name, email: checkout.customer.email, ...(checkout.customer.phone ? { contact: checkout.customer.phone } : {}) },
+      readonly: { name: true, email: true, ...(checkout.customer.phone ? { contact: true } : {}) },
       theme: { color: "#e94b16", backdrop_color: "#fff7f2" },
       timeout: Math.min(900, remainingSeconds),
       retry: { enabled: true },
-      modal: { confirm_close: true, ondismiss: () => setBusy(false) },
+      modal: { confirm_close: true, ondismiss: () => { setBusy(false); setError("Checkout was closed. If you completed payment in another window, check its status before retrying."); } },
       handler: (response: CheckoutResponse) => { void confirm(response); },
     });
     instance.on("payment.failed", response => {
@@ -82,6 +100,7 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
         <div><dt>Amount payable</dt><dd>{formatMoney(checkout.amountPaise, checkout.currency)}</dd></div>
       </dl>
       <button className="reference-checkout-button" type="button" disabled={!scriptReady || busy} onClick={openCheckout}>{busy ? "Verifying payment…" : scriptReady ? "Pay securely with Razorpay" : "Loading secure checkout…"}</button>
+      <button className="reference-outline-button razorpay-status-button" type="button" disabled={busy || checking} onClick={checkPaymentStatus}>{checking ? "Checking payment…" : "Check payment status"}</button>
       <small>Cards, UPI, netbanking and other enabled methods will appear inside Razorpay Checkout.</small>
       {error ? <p className="notice danger" role="alert">{error}</p> : null}
     </section>

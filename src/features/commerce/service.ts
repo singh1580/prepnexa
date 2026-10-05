@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { logger } from "@/lib/logger";
 import { calculateDiscount, normalizeCouponCode } from "./pricing";
 import { checkoutConflict, commerceNotFound, couponUnavailable, invalidCommerceState, paymentUnavailable, paymentVerificationFailed } from "./errors";
-import { evaluateCartCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProducts, findManagedCoupon, findManagedOrder, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findStudentOrder, findStudentPaymentAttempt, insertCartCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCouponRecord } from "./repository";
+import { evaluateCartCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProducts, findManagedCoupon, findManagedOrder, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findReusableCheckoutOrder, findStudentOrder, findStudentPaymentAttempt, insertCartCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCouponRecord } from "./repository";
 import { getPaymentProvider, type VerifiedPaymentEvent } from "./providers";
 import type { CheckoutInput, CouponInput, RefundInput } from "./validation";
 import type { RazorpayConfirmationInput } from "./validation";
@@ -10,7 +10,7 @@ import { queueStudentNotification } from "@/features/operations/service";
 import { env } from "@/config/env";
 
 type Actor = { userId: string; requestId: string };
-type StudentActor = Actor & { email: string; name: string };
+type StudentActor = Actor & { email: string; name: string; phone?: string | null };
 
 function databaseCode(error: unknown) {
   let current: unknown = error;
@@ -91,7 +91,7 @@ async function startProviderCheckout(order: NonNullable<Awaited<ReturnType<typeo
   const attempt = await insertPaymentAttempt({ orderId: order.id, provider: provider.key, idempotencyKey: `checkout:${order.id}:1`, amountPaise: order.totalPaise, currency: order.currency, expiresAt: new Date(order.expiresAt) });
   if (!attempt) throw paymentUnavailable();
   try {
-    const checkout = await provider.createCheckout({ attemptId: attempt.id, orderId: order.id, amountPaise: order.totalPaise, currency: order.currency, customer: { id: student.userId, email: student.email, name: student.name }, idempotencyKey: attempt.idempotencyKey, expiresAt: new Date(order.expiresAt) });
+    const checkout = await provider.createCheckout({ attemptId: attempt.id, orderId: order.id, amountPaise: order.totalPaise, currency: order.currency, customer: { id: student.userId, email: student.email, name: student.name, phone: student.phone }, idempotencyKey: attempt.idempotencyKey, expiresAt: new Date(order.expiresAt) });
     const saved = await saveProviderCheckout(attempt.id, checkout);
     return { ...order, paymentAttemptId: attempt.id, provider: provider.key, checkoutReference: saved?.checkoutReference ?? checkout.checkoutReference, paymentRequired: true };
   } catch (error) {
@@ -107,6 +107,8 @@ export async function createCheckout(input: CheckoutInput | {productId:string;co
   const scopedKey = `${student.userId}:${input.idempotencyKey}`.slice(0, 100);
   const existing = await findOrderByIdempotency(student.userId, scopedKey);
   if (existing) return startProviderCheckout(existing, student);
+  const reusable = await findReusableCheckoutOrder(student.userId, productIds, input.couponCode ? normalizeCouponCode(input.couponCode) : null);
+  if (reusable) return startProviderCheckout(reusable, student);
   const priced = await priceCheckout(productIds, input.couponCode, student.userId);
   const created = await insertCartCheckoutOrder({ userId: student.userId, productIds, idempotencyKey: scopedKey, couponId: priced.coupon?.id ?? null, couponCode: priced.coupon?.code ?? null, requestId: student.requestId });
   if (!created) {
@@ -161,7 +163,7 @@ export async function getRazorpayCheckout(attemptId: string, student: StudentAct
     amountPaise: attempt.amountPaise,
     currency: attempt.currency,
     expiresAt: expiresAt?.toISOString() ?? null,
-    customer: { name: student.name, email: student.email },
+    customer: { name: student.name, email: student.email, phone: student.phone ?? null },
   };
 }
 
@@ -178,6 +180,23 @@ export async function confirmRazorpayPayment(input: RazorpayConfirmationInput, s
   if (!result.duplicate) await queueStudentNotification({ userId: student.userId, type: "PURCHASE_CONFIRMED", deduplicationKey: `order-paid:${result.orderId}`, title: "Payment confirmed", body: "Your Razorpay payment is confirmed and purchased access is active.", requestId: student.requestId });
   logger.info({ requestId: student.requestId, module: "commerce", action: "razorpay_checkout_confirmed", provider: provider.key, orderId: result.orderId, duplicate: result.duplicate }, "Razorpay checkout confirmed");
   return result;
+}
+
+export async function reconcileRazorpayPayment(attemptId: string, student: StudentActor) {
+  const attempt = await findStudentPaymentAttempt(attemptId, student.userId);
+  if (!attempt) throw commerceNotFound("Payment attempt");
+  if (attempt.orderStatus === "PAID") return { orderId: attempt.orderId, paid: true };
+  if (attempt.provider !== "razorpay" || !attempt.providerOrderId) throw invalidCommerceState("This is not a Razorpay checkout.");
+  const provider = getPaymentProvider("razorpay");
+  if (!provider.reconcilePayment) throw paymentUnavailable("Payment status recovery is unavailable.");
+  const event = await provider.reconcilePayment(attempt.providerOrderId);
+  if (!event) return { orderId: attempt.orderId, paid: false };
+  if (event.amountPaise !== attempt.amountPaise || event.currency !== attempt.currency) throw paymentVerificationFailed();
+  const result = await processPaymentEvent(provider.key, event, student.requestId);
+  if (!result) throw invalidCommerceState("The captured payment could not be applied to this order.");
+  if (!result.duplicate) await queueStudentNotification({ userId: student.userId, type: "PURCHASE_CONFIRMED", deduplicationKey: `order-paid:${result.orderId}`, title: "Payment confirmed", body: "Your Razorpay payment is confirmed and purchased access is active.", requestId: student.requestId });
+  logger.info({ requestId: student.requestId, module: "commerce", action: "razorpay_payment_reconciled", provider: provider.key, orderId: result.orderId, duplicate: result.duplicate }, "Razorpay payment reconciled");
+  return { orderId: result.orderId, paid: true };
 }
 
 export async function getStudentOrders(userId: string) { await releaseExpiredCommerce(); return listStudentOrders(userId); }

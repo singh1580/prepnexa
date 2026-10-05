@@ -5,6 +5,7 @@ import type { PaymentProvider, ProviderCheckoutInput, ProviderPaymentConfirmatio
 
 type RazorpayOrder = { id?: unknown; amount?: unknown; currency?: unknown; status?: unknown };
 type RazorpayPayment = { id?: unknown; order_id?: unknown; amount?: unknown; currency?: unknown; status?: unknown; captured?: unknown; created_at?: unknown; error_code?: unknown };
+type RazorpayPaymentCollection = { items?: unknown };
 type RazorpayRefund = { id?: unknown; status?: unknown };
 
 function credentials() {
@@ -86,6 +87,12 @@ export const razorpayPaymentProvider: PaymentProvider = {
     const payment = await requestRazorpay<RazorpayPayment>(`/payments/${encodeURIComponent(input.providerPaymentId)}`);
     if (payment.order_id !== input.providerOrderId || payment.status !== "captured" || payment.captured !== true) throw paymentVerificationFailed("The payment has not been captured.");
     return paymentEvent(payment, "PAYMENT_CAPTURED", `checkout:${input.providerPaymentId}`, { source: "razorpay-checkout-confirmation", payment });
+  },
+  async reconcilePayment(providerOrderId: string) {
+    const result = await requestRazorpay<RazorpayPaymentCollection>(`/orders/${encodeURIComponent(providerOrderId)}/payments`);
+    const payments = Array.isArray(result.items) ? result.items as RazorpayPayment[] : [];
+    const payment = payments.find(item => item.order_id === providerOrderId && item.status === "captured" && item.captured === true);
+    return payment ? paymentEvent(payment, "PAYMENT_CAPTURED", `reconcile:${String(payment.id)}`, { source: "razorpay-order-reconciliation", payment }) : null;
   },
   async verifyWebhook(rawBody: string, headers: Headers) {
     const signature = headers.get("x-razorpay-signature") ?? "";

@@ -3,7 +3,7 @@ export type ProviderCheckoutInput = {
   orderId: string;
   amountPaise: number;
   currency: string;
-  customer: { id: string; email: string; name: string };
+  customer: { id: string; email: string; name: string; phone?: string | null };
   idempotencyKey: string;
   expiresAt: Date;
 };
@@ -48,5 +48,6 @@ export interface PaymentProvider {
   createCheckout(input: ProviderCheckoutInput): Promise<ProviderCheckout>;
   verifyWebhook(rawBody: string, headers: Headers): Promise<VerifiedPaymentEvent>;
   verifyPaymentConfirmation?(input: ProviderPaymentConfirmation): Promise<VerifiedPaymentEvent>;
+  reconcilePayment?(providerOrderId: string): Promise<VerifiedPaymentEvent | null>;
   refund(input: ProviderRefundInput): Promise<ProviderRefund>;
 }
