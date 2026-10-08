@@ -1,8 +1,12 @@
 /* Storefront purchase and responsive-image corrections. */
-.public-site .brand-word b{color:#e84714}.public-site .brand-word em{color:#151719;font-style:normal}
-.store-hero-media{position:absolute;inset:0;z-index:0;overflow:hidden}
-.store-hero-image{object-position:center 30%}
-.hero-handwriting{top:4rem;right:clamp(1.5rem,4.5vw,5rem);left:auto}
+.brand-word b{color:#17191c!important}.brand-word em{color:#e94b17!important;font-style:normal}
+.brand-mark i:first-child{background:#17191c!important}.brand-mark i:last-child{background:#e94b17!important}
+.public-site .store-hero{isolation:isolate;min-height:30rem;background:#fff}
+.public-site .store-hero:after{display:none}
+.store-hero-content{width:47%;padding-top:4.4rem;padding-bottom:4rem}
+.store-hero-media{position:absolute;inset:0 0 0 auto;z-index:0;width:58%;overflow:hidden;background:#f8eee7}
+.store-hero-image{object-fit:contain!important;object-position:right bottom!important}
+.hero-handwriting{top:4.2rem;right:auto;left:7%;font-size:1.08rem}
 .cart-ready-action{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .store-owned-action{background:#fff7f2;color:#d74312;border-color:#f2bca8}
 .owned-package-actions>span{display:flex;align-items:center;justify-content:center;min-height:3rem;border:1px solid #b9ddc4;border-radius:.4rem;background:#effaf2;color:#27733e;font-size:.76rem;font-weight:800}
@@ -27,13 +31,47 @@
 .student-reference-banner>div:first-child{position:relative;z-index:1;width:min(47%,31rem);padding:2.2rem}
 .student-banner-media{position:absolute!important;inset:0;z-index:-2!important;width:auto!important;padding:0!important;overflow:hidden}
 .student-banner-media img{object-fit:cover;object-position:center 38%}
+.mobile-public-actions,.student-bottom-nav{display:none}
 @media(max-width:800px){
-  .public-site .store-hero{display:flex;min-height:0;overflow:visible;flex-direction:column;border-bottom:1px solid #eee8e2}
-  .public-site .store-hero:after{display:none}.store-hero-content{order:1;width:100%;padding:2rem 1.25rem 1.7rem;background:#fff}
-  .store-hero-media{position:relative;inset:auto;order:2;height:20rem;background:#f8eee7}.store-hero-image{object-position:center 25%}.hero-handwriting{display:none}
-  .mobile-public-menu summary{min-width:auto;padding:.65rem .75rem;background:#fff!important;color:#222!important;border-color:#dedbd6!important}
-  .public-header .mobile-public-menu nav{z-index:30;top:calc(100% + .55rem);border-color:#e1ddd8!important;background:#fff!important;box-shadow:0 1rem 2.5rem #24170e24}
+  .public-header{display:grid!important;grid-template-columns:2.5rem minmax(0,1fr) auto!important;grid-template-rows:3rem auto;height:auto!important;min-height:0;padding:.55rem 1rem .75rem!important;gap:.5rem .75rem!important;align-items:center!important}
+  .public-header>.mobile-public-menu{grid-column:1;grid-row:1;margin:0!important}
+  .public-header>.brand{grid-column:2;grid-row:1;justify-self:center;font-size:1.08rem}
+  .public-header>.public-live-search{display:block!important;grid-column:1/-1;grid-row:2;max-width:none}
+  .public-header>.desktop-public-nav{display:none!important}
+  .mobile-public-actions{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:flex-end;gap:.75rem}
+  .mobile-public-actions .header-cart{border:0;width:1.9rem;height:1.9rem}
+  .mobile-account-icon{display:grid;place-items:center;width:2rem;height:2rem;color:#303438}
+  .mobile-account-icon svg{width:1.3rem;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+  .mobile-public-actions .header-avatar{width:2rem;height:2rem;font-size:.75rem}
+  .public-header .header-search input{height:2.45rem;background:#f8f7f5;font-size:.78rem}
+  .mobile-public-menu summary{width:2.35rem;min-width:2.35rem!important;height:2.35rem;min-height:2.35rem;padding:.45rem!important;border:0!important;background:#fff!important;color:#222!important}
+  .public-header .mobile-public-menu nav{z-index:70;top:calc(100% + .45rem);right:auto;left:0;border-color:#e1ddd8!important;background:#fff!important;box-shadow:0 1rem 2.5rem #24170e24}
   .public-header .mobile-public-menu nav>a:not(.button){color:#33383d!important}
+  .public-site .store-hero{display:flex;min-height:0;overflow:hidden;flex-direction:column;border-bottom:1px solid #eee8e2}
+  .store-hero-content{order:1;width:100%;padding:2rem 1.25rem 1.7rem;background:#fff}
+  .store-hero-media{position:relative;inset:auto;order:2;width:100%;height:auto;aspect-ratio:3/2;background:#f8eee7}.store-hero-image{object-position:center bottom!important}.hero-handwriting{display:none}
+  .student-bottom-nav{position:fixed;z-index:55;right:0;bottom:0;left:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:.45rem max(.35rem,env(safe-area-inset-right)) calc(.4rem + env(safe-area-inset-bottom)) max(.35rem,env(safe-area-inset-left));border-top:1px solid #e2ded9;background:#fff;box-shadow:0 -.5rem 1.5rem #24170e0d}
+  .student-bottom-nav a{display:grid;justify-items:center;gap:.22rem;min-width:0;padding:.25rem;color:#777d82;font-size:.64rem;font-weight:700}
+  .student-bottom-nav .nav-icon{width:1.22rem;height:1.22rem}
+  .student-bottom-nav a[aria-current=page]{color:#e54816}
+  .student-workspace .workspace-main{padding-bottom:6rem!important}
+  .student-workspace .workspace-header,.admin-workspace .workspace-header{min-height:4.25rem;padding-inline:.8rem!important}
+  .student-workspace .workspace-header .mobile-brand,.admin-workspace .workspace-header .mobile-brand{margin-left:2.7rem!important}
+  .student-workspace .student-header-title{display:none}
+  .student-workspace .student-mobile-menu{position:fixed!important;z-index:65;top:.75rem;left:.7rem;width:2.5rem;padding:0!important;border:0!important;background:transparent!important}
+  .student-mobile-menu>summary{display:grid;place-items:center;width:2.5rem;height:2.5rem;overflow:hidden;border:1px solid #e1ddd8;border-radius:.45rem;background:#fff;color:#25282b!important;font-size:0}
+  .student-mobile-menu>summary span{margin:0!important;font-size:1.15rem}
+  .student-mobile-menu[open]{width:min(19rem,calc(100vw - 1.4rem));max-height:calc(100dvh - 5.5rem)!important;padding:.65rem!important;overflow:auto;border:1px solid #e1ddd8!important;border-radius:.65rem;background:#fff!important;box-shadow:0 1rem 3rem #0002}
+  .student-mobile-menu[open]>summary{margin-bottom:.5rem}
+  .student-mobile-menu[open] nav{margin:0}
+  .admin-workspace .admin-mobile-menu{position:fixed!important;z-index:65;top:.75rem;left:.7rem;width:2.5rem;padding:0!important;border:0!important;background:transparent!important}
+  .admin-mobile-menu>summary{display:grid;place-items:center;width:2.5rem;height:2.5rem;overflow:hidden;border:1px solid #e1ddd8;border-radius:.45rem;background:#fff;color:#25282b!important;font-size:0}
+  .admin-mobile-menu>summary span{margin:0!important;font-size:1.15rem}
+  .admin-mobile-menu[open]{width:min(19rem,calc(100vw - 1.4rem));max-height:calc(100dvh - 1.5rem);padding:.65rem!important;overflow:auto;border:1px solid #e1ddd8!important;border-radius:.65rem;background:#fff!important;box-shadow:0 1rem 3rem #0002}
+  .admin-mobile-menu[open]>summary{margin-bottom:.5rem}.admin-mobile-menu[open] nav{max-height:none;margin:0}
+  .reference-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .reference-cart-layout,.reference-checkout-layout{gap:1rem}
+  .reference-order-summary,.reference-checkout-summary{position:static!important}
 }
 @media(max-width:600px){
   .student-reference-banner{display:grid;min-height:0;background:#fff}.student-reference-banner:after{display:none}
@@ -41,8 +79,18 @@
   .student-banner-media{position:relative!important;inset:auto;height:13.5rem;order:2}.student-banner-media img{object-position:68% 34%}.student-reference-banner p{max-width:24rem}
 }
 @media(max-width:560px){
-  .store-hero-media{height:16.5rem}.store-hero-image{object-position:center 22%}.store-hero-content{padding:1.65rem 1rem 1.4rem}.store-hero h1{font-size:clamp(2.15rem,11vw,2.7rem)}
+  .public-header{padding-inline:.75rem!important}.public-header>.brand{font-size:1rem}.public-header .brand-mark{width:1.65rem;height:1.65rem}
+  .store-hero-media{height:auto}.store-hero-content{padding:1.65rem 1rem 1.4rem}.store-hero h1{font-size:clamp(2.15rem,11vw,2.7rem)}
   .mobile-public-menu summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .reference-catalog-grid{grid-template-columns:1fr!important}
+  .all-packages-page{padding-inline:1rem!important}.all-packages-heading h1{font-size:1.75rem}.catalog-sidebar{grid-template-columns:1fr!important}
+  .store-product-card{border-radius:.55rem}.store-product-catalog{display:grid;grid-template-columns:6.8rem minmax(0,1fr)}.store-product-catalog .store-product-cover{height:100%;min-height:10.5rem}.store-product-catalog .store-product-body{padding:.7rem}.store-product-catalog .store-product-body>p{min-height:0}.store-product-catalog .store-card-actions{grid-template-columns:1fr}.store-product-catalog .store-outline-action,.store-product-catalog .store-cart-action{min-height:2.2rem}
+  .reference-commerce-page{padding-inline:1rem!important}.reference-commerce-heading h1{font-size:1.65rem}.reference-cart-layout{gap:.8rem}.reference-order-summary,.reference-billing-card,.reference-checkout-summary{padding:1rem}
+  .cart-product-list article{grid-template-columns:4.5rem minmax(0,1fr)!important;gap:.75rem!important}.cart-cover{width:4.5rem!important;height:4.5rem!important}.cart-remove{grid-column:2}.cart-item-price{margin-top:.5rem}
+  .student-reference-metrics,.student-package-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.student-package-image{min-height:7rem}.student-package-copy{padding:.75rem}.student-package-copy>p{min-height:3.2rem}.student-package-tools nav{width:100%;overflow-x:auto}.student-package-tools nav a{white-space:nowrap}
   .checkout-brand-heading{padding:1.15rem}.checkout-brand-heading ol{justify-content:space-between}.checkout-brand-heading li{min-width:0;flex:1;font-size:.64rem}.checkout-brand-heading li:not(:last-child):after{width:auto;flex:1;margin:0 .35rem}.checkout-brand-heading li:before{width:1.45rem;height:1.45rem;margin-right:.32rem}
   .checkout-card-title h2{font-size:1rem}.signin-required{align-items:stretch}.signin-required .reference-checkout-button{width:100%}
+}
+@media(max-width:390px){
+  .student-package-grid{grid-template-columns:1fr!important}.student-reference-metrics{gap:.55rem}.student-reference-metrics article{padding:.8rem}.store-product-catalog{grid-template-columns:5.8rem minmax(0,1fr)}
 }
