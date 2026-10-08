@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AddToCartButton } from "@/features/commerce/ui/cart-workflow";
+import { formatAccessDuration, formatCount, normaliseProductName } from "@/features/catalog/presentation";
 
 export type StorefrontProduct = {
   id: string;
@@ -15,6 +16,8 @@ export type StorefrontProduct = {
   materialCount: number;
   rating: number;
   reviewCount: number;
+  subjects?: string[];
+  materialTypes?: string[];
 };
 
 const price=(paise:number)=>paise===0?"Free":new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(paise/100);
@@ -25,15 +28,16 @@ function ClockIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><circle 
 
 export function StorefrontProductCard({product,index=0,variant="catalog",badge}:{product:StorefrontProduct;index?:number;variant?:"featured"|"compact"|"catalog";badge?:string}){
   const discount=product.mrpPaise&&product.mrpPaise>product.pricePaise?Math.round((1-product.pricePaise/product.mrpPaise)*100):0;
+  const productName=normaliseProductName(product.name);
   return <article className={`store-product-card store-product-${variant}`}>
     <Link className={`store-product-cover cover-tone-${index%6}${product.coverObjectKey?" uploaded-cover":""}`} href={`/packages/${product.slug}`} style={product.coverObjectKey?{backgroundImage:`url(/api/catalog/products/${product.id}/cover)`}:undefined}>
-      {badge?<span className="store-badge">{badge}</span>:null}<span className="cover-title"><b>{product.name.replace(/\bpackage\b/ig,"").trim()}</b><small>Complete Package</small></span>
+      {badge?<span className="store-badge">{badge}</span>:null}<span className="cover-title"><b>{productName.replace(/\bpackage\b/ig,"").trim()}</b><small>Complete Package</small></span>
     </Link>
     <div className="store-product-body">
-      <div className="store-content-counts"><span><FileIcon/>{product.materialCount.toLocaleString("en-IN")}+ materials</span><span><TestIcon/>{product.testCount}+ tests</span></div>
-      <Link className="store-product-title" href={`/packages/${product.slug}`}>{product.name}</Link>
+      <div className="store-content-counts"><span><FileIcon/>{formatCount(product.materialCount,"material")}</span><span><TestIcon/>{formatCount(product.testCount,"test")}</span></div>
+      <Link className="store-product-title" href={`/packages/${product.slug}`}>{productName}</Link>
       {variant!=="compact"?<p>{product.description||"Expert-curated study material, practice tests and clear explanations in one complete package."}</p>:null}
-      {variant!=="compact"?<div className="store-product-facts"><span><LanguageIcon/>{product.language==="BILINGUAL"?"English & Hindi":product.language.toLowerCase().replace(/^./,letter=>letter.toUpperCase())}</span><span><ClockIcon/>{product.accessDays>=365?`${Math.round(product.accessDays/365)} months access`:`${product.accessDays} days access`}</span></div>:null}
+      {variant!=="compact"?<div className="store-product-facts"><span><LanguageIcon/>{product.language==="BILINGUAL"?"English & Hindi":product.language.toLowerCase().replace(/^./,letter=>letter.toUpperCase())}</span><span><ClockIcon/>{formatAccessDuration(product.accessDays)} access</span></div>:null}
       <div className="store-price-row"><strong>{price(product.pricePaise)}</strong>{product.mrpPaise&&product.mrpPaise>product.pricePaise?<del>{price(product.mrpPaise)}</del>:null}{discount>0?<span>{discount}% off</span>:null}</div>
       {variant!=="compact"?<div className="store-card-actions"><Link className="store-outline-action" href={`/packages/${product.slug}`}>View details</Link><AddToCartButton productId={product.id} className="store-cart-action"/></div>:null}
     </div>
