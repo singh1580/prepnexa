@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AutoSubmitForm } from "@/components/auto-submit-form";
 import { StorefrontProductCard } from "@/components/storefront-product-card";
+import { getCurrentAuth } from "@/features/auth/authorization";
 import { listAvailableProducts } from "@/features/catalog/repository";
 
 export const dynamic="force-dynamic";export const metadata={title:"All packages"};
@@ -8,7 +9,7 @@ type Query={q?:string;sort?:string;subject?:string|string[];price?:string|string
 const many=(value:string|string[]|undefined)=>value===undefined?[]:Array.isArray(value)?value:[value];
 const checked=(values:string[],value:string)=>values.includes(value);
 export default async function Page({searchParams}:{searchParams:Promise<Query>}){
-  const query=await searchParams;const q=query.q?.trim().toLowerCase()??"";const subjects=many(query.subject);const prices=many(query.price);const languages=many(query.language);const formats=many(query.format);const sort=query.sort??"popularity";const all=await listAvailableProducts();
+  const query=await searchParams;const q=query.q?.trim().toLowerCase()??"";const subjects=many(query.subject);const prices=many(query.price);const languages=many(query.language);const formats=many(query.format);const sort=query.sort??"popularity";const auth=await getCurrentAuth();const all=await listAvailableProducts(auth?.user.id);
   const subjectCounts=new Map<string,number>();for(const product of all){for(const subject of product.subjects){subjectCounts.set(subject,(subjectCounts.get(subject)??0)+1)}}
   const matchesPrice=(value:number)=>!prices.length||prices.some(range=>range==="under2000"?value<200000:range==="2000-5000"?value>=200000&&value<500000:range==="5000-10000"?value>=500000&&value<=1000000:range==="above10000"?value>1000000:false);
   const matchesFormat=(product:(typeof all)[number])=>!formats.length||formats.some(format=>format==="pdf"?product.materialTypes.includes("PDF"):format==="video"?product.materialTypes.includes("VIDEO"):format==="notes"?product.materialTypes.includes("FILE"):format==="tests"?product.testCount>0:format==="bundle"?product.materialCount>0&&product.testCount>0:false);

@@ -18,6 +18,7 @@ export type StorefrontProduct = {
   reviewCount: number;
   subjects?: string[];
   materialTypes?: string[];
+  alreadyOwned?: boolean;
 };
 
 const price=(paise:number)=>paise===0?"Free":new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(paise/100);
@@ -39,7 +40,7 @@ export function StorefrontProductCard({product,index=0,variant="catalog",badge}:
       {variant!=="compact"?<p>{product.description||"Expert-curated study material, practice tests and clear explanations in one complete package."}</p>:null}
       {variant!=="compact"?<div className="store-product-facts"><span><LanguageIcon/>{product.language==="BILINGUAL"?"English & Hindi":product.language.toLowerCase().replace(/^./,letter=>letter.toUpperCase())}</span><span><ClockIcon/>{formatAccessDuration(product.accessDays)} access</span></div>:null}
       <div className="store-price-row"><strong>{price(product.pricePaise)}</strong>{product.mrpPaise&&product.mrpPaise>product.pricePaise?<del>{price(product.mrpPaise)}</del>:null}{discount>0?<span>{discount}% off</span>:null}</div>
-      {variant!=="compact"?<div className="store-card-actions"><Link className="store-outline-action" href={`/packages/${product.slug}`}>View details</Link><AddToCartButton productId={product.id} className="store-cart-action"/></div>:null}
+      {variant!=="compact"?<div className="store-card-actions"><Link className="store-outline-action" href={`/packages/${product.slug}`}>View details</Link>{product.alreadyOwned?<Link className="store-cart-action store-owned-action" href={`/dashboard/courses/${product.slug}`}>Open package →</Link>:<AddToCartButton productId={product.id} className="store-cart-action"/>}</div>:null}
     </div>
   </article>;
 }

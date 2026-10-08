@@ -2,31 +2,336 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductDetailCover } from "@/components/product-detail-cover";
 import { StorefrontProductCard } from "@/components/storefront-product-card";
-import { findAvailableProduct, listAvailableProducts } from "@/features/catalog/repository";
-import { formatAccessDuration, formatCount, normaliseProductName } from "@/features/catalog/presentation";
+import { getCurrentAuth } from "@/features/auth/authorization";
+import {
+  findAvailableProduct,
+  hasActiveProductAccess,
+  listAvailableProducts,
+} from "@/features/catalog/repository";
+import {
+  formatAccessDuration,
+  formatCount,
+  normaliseProductName,
+} from "@/features/catalog/presentation";
 import { ProductReviewForm } from "@/features/catalog/review-form";
 import { ProductDetailTabs } from "@/features/catalog/ui/product-detail-tabs";
 import { SyllabusAccordion } from "@/features/catalog/ui/syllabus-accordion";
 import { CheckoutCard } from "@/features/commerce/ui/checkout-card";
 
-export const dynamic="force-dynamic";
-const money=(value:number)=>value===0?"Free":new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(value/100);
-function FactIcon({kind}:{kind:"calendar"|"language"|"video"|"material"|"test"}){const paths={calendar:<><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></>,language:<><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></>,video:<><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></>,material:<><path d="M6 3h9l3 3v15H6zM14 3v4h4M9 12h6M9 16h6"/></>,test:<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></>};return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[kind]}</svg>}
+export const dynamic = "force-dynamic";
+const money = (value: number) =>
+  value === 0
+    ? "Free"
+    : new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      }).format(value / 100);
+function FactIcon({
+  kind,
+}: {
+  kind: "calendar" | "language" | "video" | "material" | "test";
+}) {
+  const paths = {
+    calendar: (
+      <>
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M8 3v4M16 3v4M4 10h16" />
+      </>
+    ),
+    language: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+      </>
+    ),
+    video: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="m10 8 6 4-6 4z" />
+      </>
+    ),
+    material: (
+      <>
+        <path d="M6 3h9l3 3v15H6zM14 3v4h4M9 12h6M9 16h6" />
+      </>
+    ),
+    test: (
+      <>
+        <rect x="5" y="3" width="14" height="18" rx="2" />
+        <path d="M9 8h6M9 12h6M9 16h3" />
+      </>
+    ),
+  };
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      {paths[kind]}
+    </svg>
+  );
+}
 
-export default async function Page({params}:{params:Promise<{slug:string}>}){
-  const product=await findAvailableProduct((await params).slug);if(!product)notFound();
-  const related=(await listAvailableProducts()).filter(item=>item.id!==product.id).slice(0,3);
-  const discount=product.mrpPaise&&product.mrpPaise>product.pricePaise?Math.round((1-product.pricePaise/product.mrpPaise)*100):0;
-  const syllabus=(product.syllabus??"").split(/\r?\n/).map(item=>item.trim()).filter(Boolean);
-  const language=product.language==="BILINGUAL"?"English & Hindi":product.language.toLowerCase().replace(/^./,value=>value.toUpperCase());
-  const productName=normaliseProductName(product.name);
-  return <main className="product-reference-page">
-    <nav className="store-breadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><span>›</span><Link href="/packages">All packages</Link><span>›</span><b>{productName}</b></nav>
-    <section className="reference-product-hero">
-      <ProductDetailCover productId={product.id} name={productName} hasCover={Boolean(product.coverObjectKey)}/>
-      <div className="reference-product-copy"><h1>{productName}</h1><p>{product.description||"Your complete exam preparation package with structured learning and practice."}</p><div className={`reference-rating${product.reviewCount?"":" no-reviews"}`}><b>{product.reviewCount?"★★★★★":"☆☆☆☆☆"}</b>{product.reviewCount?<><strong>{product.rating.toFixed(1)}</strong><span>({formatCount(product.reviewCount,"review")})</span></>:<span>No reviews yet</span>}<i>● Trusted by Prepstore learners</i></div><div className="reference-price"><del>{product.mrpPaise&&product.mrpPaise>product.pricePaise?money(product.mrpPaise):null}</del><strong>{money(product.pricePaise)}</strong>{discount>0?<span>{discount}% OFF</span>:null}<small>+ applicable GST</small></div><div className="reference-facts"><span><FactIcon kind="calendar"/><b>{formatAccessDuration(product.accessDays)}</b><small>Access duration</small></span><span><FactIcon kind="language"/><b>{language}</b><small>Language</small></span><span><FactIcon kind="video"/><b>{formatCount(product.materials.length,"resource")}</b><small>Study content</small></span><span><FactIcon kind="material"/><b>{product.materials.length.toLocaleString("en-IN")}</b><small>Materials</small></span><span><FactIcon kind="test"/><b>{product.tests.length.toLocaleString("en-IN")}</b><small>Mock tests</small></span></div><CheckoutCard productId={product.id} pricePaise={product.pricePaise}/></div>
-    </section>
-    <ProductDetailTabs panels={{description:<section><h2>Description</h2><p>{product.description||"Study, practise and analyse your preparation from one organised package workspace."}</p></section>,syllabus:<section>{syllabus.length?<SyllabusAccordion topics={syllabus}/>:<><h2>Syllabus</h2><p className="muted">The detailed syllabus will be added soon.</p></>}</section>,included:<section><h2>What&apos;s included</h2><div className="included-grid"><article><FactIcon kind="test"/><div><h3>Tests &amp; practice sets</h3><p>{product.tests.length} linked test{product.tests.length===1?"":"s"}</p></div></article><article><FactIcon kind="material"/><div><h3>Study materials</h3><p>{product.materials.length} linked resource{product.materials.length===1?"":"s"}</p></div></article></div>{product.tests.length?<div className="included-list">{product.tests.map(test=><div key={test.id}><b>{test.title}</b><span>{test.mode.toLowerCase()} · {test.durationMinutes} minutes</span></div>)}</div>:null}{product.materials.length?<div className="included-list">{product.materials.map(material=><div key={material.id}><b>{material.title}</b><span>{material.type.toLowerCase()}</span></div>)}</div>:null}</section>,reviews:<section><h2>Reviews</h2>{product.reviews.length?<div className="review-list">{product.reviews.map(review=><article key={review.id}><header><strong>{review.name}</strong><span>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</span></header><p>{review.comment}</p><small>{new Date(review.createdAt).toLocaleDateString("en-IN",{dateStyle:"medium"})}</small></article>)}</div>:<p className="muted">Be the first verified learner to review this package.</p>}<ProductReviewForm productId={product.id}/></section>,faqs:<section><h2>FAQs</h2><details><summary>Where will I find this package?</summary><p>After confirmed payment it appears inside My Packages in your student dashboard.</p></details><details><summary>Is this a physical product?</summary><p>No. Prepstore sells digital preparation packages only.</p></details><details><summary>Can I access materials and tests together?</summary><p>Yes. Materials, tests and results stay organised inside this package.</p></details></section>}}/>
-    {related.length?<section className="reference-related"><header><h2>Related packages</h2><Link href="/packages">View all <span>→</span></Link></header><div>{related.map((item,index)=><StorefrontProductCard key={item.id} product={item} index={index+1} variant="catalog"/>)}</div></section>:null}
-  </main>;
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const auth = await getCurrentAuth();
+  const product = await findAvailableProduct((await params).slug);
+  if (!product) notFound();
+  const [owned, available] = await Promise.all([
+    hasActiveProductAccess(product.id, auth?.user.id),
+    listAvailableProducts(auth?.user.id),
+  ]);
+  const related = available
+    .filter((item) => item.id !== product.id && !item.alreadyOwned)
+    .slice(0, 3);
+  const discount =
+    product.mrpPaise && product.mrpPaise > product.pricePaise
+      ? Math.round((1 - product.pricePaise / product.mrpPaise) * 100)
+      : 0;
+  const syllabus = (product.syllabus ?? "")
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const language =
+    product.language === "BILINGUAL"
+      ? "English & Hindi"
+      : product.language
+          .toLowerCase()
+          .replace(/^./, (value) => value.toUpperCase());
+  const productName = normaliseProductName(product.name);
+  return (
+    <main className="product-reference-page">
+      <nav className="store-breadcrumb" aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span>›</span>
+        <Link href="/packages">All packages</Link>
+        <span>›</span>
+        <b>{productName}</b>
+      </nav>
+      <section className="reference-product-hero">
+        <ProductDetailCover
+          productId={product.id}
+          name={productName}
+          hasCover={Boolean(product.coverObjectKey)}
+        />
+        <div className="reference-product-copy">
+          <h1>{productName}</h1>
+          <p>
+            {product.description ||
+              "Your complete exam preparation package with structured learning and practice."}
+          </p>
+          <div
+            className={`reference-rating${product.reviewCount ? "" : " no-reviews"}`}
+          >
+            <b>{product.reviewCount ? "★★★★★" : "☆☆☆☆☆"}</b>
+            {product.reviewCount ? (
+              <>
+                <strong>{product.rating.toFixed(1)}</strong>
+                <span>({formatCount(product.reviewCount, "review")})</span>
+              </>
+            ) : (
+              <span>No reviews yet</span>
+            )}
+            <i>● Trusted by Prepstore learners</i>
+          </div>
+          <div className="reference-price">
+            <del>
+              {product.mrpPaise && product.mrpPaise > product.pricePaise
+                ? money(product.mrpPaise)
+                : null}
+            </del>
+            <strong>{money(product.pricePaise)}</strong>
+            {discount > 0 ? <span>{discount}% OFF</span> : null}
+            <small>+ applicable GST</small>
+          </div>
+          <div className="reference-facts">
+            <span>
+              <FactIcon kind="calendar" />
+              <b>{formatAccessDuration(product.accessDays)}</b>
+              <small>Access duration</small>
+            </span>
+            <span>
+              <FactIcon kind="language" />
+              <b>{language}</b>
+              <small>Language</small>
+            </span>
+            <span>
+              <FactIcon kind="video" />
+              <b>{formatCount(product.materials.length, "resource")}</b>
+              <small>Study content</small>
+            </span>
+            <span>
+              <FactIcon kind="material" />
+              <b>{product.materials.length.toLocaleString("en-IN")}</b>
+              <small>Materials</small>
+            </span>
+            <span>
+              <FactIcon kind="test" />
+              <b>{product.tests.length.toLocaleString("en-IN")}</b>
+              <small>Mock tests</small>
+            </span>
+          </div>
+          <CheckoutCard
+            productId={product.id}
+            slug={product.slug}
+            pricePaise={product.pricePaise}
+            owned={owned}
+          />
+        </div>
+      </section>
+      <ProductDetailTabs
+        panels={{
+          description: (
+            <section>
+              <h2>Description</h2>
+              <p>
+                {product.description ||
+                  "Study, practise and analyse your preparation from one organised package workspace."}
+              </p>
+            </section>
+          ),
+          syllabus: (
+            <section>
+              {syllabus.length ? (
+                <SyllabusAccordion topics={syllabus} />
+              ) : (
+                <>
+                  <h2>Syllabus</h2>
+                  <p className="muted">
+                    The detailed syllabus will be added soon.
+                  </p>
+                </>
+              )}
+            </section>
+          ),
+          included: (
+            <section>
+              <h2>What&apos;s included</h2>
+              <div className="included-grid">
+                <article>
+                  <FactIcon kind="test" />
+                  <div>
+                    <h3>Tests &amp; practice sets</h3>
+                    <p>
+                      {product.tests.length} linked test
+                      {product.tests.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                </article>
+                <article>
+                  <FactIcon kind="material" />
+                  <div>
+                    <h3>Study materials</h3>
+                    <p>
+                      {product.materials.length} linked resource
+                      {product.materials.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                </article>
+              </div>
+              {product.tests.length ? (
+                <div className="included-list">
+                  {product.tests.map((test) => (
+                    <div key={test.id}>
+                      <b>{test.title}</b>
+                      <span>
+                        {test.mode.toLowerCase()} · {test.durationMinutes}{" "}
+                        minutes
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              {product.materials.length ? (
+                <div className="included-list">
+                  {product.materials.map((material) => (
+                    <div key={material.id}>
+                      <b>{material.title}</b>
+                      <span>{material.type.toLowerCase()}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </section>
+          ),
+          reviews: (
+            <section>
+              <h2>Reviews</h2>
+              {product.reviews.length ? (
+                <div className="review-list">
+                  {product.reviews.map((review) => (
+                    <article key={review.id}>
+                      <header>
+                        <strong>{review.name}</strong>
+                        <span>
+                          {"★".repeat(review.rating)}
+                          {"☆".repeat(5 - review.rating)}
+                        </span>
+                      </header>
+                      <p>{review.comment}</p>
+                      <small>
+                        {new Date(review.createdAt).toLocaleDateString(
+                          "en-IN",
+                          { dateStyle: "medium" },
+                        )}
+                      </small>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">
+                  Be the first verified learner to review this package.
+                </p>
+              )}
+              <ProductReviewForm productId={product.id} />
+            </section>
+          ),
+          faqs: (
+            <section>
+              <h2>FAQs</h2>
+              <details>
+                <summary>Where will I find this package?</summary>
+                <p>
+                  After confirmed payment it appears inside My Packages in your
+                  student dashboard.
+                </p>
+              </details>
+              <details>
+                <summary>Is this a physical product?</summary>
+                <p>No. Prepstore sells digital preparation packages only.</p>
+              </details>
+              <details>
+                <summary>Can I access materials and tests together?</summary>
+                <p>
+                  Yes. Materials, tests and results stay organised inside this
+                  package.
+                </p>
+              </details>
+            </section>
+          ),
+        }}
+      />
+      {related.length ? (
+        <section className="reference-related">
+          <header>
+            <h2>Related packages</h2>
+            <Link href="/packages">
+              View all <span>→</span>
+            </Link>
+          </header>
+          <div>
+            {related.map((item, index) => (
+              <StorefrontProductCard
+                key={item.id}
+                product={item}
+                index={index + 1}
+                variant="catalog"
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </main>
+  );
 }
