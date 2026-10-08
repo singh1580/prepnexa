@@ -24,8 +24,6 @@ type Checkout = {
   customer: { name: string; email: string; phone: string | null };
 };
 
-const prepstoreCheckoutLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e94b16'/%3E%3Cpath d='M18 17h19c8 0 13 4 13 11s-5 12-13 12H28v8H18V17Zm10 8v7h9c2 0 4-1 4-4 0-2-2-3-4-3h-9Z' fill='white'/%3E%3C/svg%3E";
-
 export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
   const router = useRouter();
   const [scriptReady, setScriptReady] = useState(false);
@@ -70,7 +68,7 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
       amount: checkout.amountPaise,
       currency: checkout.currency,
       name: "Prepstore",
-      image: prepstoreCheckoutLogo,
+      image: new URL("/images/prepstore-checkout-mark.svg", window.location.origin).toString(),
       description: `Order #${checkout.orderId.slice(0, 12).toUpperCase()}`,
       order_id: checkout.providerOrderId,
       prefill: { name: checkout.customer.name, email: checkout.customer.email, ...(checkout.customer.phone ? { contact: checkout.customer.phone } : {}) },
