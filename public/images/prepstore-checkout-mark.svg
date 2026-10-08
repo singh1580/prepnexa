@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">Prepstore</title>
+  <rect width="96" height="96" rx="24" fill="#ffffff"/>
+  <path d="M18 20h31c17 0 28 9 28 24S66 69 49 69H35v10H18V20Zm17 15v19h14c7 0 11-3 11-10 0-6-4-9-11-9H35Z" fill="#17191c"/>
+  <path d="M60 44c0-6-4-9-11-9H35v19h14c7 0 11-3 11-10Z" fill="#eb4b17"/>
+</svg>
