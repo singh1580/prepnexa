@@ -438,6 +438,29 @@ function Navigation({
   );
 }
 
+function StudentBottomNavigation({ section }: { section: string }) {
+  const items: NavItem[] = [
+    { key: "overview", href: "/dashboard", label: "Home", icon: "dashboard" },
+    { key: "courses", href: "/dashboard/courses", label: "My packages", icon: "library" },
+    { key: "orders", href: "/dashboard/orders", label: "Orders", icon: "orders" },
+    { key: "profile", href: "/account/profile", label: "Profile", icon: "profile" },
+  ];
+  return (
+    <nav className="student-bottom-nav" aria-label="Student mobile navigation">
+      {items.map((item) => (
+        <Link
+          href={item.href}
+          aria-current={section === item.key ? "page" : undefined}
+          key={item.key}
+        >
+          <NavIcon name={item.icon} />
+          <span>{item.label}</span>
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export async function WorkspaceShell({
   admin,
   name,
@@ -574,6 +597,7 @@ export async function WorkspaceShell({
         <main id="main-content" className="workspace-main">
           {children}
         </main>
+        {!admin ? <StudentBottomNavigation section={section} /> : null}
       </div>
     </div>
   );
