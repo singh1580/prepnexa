@@ -1,11 +1,11 @@
 /* Storefront purchase and responsive-image corrections. */
 .brand-word b{color:#e84714!important}.brand-word em{color:#151719!important;font-style:normal}
 .brand-mark i:first-child{background:#17191c!important}.brand-mark i:last-child{background:#e94b17!important}
-.public-site .store-hero{isolation:isolate;min-height:31rem;background:#fbf7f1}
+.public-site .store-hero{isolation:isolate;min-height:25.5rem;background:#fbf7f1}
 .public-site .store-hero:after{display:block;background:linear-gradient(90deg,#fbf8f3 0%,#fbf8f3f5 31%,#fbf8f37a 46%,transparent 66%)}
 .store-hero-content{width:min(50rem,52vw);padding:3rem 0 2.6rem clamp(2rem,7vw,7.2rem)}
 .store-hero-media{position:absolute;inset:0;z-index:0;width:100%;overflow:hidden;background:#f8eee7}
-.store-hero-image{object-fit:cover!important;object-position:center 30%!important}
+.store-hero-image{object-fit:cover!important;object-position:center 55%!important}
 .hero-handwriting{top:3.1rem;right:auto;left:80.5%;font-size:1.08rem}
 .cart-ready-action{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .store-owned-action{background:#fff7f2;color:#d74312;border-color:#f2bca8}
@@ -33,7 +33,7 @@
 .student-banner-media img{object-fit:cover;object-position:center 38%}
 .mobile-public-actions,.student-bottom-nav{display:none}
 @media(max-width:800px){
-  .public-header{display:grid!important;grid-template-columns:4.6rem minmax(0,1fr) 4.6rem!important;grid-template-rows:3rem auto;height:auto!important;min-height:0;padding:.55rem 1rem .75rem!important;gap:.5rem .4rem!important;align-items:center!important}
+  .public-header{display:grid!important;grid-template-columns:4.6rem minmax(0,1fr) 4.6rem!important;grid-template-rows:2.75rem auto;height:auto!important;min-height:0;padding:.5rem 1rem .65rem!important;gap:.45rem .4rem!important;align-items:center!important;overflow:visible}
   .public-header>.mobile-public-menu{grid-column:1;grid-row:1;margin:0!important}
   .public-header>.brand{grid-column:2;grid-row:1;justify-self:center}
   .public-header>.public-live-search{display:block!important;grid-column:1/-1;grid-row:2;max-width:none}
@@ -43,24 +43,29 @@
   .mobile-account-icon{display:grid;place-items:center;width:2rem;height:2rem;color:#303438}
   .mobile-account-icon svg{width:1.3rem;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
   .mobile-public-actions .header-avatar{width:2rem;height:2rem;font-size:.75rem}
-  .public-header .header-search input{height:2.45rem;background:#f8f7f5;font-size:.78rem}
+  .public-header .header-search input{height:2.35rem;background:#f8f7f5;font-size:.78rem}
   .mobile-public-menu summary{width:2.35rem;min-width:2.35rem!important;height:2.35rem;min-height:2.35rem;padding:.45rem!important;border:0!important;background:#fff!important;color:#222!important}
   .public-header .mobile-public-menu nav{z-index:70;top:calc(100% + .45rem);right:auto;left:0;border-color:#e1ddd8!important;background:#fff!important;box-shadow:0 1rem 2.5rem #24170e24}
   .public-header .mobile-public-menu nav>a:not(.button){color:#33383d!important}
   .brand{font-size:1.12rem!important}.brand-mark{width:1.8rem!important;height:1.8rem!important}
   .auth-site-header{min-width:0;padding-inline:1rem}.auth-site-header .brand{flex:0 0 auto}.auth-site-header nav{min-width:0;gap:.75rem}
-  .public-site .store-hero{display:block;min-height:27rem;overflow:hidden;border-bottom:1px solid #eee8e2}
-  .public-site .store-hero:after{display:block;background:linear-gradient(90deg,#fbf8f3 0%,#fbf8f3fa 43%,#fbf8f3bb 62%,transparent 100%)}
-  .store-hero-content{width:100%;padding:2rem 1.25rem 1.7rem;background:transparent}
-  .store-hero-media{position:absolute;inset:0;width:100%;height:100%;background:#f8eee7}.store-hero-image{object-position:62% center!important}.hero-handwriting{display:none}
+  .public-site .store-hero{display:block;min-height:22rem;overflow:hidden;border-bottom:1px solid #eee8e2}
+  .public-site .store-hero:after{display:block;background:linear-gradient(90deg,#fff 0%,#fffffff2 31%,#ffffffa8 46%,#ffffff26 64%,transparent 76%)}
+  .store-hero-content{width:min(88%,34rem);padding:1.55rem 1.25rem 1.35rem;background:transparent}
+  .store-hero-media{position:absolute;inset:0;width:100%;height:100%;background:#fff}.store-hero-image{object-position:66% 52%!important}.hero-handwriting{display:none}
   .hero-search{grid-template-columns:minmax(0,1fr) auto!important;max-width:32rem}.hero-search svg{top:50%!important}.hero-search input{border-right:0!important;border-radius:.4rem 0 0 .4rem!important}.hero-search button{height:auto!important;margin:0!important;border-radius:0 .4rem .4rem 0!important}
   .student-bottom-nav{position:fixed;z-index:55;right:0;bottom:0;left:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:.45rem max(.35rem,env(safe-area-inset-right)) calc(.4rem + env(safe-area-inset-bottom)) max(.35rem,env(safe-area-inset-left));border-top:1px solid #e2ded9;background:#fff;box-shadow:0 -.5rem 1.5rem #24170e0d}
   .student-bottom-nav a{display:grid;justify-items:center;gap:.22rem;min-width:0;padding:.25rem;color:#777d82;font-size:.64rem;font-weight:700}
   .student-bottom-nav .nav-icon{width:1.22rem;height:1.22rem}
   .student-bottom-nav a[aria-current=page]{color:#e54816}
   .student-workspace .workspace-main{padding-bottom:6rem!important}
-  .student-workspace .workspace-header,.admin-workspace .workspace-header{min-height:4.25rem;padding-inline:.8rem!important}
-  .student-workspace .workspace-header .mobile-brand,.admin-workspace .workspace-header .mobile-brand{margin-left:2.7rem!important}
+  .student-workspace .workspace-header,.admin-workspace .workspace-header{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;gap:.5rem!important;height:4rem!important;min-height:4rem;padding:0 .75rem 0 3.65rem!important;align-items:center!important}
+  .student-workspace .workspace-header .mobile-brand,.admin-workspace .workspace-header .mobile-brand{display:block!important;min-width:0;margin:0!important}
+  .student-workspace .workspace-header .mobile-brand .brand,.admin-workspace .workspace-header .mobile-brand .brand{width:max-content;max-width:100%;font-size:1.05rem!important}
+  .student-workspace .workspace-header .mobile-brand .brand-mark,.admin-workspace .workspace-header .mobile-brand .brand-mark{width:1.7rem!important;height:1.7rem!important}
+  .student-workspace .workspace-header .public-live-search,.admin-workspace .workspace-header .public-live-search{display:none!important}
+  .student-workspace .workspace-header .student-header-account,.admin-workspace .workspace-header .student-header-account{min-width:0;margin:0;padding-left:.45rem}
+  .student-workspace .workspace-header>.button.secondary,.admin-workspace .workspace-header>.button.secondary{display:none!important}
   .student-workspace .student-header-title{display:none}
   .student-workspace .student-mobile-menu{position:fixed!important;z-index:65;top:.75rem;left:.7rem;width:2.5rem;padding:0!important;border:0!important;background:transparent!important}
   .student-mobile-menu>summary{display:grid;place-items:center;width:2.5rem;height:2.5rem;overflow:hidden;border:1px solid #e1ddd8;border-radius:.45rem;background:#fff;color:#25282b!important;font-size:0}
@@ -86,7 +91,8 @@
 }
 @media(max-width:560px){
   .public-header{grid-template-columns:4.2rem minmax(0,1fr) 4.2rem!important;padding-inline:.75rem!important}.public-header>.brand{font-size:1.12rem!important}.public-header .brand-mark{width:1.8rem!important;height:1.8rem!important}
-  .store-hero-content{padding:1.4rem 1rem 1.2rem}.store-hero h1{font-size:clamp(2rem,10vw,2.4rem)}.store-hero-content>p{font-size:.82rem;line-height:1.4}.hero-search{margin-top:.9rem}
+  .public-site .store-hero{min-height:21rem}
+  .store-hero-content{width:94%;padding:1.2rem 1rem 1.05rem}.store-hero h1{font-size:clamp(1.85rem,9vw,2.2rem);line-height:.96}.store-hero-content>p{max-width:20rem;font-size:.78rem;line-height:1.38}.hero-search{margin-top:.75rem}.hero-search input{height:2.7rem;padding-left:2.55rem;font-size:.7rem}.hero-search button{min-width:5.2rem;padding-inline:.7rem;font-size:.72rem}
   .mobile-public-menu summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .reference-catalog-grid{grid-template-columns:1fr!important}
   .all-packages-page{padding-inline:1rem!important}.all-packages-heading h1{font-size:1.75rem}.catalog-sidebar{grid-template-columns:1fr!important}
@@ -96,6 +102,20 @@
   .student-reference-metrics,.student-package-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.student-package-image{min-height:7rem}.student-package-copy{padding:.75rem}.student-package-copy>p{min-height:3.2rem}.student-package-tools nav{width:100%;overflow-x:auto}.student-package-tools nav a{white-space:nowrap}
   .checkout-brand-heading{padding:1.15rem}.checkout-brand-heading ol{justify-content:space-between}.checkout-brand-heading li{min-width:0;flex:1;font-size:.64rem}.checkout-brand-heading li:not(:last-child):after{width:auto;flex:1;margin:0 .35rem}.checkout-brand-heading li:before{width:1.45rem;height:1.45rem;margin-right:.32rem}
   .checkout-card-title h2{font-size:1rem}.signin-required{align-items:stretch}.signin-required .reference-checkout-button{width:100%}
+}
+@media(max-width:420px){
+  .public-header{grid-template-columns:3.8rem minmax(0,1fr) 3.8rem!important;padding-inline:.65rem!important}
+  .public-header>.brand{font-size:1.02rem!important}.public-header .brand-mark{width:1.65rem!important;height:1.65rem!important}
+  .mobile-public-actions{gap:.2rem}.mobile-public-actions .header-cart,.mobile-account-icon{width:1.75rem;height:1.75rem}
+  .public-site .store-hero{min-height:20.5rem}
+  .store-hero-content{padding-top:1rem}.store-hero-content>span{font-size:.62rem}.store-hero h1{font-size:1.8rem}.store-hero-content>p{font-size:.74rem}
+  .student-workspace .workspace-header,.admin-workspace .workspace-header{padding-right:.55rem!important;gap:.35rem!important}
+  .student-workspace .workspace-header .mobile-brand .brand,.admin-workspace .workspace-header .mobile-brand .brand{font-size:.98rem!important}
+  .student-header-bell{width:2.05rem;height:2.05rem}.student-header-account{border-left:0}.student-header-account .avatar{width:1.9rem;height:1.9rem}
+}
+@media(max-width:700px){
+  .auth-story{display:none!important}.auth-main{min-height:100vh!important;padding:1rem!important;justify-content:flex-start!important}
+  .auth-main>.mobile-brand{display:block!important;align-self:flex-start;margin:0 0 1.5rem!important}
 }
 @media(max-width:390px){
   .student-package-grid{grid-template-columns:1fr!important}.student-reference-metrics{gap:.55rem}.student-reference-metrics article{padding:.8rem}.store-product-catalog{grid-template-columns:5.8rem minmax(0,1fr)}
