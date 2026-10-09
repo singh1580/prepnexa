@@ -23,7 +23,7 @@ export default async function Page({
   }
   return (
     <WorkspaceShell admin={false} name={auth.user.name} section="support">
-      <nav className="student-breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span><Link href="/dashboard/support">Support</Link><span>›</span><b>Ticket #{String(ticket.id).slice(0,8).toUpperCase()}</b></nav>
+      <nav className="student-breadcrumb"><Link href="/dashboard">Dashboard</Link><span>›</span><Link href="/dashboard/support">Support</Link><span>›</span><b>Ticket #{String(ticket.id).slice(0,8).toUpperCase()}</b></nav>
       <Link className="back-link" href="/dashboard/support">← Back to Support</Link>
       <section className="reference-ticket"><header><div className="ticket-title-block"><div><h1>Ticket #{String(ticket.id).slice(0,8).toUpperCase()}</h1><span className={`support-status ${String(ticket.status).toLowerCase()}`}>● {String(ticket.status).replaceAll("_", " ")}</span></div><p>Created on {new Date(ticket.createdAt as Date).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})} &nbsp;·&nbsp; Related to: {String(ticket.subject)}</p></div><div className="ticket-header-actions">{!['RESOLVED','CLOSED'].includes(String(ticket.status))?<SupportResolveButton ticketId={String(ticket.id)}/>:null}<details className="ticket-more"><summary aria-label="Ticket details">⋮</summary><div><strong>{String(ticket.subject)}</strong><span>{String(ticket.category).replaceAll("_"," ")}</span></div></details></div></header>
       <div className="support-thread">

@@ -17,6 +17,8 @@ export type StudentCourse = {
   testCount: number;
   materialCount: number;
   completedAttempts: number;
+  completedTests: number;
+  viewedMaterialCount: number;
   activeAttemptId: string | null;
   activeTestTitle: string | null;
   accessStatus?: "ACTIVE" | "EXPIRED";
@@ -80,6 +82,10 @@ export async function listAccessibleCourses(userId: string) {
       (select count(*)::int from product_materials pm where pm.product_id=p.id) as "materialCount",
       (select count(*)::int from attempts a
         where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
+      (select count(distinct a.test_id)::int from attempts a join product_tests pt on pt.test_id=a.test_id and pt.product_id=p.id
+        where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedTests",
+      (select count(distinct mal.material_id)::int from material_access_logs mal join product_materials pm on pm.material_id=mal.material_id and pm.product_id=p.id
+        where mal.product_id=p.id and mal.user_id=${userId}::uuid) as "viewedMaterialCount",
       active.id as "activeAttemptId", active.title as "activeTestTitle"
     from products p
     left join lateral (
@@ -110,6 +116,10 @@ export async function findAccessibleCourse(slug: string, userId: string) {
       (select count(*)::int from product_materials pm where pm.product_id=p.id) as "materialCount",
       (select count(*)::int from attempts a
         where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
+      (select count(distinct a.test_id)::int from attempts a join product_tests pt on pt.test_id=a.test_id and pt.product_id=p.id
+        where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedTests",
+      (select count(distinct mal.material_id)::int from material_access_logs mal join product_materials pm on pm.material_id=mal.material_id and pm.product_id=p.id
+        where mal.product_id=p.id and mal.user_id=${userId}::uuid) as "viewedMaterialCount",
       active.id as "activeAttemptId", active.title as "activeTestTitle"
     from products p
     left join lateral (
@@ -240,6 +250,8 @@ export async function listOwnedCourses(userId:string){
       (select count(*)::int from product_tests pt where pt.product_id=p.id) as "testCount",
       (select count(*)::int from product_materials pm where pm.product_id=p.id) as "materialCount",
       (select count(*)::int from attempts a where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedAttempts",
+      (select count(distinct a.test_id)::int from attempts a join product_tests pt on pt.test_id=a.test_id and pt.product_id=p.id where a.product_id=p.id and a.user_id=${userId}::uuid and a.status='EVALUATED') as "completedTests",
+      (select count(distinct mal.material_id)::int from material_access_logs mal join product_materials pm on pm.material_id=mal.material_id and pm.product_id=p.id where mal.product_id=p.id and mal.user_id=${userId}::uuid) as "viewedMaterialCount",
       active.id as "activeAttemptId",active.title as "activeTestTitle"
     from products p join lateral(select x.* from entitlements x where x.product_id=p.id and x.user_id=${userId}::uuid order by x.expires_at desc limit 1)e on true
     left join lateral(select a.id,t.title from attempts a join tests t on t.id=a.test_id where a.product_id=p.id and a.user_id=${userId}::uuid and a.status in('CREATED','IN_PROGRESS') order by a.updated_at desc limit 1)active on true

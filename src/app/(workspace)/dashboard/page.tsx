@@ -5,6 +5,7 @@ import { WorkspaceShell } from "@/components/workspace-shell";
 import { requireWorkspace } from "@/features/auth/page-access";
 import { getStudentNotifications } from "@/features/operations/service";
 import { getStudentCourseDashboard } from "@/features/student-courses/service";
+import { courseProgress } from "@/features/student-courses/progress";
 
 export const metadata = { title: "Student dashboard" };
 
@@ -28,10 +29,12 @@ export default async function Page() {
     getStudentCourseDashboard(auth.user.id),
     getStudentNotifications(auth.user.id),
   ]);
-  const availableTests = courses.reduce((total, course) => total + course.testCount, 0);
+  const totalItems = courses.reduce((total, course) => total + course.testCount + course.materialCount, 0);
+  const completedItems = courses.reduce((total, course) => total + Math.min(course.completedTests, course.testCount) + Math.min(course.viewedMaterialCount, course.materialCount), 0);
   const completedAttempts = courses.reduce((total, course) => total + course.completedAttempts, 0);
-  const progress = availableTests ? Math.min(100, Math.round((completedAttempts / availableTests) * 100)) : 0;
+  const progress = totalItems ? Math.round(completedItems / totalItems * 100) : 0;
   const continueCourse = courses.find((course) => course.activeAttemptId) ?? courses[0];
+  const continueProgress = continueCourse ? courseProgress(continueCourse) : 0;
   const chartResults = [...recentResults].reverse();
   const average = recentResults.length ? Math.round(recentResults.reduce((total, result) => total + (Number(result.maxScore) ? Number(result.score) / Number(result.maxScore) * 100 : 0), 0) / recentResults.length) : null;
   const firstName = auth.user.name.split(" ")[0];
@@ -42,7 +45,7 @@ export default async function Page() {
       <div className="student-banner-media"><Image src="/images/student-dashboard-banner.webp" alt="Student learning online" fill priority sizes="(max-width: 800px) 100vw, 70vw" /></div>
     </section>
 
-    {continueCourse ? <section className="student-section"><div className="student-section-heading"><h2>Continue learning</h2><Link href={`/dashboard/courses/${continueCourse.slug}`}>View package</Link></div><article className="continue-learning-card"><div className="course-tile">{continueCourse.coverObjectKey ? <Image src={`/api/catalog/products/${continueCourse.id}/cover`} alt="" fill sizes="88px" /> : <b>{continueCourse.name.slice(0, 2).toUpperCase()}</b>}</div><div><small>{continueCourse.activeAttemptId ? "TEST IN PROGRESS" : "YOUR PACKAGE"}</small><h3>{continueCourse.activeTestTitle ?? continueCourse.name}</h3><p>{continueCourse.name}</p></div><div className="continue-progress"><span>{Math.min(100, continueCourse.testCount ? Math.round(continueCourse.completedAttempts / continueCourse.testCount * 100) : 0)}% complete</span><progress max="100" value={continueCourse.testCount ? Math.min(100, Math.round(continueCourse.completedAttempts / continueCourse.testCount * 100)) : 0}/><Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue <b>→</b></Link></div></article></section> : null}
+    {continueCourse ? <section className="student-section"><div className="student-section-heading"><h2>Continue learning</h2><Link href={`/dashboard/courses/${continueCourse.slug}`}>View package</Link></div><article className="continue-learning-card"><div className="course-tile">{continueCourse.coverObjectKey ? <Image src={`/api/catalog/products/${continueCourse.id}/cover`} alt="" fill sizes="88px" /> : <b>{continueCourse.name.slice(0, 2).toUpperCase()}</b>}</div><div><small>{continueCourse.activeAttemptId ? "TEST IN PROGRESS" : "YOUR PACKAGE"}</small><h3>{continueCourse.activeTestTitle ?? continueCourse.name}</h3><p>{continueCourse.name}</p></div><div className="continue-progress"><span>{continueProgress}% complete</span><progress max="100" value={continueProgress}/><Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue <b>→</b></Link></div></article></section> : null}
 
     <section className="student-reference-metrics" aria-label="Learning overview">
       <article><i><DashboardIcon name="package"/></i><div><strong>{courses.length}</strong><span>Active packages</span></div></article>
