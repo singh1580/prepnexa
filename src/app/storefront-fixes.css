@@ -5,8 +5,13 @@
 .public-site .store-hero:after{display:block;background:linear-gradient(90deg,#fbf8f3 0%,#fbf8f3f5 31%,#fbf8f37a 46%,transparent 66%)}
 .store-hero-content{width:min(50rem,52vw);padding:3rem 0 2.6rem clamp(2rem,7vw,7.2rem)}
 .store-hero-media{position:absolute;inset:0;z-index:0;width:100%;overflow:hidden;background:#f8eee7}
-.store-hero-image{object-fit:cover!important;object-position:center 55%!important}
-.hero-handwriting{top:3.1rem;right:auto;left:80.5%;font-size:1.08rem}
+.store-hero-media{left:42%;width:58%}
+.store-hero-image{object-fit:contain!important;object-position:right center!important;filter:none!important}
+.public-site .store-hero:after{background:linear-gradient(90deg,#fbf8f3 0%,#fbf8f3 39%,transparent 54%)}
+.store-product-cover.uploaded-cover{background-size:contain;background-position:center;background-repeat:no-repeat;background-color:#f5f5f5}
+.store-product-cover.uploaded-cover:after{display:none}
+.store-product-cover.uploaded-cover .cover-title{display:none}
+.hero-handwriting{top:3.1rem;right:auto;left:66.38%;font-size:1.08rem}
 .cart-ready-action{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .store-owned-action{background:#fff7f2;color:#d74312;border-color:#f2bca8}
 .owned-package-actions>span{display:flex;align-items:center;justify-content:center;min-height:3rem;border:1px solid #b9ddc4;border-radius:.4rem;background:#effaf2;color:#27733e;font-size:.76rem;font-weight:800}
@@ -37,6 +42,9 @@
   .public-header>.mobile-public-menu{grid-column:1;grid-row:1;margin:0!important}
   .public-header>.brand{grid-column:2;grid-row:1;justify-self:center}
   .public-header>.public-live-search{display:block!important;grid-column:1/-1;grid-row:2;max-width:none}
+  .public-header .header-search{display:block!important;position:relative;width:100%;min-width:0;background:transparent;border:0;padding:0}
+  .public-header .header-search input{width:100%;min-width:0;padding-left:2.6rem}
+  .public-header .header-search svg{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:1rem;height:1rem}
   .public-header>.desktop-public-nav{display:none!important}
   .mobile-public-actions{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:flex-end;gap:.45rem}
   .mobile-public-actions .header-cart{border:0;width:1.9rem;height:1.9rem}
@@ -49,10 +57,10 @@
   .public-header .mobile-public-menu nav>a:not(.button){color:#33383d!important}
   .brand{font-size:1.12rem!important}.brand-mark{width:1.8rem!important;height:1.8rem!important}
   .auth-site-header{min-width:0;padding-inline:1rem}.auth-site-header .brand{flex:0 0 auto}.auth-site-header nav{min-width:0;gap:.75rem}
-  .public-site .store-hero{display:block;min-height:22rem;overflow:hidden;border-bottom:1px solid #eee8e2}
-  .public-site .store-hero:after{display:block;background:linear-gradient(90deg,#fff 0%,#fffffff2 31%,#ffffffa8 46%,#ffffff26 64%,transparent 76%)}
+  .public-site .store-hero{display:block;min-height:19rem;overflow:hidden;border-bottom:1px solid #eee8e2}
+  .public-site .store-hero:after{display:none}
   .store-hero-content{width:min(88%,34rem);padding:1.55rem 1.25rem 1.35rem;background:transparent}
-  .store-hero-media{position:absolute;inset:0;width:100%;height:100%;background:#fff}.store-hero-image{object-position:66% 52%!important}.hero-handwriting{display:none}
+  .store-hero-media{position:absolute;inset:0;width:100%;height:100%;background:#fbf8f3}.store-hero-image{object-position:right bottom!important}.hero-handwriting{display:none}
   .hero-search{grid-template-columns:minmax(0,1fr) auto!important;max-width:32rem}.hero-search svg{top:50%!important}.hero-search input{border-right:0!important;border-radius:.4rem 0 0 .4rem!important}.hero-search button{height:auto!important;margin:0!important;border-radius:0 .4rem .4rem 0!important}
   .student-bottom-nav{position:fixed;z-index:55;right:0;bottom:0;left:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:.45rem max(.35rem,env(safe-area-inset-right)) calc(.4rem + env(safe-area-inset-bottom)) max(.35rem,env(safe-area-inset-left));border-top:1px solid #e2ded9;background:#fff;box-shadow:0 -.5rem 1.5rem #24170e0d}
   .student-bottom-nav a{display:grid;justify-items:center;gap:.22rem;min-width:0;padding:.25rem;color:#777d82;font-size:.64rem;font-weight:700}
@@ -91,7 +99,7 @@
 }
 @media(max-width:560px){
   .public-header{grid-template-columns:4.2rem minmax(0,1fr) 4.2rem!important;padding-inline:.75rem!important}.public-header>.brand{font-size:1.12rem!important}.public-header .brand-mark{width:1.8rem!important;height:1.8rem!important}
-  .public-site .store-hero{min-height:21rem}
+  .public-site .store-hero{min-height:19rem}
   .store-hero-content{width:94%;padding:1.2rem 1rem 1.05rem}.store-hero h1{font-size:clamp(1.85rem,9vw,2.2rem);line-height:.96}.store-hero-content>p{max-width:20rem;font-size:.78rem;line-height:1.38}.hero-search{margin-top:.75rem}.hero-search input{height:2.7rem;padding-left:2.55rem;font-size:.7rem}.hero-search button{min-width:5.2rem;padding-inline:.7rem;font-size:.72rem}
   .mobile-public-menu summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .reference-catalog-grid{grid-template-columns:1fr!important}
@@ -107,7 +115,7 @@
   .public-header{grid-template-columns:3.8rem minmax(0,1fr) 3.8rem!important;padding-inline:.65rem!important}
   .public-header>.brand{font-size:1.02rem!important}.public-header .brand-mark{width:1.65rem!important;height:1.65rem!important}
   .mobile-public-actions{gap:.2rem}.mobile-public-actions .header-cart,.mobile-account-icon{width:1.75rem;height:1.75rem}
-  .public-site .store-hero{min-height:20.5rem}
+  .public-site .store-hero{min-height:19rem}
   .store-hero-content{padding-top:1rem}.store-hero-content>span{font-size:.62rem}.store-hero h1{font-size:1.8rem}.store-hero-content>p{font-size:.74rem}
   .student-workspace .workspace-header,.admin-workspace .workspace-header{padding-right:.55rem!important;gap:.35rem!important}
   .student-workspace .workspace-header .mobile-brand .brand,.admin-workspace .workspace-header .mobile-brand .brand{font-size:.98rem!important}

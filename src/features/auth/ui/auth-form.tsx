@@ -3,7 +3,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { authRequest, ClientApiError } from "./api";
 import { Field } from "./field";
 import { MfaFlow } from "./mfa-flow";
@@ -18,7 +17,6 @@ const copy: Record<AuthMode, { title: string; description: string; action: strin
 };
 
 export function AuthForm({ mode, token, expiredSession = false, nextPath = "/dashboard" }: { mode: AuthMode; token?: string; expiredSession?: boolean; nextPath?: string }) {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -40,7 +38,7 @@ export function AuthForm({ mode, token, expiredSession = false, nextPath = "/das
       if (mode === "login") {
         const result = await authRequest<{ mfaRequired: boolean; mfaSetupRequired?: boolean; challengeToken?: string }>("login", values);
         if (result.mfaRequired && result.challengeToken) setChallenge({ token: result.challengeToken, setup: Boolean(result.mfaSetupRequired) });
-        else router.push(nextPath);
+        else window.location.replace(nextPath);
       } else if (mode === "signup") {
         const result = await authRequest<{ emailSent: boolean }>("register", values);
         setMessage(result.emailSent ? "Account created. Check your inbox for the verification link before signing in." : "Account created, but we couldn't send the verification email. Try resending it below; contact your administrator if delivery remains unavailable."); setDone(true);

@@ -3,5 +3,6 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./styles.css";
 import "./storefront-fixes.css";
+import { AuthHistorySync } from "@/components/auth-history-sync";
 export const metadata: Metadata = { title:{default:"Prepstore",template:"%s | Prepstore"},description:"Placement exam practice tests and study material." };
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} data-scroll-behavior="smooth"><body>{children}</body></html>}
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} data-scroll-behavior="smooth"><body><AuthHistorySync/>{children}</body></html>}

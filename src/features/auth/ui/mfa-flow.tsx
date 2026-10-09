@@ -4,12 +4,10 @@
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import QRCode from "qrcode";
-import { useRouter } from "next/navigation";
 import { authRequest } from "./api";
 import { Field } from "./field";
 
 export function MfaFlow({ challengeToken, setup, nextPath = "/dashboard", onBack }: { challengeToken: string; setup: boolean; nextPath?: string; onBack: () => void }) {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [factor, setFactor] = useState<{ secret: string; qr: string } | null>(null);
@@ -33,7 +31,7 @@ export function MfaFlow({ challengeToken, setup, nextPath = "/dashboard", onBack
         setCodes(result.recoveryCodes); setFactor(null);
       } else {
         await authRequest("mfa/verify-login", { challengeToken, ...values });
-        router.push(nextPath); router.refresh();
+        window.location.replace(nextPath);
       }
     } catch (e) { setError(e instanceof Error ? e.message : "Verification failed."); }
     finally { setBusy(false); }
