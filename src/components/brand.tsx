@@ -13,8 +13,8 @@ export function PrepstoreLogo() {
         className="brand-logo"
         src="/brand/prepstore-logo.svg"
         alt="Prepstore"
-        width={199}
-        height={36}
+        width={728}
+        height={160}
         priority
       />
     </Link>
