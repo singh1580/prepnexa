@@ -513,6 +513,9 @@ export async function WorkspaceShell({
             drawerClassName="workspace-mobile-drawer"
             label={admin ? "Open admin navigation" : "Open student navigation"}
           >
+            <div className="workspace-drawer-brand">
+              <Brand />
+            </div>
             <Link className="mobile-drawer-profile" href="/account/profile">
               <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
               <strong>{name}</strong>

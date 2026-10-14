@@ -40,6 +40,8 @@ describe("responsive navigation", () => {
     expect(packages).toBeLessThan(actions);
     expect(publicHeader).not.toContain("Help &amp; support");
     expect(publicHeader).toContain("<CartCount />");
+    expect(publicHeader).toContain("Create account");
+    expect(publicHeader).toContain('href="/signup"');
   });
 
   it("uses the centred account profile and avoids repeated student cart navigation", () => {
@@ -48,7 +50,7 @@ describe("responsive navigation", () => {
     expect(workspaceShell).not.toContain("StudentBottomNavigation");
     expect(workspaceShell).not.toContain('label: "Cart"');
     expect(workspaceShell).not.toContain('label: "Profile & security"');
-    expect(workspaceShell).not.toContain("workspace-drawer-brand");
+    expect(workspaceShell).toContain('className="workspace-drawer-brand"');
   });
 
   it("supports modal drawer accessibility and the approved responsive sizes", () => {
@@ -79,6 +81,10 @@ describe("responsive navigation", () => {
     expect(responsiveCss).toContain(
       ".mobile-public-menu[open] > summary {",
     );
+    expect(responsiveCss).toContain(
+      "top: calc(var(--mobile-header-height) + 18px)",
+    );
+    expect(responsiveCss).toContain(".workspace-drawer-brand {");
   });
 
   it("provides a consistent back-to-home action across auth pages", () => {

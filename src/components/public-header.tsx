@@ -87,9 +87,14 @@ export async function PublicHeader({
           {auth ? (
             <LogoutButton />
           ) : (
-            <Link className="button secondary" href="/login">
-              Sign in
-            </Link>
+            <>
+              <Link className="button secondary" href="/login">
+                Sign in
+              </Link>
+              <Link className="button" href="/signup">
+                Create account
+              </Link>
+            </>
           )}
         </div>
       </MobileDrawer>

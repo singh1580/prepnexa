@@ -98,13 +98,15 @@
 
 .sidebar {
   min-width: 240px;
+  padding-top: 0 !important;
 }
 
 .sidebar > .brand-logo-link,
 .sidebar > .brand {
   width: 188px;
   min-width: 188px;
-  min-height: 72px;
+  height: 64px;
+  min-height: 64px;
   margin: 0 0 16px 6px !important;
   padding: 0 !important;
   background: transparent !important;
@@ -118,6 +120,15 @@
 .workspace-header {
   height: 64px !important;
   min-height: 64px !important;
+}
+
+.sidebar > nav {
+  scrollbar-width: none;
+}
+
+.sidebar > nav::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .student-workspace .workspace-header {
@@ -294,8 +305,8 @@
   .mobile-public-menu[open] > summary {
     position: fixed !important;
     z-index: 103;
-    top: calc((var(--mobile-header-height) - 44px) / 2);
-    right: clamp(12px, 3.5vw, 20px);
+    top: calc(var(--mobile-header-height) + 18px);
+    right: clamp(26px, 5vw, 34px);
     left: auto;
   }
 
@@ -380,8 +391,8 @@
   .mobile-drawer-profile {
     display: flex;
     align-items: center;
-    margin: 0 0 8px;
-    padding: 4px 8px 12px;
+    margin: 0 0 6px;
+    padding: 2px 8px 10px;
     flex-direction: column;
     color: var(--prepstore-black);
     text-align: center;
@@ -389,12 +400,12 @@
   }
 
   .mobile-drawer-profile .avatar {
-    width: 52px;
-    height: 52px;
-    margin-bottom: 8px;
+    width: 46px;
+    height: 46px;
+    margin-bottom: 6px;
     color: #bd3d13;
     background: #fff0e8;
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .mobile-drawer-profile strong {
@@ -590,7 +601,7 @@
     max-width: 88vw !important;
     max-height: 100dvh;
     min-height: 100dvh;
-    padding: 68px 16px max(18px, env(safe-area-inset-bottom));
+    padding: 10px 16px max(18px, env(safe-area-inset-bottom));
     border-width: 0 1px 0 0;
     border-radius: 0;
     box-shadow: 20px 0 55px rgb(25 18 12 / 22%);
@@ -603,6 +614,25 @@
     top: 12px;
     right: auto;
     left: calc(var(--workspace-drawer-width) - 58px);
+  }
+
+  .workspace-drawer-brand {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    margin: 0 52px 4px 0;
+  }
+
+  .workspace-drawer-brand .brand,
+  .workspace-drawer-brand .brand-logo-link {
+    width: 188px !important;
+    min-width: 188px !important;
+    max-width: 188px !important;
+  }
+
+  .workspace-drawer-brand .brand-logo {
+    width: 188px !important;
+    height: 34px !important;
   }
 
   @keyframes prepstore-drawer-enter {
