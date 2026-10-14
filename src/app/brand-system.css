@@ -83,6 +83,19 @@
   min-height: 64px !important;
 }
 
+.student-workspace .workspace-header {
+  justify-content: flex-end;
+}
+
+.student-workspace .workspace-header > .public-live-search {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.admin-workspace .workspace-header {
+  grid-template-columns: minmax(14rem, 31rem) auto auto auto !important;
+}
+
 .workspace-mobile-brand,
 .workspace-mobile-menu {
   display: none;

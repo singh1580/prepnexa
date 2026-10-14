@@ -487,11 +487,6 @@ export async function WorkspaceShell({
   children: React.ReactNode;
 }) {
   const nav = admin ? adminNavigation(permissions) : studentNavigation;
-  const current =
-    section === "courses"
-      ? "My packages"
-      : (nav.find((item) => item.key === section)?.label ??
-        (admin ? "Administration" : "Dashboard"));
   const resolvedUserId = !admin
     ? (userId ?? (await getCurrentAuth())?.user.id)
     : undefined;
@@ -544,7 +539,6 @@ export async function WorkspaceShell({
           </div>
           {admin ? (
             <>
-              <strong className="admin-header-title">{current}</strong>
               <PublicSearch />
               <Link
                 className="student-header-bell"
@@ -560,7 +554,6 @@ export async function WorkspaceShell({
             </>
           ) : (
             <>
-              <strong className="student-header-title">{current}</strong>
               <PublicSearch />
               <Link
                 className="student-header-bell"
