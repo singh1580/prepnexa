@@ -12,24 +12,26 @@ describe("responsive navigation", () => {
   const baseCss = readFileSync("src/app/styles.css", "utf8");
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
 
-  it("keeps the hamburger before the official logo without a duplicate drawer logo", () => {
+  it("keeps the hamburger before the official logo and brands the drawer header", () => {
     expect(publicHeader.indexOf('className="mobile-public-menu"')).toBeLessThan(
       publicHeader.indexOf("<Brand />"),
     );
-    expect(publicHeader).not.toContain("mobile-drawer-brand");
-    expect(publicHeader).not.toContain(">Home<");
+    expect(drawer).toContain('className="mobile-drawer-brand-row"');
+    expect(drawer).toContain("<Brand />");
     expect(publicHeader).not.toContain(">Menu<");
   });
 
   it("keeps public navigation ordered and account actions separate", () => {
+    const home = publicHeader.indexOf('href="/">Home<');
     const packages = publicHeader.indexOf(">All packages<");
-    const cart = publicHeader.indexOf(">Cart<");
-    const support = publicHeader.indexOf("Help &amp; support");
+    const cart = publicHeader.indexOf("mobile-drawer-cart");
     const actions = publicHeader.indexOf('className="mobile-drawer-actions"');
+    expect(home).toBeGreaterThan(-1);
     expect(packages).toBeGreaterThan(-1);
-    expect(packages).toBeLessThan(cart);
-    expect(cart).toBeLessThan(support);
-    expect(support).toBeLessThan(actions);
+    expect(home).toBeLessThan(cart);
+    expect(cart).toBeLessThan(packages);
+    expect(packages).toBeLessThan(actions);
+    expect(publicHeader).not.toContain("Help &amp; support");
     expect(publicHeader).toContain("<CartCount />");
   });
 
@@ -48,8 +50,8 @@ describe("responsive navigation", () => {
     expect(drawer).toContain('document.body.style.overflow = "hidden"');
     expect(drawer).toContain('aria-label="Close navigation"');
     expect(drawer).toContain('aria-modal="true"');
-    expect(responsiveCss).toContain("width: min(320px, 88vw)");
-    expect(responsiveCss).toContain("width: 92vw");
+    expect(responsiveCss).toContain("--mobile-drawer-width: min(340px, 88vw)");
+    expect(responsiveCss).toContain("--mobile-drawer-width: 92vw");
     expect(responsiveCss).toContain("inset: 0 auto 0 0");
     expect(responsiveCss).toContain("height: 100dvh");
     expect(responsiveCss).toContain("position: fixed !important");

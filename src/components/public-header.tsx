@@ -52,9 +52,6 @@ export async function PublicHeader({
       )}
     </>
   );
-  const supportHref = auth
-    ? `${dashboard}/support`
-    : "/login?next=%2Fdashboard%2Fsupport";
   return (
     <header className="public-header">
       <a className="skip-link" href="#main-content">
@@ -77,28 +74,22 @@ export async function PublicHeader({
             </em>
           </Link>
         ) : null}
-        <PublicSearch />
         <nav aria-label="Mobile primary navigation">
-          <Link href="/packages">All packages</Link>
+          <Link href="/">Home</Link>
           <Link className="mobile-drawer-cart" href="/cart">
             <span>Cart</span>
             <CartCount />
           </Link>
-          <Link href={supportHref}>Help &amp; support</Link>
+          <Link href="/packages">All packages</Link>
           {auth ? <Link href={dashboard}>Dashboard</Link> : null}
         </nav>
         <div className="mobile-drawer-actions">
           {auth ? (
             <LogoutButton />
           ) : (
-            <>
-              <Link className="button secondary" href="/login">
-                Sign in
-              </Link>
-              <Link className="button" href="/signup">
-                Create account
-              </Link>
-            </>
+            <Link className="button secondary" href="/login">
+              Sign in
+            </Link>
           )}
         </div>
       </MobileDrawer>
