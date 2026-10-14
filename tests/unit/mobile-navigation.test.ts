@@ -9,10 +9,8 @@ describe("responsive navigation", () => {
   );
   const drawer = readFileSync("src/components/mobile-drawer.tsx", "utf8");
   const responsiveCss = readFileSync("src/app/brand-system.css", "utf8");
-  const legacyCss = [
-    readFileSync("src/app/styles.css", "utf8"),
-    readFileSync("src/app/storefront-fixes.css", "utf8"),
-  ].join("\n");
+  const baseCss = readFileSync("src/app/styles.css", "utf8");
+  const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
 
   it("keeps the hamburger before the official logo without a duplicate drawer logo", () => {
     expect(publicHeader.indexOf('className="mobile-public-menu"')).toBeLessThan(
@@ -56,10 +54,15 @@ describe("responsive navigation", () => {
     expect(responsiveCss).toContain("--mobile-header-height: 58px");
   });
 
-  it("removes obsolete text-logo and competing mobile-navigation CSS", () => {
-    expect(legacyCss).not.toMatch(/\.brand-(?:mark|word)/);
-    expect(legacyCss).not.toMatch(
-      /\.(?:student-bottom-nav|student-mobile-menu|admin-mobile-menu|mobile-public-actions)/,
+  it("keeps the complete base stylesheet and applies responsive overrides last", () => {
+    expect(baseCss).toContain("body{margin:0;min-width:320px}");
+    expect(baseCss).toContain(".store-product-card");
+    expect(baseCss).toContain(".workspace{");
+    expect(rootLayout.indexOf('import "./styles.css"')).toBeLessThan(
+      rootLayout.indexOf('import "./brand-system.css"'),
     );
+    expect(publicHeader).not.toContain("brand-mark");
+    expect(workspaceShell).not.toContain("student-mobile-menu");
+    expect(workspaceShell).not.toContain("admin-mobile-menu");
   });
 });

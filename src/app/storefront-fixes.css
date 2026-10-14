@@ -1,4 +1,6 @@
 /* Storefront purchase and responsive-image corrections. */
+.brand-word b{color:#e84714!important}.brand-word em{color:#151719!important;font-style:normal}
+.brand-mark i:first-child{background:#17191c!important}.brand-mark i:last-child{background:#e94b17!important}
 .public-site .store-hero{isolation:isolate;min-height:25.5rem;background:#fbf7f1}
 .public-site .store-hero:after{display:block;background:linear-gradient(90deg,#fbf8f3 0%,#fbf8f3f5 31%,#fbf8f37a 46%,transparent 66%)}
 .store-hero-content{width:min(50rem,52vw);padding:3rem 0 2.6rem clamp(2rem,7vw,7.2rem)}
@@ -12,6 +14,8 @@
 .cart-ready-action{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .store-owned-action{background:#fff7f2;color:#d74312;border-color:#f2bca8}
 .owned-package-actions>span{display:flex;align-items:center;justify-content:center;min-height:3rem;border:1px solid #b9ddc4;border-radius:.4rem;background:#effaf2;color:#27733e;font-size:.76rem;font-weight:800}
+.mobile-public-menu summary{display:flex;align-items:center;justify-content:center;gap:.45rem}
+.mobile-public-menu summary svg{width:1.1rem;height:1.1rem;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
 .checkout-brand-heading{position:relative;margin-bottom:1.5rem;padding:1.45rem 1.6rem;border:1px solid #ece4dc;border-radius:.75rem;background:linear-gradient(110deg,#fff 0%,#fff8f3 100%)}
 .checkout-brand-heading>span{display:flex;align-items:center;gap:.55rem;color:#d94412;font-size:.65rem;font-weight:850;letter-spacing:.1em}
 .checkout-brand-heading>span i{display:grid;place-items:center;width:1.75rem;height:1.75rem;border-radius:.42rem;background:#eb4b17;color:#fff;font-size:.58rem;font-style:normal;letter-spacing:0}
@@ -31,30 +35,58 @@
 .student-reference-banner>div:first-child{position:relative;z-index:1;width:min(47%,31rem);padding:2.2rem}
 .student-banner-media{position:absolute!important;inset:0;z-index:-2!important;width:auto!important;padding:0!important;overflow:hidden}
 .student-banner-media img{object-fit:cover;object-position:center 38%}
+.mobile-public-actions,.student-bottom-nav{display:none}
 @media(max-width:800px){
   .public-header{display:grid!important;grid-template-columns:4.6rem minmax(0,1fr) 4.6rem!important;grid-template-rows:2.75rem auto;height:auto!important;min-height:0;padding:.5rem 1rem .65rem!important;gap:.45rem .4rem!important;align-items:center!important;overflow:visible}
+  .public-header>.mobile-public-menu{grid-column:1;grid-row:1;margin:0!important}
   .public-header>.brand{grid-column:2;grid-row:1;justify-self:center}
   .public-header>.public-live-search{display:block!important;grid-column:1/-1;grid-row:2;max-width:none}
   .public-header .header-search{display:block!important;position:relative;width:100%;min-width:0;background:transparent;border:0;padding:0}
   .public-header .header-search input{width:100%;min-width:0;padding-left:2.6rem}
   .public-header .header-search svg{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:1rem;height:1rem}
   .public-header>.desktop-public-nav{display:none!important}
+  .mobile-public-actions{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:flex-end;gap:.45rem}
+  .mobile-public-actions .header-cart{border:0;width:1.9rem;height:1.9rem}
   .mobile-account-icon{display:grid;place-items:center;width:2rem;height:2rem;color:#303438}
   .mobile-account-icon svg{width:1.3rem;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+  .mobile-public-actions .header-avatar{width:2rem;height:2rem;font-size:.75rem}
   .public-header .header-search input{height:2.35rem;background:#f8f7f5;font-size:.78rem}
-  .brand{font-size:1.12rem!important}
+  .mobile-public-menu summary{width:2.35rem;min-width:2.35rem!important;height:2.35rem;min-height:2.35rem;padding:.45rem!important;border:0!important;background:#fff!important;color:#222!important}
+  .public-header .mobile-public-menu nav{z-index:70;top:calc(100% + .45rem);right:auto;left:0;border-color:#e1ddd8!important;background:#fff!important;box-shadow:0 1rem 2.5rem #24170e24}
+  .public-header .mobile-public-menu nav>a:not(.button){color:#33383d!important}
+  .brand{font-size:1.12rem!important}.brand-mark{width:1.8rem!important;height:1.8rem!important}
   .auth-site-header{min-width:0;padding-inline:1rem}.auth-site-header .brand{flex:0 0 auto}.auth-site-header nav{min-width:0;gap:.75rem}
   .public-site .store-hero{display:block;min-height:19rem;overflow:hidden;border-bottom:1px solid #eee8e2}
   .public-site .store-hero:after{display:none}
   .store-hero-content{width:min(88%,34rem);padding:1.55rem 1.25rem 1.35rem;background:transparent}
   .store-hero-media{position:absolute;inset:0;width:100%;height:100%;background:#fbf8f3}.store-hero-image{object-position:right bottom!important}.hero-handwriting{display:none}
   .hero-search{grid-template-columns:minmax(0,1fr) auto!important;max-width:32rem}.hero-search svg{top:50%!important}.hero-search input{border-right:0!important;border-radius:.4rem 0 0 .4rem!important}.hero-search button{height:auto!important;margin:0!important;border-radius:0 .4rem .4rem 0!important}
+  .student-bottom-nav{position:fixed;z-index:55;right:0;bottom:0;left:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:.45rem max(.35rem,env(safe-area-inset-right)) calc(.4rem + env(safe-area-inset-bottom)) max(.35rem,env(safe-area-inset-left));border-top:1px solid #e2ded9;background:#fff;box-shadow:0 -.5rem 1.5rem #24170e0d}
+  .student-bottom-nav a{display:grid;justify-items:center;gap:.22rem;min-width:0;padding:.25rem;color:#777d82;font-size:.64rem;font-weight:700}
+  .student-bottom-nav .nav-icon{width:1.22rem;height:1.22rem}
+  .student-bottom-nav a[aria-current=page]{color:#e54816}
   .student-workspace .workspace-main{padding-bottom:6rem!important}
   .student-workspace .workspace-header,.admin-workspace .workspace-header{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;gap:.5rem!important;height:4rem!important;min-height:4rem;padding:0 .75rem 0 3.65rem!important;align-items:center!important}
+  .student-workspace .workspace-header .mobile-brand,.admin-workspace .workspace-header .mobile-brand{display:block!important;min-width:0;margin:0!important}
+  .student-workspace .workspace-header .mobile-brand .brand,.admin-workspace .workspace-header .mobile-brand .brand{width:max-content;max-width:100%;font-size:1.05rem!important}
+  .student-workspace .workspace-header .mobile-brand .brand-mark,.admin-workspace .workspace-header .mobile-brand .brand-mark{width:1.7rem!important;height:1.7rem!important}
   .student-workspace .workspace-header .public-live-search,.admin-workspace .workspace-header .public-live-search{display:none!important}
   .student-workspace .workspace-header .student-header-account,.admin-workspace .workspace-header .student-header-account{min-width:0;margin:0;padding-left:.45rem}
   .student-workspace .workspace-header>.button.secondary,.admin-workspace .workspace-header>.button.secondary{display:none!important}
   .student-workspace .student-header-title{display:none}
+  .student-workspace .student-mobile-menu{position:fixed!important;z-index:65;top:.75rem;left:.7rem;width:2.5rem;padding:0!important;border:0!important;background:transparent!important}
+  .student-mobile-menu>summary{display:grid;place-items:center;width:2.5rem;height:2.5rem;overflow:hidden;border:1px solid #e1ddd8;border-radius:.45rem;background:#fff;color:#25282b!important;font-size:0}
+  .student-mobile-menu>summary span{margin:0!important;font-size:1.15rem}
+  .student-mobile-menu[open]{top:0;left:0;width:min(20rem,86vw);height:100dvh;max-height:none!important;padding:.75rem!important;overflow:auto;border:0!important;border-right:1px solid #e1ddd8!important;border-radius:0;background:#fff!important;box-shadow:100vw 0 0 100vw #15171973,0 1rem 3rem #0003}
+  .student-mobile-menu[open]>summary{margin-bottom:.5rem}
+  .student-mobile-menu[open]>summary span{font-size:0}.student-mobile-menu[open]>summary span:after{content:"×";font-size:1.5rem;line-height:1}
+  .student-mobile-menu[open] nav{margin:0}
+  .admin-workspace .admin-mobile-menu{position:fixed!important;z-index:65;top:.75rem;left:.7rem;width:2.5rem;padding:0!important;border:0!important;background:transparent!important}
+  .admin-mobile-menu>summary{display:grid;place-items:center;width:2.5rem;height:2.5rem;overflow:hidden;border:1px solid #e1ddd8;border-radius:.45rem;background:#fff;color:#25282b!important;font-size:0}
+  .admin-mobile-menu>summary span{margin:0!important;font-size:1.15rem}
+  .admin-mobile-menu[open]{top:0;left:0;width:min(20rem,86vw);height:100dvh;max-height:none;padding:.75rem!important;overflow:auto;border:0!important;border-right:1px solid #e1ddd8!important;border-radius:0;background:#fff!important;box-shadow:100vw 0 0 100vw #15171973,0 1rem 3rem #0003}
+  .admin-mobile-menu[open]>summary span{font-size:0}.admin-mobile-menu[open]>summary span:after{content:"×";font-size:1.5rem;line-height:1}
+  .admin-mobile-menu[open]>summary{margin-bottom:.5rem}.admin-mobile-menu[open] nav{max-height:none;margin:0}
   .reference-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .reference-cart-layout,.reference-checkout-layout{gap:1rem}
   .reference-order-summary,.reference-checkout-summary{position:static!important}
@@ -65,9 +97,10 @@
   .student-banner-media{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;overflow:hidden}.student-banner-media img{object-fit:cover;object-position:66% center}.student-reference-banner p{max-width:16rem}
 }
 @media(max-width:560px){
-  .public-header{grid-template-columns:4.2rem minmax(0,1fr) 4.2rem!important;padding-inline:.75rem!important}.public-header>.brand{font-size:1.12rem!important}
+  .public-header{grid-template-columns:4.2rem minmax(0,1fr) 4.2rem!important;padding-inline:.75rem!important}.public-header>.brand{font-size:1.12rem!important}.public-header .brand-mark{width:1.8rem!important;height:1.8rem!important}
   .public-site .store-hero{min-height:19rem}
   .store-hero-content{width:94%;padding:1.2rem 1rem 1.05rem}.store-hero h1{font-size:clamp(1.85rem,9vw,2.2rem);line-height:.96}.store-hero-content>p{max-width:20rem;font-size:.78rem;line-height:1.38}.hero-search{margin-top:.75rem}.hero-search input{height:2.7rem;padding-left:2.55rem;font-size:.7rem}.hero-search button{min-width:5.2rem;padding-inline:.7rem;font-size:.72rem}
+  .mobile-public-menu summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .reference-catalog-grid{grid-template-columns:1fr!important}
   .all-packages-page{padding-inline:1rem!important}.all-packages-heading h1{font-size:1.75rem}.catalog-sidebar{grid-template-columns:1fr!important}
   .store-product-card{border-radius:.55rem}.store-product-catalog{display:grid;grid-template-columns:6.8rem minmax(0,1fr)}.store-product-catalog .store-product-cover{height:100%;min-height:10.5rem}.store-product-catalog .store-product-body{padding:.7rem}.store-product-catalog .store-product-body>p{min-height:0}.store-product-catalog .store-card-actions{grid-template-columns:1fr}.store-product-catalog .store-outline-action,.store-product-catalog .store-cart-action{min-height:2.2rem}
@@ -79,10 +112,12 @@
 }
 @media(max-width:420px){
   .public-header{grid-template-columns:3.8rem minmax(0,1fr) 3.8rem!important;padding-inline:.65rem!important}
-  .public-header>.brand{font-size:1.02rem!important}.mobile-account-icon{width:1.75rem;height:1.75rem}
+  .public-header>.brand{font-size:1.02rem!important}.public-header .brand-mark{width:1.65rem!important;height:1.65rem!important}
+  .mobile-public-actions{gap:.2rem}.mobile-public-actions .header-cart,.mobile-account-icon{width:1.75rem;height:1.75rem}
   .public-site .store-hero{min-height:19rem}
   .store-hero-content{padding-top:1rem}.store-hero-content>span{font-size:.62rem}.store-hero h1{font-size:1.8rem}.store-hero-content>p{font-size:.74rem}
   .student-workspace .workspace-header,.admin-workspace .workspace-header{padding-right:.55rem!important;gap:.35rem!important}
+  .student-workspace .workspace-header .mobile-brand .brand,.admin-workspace .workspace-header .mobile-brand .brand{font-size:.98rem!important}
   .student-header-bell{width:2.05rem;height:2.05rem}.student-header-account{border-left:0}.student-header-account .avatar{width:1.9rem;height:1.9rem}
 }
 @media(max-width:700px){
@@ -97,8 +132,11 @@
   .public-header,.student-workspace .workspace-header,.admin-workspace .workspace-header{height:auto!important;min-height:0!important;padding:.45rem .75rem .6rem!important;grid-template-rows:2.5rem 2.4rem!important;row-gap:.3rem!important;column-gap:.35rem!important;align-items:center!important}
   .public-header{grid-template-columns:2.5rem minmax(0,1fr) 4.5rem!important}
   .student-workspace .workspace-header,.admin-workspace .workspace-header{grid-template-columns:2.5rem minmax(0,1fr) 2.125rem 2.125rem!important}
-  .public-header>.brand{grid-column:2;grid-row:1;justify-self:center;margin:0!important}
-  .public-header>.brand{font-size:1.08rem!important;gap:.4rem}
+  .public-header>.brand,.student-workspace .workspace-header>.mobile-brand,.admin-workspace .workspace-header>.mobile-brand{grid-column:2;grid-row:1;justify-self:center;margin:0!important}
+  .public-header>.brand,.student-workspace .workspace-header .mobile-brand .brand,.admin-workspace .workspace-header .mobile-brand .brand{font-size:1.08rem!important;gap:.4rem}
+  .public-header .brand-mark,.student-workspace .workspace-header .mobile-brand .brand-mark,.admin-workspace .workspace-header .mobile-brand .brand-mark{width:1.75rem!important;height:1.75rem!important}
+  .public-header>.mobile-public-menu{grid-column:1;grid-row:1;justify-self:start}
+  .public-header>.mobile-public-actions{grid-column:3;grid-row:1;justify-self:end}
   .student-workspace .workspace-header>.student-header-bell,.admin-workspace .workspace-header>.student-header-bell{grid-column:3;grid-row:1;width:2rem;height:2rem;justify-self:center}
   .student-workspace .workspace-header>.student-header-account,.admin-workspace .workspace-header>.student-header-account{grid-column:4;grid-row:1;padding:0;border:0;margin:0;justify-self:center}
   .workspace-header .student-header-account b{display:none!important}
@@ -106,6 +144,8 @@
   .workspace-header .header-search,.public-header .header-search{display:block!important;position:relative;width:100%!important;height:2.4rem!important;border:0!important;background:transparent!important;border-radius:0!important}
   .workspace-header .header-search input,.public-header .header-search input{width:100%;height:2.4rem!important;padding:.5rem .8rem .5rem 2.6rem!important;border:1px solid #dedbd7!important;border-radius:.45rem!important;background:#fafafa!important;font-size:.84rem!important}
   .workspace-header .header-search svg,.public-header .header-search svg{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:1rem;height:1rem}
+  .student-workspace .student-mobile-menu,.admin-workspace .admin-mobile-menu{top:.45rem;left:.75rem}
+  .student-mobile-menu>summary,.admin-mobile-menu>summary{border:0;border-radius:.35rem}
   .public-site .store-hero{min-height:18rem!important}
   .store-hero-media{inset:0;width:100%;height:100%;background:#fbf8f3}
   .store-hero-image{object-fit:cover!important;object-position:center center!important}
