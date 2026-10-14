@@ -12,12 +12,11 @@ describe("responsive navigation", () => {
   const baseCss = readFileSync("src/app/styles.css", "utf8");
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
 
-  it("keeps the hamburger before the official logo and brands the drawer header", () => {
+  it("keeps the hamburger before the official header logo without duplicating branding", () => {
     expect(publicHeader.indexOf('className="mobile-public-menu"')).toBeLessThan(
       publicHeader.indexOf("<Brand />"),
     );
-    expect(drawer).toContain('className="mobile-drawer-brand-row"');
-    expect(drawer).toContain("<Brand />");
+    expect(drawer).not.toContain("<Brand />");
     expect(publicHeader).not.toContain(">Menu<");
   });
 
@@ -50,10 +49,13 @@ describe("responsive navigation", () => {
     expect(drawer).toContain('document.body.style.overflow = "hidden"');
     expect(drawer).toContain('aria-label="Close navigation"');
     expect(drawer).toContain('aria-modal="true"');
-    expect(responsiveCss).toContain("--mobile-drawer-width: min(340px, 88vw)");
-    expect(responsiveCss).toContain("--mobile-drawer-width: 92vw");
-    expect(responsiveCss).toContain("inset: 0 auto 0 0");
-    expect(responsiveCss).toContain("height: 100dvh");
+    expect(responsiveCss).toContain(
+      "--mobile-drawer-width: min(380px, calc(100vw - 32px))",
+    );
+    expect(responsiveCss).toContain("top: calc(var(--mobile-header-height) + 8px)");
+    expect(responsiveCss).toContain("max-height: calc(100dvh - var(--mobile-header-height) - 24px)");
+    expect(responsiveCss).toContain("border-radius: 14px");
+    expect(responsiveCss).toContain("justify-items: stretch !important");
     expect(responsiveCss).toContain("position: fixed !important");
     expect(responsiveCss).toContain("--mobile-header-height: 60px");
     expect(responsiveCss).toContain("--mobile-header-height: 58px");

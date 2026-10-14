@@ -8,7 +8,6 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { Brand } from "./brand";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -115,9 +114,6 @@ export function MobileDrawer({
         aria-label={label}
         onClick={handleDrawerClick}
       >
-        <div className="mobile-drawer-brand-row">
-          <Brand />
-        </div>
         {children}
       </div>
     </details>

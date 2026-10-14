@@ -74,7 +74,7 @@ export async function PublicHeader({
             </em>
           </Link>
         ) : null}
-        <nav aria-label="Mobile primary navigation">
+        <nav className="mobile-drawer-nav" aria-label="Mobile primary navigation">
           <Link href="/">Home</Link>
           <Link className="mobile-drawer-cart" href="/cart">
             <span>Cart</span>
