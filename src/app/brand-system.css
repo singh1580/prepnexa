@@ -48,6 +48,43 @@
   height: 34px !important;
 }
 
+.auth-main {
+  position: relative;
+}
+
+.auth-back-home {
+  position: absolute;
+  z-index: 2;
+  top: 24px;
+  left: clamp(20px, 3vw, 40px);
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  color: #454a4f;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 720;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.auth-back-home:hover {
+  color: var(--prepstore-orange);
+  background: #fff3ed;
+}
+
+.auth-back-home svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* Desktop header and sidebar dimensions. */
 .public-header {
   height: 72px !important;
@@ -254,8 +291,7 @@
     animation: prepstore-drawer-enter 180ms ease-out;
   }
 
-  .mobile-public-menu[open] > summary,
-  .workspace-mobile-menu[open] > summary {
+  .mobile-public-menu[open] > summary {
     position: fixed !important;
     z-index: 103;
     top: calc((var(--mobile-header-height) - 44px) / 2);
@@ -528,9 +564,55 @@
     margin-top: 10px;
   }
 
+  /* Student/admin navigation is a full-height application drawer. */
+  .workspace-mobile-menu {
+    --workspace-drawer-width: min(340px, 88vw);
+  }
+
+  .workspace-mobile-menu[open] > .mobile-drawer-backdrop {
+    position: fixed;
+    z-index: 99;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    cursor: pointer;
+    border: 0;
+    background: rgb(21 23 25 / 38%);
+  }
+
+  .workspace-mobile-drawer {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--workspace-drawer-width) !important;
+    max-width: 88vw !important;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    padding: 68px 16px max(18px, env(safe-area-inset-bottom));
+    border-width: 0 1px 0 0;
+    border-radius: 0;
+    box-shadow: 20px 0 55px rgb(25 18 12 / 22%);
+    animation: prepstore-workspace-drawer-enter 190ms ease-out;
+  }
+
+  .workspace-mobile-menu[open] > summary {
+    position: fixed !important;
+    z-index: 103;
+    top: 12px;
+    right: auto;
+    left: calc(var(--workspace-drawer-width) - 58px);
+  }
+
   @keyframes prepstore-drawer-enter {
     from { transform: translateY(-8px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes prepstore-workspace-drawer-enter {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
   }
 }
 
@@ -545,6 +627,15 @@
     height: 60px !important;
     min-height: 60px !important;
     padding-inline: clamp(12px, 3.5vw, 16px) !important;
+  }
+
+  .auth-main {
+    padding-top: 76px !important;
+  }
+
+  .auth-back-home {
+    top: 10px;
+    left: 8px;
   }
 
 }
@@ -581,10 +672,19 @@
     --mobile-drawer-width: calc(100vw - 20px);
   }
 
+  .workspace-mobile-menu {
+    --workspace-drawer-width: min(310px, 92vw);
+  }
+
   .mobile-public-drawer,
-  .workspace-mobile-drawer {
+  .mobile-public-drawer {
     left: 10px;
     max-width: calc(100vw - 20px) !important;
+  }
+
+  .workspace-mobile-drawer {
+    left: 0;
+    max-width: 92vw !important;
   }
 }
 

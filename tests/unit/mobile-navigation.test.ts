@@ -15,6 +15,10 @@ describe("responsive navigation", () => {
     "utf8",
   );
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
+  const authShell = readFileSync(
+    "src/features/auth/ui/auth-shell.tsx",
+    "utf8",
+  );
 
   it("keeps the hamburger before the official header logo without duplicating branding", () => {
     expect(publicHeader.indexOf('className="mobile-public-menu"')).toBeLessThan(
@@ -63,6 +67,24 @@ describe("responsive navigation", () => {
     expect(responsiveCss).toContain("position: fixed !important");
     expect(responsiveCss).toContain("--mobile-header-height: 60px");
     expect(responsiveCss).toContain("--mobile-header-height: 58px");
+  });
+
+  it("separates the compact public menu from full-height workspace drawers", () => {
+    expect(responsiveCss).toContain(
+      ".workspace-mobile-menu[open] > .mobile-drawer-backdrop",
+    );
+    expect(responsiveCss).toContain("--workspace-drawer-width: min(340px, 88vw)");
+    expect(responsiveCss).toContain("min-height: 100dvh");
+    expect(responsiveCss).toContain("transform: translateX(-100%)");
+    expect(responsiveCss).toContain(
+      ".mobile-public-menu[open] > summary {",
+    );
+  });
+
+  it("provides a consistent back-to-home action across auth pages", () => {
+    expect(authShell).toContain('className="auth-back-home"');
+    expect(authShell).toContain('href="/"');
+    expect(authShell).toContain("Back to home");
   });
 
   it("keeps the complete base stylesheet and applies responsive overrides last", () => {
