@@ -1,0 +1,477 @@
+:root {
+  --prepstore-orange: #e84714;
+  --prepstore-icon-orange: #e94b17;
+  --prepstore-black: #151719;
+  --prepstore-charcoal: #17191c;
+  --prepstore-cream: #f4f0ea;
+  --prepstore-white: #fffdfc;
+}
+
+/* One image-backed wordmark is shared by public, auth, student and admin UI. */
+.brand-logo-link,
+.brand {
+  display: inline-flex !important;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+  width: 199px;
+  min-width: 199px;
+  min-height: 44px;
+  gap: 0 !important;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.brand-logo {
+  display: block;
+  width: 199px !important;
+  height: 36px !important;
+  max-width: none;
+  object-fit: contain;
+  object-position: left center;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.auth-shell .brand-logo-link,
+.auth-shell .brand,
+.auth-shell .brand-logo {
+  width: 188px !important;
+  min-width: 188px;
+}
+
+.auth-shell .brand-logo {
+  height: 34px !important;
+}
+
+/* Desktop header and sidebar dimensions. */
+.public-header {
+  height: 72px !important;
+  min-height: 72px !important;
+  padding-inline: clamp(24px, 2.2vw, 32px) !important;
+}
+
+.workspace {
+  grid-template-columns: minmax(240px, 256px) minmax(0, 1fr);
+}
+
+.sidebar {
+  min-width: 240px;
+}
+
+.sidebar > .brand-logo-link,
+.sidebar > .brand {
+  width: 188px;
+  min-width: 188px;
+  min-height: 72px;
+  margin: 0 0 16px 6px !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.sidebar > .brand .brand-logo {
+  width: 188px !important;
+  height: 34px !important;
+}
+
+.workspace-header {
+  height: 64px !important;
+  min-height: 64px !important;
+}
+
+.workspace-mobile-brand,
+.workspace-mobile-menu {
+  display: none;
+}
+
+.mobile-public-menu {
+  display: none;
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .brand-logo-link,
+  .brand {
+    width: 188px;
+    min-width: 188px;
+  }
+
+  .brand-logo {
+    width: 188px !important;
+    height: 34px !important;
+  }
+
+  .public-header {
+    height: 68px !important;
+    min-height: 68px !important;
+    padding-inline: clamp(20px, 2vw, 24px) !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .brand-logo-link,
+  .brand {
+    width: 188px !important;
+    min-width: 188px !important;
+    max-width: 188px !important;
+    min-height: 44px;
+  }
+
+  .brand-logo {
+    width: 188px !important;
+    height: 34px !important;
+  }
+
+  .public-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 0 clamp(16px, 2.2vw, 20px) !important;
+    overflow: visible !important;
+  }
+
+  .public-header > .brand {
+    order: 1;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: auto !important;
+  }
+
+  .public-header > .public-live-search,
+  .public-header > .desktop-public-nav,
+  .public-header > .mobile-public-actions {
+    display: none !important;
+  }
+
+  .mobile-public-menu,
+  .workspace-mobile-menu {
+    position: relative;
+    display: block !important;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    margin: 0 !important;
+  }
+
+  .mobile-public-menu {
+    order: 2;
+  }
+
+  .mobile-public-menu > summary,
+  .workspace-mobile-menu > summary {
+    position: relative;
+    z-index: 103;
+    display: grid !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    place-items: center;
+    padding: 0 !important;
+    list-style: none;
+    cursor: pointer;
+    color: var(--prepstore-black) !important;
+    border: 1px solid #e4e0db !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .mobile-public-menu > summary::-webkit-details-marker,
+  .workspace-mobile-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-public-menu > summary svg,
+  .workspace-mobile-menu > summary svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  .mobile-public-menu[open] > summary,
+  .workspace-mobile-menu[open] > summary {
+    position: fixed;
+    top: 10px;
+    right: 12px;
+  }
+
+  .mobile-public-menu[open] > summary svg,
+  .workspace-mobile-menu[open] > summary svg {
+    display: none;
+  }
+
+  .mobile-public-menu[open] > summary::after,
+  .workspace-mobile-menu[open] > summary::after {
+    content: "\00d7";
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .mobile-public-menu[open]::before,
+  .workspace-mobile-menu[open]::before {
+    content: "";
+    position: fixed;
+    z-index: 98;
+    inset: 0;
+    background: rgb(21 23 25 / 52%);
+  }
+
+  .mobile-public-drawer,
+  .workspace-mobile-drawer {
+    position: fixed;
+    z-index: 100;
+    inset: 0 auto 0 0;
+    width: min(380px, 88vw);
+    height: 100dvh;
+    padding: 14px 16px 24px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    color: var(--prepstore-black);
+    border: 0;
+    border-right: 1px solid #e8e3de;
+    background: #fff;
+    box-shadow: 18px 0 50px rgb(25 18 12 / 18%);
+  }
+
+  .mobile-drawer-brand,
+  .workspace-drawer-brand {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    margin-bottom: 18px;
+  }
+
+  .mobile-public-drawer > .public-live-search {
+    display: block !important;
+    width: 100% !important;
+    max-width: none;
+    margin: 0 0 18px !important;
+  }
+
+  .mobile-public-drawer .header-search {
+    display: block !important;
+    position: relative;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .mobile-public-drawer .header-search input {
+    width: 100%;
+    height: 44px !important;
+    padding-left: 42px !important;
+    border: 1px solid #dedbd7 !important;
+    border-radius: 9px !important;
+    background: #faf9f7 !important;
+    font-size: 14px !important;
+  }
+
+  .mobile-public-drawer .header-search svg {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+  }
+
+  .public-header .mobile-public-drawer nav {
+    position: static !important;
+    display: grid !important;
+    width: 100% !important;
+    gap: 6px !important;
+    padding: 0 !important;
+    color: var(--prepstore-black) !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .public-header .mobile-public-drawer nav > a,
+  .public-header .mobile-public-drawer nav > a:not(.button) {
+    display: flex !important;
+    align-items: center;
+    min-height: 48px;
+    padding: 10px 12px;
+    color: #36393d !important;
+    border-radius: 9px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .public-header .mobile-public-drawer nav > a:hover {
+    color: var(--prepstore-orange) !important;
+    background: #fff3ed !important;
+  }
+
+  .public-header .mobile-public-drawer nav > .button {
+    justify-content: center;
+    color: #fff !important;
+    background: var(--prepstore-orange) !important;
+  }
+
+  .workspace {
+    display: block !important;
+    min-width: 0;
+  }
+
+  .workspace > .sidebar {
+    display: none !important;
+  }
+
+  .workspace-body {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .student-workspace .workspace-header,
+  .admin-workspace .workspace-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 0 clamp(16px, 2.2vw, 20px) !important;
+    overflow: visible;
+  }
+
+  .workspace-header > .workspace-mobile-brand {
+    display: block !important;
+    flex: 0 0 188px;
+    min-width: 188px;
+  }
+
+  .workspace-header > .admin-header-title,
+  .workspace-header > .student-header-title,
+  .workspace-header > .public-live-search,
+  .workspace-header > .student-header-bell,
+  .workspace-header > .student-header-account,
+  .workspace-header > .button,
+  .workspace-header > form {
+    display: none !important;
+  }
+
+  .workspace-mobile-drawer {
+    padding-top: 14px;
+  }
+
+  .workspace-drawer-account {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: center;
+    gap: 11px;
+    min-height: 66px;
+    margin-bottom: 16px;
+    padding: 10px;
+    border: 1px solid #ebe7e2;
+    border-radius: 11px;
+    background: #faf9f7;
+  }
+
+  .workspace-drawer-account > span:last-child {
+    display: grid;
+    min-width: 0;
+  }
+
+  .workspace-drawer-account strong,
+  .workspace-drawer-account small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .workspace-drawer-account small {
+    margin-top: 3px;
+    color: #777d82;
+  }
+
+  .workspace-mobile-drawer > nav {
+    display: grid;
+    gap: 5px;
+  }
+
+  .workspace-mobile-drawer .nav-item {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 10px 12px;
+    color: #4f565c !important;
+    border-radius: 9px;
+    background: transparent !important;
+    font-size: 14px !important;
+    font-weight: 700;
+  }
+
+  .workspace-mobile-drawer .nav-item.active {
+    color: #d94312 !important;
+    background: #fff0e8 !important;
+  }
+
+  .workspace-mobile-drawer .nav-icon {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .workspace-mobile-drawer .package-sidebar-list {
+    margin: 4px 0 8px 14px;
+  }
+
+  .workspace-drawer-logout {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #ebe7e2;
+  }
+
+  .workspace-drawer-logout .button {
+    display: flex !important;
+    width: 100%;
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-header,
+  .student-workspace .workspace-header,
+  .admin-workspace .workspace-header {
+    height: 60px !important;
+    min-height: 60px !important;
+    padding-inline: clamp(12px, 3.5vw, 16px) !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .brand-logo-link,
+  .brand,
+  .workspace-header > .workspace-mobile-brand {
+    width: 177px !important;
+    min-width: 177px !important;
+    max-width: 177px !important;
+    flex-basis: 177px;
+  }
+
+  .brand-logo {
+    width: 177px !important;
+    height: 32px !important;
+  }
+
+  .public-header,
+  .student-workspace .workspace-header,
+  .admin-workspace .workspace-header {
+    height: 58px !important;
+    min-height: 58px !important;
+    padding-inline: clamp(10px, 3vw, 12px) !important;
+  }
+}

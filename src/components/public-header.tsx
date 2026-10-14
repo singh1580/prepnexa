@@ -21,14 +21,6 @@ function MenuIcon() {
     </svg>
   );
 }
-function AccountIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 21a7 7 0 0 1 14 0" />
-    </svg>
-  );
-}
 export async function PublicHeader({
   auth: suppliedAuth,
 }: { auth?: Awaited<ReturnType<typeof getCurrentAuth>> } = {}) {
@@ -68,8 +60,12 @@ export async function PublicHeader({
   const mobileNavigation = (
     <>
       <Link href="/packages">All packages</Link>
+      <Link href="/cart">Cart</Link>
       {auth ? (
-        <Link href={dashboard}>Open dashboard</Link>
+        <>
+          <Link href={dashboard}>Open dashboard</Link>
+          <Link href="/account/profile">My account</Link>
+        </>
       ) : (
         <>
           <Link href="/login">Sign in</Link>
@@ -85,31 +81,22 @@ export async function PublicHeader({
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
-      <details className="mobile-public-menu">
-        <summary aria-label="Open navigation">
-          <MenuIcon />
-          <span>Menu</span>
-        </summary>
-        <nav aria-label="Mobile primary navigation">{mobileNavigation}</nav>
-      </details>
       <Brand />
       <PublicSearch />
       <nav className="desktop-public-nav" aria-label="Primary navigation">
         {desktopNavigation}
       </nav>
-      <div className="mobile-public-actions">
-        <Link className="header-cart" href="/cart" aria-label="Cart">
-          <CartIcon />
-          <CartCount />
-        </Link>
-        <Link
-          className={auth ? "header-avatar" : "mobile-account-icon"}
-          href={auth ? dashboard : "/login"}
-          aria-label={auth ? `${auth.user.name} dashboard` : "Sign in"}
-        >
-          {auth ? auth.user.name.slice(0, 1).toUpperCase() : <AccountIcon />}
-        </Link>
-      </div>
+      <details className="mobile-public-menu">
+        <summary aria-label="Open navigation">
+          <MenuIcon />
+          <span className="sr-only">Menu</span>
+        </summary>
+        <div className="mobile-public-drawer">
+          <div className="mobile-drawer-brand"><Brand /></div>
+          <PublicSearch />
+          <nav aria-label="Mobile primary navigation">{mobileNavigation}</nav>
+        </div>
+      </details>
     </header>
   );
 }

@@ -539,7 +539,7 @@ export async function WorkspaceShell({
       </aside>
       <div className="workspace-body">
         <header className="workspace-header">
-          <div className="mobile-brand">
+          <div className="workspace-mobile-brand">
             <Brand />
           </div>
           {admin ? (
@@ -579,21 +579,26 @@ export async function WorkspaceShell({
             </>
           )}
           <LogoutButton />
+          <details className="workspace-mobile-menu">
+            <summary aria-label={admin ? "Open admin menu" : "Open student menu"}>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </summary>
+            <div className="workspace-mobile-drawer">
+              <div className="workspace-drawer-brand"><Brand /></div>
+              <Link className="workspace-drawer-account" href="/account/profile">
+                <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
+                <span>
+                  <strong>{name}</strong>
+                  <small>{admin ? "Admin account" : "Student account"}</small>
+                </span>
+              </Link>
+              <Navigation {...navigationProps} />
+              <div className="workspace-drawer-logout"><LogoutButton /></div>
+            </div>
+          </details>
         </header>
-        <details
-          className={admin ? "admin-mobile-menu" : "student-mobile-menu"}
-        >
-          <summary>
-            <span aria-hidden="true">☰</span>{" "}
-            {admin ? "Admin menu" : "Student menu"}
-          </summary>
-          <Navigation {...navigationProps} />
-          {!admin ? (
-            <Link className="mobile-account-link" href="/account/profile">
-              <NavIcon name="profile" /> My account
-            </Link>
-          ) : null}
-        </details>
         <main id="main-content" className="workspace-main">
           {children}
         </main>
