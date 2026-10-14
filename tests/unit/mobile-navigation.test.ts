@@ -75,9 +75,13 @@ describe("responsive navigation", () => {
     expect(responsiveCss).toContain(
       ".workspace-mobile-menu[open] > .mobile-drawer-backdrop",
     );
-    expect(responsiveCss).toContain("--workspace-drawer-width: min(340px, 88vw)");
+    expect(responsiveCss).toContain(
+      "--workspace-drawer-width: min(360px, calc(100vw - 32px))",
+    );
     expect(responsiveCss).toContain("min-height: 100dvh");
     expect(responsiveCss).toContain("transform: translateX(-100%)");
+    expect(responsiveCss).toContain(".workspace-drawer-logout {");
+    expect(responsiveCss).toContain("margin-top: auto");
     expect(responsiveCss).toContain(
       ".mobile-public-menu[open] > summary {",
     );
@@ -85,6 +89,7 @@ describe("responsive navigation", () => {
       "top: calc(var(--mobile-header-height) + 18px)",
     );
     expect(responsiveCss).toContain(".workspace-drawer-brand {");
+    expect(responsiveCss).toContain("border-bottom: 1px solid #ebe7e2");
   });
 
   it("provides a consistent back-to-home action across auth pages", () => {

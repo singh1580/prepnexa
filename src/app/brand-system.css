@@ -392,7 +392,7 @@
     display: flex;
     align-items: center;
     margin: 0 0 6px;
-    padding: 2px 8px 10px;
+    padding: 0 8px 9px;
     flex-direction: column;
     color: var(--prepstore-black);
     text-align: center;
@@ -400,9 +400,9 @@
   }
 
   .mobile-drawer-profile .avatar {
-    width: 46px;
-    height: 46px;
-    margin-bottom: 6px;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
     color: #bd3d13;
     background: #fff0e8;
     font-size: 16px;
@@ -431,7 +431,7 @@
   }
 
   .mobile-drawer-profile em {
-    margin-top: 7px;
+    margin-top: 5px;
     padding: 3px 8px;
     color: #b83c14;
     border-radius: 999px;
@@ -572,12 +572,17 @@
   }
 
   .workspace-drawer-logout {
-    margin-top: 10px;
+    position: sticky;
+    z-index: 4;
+    bottom: max(-18px, calc(-1 * env(safe-area-inset-bottom)));
+    margin-top: auto;
+    padding: 12px 0 max(2px, env(safe-area-inset-bottom));
+    background: #fff;
   }
 
   /* Student/admin navigation is a full-height application drawer. */
   .workspace-mobile-menu {
-    --workspace-drawer-width: min(340px, 88vw);
+    --workspace-drawer-width: min(360px, calc(100vw - 32px));
   }
 
   .workspace-mobile-menu[open] > .mobile-drawer-backdrop {
@@ -598,7 +603,7 @@
     bottom: 0;
     left: 0;
     width: var(--workspace-drawer-width) !important;
-    max-width: 88vw !important;
+    max-width: calc(100vw - 32px) !important;
     max-height: 100dvh;
     min-height: 100dvh;
     padding: 10px 16px max(18px, env(safe-area-inset-bottom));
@@ -620,7 +625,9 @@
     display: flex;
     min-height: 48px;
     align-items: center;
-    margin: 0 52px 4px 0;
+    margin: 0 0 8px;
+    padding: 0 52px 8px 0;
+    border-bottom: 1px solid #ebe7e2;
   }
 
   .workspace-drawer-brand .brand,
@@ -702,10 +709,6 @@
     --mobile-drawer-width: calc(100vw - 20px);
   }
 
-  .workspace-mobile-menu {
-    --workspace-drawer-width: min(310px, 92vw);
-  }
-
   .mobile-public-drawer,
   .mobile-public-drawer {
     left: 10px;
@@ -714,7 +717,7 @@
 
   .workspace-mobile-drawer {
     left: 0;
-    max-width: 92vw !important;
+    max-width: calc(100vw - 20px) !important;
   }
 }
 
