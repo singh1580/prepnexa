@@ -10,6 +10,10 @@ describe("responsive navigation", () => {
   const drawer = readFileSync("src/components/mobile-drawer.tsx", "utf8");
   const responsiveCss = readFileSync("src/app/brand-system.css", "utf8");
   const baseCss = readFileSync("src/app/styles.css", "utf8");
+  const storefrontFixes = readFileSync(
+    "src/app/storefront-fixes.css",
+    "utf8",
+  );
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
 
   it("keeps the hamburger before the official header logo without duplicating branding", () => {
@@ -65,6 +69,12 @@ describe("responsive navigation", () => {
     expect(baseCss).toContain("body{margin:0;min-width:320px}");
     expect(baseCss).toContain(".store-product-card");
     expect(baseCss).toContain(".workspace{");
+    expect(baseCss).not.toContain(".mobile-public-menu");
+    expect(baseCss).not.toContain(".student-mobile-menu");
+    expect(baseCss).not.toContain(".admin-mobile-menu");
+    expect(storefrontFixes).not.toContain(".mobile-public-menu");
+    expect(storefrontFixes).not.toContain(".student-mobile-menu");
+    expect(storefrontFixes).not.toContain(".admin-mobile-menu");
     expect(rootLayout.indexOf('import "./styles.css"')).toBeLessThan(
       rootLayout.indexOf('import "./brand-system.css"'),
     );
