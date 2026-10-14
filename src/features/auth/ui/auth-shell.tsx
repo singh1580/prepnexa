@@ -1,4 +1,13 @@
+import Link from "next/link";
 import { Brand } from "@/components/brand";
+
+function BackArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m15 18-6-6 6-6M9 12h10" />
+    </svg>
+  );
+}
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
@@ -25,6 +34,10 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         <p className="story-footer">PREPSTORE · LEARN WITH INTENT</p>
       </aside>
       <main id="main-content" className="auth-main">
+        <Link className="auth-back-home" href="/">
+          <BackArrowIcon />
+          <span>Back to home</span>
+        </Link>
         <div className="mobile-brand">
           <Brand />
         </div>

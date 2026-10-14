@@ -42,7 +42,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Stu
     return `/admin/students?${params.toString()}`;
   };
 
-  return <WorkspaceShell admin name={auth.user.name} permissions={auth.permissions} section="students">
+  return <WorkspaceShell admin name={auth.user.name} email={auth.user.email} permissions={auth.permissions} section="students">
     <header className="admin-page-header"><div><h1>Students</h1><p>Manage student accounts, package access and order history.</p></div><a className="button" href="/api/operations/admin/students/export">⇩ Export students</a></header>
     <form className="admin-list-controls student-list-controls">
       <label className="order-search-field"><span className="sr-only">Search students</span><input name="q" defaultValue={query.q} type="search" placeholder="Search students by name or email…"/></label>

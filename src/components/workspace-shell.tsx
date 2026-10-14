@@ -10,6 +10,7 @@ import {
   getStudentCourses,
 } from "@/features/student-courses/service";
 import type { StudentCourse } from "@/features/student-courses/repository";
+import { MobileDrawer } from "./mobile-drawer";
 
 type NavItem = { key: string; href: string; label: string; icon: string };
 
@@ -184,12 +185,6 @@ function adminNavigation(permissions: readonly string[]): NavItem[] {
           },
         ]
       : []),
-    {
-      key: "profile",
-      href: "/account/profile",
-      label: "Profile & security",
-      icon: "profile",
-    },
   ];
 }
 
@@ -438,32 +433,10 @@ function Navigation({
   );
 }
 
-function StudentBottomNavigation({ section }: { section: string }) {
-  const items: NavItem[] = [
-    { key: "overview", href: "/dashboard", label: "Home", icon: "dashboard" },
-    { key: "courses", href: "/dashboard/courses", label: "My packages", icon: "library" },
-    { key: "orders", href: "/dashboard/orders", label: "Orders", icon: "orders" },
-    { key: "profile", href: "/account/profile", label: "Profile", icon: "profile" },
-  ];
-  return (
-    <nav className="student-bottom-nav" aria-label="Student mobile navigation">
-      {items.map((item) => (
-        <Link
-          href={item.href}
-          aria-current={section === item.key ? "page" : undefined}
-          key={item.key}
-        >
-          <NavIcon name={item.icon} />
-          <span>{item.label}</span>
-        </Link>
-      ))}
-    </nav>
-  );
-}
-
 export async function WorkspaceShell({
   admin,
   name,
+  email,
   permissions = [],
   section,
   unreadNotifications = 0,
@@ -476,6 +449,7 @@ export async function WorkspaceShell({
 }: {
   admin: boolean;
   name: string;
+  email: string;
   permissions?: readonly string[];
   section: string;
   unreadNotifications?: number;
@@ -487,11 +461,6 @@ export async function WorkspaceShell({
   children: React.ReactNode;
 }) {
   const nav = admin ? adminNavigation(permissions) : studentNavigation;
-  const current =
-    section === "courses"
-      ? "My packages"
-      : (nav.find((item) => item.key === section)?.label ??
-        (admin ? "Administration" : "Dashboard"));
   const resolvedUserId = !admin
     ? (userId ?? (await getCurrentAuth())?.user.id)
     : undefined;
@@ -539,12 +508,30 @@ export async function WorkspaceShell({
       </aside>
       <div className="workspace-body">
         <header className="workspace-header">
-          <div className="mobile-brand">
+          <MobileDrawer
+            className="workspace-mobile-menu"
+            drawerClassName="workspace-mobile-drawer"
+            label={admin ? "Open admin navigation" : "Open student navigation"}
+          >
+            <div className="workspace-drawer-brand">
+              <Brand />
+            </div>
+            <Link className="mobile-drawer-profile" href="/account/profile">
+              <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
+              <strong>{name}</strong>
+              <small>{email}</small>
+              <em>{admin ? "Administrator" : "Student"}</em>
+            </Link>
+            <Navigation {...navigationProps} />
+            <div className="mobile-drawer-actions workspace-drawer-logout">
+              <LogoutButton />
+            </div>
+          </MobileDrawer>
+          <div className="workspace-mobile-brand">
             <Brand />
           </div>
           {admin ? (
             <>
-              <strong className="admin-header-title">{current}</strong>
               <PublicSearch />
               <Link
                 className="student-header-bell"
@@ -560,7 +547,6 @@ export async function WorkspaceShell({
             </>
           ) : (
             <>
-              <strong className="student-header-title">{current}</strong>
               <PublicSearch />
               <Link
                 className="student-header-bell"
@@ -580,24 +566,9 @@ export async function WorkspaceShell({
           )}
           <LogoutButton />
         </header>
-        <details
-          className={admin ? "admin-mobile-menu" : "student-mobile-menu"}
-        >
-          <summary>
-            <span aria-hidden="true">☰</span>{" "}
-            {admin ? "Admin menu" : "Student menu"}
-          </summary>
-          <Navigation {...navigationProps} />
-          {!admin ? (
-            <Link className="mobile-account-link" href="/account/profile">
-              <NavIcon name="profile" /> My account
-            </Link>
-          ) : null}
-        </details>
         <main id="main-content" className="workspace-main">
           {children}
         </main>
-        {!admin ? <StudentBottomNavigation section={section} /> : null}
       </div>
     </div>
   );

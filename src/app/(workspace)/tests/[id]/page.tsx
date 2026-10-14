@@ -23,7 +23,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const resolvedCourseSlug = test.productSlug ?? courseSlug;
   const courseHref = resolvedCourseSlug ? `/dashboard/courses/${encodeURIComponent(resolvedCourseSlug)}?view=tests` : "/dashboard/courses";
   const sectionCount=test.sectionCount;
-  return <WorkspaceShell admin={false} name={auth.user.name} section="courses" unreadNotifications={notifications.unreadCount} activePackageSlug={resolvedCourseSlug} activePackageView="tests">
+  return <WorkspaceShell admin={false} name={auth.user.name} email={auth.user.email} section="courses" unreadNotifications={notifications.unreadCount} activePackageSlug={resolvedCourseSlug} activePackageView="tests">
     <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{resolvedCourseSlug?<><Link href={courseHref}>{resolvedCourseSlug.replaceAll("-"," ")}</Link><span>›</span></>:null}<b>{test.title}</b></nav>
     <header className="reference-test-heading"><h1>{test.title}</h1><p>{test.instructions?.split("\n").find(Boolean)||"Full-length mock test designed to simulate the actual exam pattern and difficulty level."}</p></header>
     {!test.hasAccess?<section className="student-empty-package"><h2>Access required</h2><p>This test is not included in your active packages.</p><Link href="/packages">Explore packages</Link></section>:<>

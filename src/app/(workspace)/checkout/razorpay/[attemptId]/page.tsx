@@ -24,5 +24,5 @@ export default async function Page({ params }: { params: Promise<{ attemptId: st
   }
   if (unavailable || !checkout) redirect("/dashboard/orders?notice=checkout-unavailable");
   if (checkout.paid) redirect(`/payment-success?order=${checkout.orderId}`);
-  return <WorkspaceShell admin={false} name={auth.user.name} section="orders"><RazorpayPayment checkout={checkout}/></WorkspaceShell>;
+  return <WorkspaceShell admin={false} name={auth.user.name} email={auth.user.email} section="orders"><RazorpayPayment checkout={checkout}/></WorkspaceShell>;
 }
