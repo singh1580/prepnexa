@@ -39,7 +39,7 @@ export default async function Page() {
   const average = recentResults.length ? Math.round(recentResults.reduce((total, result) => total + (Number(result.maxScore) ? Number(result.score) / Number(result.maxScore) * 100 : 0), 0) / recentResults.length) : null;
   const firstName = auth.user.name.split(" ")[0];
 
-  return <WorkspaceShell admin={false} name={auth.user.name} section="overview" unreadNotifications={notifications.unreadCount}>
+  return <WorkspaceShell admin={false} name={auth.user.name} email={auth.user.email} section="overview" unreadNotifications={notifications.unreadCount}>
     <section className="student-reference-banner">
       <div><span>WELCOME BACK</span><h1>Keep learning, {firstName}!</h1><p>Pick up where you left off and keep moving towards your goals.</p>{continueCourse ? <Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue learning <b>→</b></Link> : <Link href="/packages">Explore packages <b>→</b></Link>}</div>
       <div className="student-banner-media"><Image src="/images/student-dashboard-banner.webp" alt="Student learning online" fill priority sizes="(max-width: 800px) 100vw, 70vw" /></div>

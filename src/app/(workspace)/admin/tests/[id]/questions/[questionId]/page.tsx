@@ -30,7 +30,7 @@ export default async function Page({
   return (
     <WorkspaceShell
       admin
-      name={auth.user.name}
+      name={auth.user.name} email={auth.user.email}
       permissions={auth.permissions}
       section="tests"
     >

@@ -32,7 +32,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
     return `/admin/tests?${params.toString()}`;
   };
   return (
-    <WorkspaceShell admin name={auth.user.name} permissions={auth.permissions} section="tests">
+    <WorkspaceShell admin name={auth.user.name} email={auth.user.email} permissions={auth.permissions} section="tests">
       <header className="admin-page-header reference-admin-heading"><div><h1>Tests &amp; Practice Sets</h1><p>Create and manage tests and practice sets.</p></div>{canManage && <AdminModal label="＋ New test" title="Create test or practice set" description="Complete the test settings, then add sections and questions in the same test workspace." large><TestCreateForm /></AdminModal>}</header>
       <TestListFilters initial={{ query, category, mode }} />
       {result.items.length ? <div className="reference-test-table"><table><thead><tr><th>Test Name</th><th>Mode</th><th>Sections</th><th>Questions</th><th>Duration</th><th>Attempts</th><th>Actions</th></tr></thead><tbody>{result.items.map(test=><tr key={test.id}><td><strong>{test.title}</strong><small>{testCategoryLabel(test.category)}</small></td><td>{test.mode==="PRACTICE"?"Practice Set":"Mock Test"}</td><td>{test.sectionCount}</td><td>{test.questionCount}</td><td>{test.durationMinutes} min</td><td>{test.attemptCount}</td><td><div><Link className="table-edit" href={`/admin/tests/${test.id}#settings`}>Edit</Link><Link className="table-open" href={`/admin/tests/${test.id}`}>Open</Link></div></td></tr>)}</tbody></table></div> : <div className="admin-card clean-empty tall"><span className="empty-icon">▣</span><strong>No tests or practice sets</strong><span>Create your first item or change the active filters.</span></div>}
