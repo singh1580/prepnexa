@@ -50,6 +50,9 @@ describe("responsive navigation", () => {
     expect(drawer).toContain('aria-modal="true"');
     expect(responsiveCss).toContain("width: min(320px, 88vw)");
     expect(responsiveCss).toContain("width: 92vw");
+    expect(responsiveCss).toContain("inset: 0 auto 0 0");
+    expect(responsiveCss).toContain("height: 100dvh");
+    expect(responsiveCss).toContain("position: fixed !important");
     expect(responsiveCss).toContain("--mobile-header-height: 60px");
     expect(responsiveCss).toContain("--mobile-header-height: 58px");
   });

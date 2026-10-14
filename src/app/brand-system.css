@@ -227,7 +227,7 @@
   .mobile-drawer-backdrop {
     position: fixed;
     z-index: 98;
-    inset: var(--mobile-header-height) 0 0;
+    inset: 0;
     display: block;
     width: auto;
     height: auto;
@@ -241,11 +241,11 @@
   .workspace-mobile-drawer {
     position: fixed;
     z-index: 100;
-    inset: var(--mobile-header-height) auto 0 0;
+    inset: 0 auto 0 0;
     display: flex;
     width: min(320px, 88vw);
-    height: calc(100dvh - var(--mobile-header-height));
-    padding: 18px 16px max(18px, env(safe-area-inset-bottom));
+    height: 100dvh;
+    padding: calc(var(--mobile-header-height) + 18px) 16px max(18px, env(safe-area-inset-bottom));
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
@@ -256,6 +256,14 @@
     background: #fff;
     box-shadow: 18px 0 50px rgb(25 18 12 / 18%);
     animation: prepstore-drawer-enter 180ms ease-out;
+  }
+
+  .mobile-public-menu[open] > summary,
+  .workspace-mobile-menu[open] > summary {
+    position: fixed !important;
+    z-index: 103;
+    top: calc((var(--mobile-header-height) - 44px) / 2);
+    left: clamp(16px, 2.2vw, 20px);
   }
 
   .mobile-public-drawer > .public-live-search {
@@ -461,6 +469,12 @@
     display: none !important;
   }
 
+  .student-workspace .workspace-header > .public-live-search,
+  .admin-workspace .workspace-header > .public-live-search {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
   .workspace-mobile-drawer > nav {
     display: grid;
     gap: 5px;
@@ -515,6 +529,11 @@
     min-height: 60px !important;
     padding-inline: clamp(12px, 3.5vw, 16px) !important;
   }
+
+  .mobile-public-menu[open] > summary,
+  .workspace-mobile-menu[open] > summary {
+    left: clamp(12px, 3.5vw, 16px);
+  }
 }
 
 @media (max-width: 340px) {
@@ -547,6 +566,11 @@
   .mobile-public-drawer,
   .workspace-mobile-drawer {
     width: 92vw;
+  }
+
+  .mobile-public-menu[open] > summary,
+  .workspace-mobile-menu[open] > summary {
+    left: clamp(10px, 3vw, 12px);
   }
 }
 
