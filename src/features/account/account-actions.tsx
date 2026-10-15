@@ -1,17 +1,37 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authRequest, ClientApiError } from "@/features/auth/ui/api";
 import { Field } from "@/features/auth/ui/field";
 
 export function LogoutButton() {
   const router = useRouter();
-  const [busy, setBusy] = useState(false); const [error, setError] = useState("");
-  return <><button className="button secondary" disabled={busy} onClick={async () => {
+  const [busy, setBusy] = useState(false); const [confirming, setConfirming] = useState(false); const [error, setError] = useState("");
+  useEffect(() => {
+    if (!confirming) return;
+    function closeOnEscape(event: KeyboardEvent) { if (event.key === "Escape" && !busy) setConfirming(false); }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [busy, confirming]);
+  async function logout() {
     setBusy(true); setError("");
     try { await authRequest("logout", {}); router.push("/login"); router.refresh(); }
-    catch { setError("Couldn't sign out. Please try again."); setBusy(false); }
-  }}>{busy ? "Signing out…" : "Sign out"}</button>{error && <p role="alert">{error}</p>}</>;
+    catch { setError("Couldn't sign out. Please try again."); setBusy(false); setConfirming(false); }
+  }
+  return <>
+    <button className="button secondary" disabled={busy} onClick={() => setConfirming(true)}>{busy ? "Signing out…" : "Sign out"}</button>
+    {confirming ? <div className="logout-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setConfirming(false); }}>
+      <section className="logout-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title" aria-describedby="logout-confirm-description">
+        <h2 id="logout-confirm-title">Sign out of Prepstore?</h2>
+        <p id="logout-confirm-description">You will need to sign in again to access your account and learning dashboard.</p>
+        <div className="logout-confirm-actions">
+          <button className="button secondary" type="button" disabled={busy} autoFocus onClick={() => setConfirming(false)}>Cancel</button>
+          <button className="button" type="button" disabled={busy} onClick={() => void logout()}>{busy ? "Signing out…" : "Sign out"}</button>
+        </div>
+      </section>
+    </div> : null}
+    {error && <p role="alert">{error}</p>}
+  </>;
 }
 export function ProfileForm({ name, email, phone, verified }: { name: string; email: string; phone:string|null; verified: boolean }) {
   const router = useRouter();
