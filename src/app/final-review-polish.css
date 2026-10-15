@@ -116,6 +116,52 @@
   min-width: 6.5rem;
 }
 
+/* Test runner: the base grid gap and a second one-rem tab margin used to stack,
+   creating large empty bands around the title, timer and active section. */
+.student-workspace .attempt-runner {
+  gap: .75rem !important;
+}
+
+.student-workspace .attempt-toolbar {
+  min-height: 3.75rem !important;
+  padding: 0 0 .65rem !important;
+}
+
+.student-workspace .attempt-toolbar h1 {
+  font-size: 1.4rem !important;
+  line-height: 1.15;
+}
+
+.student-workspace .attempt-timer {
+  min-width: 7.25rem !important;
+  padding: .45rem .75rem !important;
+}
+
+.student-workspace .attempt-timer strong {
+  margin: 0 !important;
+  font-size: 1.15rem !important;
+  line-height: 1.15;
+}
+
+.student-workspace .attempt-timer small {
+  margin-top: .2rem;
+  font-size: .63rem !important;
+}
+
+.student-workspace .attempt-section-tabs {
+  gap: .45rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.student-workspace .attempt-section-tabs button {
+  flex: 0 0 auto !important;
+  width: auto;
+  min-width: 8.5rem !important;
+  min-height: 2.35rem !important;
+  padding: .45rem .9rem !important;
+}
+
 @media (max-width: 420px) {
   .logout-confirm-actions {
     display: grid;
@@ -125,6 +171,23 @@
   .logout-confirm-actions .button {
     width: 100% !important;
     min-width: 0;
+  }
+
+  .student-workspace .attempt-toolbar {
+    align-items: center !important;
+    gap: .65rem;
+  }
+
+  .student-workspace .attempt-toolbar h1 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 1.15rem !important;
+  }
+
+  .student-workspace .attempt-timer {
+    flex: 0 0 auto;
+    min-width: 6.5rem !important;
+    padding-inline: .55rem !important;
   }
 }
 
