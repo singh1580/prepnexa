@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatAccessDuration, formatCount, normaliseProductName } from "@/features/catalog/presentation";
+import {
+  formatAccessDuration,
+  formatCount,
+  meaningfulProductDescription,
+  normaliseProductName,
+} from "@/features/catalog/presentation";
 
 describe("catalog presentation", () => {
   it("uses grammatically correct count labels", () => {
@@ -17,5 +22,25 @@ describe("catalog presentation", () => {
 
   it("makes machine-like product names readable without inventing content", () => {
     expect(normaliseProductName("first_testing  package")).toBe("first testing package");
+  });
+
+  it("does not repeat a product name or slug as its description", () => {
+    const fallback = "Your learning package overview.";
+    expect(
+      meaningfulProductDescription(
+        "first_testing",
+        "First Testing",
+        "first-testing",
+        fallback,
+      ),
+    ).toBe(fallback);
+    expect(
+      meaningfulProductDescription(
+        "Focused quantitative practice.",
+        "First Testing",
+        "first-testing",
+        fallback,
+      ),
+    ).toBe("Focused quantitative practice.");
   });
 });

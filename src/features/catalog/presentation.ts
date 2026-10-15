@@ -11,3 +11,24 @@ export function formatAccessDuration(days: number) {
 export function normaliseProductName(name: string) {
   return name.replaceAll("_", " ").replace(/\s+/g, " ").trim();
 }
+
+function comparableCopy(value: string) {
+  return value.toLocaleLowerCase("en-IN").replace(/[^a-z0-9]+/g, "");
+}
+
+export function meaningfulProductDescription(
+  description: string | null | undefined,
+  name: string,
+  slug: string,
+  fallback: string,
+) {
+  const copy = description?.trim();
+  if (!copy) return fallback;
+
+  const normalisedCopy = comparableCopy(copy);
+  const repeatsIdentity = [name, normaliseProductName(name), slug].some(
+    (identity) => comparableCopy(identity) === normalisedCopy,
+  );
+
+  return repeatsIdentity ? fallback : copy;
+}

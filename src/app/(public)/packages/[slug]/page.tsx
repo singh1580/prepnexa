@@ -11,6 +11,7 @@ import {
 import {
   formatAccessDuration,
   formatCount,
+  meaningfulProductDescription,
   normaliseProductName,
 } from "@/features/catalog/presentation";
 import { ProductReviewForm } from "@/features/catalog/review-form";
@@ -100,6 +101,12 @@ export default async function Page({
           .toLowerCase()
           .replace(/^./, (value) => value.toUpperCase());
   const productName = normaliseProductName(product.name);
+  const productDescription = meaningfulProductDescription(
+    product.description,
+    product.name,
+    product.slug,
+    "Your complete exam preparation package with structured learning and practice.",
+  );
   return (
     <main className="product-reference-page">
       <nav className="store-breadcrumb" aria-label="Breadcrumb">
@@ -117,10 +124,7 @@ export default async function Page({
         />
         <div className="reference-product-copy">
           <h1>{productName}</h1>
-          <p>
-            {product.description ||
-              "Your complete exam preparation package with structured learning and practice."}
-          </p>
+          <p>{productDescription}</p>
           <div
             className={`reference-rating${product.reviewCount ? "" : " no-reviews"}`}
           >
@@ -186,8 +190,12 @@ export default async function Page({
             <section>
               <h2>Description</h2>
               <p>
-                {product.description ||
-                  "Study, practise and analyse your preparation from one organised package workspace."}
+                {meaningfulProductDescription(
+                  product.description,
+                  product.name,
+                  product.slug,
+                  "Study, practise and analyse your preparation from one organised package workspace.",
+                )}
               </p>
             </section>
           ),

@@ -7,6 +7,7 @@ import { getStudentNotifications } from "@/features/operations/service";
 import { getStudentCourse } from "@/features/student-courses/service";
 import { courseProgress } from "@/features/student-courses/progress";
 import { MaterialsBrowser } from "@/features/student-courses/ui/materials-browser";
+import { meaningfulProductDescription } from "@/features/catalog/presentation";
 
 const views = ["overview", "materials", "tests", "results"] as const;
 type CourseView = (typeof views)[number];
@@ -22,11 +23,12 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const [course,notifications] = await Promise.all([getStudentCourse(slug, auth.user.id),getStudentNotifications(auth.user.id)]);
   if (!course) notFound();
   const progress=courseProgress(course);
+  const overviewDescription=meaningfulProductDescription(course.description,course.name,slug,"Your learning package overview.");
   const syllabus=(course.syllabus??"").split(/\r?\n/).map(item=>item.trim()).filter(Boolean);
   const recentActivity=[...(course.results.slice(0,3).map(result=>({id:result.id,title:`Completed ${result.title}`,meta:`Score ${result.score} / ${result.maxScore}`,date:result.publishedAt,href:`/results/${result.id}?course=${slug}`,icon:"result" as const}))),...(course.activeAttemptId?[{id:course.activeAttemptId,title:`Continued ${course.activeTestTitle??"test"}`,meta:"Attempt in progress",date:null,href:`/attempts/${course.activeAttemptId}?course=${slug}`,icon:"test" as const}]:[])].slice(0,3);
   return <WorkspaceShell admin={false} name={auth.user.name} email={auth.user.email} section="courses" unreadNotifications={notifications.unreadCount} activePackageSlug={slug} activePackageView={view}>
     <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard">Dashboard</Link><span>›</span><Link href="/dashboard/courses">My Packages</Link><span>›</span><b>{course.name}</b></nav>
-    <header className="package-content-heading"><div><span>{course.accessSource==="FREE"?"FREE PACKAGE":"MY PACKAGE"}</span><h1>{view==="overview"?course.name:view==="materials"?"Study materials":view==="tests"?"Tests & practice sets":"Results & analysis"}</h1><p>{view==="overview"?(course.description||"Your learning package overview."):view==="materials"?"Browse your package resources by subject and topic.":view==="tests"?"Continue mock tests and practice sets included in this package.":"Review your completed test performance."}</p></div></header>
+    <header className="package-content-heading"><div><span>{course.accessSource==="FREE"?"FREE PACKAGE":"MY PACKAGE"}</span><h1>{view==="overview"?course.name:view==="materials"?"Study materials":view==="tests"?"Tests & practice sets":"Results & analysis"}</h1><p>{view==="overview"?overviewDescription:view==="materials"?"Browse your package resources by subject and topic.":view==="tests"?"Continue mock tests and practice sets included in this package.":"Review your completed test performance."}</p></div></header>
 
     {view==="overview"?<>
       <section className="student-overview-progress"><div className="progress-ring" style={{"--progress":`${progress*3.6}deg`} as CSSProperties}><span><b>{progress}%</b><small>complete</small></span></div><div><h2>Your progress</h2><p>Continue learning and completing tests to move forward.</p><div><span><b>{course.completedTests}</b> tests completed</span><span><b>{Math.max(0,course.testCount-course.completedTests)}</b> tests remaining</span><span><b>{course.viewedMaterialCount} / {course.materialCount}</b> resources opened</span></div></div>{course.activeAttemptId?<Link href={`/attempts/${course.activeAttemptId}?course=${slug}`}>Resume test <b>→</b></Link>:null}</section>
