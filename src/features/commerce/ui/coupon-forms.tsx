@@ -39,6 +39,9 @@ export function CouponForm({
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [discountType, setDiscountType] = useState<"FIXED" | "PERCENT">(
+    initial?.type ?? "PERCENT",
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -105,17 +108,18 @@ export function CouponForm({
           </label>
           <label className="field">
             <span>Discount type</span>
-            <select name="type" defaultValue={initial?.type ?? "PERCENT"}>
+            <select name="type" value={discountType} onChange={(event) => setDiscountType(event.target.value as "FIXED" | "PERCENT")}>
               <option value="PERCENT">Percentage</option>
               <option value="FIXED">Fixed amount</option>
             </select>
           </label>
           <label className="field">
-            <span>Value (percent or ₹)</span>
+            <span>{discountType === "PERCENT" ? "Discount percentage" : "Discount amount (₹)"}</span>
             <input
               name="value"
               type="number"
               min="0.01"
+              max={discountType === "PERCENT" ? 100 : undefined}
               step="0.01"
               required
               defaultValue={initial ? initial.value / 100 : undefined}
