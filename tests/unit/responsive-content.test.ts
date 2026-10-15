@@ -62,6 +62,10 @@ describe("responsive content integrity", () => {
     "utf8",
   );
   const adminModal = readFileSync("src/components/admin-modal.tsx", "utf8");
+  const accountActions = readFileSync(
+    "src/features/account/account-actions.tsx",
+    "utf8",
+  );
 
   it("keeps product tabs inside their mobile container", () => {
     expect(css).not.toContain(
@@ -128,6 +132,23 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain("top: 63px");
     expect(finalReviewPolish).toContain("grid-auto-rows: max-content");
     expect(finalReviewPolish).toContain("align-content: start");
+    expect(finalReviewPolish).toContain(
+      ".student-workspace .workspace-header {",
+    );
+    expect(finalReviewPolish).toContain(
+      "border-bottom: 1px solid var(--review-line) !important",
+    );
+    expect(finalReviewPolish).toContain(
+      "border-right: 1px solid var(--review-line) !important",
+    );
+  });
+
+  it("asks for confirmation before ending a signed-in session", () => {
+    expect(accountActions).toContain('className="logout-confirm-backdrop"');
+    expect(accountActions).toContain('aria-modal="true"');
+    expect(accountActions).toContain("Sign out of Prepstore?");
+    expect(accountActions).toContain("setConfirming(true)");
+    expect(finalReviewPolish).toContain(".logout-confirm-dialog");
   });
 
   it("keeps admin header account actions in a compact right-side group", () => {
