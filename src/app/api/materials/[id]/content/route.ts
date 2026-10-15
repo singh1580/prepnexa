@@ -28,7 +28,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       "Content-Disposition": `${disposition}; filename="${fileName}"`,
       "Cache-Control": "private, no-store, max-age=0",
       "X-Content-Type-Options": "nosniff",
-      "Content-Security-Policy": "default-src 'none'; sandbox",
+      "X-Frame-Options": "SAMEORIGIN",
+      "Cross-Origin-Resource-Policy": "same-origin",
+      "Content-Security-Policy": "default-src 'none'; frame-ancestors 'self'",
     } });
   });
 }
