@@ -11,6 +11,8 @@ import {
 } from "@/features/student-courses/service";
 import type { StudentCourse } from "@/features/student-courses/repository";
 import { MobileDrawer } from "./mobile-drawer";
+import { UiIcon } from "./ui-icon";
+import { normaliseProductName } from "@/features/catalog/presentation";
 
 type NavItem = { key: string; href: string; label: string; icon: string };
 
@@ -269,7 +271,7 @@ function StudentPackageMenu({
           <NavIcon name="library" />
           <span>My packages</span>
         </Link>
-        <i aria-hidden="true">⌄</i>
+        <i><UiIcon name="chevron" /></i>
       </summary>
       <div className="package-sidebar-list">
         <Link className="package-view-all" href="/dashboard/courses">
@@ -282,8 +284,8 @@ function StudentPackageMenu({
             key={course.id}
           >
             <summary>
-              <span>{course.name}</span>
-              <i aria-hidden="true">⌄</i>
+              <span>{normaliseProductName(course.name)}</span>
+              <i><UiIcon name="chevron" /></i>
             </summary>
             <div className="sidebar-course-links">
               {sections.map(([key, label]) =>
@@ -311,7 +313,7 @@ function StudentPackageMenu({
                     groups.length ? (
                       <details className="sidebar-course-outline" open>
                         <summary>
-                          Course outline <i aria-hidden="true">⌄</i>
+                          Course outline <i><UiIcon name="chevron" /></i>
                         </summary>
                         {groups.map((group) => (
                           <details
