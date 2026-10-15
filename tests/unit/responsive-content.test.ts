@@ -20,6 +20,26 @@ describe("responsive content integrity", () => {
     "src/app/(workspace)/dashboard/courses/[slug]/page.tsx",
     "utf8",
   );
+  const invoicePage = readFileSync(
+    "src/app/(workspace)/invoice/[id]/page.tsx",
+    "utf8",
+  );
+  const securePdfViewer = readFileSync(
+    "src/features/materials/ui/secure-pdf-viewer.tsx",
+    "utf8",
+  );
+  const profilePage = readFileSync(
+    "src/app/(workspace)/account/profile/page.tsx",
+    "utf8",
+  );
+  const testForms = readFileSync(
+    "src/features/admin-tests/ui/forms.tsx",
+    "utf8",
+  );
+  const studentActions = readFileSync(
+    "src/features/operations/ui/student-actions.tsx",
+    "utf8",
+  );
 
   it("keeps product tabs inside their mobile container", () => {
     expect(css).not.toContain(
@@ -54,6 +74,16 @@ describe("responsive content integrity", () => {
     expect(materialContentRoute).toContain('"X-Frame-Options": "SAMEORIGIN"');
     expect(materialContentRoute).toContain("frame-ancestors 'self'");
     expect(materialContentRoute).not.toContain("default-src 'none'; sandbox");
+    expect(reader).toContain("<SecurePdfViewer");
+    expect(securePdfViewer).toContain("URL.createObjectURL(blob)");
+    expect(securePdfViewer).toContain('credentials: "same-origin"');
+  });
+
+  it("renders invoice items as labelled mobile rows", () => {
+    expect(invoicePage).toContain('data-label="Description"');
+    expect(invoicePage).toContain('data-label="Access period"');
+    expect(invoicePage).toContain('data-label="Amount"');
+    expect(css).toContain(".invoice-page .invoice thead{display:none}");
   });
 
   it("uses a compact course heading and includes the active view in breadcrumbs", () => {
@@ -66,5 +96,39 @@ describe("responsive content integrity", () => {
     expect(css).not.toContain(".review-table-wrap table{min-width:700px}");
     expect(css).toContain(".review-row-summary>span:before{content:attr(data-label)");
     expect(css).toContain(".section-performance-head{display:none}");
+    expect(css).toContain(".reference-performance>div{grid-template-columns:repeat(6,minmax(0,1fr))}");
+  });
+
+  it("uses semantic status colours instead of falling back to grey", () => {
+    expect(css).toContain(".status-active,.status-paid,.status-enabled");
+    expect(css).toContain(".status-pending,.status-created,.status-required");
+    expect(css).toContain(".status-failed,.status-suspended,.status-blocked");
+    expect(css).toContain(".status-cancelled,.status-expired,.status-closed");
+    expect(css).toContain(".status-refunded,.status-partially_refunded");
+    expect(profilePage).toContain("status-enabled");
+    expect(profilePage).toContain("status-required");
+  });
+
+  it("keeps workspace forms and dialogs bounded at desktop and mobile sizes", () => {
+    expect(css).toContain(".change-password-form fieldset{margin:0;padding:0;border:0}");
+    expect(css).toContain(".admin-workspace .admin-dialog.dialog-large{width:min(55rem");
+    expect(css).toContain("max-height:calc(100dvh - 2rem)");
+    expect(css).toContain(".dialog-body{min-height:0;max-height:none;overflow-y:auto}");
+    expect(css).toContain(".support-ticket-create-form fieldset{display:grid;grid-template-columns:1fr 1fr");
+    expect(studentActions).toContain('className="admin-form support-ticket-create-form"');
+    expect(css).toContain('.cover-upload-field input[type="file"]::file-selector-button');
+  });
+
+  it("keeps test editing compact and uses the primary save action", () => {
+    expect(css).toContain('.test-create-workspace input:not([type="checkbox"])');
+    expect(css).toContain(".test-settings-card .check-row{min-height:2.25rem");
+    expect(testForms).toContain('{busy === "settings" ? "Saving…" : "Save settings"}');
+    expect(testForms).not.toContain('<button className="button secondary" type="submit">\n                {busy === "settings"');
+  });
+
+  it("keeps the identifier column visible while wide admin tables scroll", () => {
+    expect(css).toContain(".reference-order-card .admin-table th:first-child");
+    expect(css).toContain(".reference-student-card .admin-table th:first-child");
+    expect(css).toContain("position:sticky;left:0");
   });
 });

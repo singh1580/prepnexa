@@ -8,6 +8,7 @@ import { AppError } from "@/lib/errors/app-error";
 import { getStudentCourse } from "@/features/student-courses/service";
 import { UiIcon } from "@/components/ui-icon";
 import { normaliseProductName } from "@/features/catalog/presentation";
+import { SecurePdfViewer } from "@/features/materials/ui/secure-pdf-viewer";
 
 export default async function Page({
   params,
@@ -32,7 +33,6 @@ export default async function Page({
   const course = courseSlug ? await getStudentCourse(courseSlug, auth.user.id) : null;
   const activeIndex=course?.materials.findIndex(item=>item.id===material.id)??-1;
   const nextMaterial=course&&activeIndex>=0?course.materials[activeIndex+1]:undefined;
-  const activeCourseMaterial=course?.materials.find(item=>item.id===material.id);
   return (
     <WorkspaceShell
       admin={false}
@@ -43,7 +43,7 @@ export default async function Page({
       activePackageView="materials"
       activeMaterialId={material.id}
     >
-      <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{course?<Link href={courseHref}>{normaliseProductName(course.name)}</Link>:null}<span>›</span>{activeCourseMaterial?<span>{activeCourseMaterial.subject}</span>:null}<span>›</span><b>{material.title}</b></nav>
+      <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard">Dashboard</Link><span>›</span><Link href="/dashboard/courses">My Packages</Link><span>›</span>{course?<Link href={courseHref}>{normaliseProductName(course.name)}</Link>:null}<span>›</span><Link href={courseHref}>Study materials</Link><span>›</span><b aria-current="page">{material.title}</b></nav>
       <div className="lesson-content reference-reader-content">
       {material.type === "VIDEO" ? (
         <section className="panel video-lesson">
@@ -76,11 +76,7 @@ export default async function Page({
             )}
           </div>
           {material.contentType === "application/pdf" ? (
-            <iframe
-              title={material.title}
-              src={`/api/materials/${material.id}/access?action=view${courseSlug?`&course=${encodeURIComponent(courseSlug)}`:""}`}
-              className="pdf-reader"
-            />
+            <SecurePdfViewer title={material.title} src={`/api/materials/${material.id}/access?action=view${courseSlug?`&course=${encodeURIComponent(courseSlug)}`:""}`}/>
           ) : material.allowDownload ? (
             <section className="panel empty-state">
               <h2>Ready to download</h2>

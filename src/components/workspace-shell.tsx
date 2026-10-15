@@ -13,6 +13,8 @@ import type { StudentCourse } from "@/features/student-courses/repository";
 import { MobileDrawer } from "./mobile-drawer";
 import { UiIcon } from "./ui-icon";
 import { normaliseProductName } from "@/features/catalog/presentation";
+import { SidebarDisclosure } from "./sidebar-disclosure";
+import { WorkspaceRouteEffects } from "./workspace-route-effects";
 
 type NavItem = { key: string; href: string; label: string; icon: string };
 
@@ -259,34 +261,35 @@ function StudentPackageMenu({
     ["results", "Results & analysis"],
   ];
   return (
-    <details
+    <SidebarDisclosure
       className="package-sidebar-menu"
-      open={expanded || Boolean(activePackageSlug)}
-    >
-      <summary>
+      defaultOpen={expanded || Boolean(activePackageSlug)}
+      openKey={activePackageSlug ?? (expanded ? "all-packages" : undefined)}
+      label="My packages"
+      trigger={
         <Link
-          className={activePackageSlug ? "nav-item active" : "nav-item"}
+          className={expanded || activePackageSlug ? "nav-item active" : "nav-item"}
           href="/dashboard/courses"
         >
           <NavIcon name="library" />
           <span>My packages</span>
         </Link>
-        <i><UiIcon name="chevron" /></i>
-      </summary>
+      }
+    >
       <div className="package-sidebar-list">
         <Link className="package-view-all" href="/dashboard/courses">
           View all packages
         </Link>
         {packages.map((course) => (
-          <details
+          <SidebarDisclosure
             className="sidebar-course"
-            open={course.slug === activePackageSlug}
+            defaultOpen={course.slug === activePackageSlug}
+            openKey={course.slug === activePackageSlug ? course.slug : undefined}
+            label={normaliseProductName(course.name)}
+            trigger={<span>{normaliseProductName(course.name)}</span>}
+            triggerToggles
             key={course.id}
           >
-            <summary>
-              <span>{normaliseProductName(course.name)}</span>
-              <i><UiIcon name="chevron" /></i>
-            </summary>
             <div className="sidebar-course-links">
               {sections.map(([key, label]) =>
                 key === "materials" ? (
@@ -373,10 +376,10 @@ function StudentPackageMenu({
                 ),
               )}
             </div>
-          </details>
+          </SidebarDisclosure>
         ))}
       </div>
-    </details>
+    </SidebarDisclosure>
   );
 }
 
@@ -509,6 +512,7 @@ export async function WorkspaceShell({
         </Link>
       </aside>
       <div className="workspace-body">
+        <WorkspaceRouteEffects />
         <header className="workspace-header">
           <MobileDrawer
             className="workspace-mobile-menu"
