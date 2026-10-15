@@ -12,7 +12,6 @@ import {
   NotificationCampaignForm,
   RetryDeliveryButton,
 } from "@/features/operations/ui/admin-actions";
-import { UiIcon } from "@/components/ui-icon";
 
 export const metadata = { title: "Notifications" };
 function SearchIcon() {
@@ -132,23 +131,23 @@ export default async function Page({
               <tbody>
                 {rows.map((item) => (
                   <tr key={item.id}>
-                    <td><span className="notification-audience">{audienceLabel(item.audience, item.productName)}</span></td>
-                    <td>
+                    <td data-label="Audience"><span className="notification-audience">{audienceLabel(item.audience, item.productName)}</span></td>
+                    <td data-label="Notification">
                       <strong className="notification-title">{item.title}</strong>
                       <small className="notification-message">{item.body}</small>
                     </td>
-                    <td>
+                    <td data-label="Channel">
                       <span className={`notification-channel-badge ${item.channel.toLowerCase()}`}>
                         <ChannelIcon channel={item.channel} />
                         {item.channel === "IN_APP" ? "In-app" : "Email"}
                       </span>
                     </td>
-                    <td><strong className="notification-recipient-count">{item.recipientCount.toLocaleString("en-IN")}</strong></td>
-                    <td className="notification-sent-date">
+                    <td data-label="Recipients"><strong className="notification-recipient-count">{item.recipientCount.toLocaleString("en-IN")}</strong></td>
+                    <td data-label="Sent date" className="notification-sent-date">
                       <strong>{new Date(item.createdAt).toLocaleDateString("en-IN", {dateStyle: "medium"})}</strong>
                       <small>{new Date(item.createdAt).toLocaleTimeString("en-IN", {hour: "2-digit", minute: "2-digit"})}</small>
                     </td>
-                    <td>
+                    <td data-label="Actions">
                       <details className="table-row-menu">
                         <summary aria-label={`View details for ${item.title}`}>⋮</summary>
                         <div className="notification-row-detail">
@@ -165,11 +164,11 @@ export default async function Page({
           </div>
             <footer className="table-pagination">
               <span>Showing {visible.length ? (currentPage - 1) * pageSize + 1 : 0}–{Math.min(currentPage * pageSize, visible.length)} of {visible.length}</span>
-              <nav aria-label="Notification pages">
+              {totalPages > 1 ? <nav aria-label="Notification pages">
                 <Link aria-disabled={currentPage === 1} href={pageHref(Math.max(1, currentPage - 1))}>‹</Link>
                 {Array.from({length: totalPages}, (_, index) => index + 1).filter(value => value === 1 || value === totalPages || Math.abs(value - currentPage) <= 1).map(value => <Link className={value === currentPage ? "active" : ""} href={pageHref(value)} key={value}>{value}</Link>)}
                 <Link aria-disabled={currentPage === totalPages} href={pageHref(Math.min(totalPages, currentPage + 1))}>›</Link>
-              </nav>
+              </nav> : null}
             </footer>
           </>
         ) : (
