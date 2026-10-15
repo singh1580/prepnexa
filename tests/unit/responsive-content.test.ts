@@ -141,6 +141,9 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(
       "border-right: 1px solid var(--review-line) !important",
     );
+    expect(finalReviewPolish).toContain(
+      "border-left: 1px solid var(--review-line) !important",
+    );
   });
 
   it("asks for confirmation before ending a signed-in session", () => {
@@ -162,6 +165,20 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain("min-width: 8.5rem !important");
     expect(finalReviewPolish).toContain(
       ".student-workspace .attempt-timer strong",
+    );
+  });
+
+  it("uses swipeable two-card home shelves on phones", () => {
+    expect(finalReviewPolish).toContain(
+      ".store-home .featured-store-grid",
+    );
+    expect(finalReviewPolish).toContain("grid-auto-flow: column");
+    expect(finalReviewPolish).toContain(
+      "grid-auto-columns: minmax(0, calc((100% - .65rem) / 2))",
+    );
+    expect(finalReviewPolish).toContain("scroll-snap-type: inline mandatory");
+    expect(finalReviewPolish).toContain(
+      ".store-home .store-product-compact .store-product-title",
     );
   });
 
