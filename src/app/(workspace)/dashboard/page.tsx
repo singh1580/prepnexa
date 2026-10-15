@@ -6,6 +6,7 @@ import { requireWorkspace } from "@/features/auth/page-access";
 import { getStudentNotifications } from "@/features/operations/service";
 import { getStudentCourseDashboard } from "@/features/student-courses/service";
 import { courseProgress } from "@/features/student-courses/progress";
+import { meaningfulProductDescription, normaliseProductName } from "@/features/catalog/presentation";
 
 export const metadata = { title: "Student dashboard" };
 
@@ -35,6 +36,17 @@ export default async function Page() {
   const progress = totalItems ? Math.round(completedItems / totalItems * 100) : 0;
   const continueCourse = courses.find((course) => course.activeAttemptId) ?? courses[0];
   const continueProgress = continueCourse ? courseProgress(continueCourse) : 0;
+  const continueCourseName = continueCourse ? normaliseProductName(continueCourse.name) : "";
+  const continueSubtitle = continueCourse
+    ? continueCourse.activeTestTitle
+      ? continueCourseName
+      : meaningfulProductDescription(
+          continueCourse.description,
+          continueCourse.name,
+          continueCourse.slug,
+          `${continueCourse.materialCount} resources · ${continueCourse.testCount} tests`,
+        )
+    : "";
   const chartResults = [...recentResults].reverse();
   const average = recentResults.length ? Math.round(recentResults.reduce((total, result) => total + (Number(result.maxScore) ? Number(result.score) / Number(result.maxScore) * 100 : 0), 0) / recentResults.length) : null;
   const firstName = auth.user.name.split(" ")[0];
@@ -45,7 +57,7 @@ export default async function Page() {
       <div className="student-banner-media"><Image src="/images/student-dashboard-banner.webp" alt="Student learning online" fill priority sizes="(max-width: 800px) 100vw, 70vw" /></div>
     </section>
 
-    {continueCourse ? <section className="student-section"><div className="student-section-heading"><h2>Continue learning</h2><Link href={`/dashboard/courses/${continueCourse.slug}`}>View package</Link></div><article className="continue-learning-card"><div className="course-tile">{continueCourse.coverObjectKey ? <Image src={`/api/catalog/products/${continueCourse.id}/cover`} alt="" fill sizes="88px" /> : <b>{continueCourse.name.slice(0, 2).toUpperCase()}</b>}</div><div><small>{continueCourse.activeAttemptId ? "TEST IN PROGRESS" : "YOUR PACKAGE"}</small><h3>{continueCourse.activeTestTitle ?? continueCourse.name}</h3><p>{continueCourse.name}</p></div><div className="continue-progress"><span>{continueProgress}% complete</span><progress max="100" value={continueProgress}/><Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue <b>→</b></Link></div></article></section> : null}
+    {continueCourse ? <section className="student-section"><div className="student-section-heading"><h2>Continue learning</h2><Link href={`/dashboard/courses/${continueCourse.slug}`}>View package</Link></div><article className="continue-learning-card"><div className="course-tile">{continueCourse.coverObjectKey ? <Image src={`/api/catalog/products/${continueCourse.id}/cover`} alt="" fill sizes="88px" /> : <b>{continueCourseName.slice(0, 2).toUpperCase()}</b>}</div><div><small>{continueCourse.activeAttemptId ? "TEST IN PROGRESS" : "YOUR PACKAGE"}</small><h3>{continueCourse.activeTestTitle ?? continueCourseName}</h3><p>{continueSubtitle}</p></div><div className="continue-progress"><span>{continueProgress}% complete</span><progress max="100" value={continueProgress}/><Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue <b>→</b></Link></div></article></section> : null}
 
     <section className="student-reference-metrics" aria-label="Learning overview">
       <article><i><DashboardIcon name="package"/></i><div><strong>{courses.length}</strong><span>Active packages</span></div></article>
@@ -54,7 +66,7 @@ export default async function Page() {
       <article><i><DashboardIcon name="bell"/></i><div><strong>{summary.unreadNotifications}</strong><span>Unread updates</span></div></article>
     </section>
 
-    <section className="student-section"><div className="student-section-heading"><h2>My packages</h2><Link href="/dashboard/courses">View all <span>→</span></Link></div>{courses.length ? <div className="dashboard-package-list">{courses.slice(0, 3).map((course) => <Link href={`/dashboard/courses/${course.slug}`} key={course.id}><span className="dashboard-package-cover">{course.coverObjectKey ? <Image src={`/api/catalog/products/${course.id}/cover`} alt="" fill sizes="64px"/> : course.name.slice(0, 2).toUpperCase()}</span><div><strong>{course.name}</strong><small>{course.materialCount} materials · {course.testCount} tests</small></div><b>{course.activeAttemptId ? "Continue" : "Open"} →</b></Link>)}</div> : <div className="student-empty-row"><p>No active packages yet.</p><Link href="/packages">Explore packages</Link></div>}</section>
+    <section className="student-section"><div className="student-section-heading"><h2>My packages</h2><Link href="/dashboard/courses">View all <span>→</span></Link></div>{courses.length ? <div className="dashboard-package-list">{courses.slice(0, 3).map((course) => {const courseName=normaliseProductName(course.name);return <Link href={`/dashboard/courses/${course.slug}`} key={course.id}><span className="dashboard-package-cover">{course.coverObjectKey ? <Image src={`/api/catalog/products/${course.id}/cover`} alt="" fill sizes="64px"/> : courseName.slice(0, 2).toUpperCase()}</span><div><strong>{courseName}</strong><small>{course.materialCount} materials · {course.testCount} tests</small></div><b>{course.activeAttemptId ? "Continue" : "Open"} →</b></Link>})}</div> : <div className="student-empty-row"><p>No active packages yet.</p><Link href="/packages">Explore packages</Link></div>}</section>
 
     <div className="student-dashboard-bottom">
       <section className="student-data-card"><div className="student-section-heading"><div><h2>Recent performance</h2><p>{average === null ? "Complete a test to see your progress" : `Average score ${average}%`}</p></div>{summary.latestResultId ? <Link href={`/results/${summary.latestResultId}?course=${summary.latestResultCourseSlug}`}>View analysis</Link> : null}</div>{chartResults.length ? <div className="performance-chart" aria-label="Recent test scores">{chartResults.map((result) => { const value = Number(result.maxScore) ? Math.round(Number(result.score) / Number(result.maxScore) * 100) : 0; return <div key={result.id}><span title={`${result.title}: ${value}%`} style={{height:`${Math.max(8,value)}%`}}/><small>{value}%</small></div>; })}</div> : <div className="empty-chart"><span/><span/><span/><span/><span/></div>}</section>
