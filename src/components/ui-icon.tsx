@@ -6,6 +6,7 @@ export type UiIconName =
   | "download"
   | "export"
   | "language"
+  | "paperclip"
   | "print"
   | "review"
   | "save"
@@ -21,6 +22,7 @@ export function UiIcon({ name, className }: { name: UiIconName; className?: stri
     download: <><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5" /><path d="M5 20h14" /></>,
     export: <><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5" /><path d="M5 13v7h14v-7" /></>,
     language: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" /></>,
+    paperclip: <path d="m8.5 12.5 6.8-6.8a3 3 0 0 1 4.2 4.2l-8.9 8.9a5 5 0 0 1-7.1-7.1l8.2-8.2M6.3 14.7l8.2-8.2a1 1 0 0 1 1.4 1.4l-8.2 8.2" />,
     print: <><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" /><path d="M7 14h10v7H7z" /></>,
     review: <path d="M6 3h12v18l-6-4-6 4z" />,
     save: <><path d="M7 18h10a4 4 0 0 0 .7-7.9A6 6 0 0 0 6.2 8.5 4.5 4.5 0 0 0 7 18Z" /><path d="m9.5 13 1.7 1.7 3.6-3.7" /></>,

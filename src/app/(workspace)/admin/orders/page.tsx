@@ -6,6 +6,7 @@ import { getManagedOrder, getManagedOrders } from "@/features/commerce/service";
 import { RefundForm } from "@/features/commerce/ui/refund-form";
 import { AdminModal } from "@/components/admin-modal";
 import { normaliseProductName } from "@/features/catalog/presentation";
+import { UiIcon } from "@/components/ui-icon";
 
 type ManagedOrder = {
   id: string;
@@ -139,40 +140,40 @@ export default async function Page({
                   className={selected?.id === order.id ? "selected-row" : ""}
                   key={order.id}
                 >
-                  <td>
+                  <td data-label="Order ID">
                     <strong>#{order.id.slice(0, 10).toUpperCase()}</strong>
                   </td>
-                  <td>
+                  <td data-label="Student">
                     <strong>{order.studentName}</strong>
                     <small>{order.email}</small>
                   </td>
-                  <td>{normaliseProductName(order.products)}</td>
-                  <td>
+                  <td data-label="Packages">{normaliseProductName(order.products)}</td>
+                  <td data-label="Base amount">
                     {formatMoney(
                       Math.max(0, order.subtotalPaise - order.discountPaise),
                       order.currency,
                     )}
                   </td>
-                  <td>{formatMoney(order.taxPaise, order.currency)}</td>
-                  <td>
+                  <td data-label="GST">{formatMoney(order.taxPaise, order.currency)}</td>
+                  <td data-label="Total">
                     <strong>
                       {formatMoney(order.totalPaise, order.currency)}
                     </strong>
                   </td>
-                  <td>
+                  <td data-label="Payment status">
                     <span
                       className={`commerce-status status-${order.status.toLowerCase()}`}
                     >
                       {order.status.replaceAll("_", " ")}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Date">
                     {new Date(order.createdAt).toLocaleString("en-IN", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}
                   </td>
-                  <td>
+                  <td data-label="Actions">
                     <Link
                       className="table-open-link"
                       href={`/admin/orders?${keep.toString()}${keep.size ? "&" : ""}order=${order.id}`}
@@ -214,7 +215,7 @@ export default async function Page({
                 href={`/admin/orders${keep.size ? `?${keep.toString()}` : ""}`}
                 aria-label="Close"
               >
-                ×
+                <UiIcon name="close" />
               </Link>
             </header>
             <div className="side-detail-section student-order-person">

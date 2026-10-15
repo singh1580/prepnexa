@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { operationsRequest, operationsUpload, OperationsApiError } from "./api";
+import { UiIcon } from "@/components/ui-icon";
 
 function message(error: unknown) {
   return error instanceof OperationsApiError
@@ -160,7 +161,7 @@ export function ManagedTicketActions({
             />
             <div className="composer-footer">
               <label className="attachment-button">
-                ⌕ Attach
+                <UiIcon name="paperclip" /> Attach file
                 <input
                   name="attachment"
                   type="file"

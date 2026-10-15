@@ -491,6 +491,198 @@
   }
 }
 
+/* Final workflow polish: keep dense admin data usable without horizontal zoom. */
+.cover-remove-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  margin-top: .15rem;
+  color: #b42318;
+  font-size: .75rem;
+  font-weight: 750;
+}
+
+.cover-remove-button svg,
+.attachment-button svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.reference-reader-content .pdf-reader,
+.reference-reader-content .pdf-reader-state {
+  height: clamp(28rem, 62dvh, 44rem) !important;
+  min-height: 0 !important;
+  max-height: 44rem !important;
+}
+
+.reference-performance > div {
+  overflow: hidden;
+  border-radius: .35rem;
+}
+
+.reference-performance article {
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .reference-performance > div {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+
+  .reference-performance article {
+    grid-column: span 2 !important;
+    border: 0 !important;
+    border-left: 1px solid #e3e1de !important;
+    border-top: 1px solid #e3e1de !important;
+    padding: .7rem .35rem !important;
+  }
+
+  .reference-performance article:nth-child(1),
+  .reference-performance article:nth-child(2) {
+    grid-column: span 3 !important;
+    border-top: 0 !important;
+  }
+
+  .reference-performance article:nth-child(1),
+  .reference-performance article:nth-child(3) {
+    border-left: 0 !important;
+  }
+
+  .reference-reader-content .pdf-reader,
+  .reference-reader-content .pdf-reader-state {
+    height: min(56dvh, 32rem) !important;
+    min-height: 21rem !important;
+    max-height: 32rem !important;
+  }
+
+  .reference-reader-content .material-reader-toolbar {
+    padding: .65rem .75rem !important;
+  }
+
+  .reference-order-card .admin-table-wrap,
+  .reference-student-card .admin-table-wrap,
+  .reference-coupon-card .admin-table-wrap,
+  .notification-campaigns-card .table-scroll {
+    overflow: visible !important;
+  }
+
+  .reference-order-card .admin-table,
+  .reference-student-card .admin-table,
+  .reference-coupon-card .admin-table,
+  .notification-campaigns-card .admin-table,
+  .reference-order-card .admin-table tbody,
+  .reference-student-card .admin-table tbody,
+  .reference-coupon-card .admin-table tbody,
+  .notification-campaigns-card .admin-table tbody {
+    display: grid;
+    width: 100%;
+    min-width: 0 !important;
+    gap: .75rem;
+  }
+
+  .reference-order-card .admin-table thead,
+  .reference-student-card .admin-table thead,
+  .reference-coupon-card .admin-table thead,
+  .notification-campaigns-card .admin-table thead {
+    display: none;
+  }
+
+  .reference-order-card .admin-table tr,
+  .reference-student-card .admin-table tr,
+  .reference-coupon-card .admin-table tr,
+  .notification-campaigns-card .admin-table tr {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--review-line) !important;
+    border-radius: .6rem;
+    background: #fff;
+  }
+
+  .reference-order-card .admin-table td,
+  .reference-student-card .admin-table td,
+  .reference-coupon-card .admin-table td,
+  .notification-campaigns-card .admin-table td {
+    position: static !important;
+    display: grid;
+    grid-template-columns: minmax(6.7rem, .42fr) minmax(0, 1fr);
+    align-items: center;
+    gap: .7rem;
+    width: 100%;
+    min-width: 0;
+    padding: .62rem .75rem !important;
+    border: 0 !important;
+    border-top: 1px solid #efedea !important;
+    background: transparent !important;
+    text-align: left !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .reference-order-card .admin-table td:first-child,
+  .reference-student-card .admin-table td:first-child,
+  .reference-coupon-card .admin-table td:first-child,
+  .notification-campaigns-card .admin-table td:first-child {
+    border-top: 0 !important;
+  }
+
+  .reference-order-card .admin-table td::before,
+  .reference-student-card .admin-table td::before,
+  .reference-coupon-card .admin-table td::before,
+  .notification-campaigns-card .admin-table td::before {
+    content: attr(data-label);
+    color: #6d7479;
+    font-size: .68rem;
+    font-weight: 760;
+    letter-spacing: .02em;
+  }
+
+  .reference-order-card .admin-table td > *,
+  .reference-student-card .admin-table td > *,
+  .reference-coupon-card .admin-table td > *,
+  .notification-campaigns-card .admin-table td > * {
+    min-width: 0;
+    justify-self: start;
+  }
+
+  .reference-student-card .student-cell {
+    align-items: center;
+  }
+
+  .notification-campaigns-card .notification-message {
+    max-width: none;
+  }
+
+  .notification-campaigns-card .table-row-menu {
+    justify-self: start;
+  }
+
+  .table-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .65rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .reference-order-card .admin-table td,
+  .reference-student-card .admin-table td,
+  .reference-coupon-card .admin-table td,
+  .notification-campaigns-card .admin-table td {
+    grid-template-columns: 1fr;
+    gap: .25rem;
+  }
+
+  .reference-reader-content .pdf-reader,
+  .reference-reader-content .pdf-reader-state {
+    height: 50dvh !important;
+    min-height: 19rem !important;
+  }
+}
+
 @media print {
   @page {
     size: A4;

@@ -7,6 +7,7 @@ import {
   getManagedSupportTickets,
 } from "@/features/operations/service";
 import { ManagedTicketActions } from "@/features/operations/ui/admin-actions";
+import { UiIcon } from "@/components/ui-icon";
 
 export const metadata = { title: "Support" };
 export default async function Page({
@@ -182,7 +183,7 @@ export default async function Page({
                 href="/admin/support"
                 aria-label="Close ticket"
               >
-                ×
+                <UiIcon name="close" />
               </Link>
             </header>
             <div className="ticket-student-strip">
