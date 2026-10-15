@@ -130,6 +130,18 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain("align-content: start");
   });
 
+  it("keeps admin header account actions in a compact right-side group", () => {
+    expect(finalReviewPolish).toContain(".admin-workspace .workspace-header {");
+    expect(finalReviewPolish).toContain("justify-content: flex-start !important");
+    expect(finalReviewPolish).toContain(
+      ".admin-workspace .workspace-header > .public-live-search",
+    );
+    expect(finalReviewPolish).toContain("margin: 0 auto 0 0 !important");
+    expect(finalReviewPolish).toContain(
+      ".admin-workspace .workspace-header > .student-header-account",
+    );
+  });
+
   it("uses a compact course heading and includes the active view in breadcrumbs", () => {
     expect(coursePage).not.toContain('"MY PACKAGE"');
     expect(coursePage).toContain("<b>{viewLabel}</b>");
