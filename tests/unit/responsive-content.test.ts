@@ -20,6 +20,14 @@ describe("responsive content integrity", () => {
     "src/app/(workspace)/dashboard/courses/[slug]/page.tsx",
     "utf8",
   );
+  const invoicePage = readFileSync(
+    "src/app/(workspace)/invoice/[id]/page.tsx",
+    "utf8",
+  );
+  const securePdfViewer = readFileSync(
+    "src/features/materials/ui/secure-pdf-viewer.tsx",
+    "utf8",
+  );
 
   it("keeps product tabs inside their mobile container", () => {
     expect(css).not.toContain(
@@ -54,6 +62,16 @@ describe("responsive content integrity", () => {
     expect(materialContentRoute).toContain('"X-Frame-Options": "SAMEORIGIN"');
     expect(materialContentRoute).toContain("frame-ancestors 'self'");
     expect(materialContentRoute).not.toContain("default-src 'none'; sandbox");
+    expect(reader).toContain("<SecurePdfViewer");
+    expect(securePdfViewer).toContain("URL.createObjectURL(blob)");
+    expect(securePdfViewer).toContain('credentials: "same-origin"');
+  });
+
+  it("renders invoice items as labelled mobile rows", () => {
+    expect(invoicePage).toContain('data-label="Description"');
+    expect(invoicePage).toContain('data-label="Access period"');
+    expect(invoicePage).toContain('data-label="Amount"');
+    expect(css).toContain(".invoice-page .invoice thead{display:none}");
   });
 
   it("uses a compact course heading and includes the active view in breadcrumbs", () => {
@@ -66,5 +84,6 @@ describe("responsive content integrity", () => {
     expect(css).not.toContain(".review-table-wrap table{min-width:700px}");
     expect(css).toContain(".review-row-summary>span:before{content:attr(data-label)");
     expect(css).toContain(".section-performance-head{display:none}");
+    expect(css).toContain(".reference-performance>div{grid-template-columns:repeat(6,minmax(0,1fr))}");
   });
 });
