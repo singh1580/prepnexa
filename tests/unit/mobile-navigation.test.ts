@@ -8,6 +8,14 @@ describe("responsive navigation", () => {
     "utf8",
   );
   const drawer = readFileSync("src/components/mobile-drawer.tsx", "utf8");
+  const packageDisclosure = readFileSync(
+    "src/components/sidebar-disclosure.tsx",
+    "utf8",
+  );
+  const routeEffects = readFileSync(
+    "src/components/workspace-route-effects.tsx",
+    "utf8",
+  );
   const responsiveCss = readFileSync("src/app/brand-system.css", "utf8");
   const baseCss = readFileSync("src/app/styles.css", "utf8");
   const storefrontFixes = readFileSync(
@@ -51,6 +59,24 @@ describe("responsive navigation", () => {
     expect(workspaceShell).not.toContain('label: "Cart"');
     expect(workspaceShell).not.toContain('label: "Profile & security"');
     expect(workspaceShell).toContain('className="workspace-drawer-brand"');
+  });
+
+  it("keeps package navigation separate from accessible collapse controls", () => {
+    expect(workspaceShell).toContain("<SidebarDisclosure");
+    expect(workspaceShell).not.toContain('<details\n      className="package-sidebar-menu"');
+    expect(packageDisclosure).toContain('aria-expanded={open}');
+    expect(packageDisclosure).toContain('aria-label={`${open ? "Collapse" : "Expand"} ${label}`}');
+    expect(packageDisclosure).toContain("setOpen((value) => !value)");
+  });
+
+  it("resets document scroll for route and package-view navigation", () => {
+    expect(workspaceShell).toContain("<WorkspaceRouteEffects />");
+    expect(routeEffects).toContain("const pathname = usePathname()");
+    expect(routeEffects).toContain('searchParams.get("view")');
+    expect(routeEffects).toContain("window.scrollTo(0, 0)");
+    expect(routeEffects).toContain(".admin-table-wrap, .table-scroll, .orders-table-wrap, .review-table-wrap");
+    expect(routeEffects).toContain("scrollTo({ left: 0, top: 0 })");
+    expect(routeEffects).toContain("[pathname, packageView]");
   });
 
   it("supports modal drawer accessibility and the approved responsive sizes", () => {

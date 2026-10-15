@@ -768,6 +768,86 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .coupon-list-controls{grid-template-columns:minmax(16rem,1fr) minmax(10rem,.35fr) auto auto!important}.coupon-list-controls input,.coupon-list-controls select{width:100%;height:2.75rem}.reference-coupon-card .table-pagination{border-top:1px solid #e8e6e3}
 @media(max-width:700px){.coupon-list-controls{grid-template-columns:1fr!important}.coupon-list-controls>*{grid-column:1!important}}
 
+/* Workspace interaction and visual consistency — consolidated final overrides. */
+.sidebar-disclosure-summary{display:flex;align-items:center;min-width:0}
+.sidebar-disclosure-summary>.nav-item{flex:1;min-width:0}
+.sidebar-disclosure-primary{display:flex;align-items:center;min-width:0;flex:1;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.sidebar-disclosure-primary>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar-disclosure-toggle{display:grid;place-items:center;width:2.25rem;height:2.25rem;flex:0 0 auto;padding:0;border:0;border-radius:.4rem;background:transparent;color:#73797e;cursor:pointer}
+.sidebar-disclosure-toggle:hover,.sidebar-disclosure-toggle:focus-visible{background:#fff0e8;color:#d84412}
+.sidebar-disclosure-toggle svg{width:1rem;height:1rem;transition:transform .18s ease}
+.package-sidebar-menu[data-open="true"]>.sidebar-disclosure-summary .sidebar-disclosure-toggle svg,.sidebar-course[data-open="true"]>.sidebar-disclosure-summary .sidebar-disclosure-toggle svg{transform:rotate(180deg)}
+.sidebar-course>.sidebar-disclosure-summary{border-radius:.4rem}
+.sidebar-course>.sidebar-disclosure-summary:hover{background:#faf7f4}
+.sidebar-course>.sidebar-disclosure-summary .sidebar-disclosure-primary{padding:.55rem;color:#4d5459;font-size:.84rem;font-weight:720}
+.sidebar-course[data-open="true"]>.sidebar-disclosure-summary .sidebar-disclosure-primary{color:#d94312}
+.package-sidebar-menu>.sidebar-disclosure-summary>.sidebar-disclosure-toggle{margin-right:.25rem}
+
+.workspace-main{scroll-margin-top:4.75rem}
+.student-workspace .workspace-main{padding-top:1.75rem}
+.admin-workspace .workspace-main{padding-top:1.75rem}
+.admin-page-header,.student-page-heading{margin-top:0}
+
+.commerce-status,.status-pill{align-items:center;gap:.25rem;border:1px solid transparent;line-height:1.25;white-space:nowrap}
+.status-active,.status-paid,.status-enabled,.status-resolved,.status-captured,.status-completed{border-color:#bfe2cc;background:#e7f4ec!important;color:#276448!important}
+.status-pending,.status-created,.status-required,.status-open,.status-processing,.status-authorized{border-color:#f1d79b;background:#fff4d9!important;color:#8a5b13!important}
+.status-failed,.status-suspended,.status-blocked,.status-rejected{border-color:#efc1bd;background:#fdebea!important;color:#ad3028!important}
+.status-cancelled,.status-expired,.status-closed,.status-inactive,.status-disabled{border-color:#d9dce0;background:#f0f1f2!important;color:#5f666d!important}
+.status-refunded,.status-partially_refunded{border-color:#cdd8f1;background:#edf2ff!important;color:#405f9d!important}
+.content-open,.content-in_progress{border-color:#cbd8f0;background:#edf3ff!important;color:#3f629f!important}
+.content-resolved{border-color:#bfe2cc;background:#e7f4ec!important;color:#276448!important}
+.content-closed{border-color:#d9dce0;background:#f0f1f2!important;color:#5f666d!important}
+
+.admin-workspace .admin-dialog{width:min(43rem,calc(100vw - 2rem));max-height:calc(100dvh - 2rem)}
+.admin-workspace .admin-dialog.dialog-large{width:min(55rem,calc(100vw - 2rem))}
+.student-workspace .admin-dialog{width:min(43rem,calc(100vw - 2rem));max-height:calc(100dvh - 2rem);background:#fff}
+.dialog-heading{flex:0 0 auto}
+.dialog-body{min-height:0;max-height:none;overflow-y:auto}
+.dialog-body form fieldset{min-width:0}
+
+.support-ticket-create-form fieldset{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+.support-ticket-create-form .field:nth-of-type(n+3),.support-ticket-create-form>.notice,.support-ticket-create-form fieldset>.button{grid-column:1/-1}
+.support-ticket-create-form input,.support-ticket-create-form select{height:2.75rem;min-height:2.75rem}
+.support-ticket-create-form textarea{min-height:8rem;resize:vertical}
+.support-ticket-create-form fieldset>.button{justify-self:end;min-width:12rem}
+
+.test-create-workspace input:not([type="checkbox"]),.test-create-workspace select,.test-settings-card input:not([type="checkbox"]),.test-settings-card select{height:2.75rem;min-height:2.75rem}
+.test-create-workspace textarea,.test-settings-card textarea{min-height:7rem;resize:vertical}
+.test-settings-card>form{margin-top:.75rem;margin-bottom:1rem}
+.test-settings-card .admin-form fieldset{gap:.7rem 1rem}
+.test-settings-card .check-row{min-height:2.25rem;margin:0;padding:.35rem 0}
+
+.cover-upload-field input[type="file"]{padding:.35rem;border:1px solid #ddd9d5;border-radius:.45rem;background:#faf9f7;color:#656c72}
+.cover-upload-field input[type="file"]::file-selector-button{margin-right:.65rem;padding:.5rem .7rem;border:0;border-radius:.35rem;background:#fff0e8;color:#d94312;font:inherit;font-weight:750;cursor:pointer}
+
+.reference-order-card .admin-table th:first-child,.reference-order-card .admin-table td:first-child,.reference-student-card .admin-table th:first-child,.reference-student-card .admin-table td:first-child{position:sticky;left:0;z-index:2;background:#fff}
+.reference-order-card .admin-table thead th:first-child,.reference-student-card .admin-table thead th:first-child{z-index:3;background:#faf9f7}
+.reference-order-card .admin-table td:first-child,.reference-student-card .admin-table td:first-child{box-shadow:1px 0 0 #ece9e5}
+
+.change-password-form fieldset{margin:0;padding:0;border:0}
+.admin-profile-grid{align-items:start}
+.admin-profile-grid>.admin-card{height:auto}
+.admin-password-card .change-password-form .field{grid-column:1/-1}
+.admin-password-card .change-password-form .button{justify-self:end}
+
+@media(min-width:1400px){
+  .admin-workspace .workspace-main{width:min(100%,1440px)}
+  .student-workspace .workspace-main{width:min(100%,1240px)}
+}
+@media(max-width:800px){
+  .student-workspace .workspace-main,.admin-workspace .workspace-main{padding-top:1.25rem}
+  .package-sidebar-menu>.sidebar-disclosure-summary>.sidebar-disclosure-toggle{margin-right:0}
+  .admin-workspace .admin-dialog,.admin-workspace .admin-dialog.dialog-large,.student-workspace .admin-dialog{width:calc(100vw - 1rem);max-height:calc(100dvh - 1rem);border-radius:.75rem}
+}
+@media(max-width:560px){
+  .admin-workspace .admin-dialog,.admin-workspace .admin-dialog.dialog-large,.student-workspace .admin-dialog{width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0}
+  .dialog-heading{padding:1rem}
+  .dialog-body{padding:1rem}
+  .support-ticket-create-form fieldset{grid-template-columns:1fr}
+  .support-ticket-create-form .field,.support-ticket-create-form fieldset>.button{grid-column:1}
+  .support-ticket-create-form fieldset>.button{width:100%;min-width:0}
+}
+
 /* Keep protected lessons useful without letting the reader consume the whole mobile page. */
 @media(max-width:700px){.reference-reader-content .pdf-reader,.reference-reader-content .pdf-reader-state{height:60dvh;min-height:24rem!important;max-height:38rem}}
 

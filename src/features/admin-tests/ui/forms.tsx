@@ -391,7 +391,7 @@ export function TestBuilder({
                   rows={4}
                 />
               </label>
-              <button className="button secondary" type="submit">
+              <button className="button" type="submit">
                 {busy === "settings" ? "Saving…" : "Save settings"}
               </button>
             </fieldset>
