@@ -151,6 +151,20 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(".logout-confirm-dialog");
   });
 
+  it("keeps the test title, timer and section selector compact", () => {
+    expect(finalReviewPolish).toContain(
+      ".student-workspace .attempt-runner",
+    );
+    expect(finalReviewPolish).toContain(
+      ".student-workspace .attempt-section-tabs",
+    );
+    expect(finalReviewPolish).toContain("margin: 0 !important");
+    expect(finalReviewPolish).toContain("min-width: 8.5rem !important");
+    expect(finalReviewPolish).toContain(
+      ".student-workspace .attempt-timer strong",
+    );
+  });
+
   it("keeps admin header account actions in a compact right-side group", () => {
     expect(finalReviewPolish).toContain(".admin-workspace .workspace-header {");
     expect(finalReviewPolish).toContain("justify-content: flex-start !important");
