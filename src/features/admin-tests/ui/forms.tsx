@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AddTestQuestions } from "./add-questions";
 import { Field } from "@/features/auth/ui/field";
 import type { ApiFailure, ApiSuccess } from "@/lib/http/api-response";
+import { UiIcon } from "@/components/ui-icon";
 
 type TestDetails = {
   category: TestCategory | null;
@@ -470,7 +471,7 @@ export function TestBuilder({
                     disabled={Boolean(busy)}
                     onClick={() => remove(`sections/${section.id}`)}
                   >
-                    Remove empty section
+                    <UiIcon name="trash" /> Remove empty section
                   </button>
                 )}
                 <p className="muted section-summary">{section.durationMinutes ? `${section.durationMinutes} minutes · ` : ""}{section.questions.length ? "Questions are shown in the student exam order below." : "Add the first question manually or import Excel / CSV."}</p>
@@ -557,7 +558,7 @@ export function TestBuilder({
                             )
                           }
                         >
-                          Remove question
+                          <UiIcon name="trash" /> Remove question
                         </button>
                       </>
                     )}
