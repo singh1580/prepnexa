@@ -122,6 +122,14 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(".product-create-form .dialog-form-footer");
   });
 
+  it("keeps desktop workspace dividers continuous without stretching student navigation", () => {
+    expect(finalReviewPolish).toContain(".admin-workspace > .sidebar::before");
+    expect(finalReviewPolish).toContain(".student-workspace > .sidebar::before");
+    expect(finalReviewPolish).toContain("top: 63px");
+    expect(finalReviewPolish).toContain("grid-auto-rows: max-content");
+    expect(finalReviewPolish).toContain("align-content: start");
+  });
+
   it("uses a compact course heading and includes the active view in breadcrumbs", () => {
     expect(coursePage).not.toContain('"MY PACKAGE"');
     expect(coursePage).toContain("<b>{viewLabel}</b>");

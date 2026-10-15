@@ -10,6 +10,35 @@
   --review-orange-soft: #fff1ea;
 }
 
+/* Desktop workspace chrome: the 64px logo rail and top header share one
+   continuous divider. Grid rows in the student rail must not stretch simply
+   because the navigation owns the remaining viewport height. */
+@media (min-width: 1024px) {
+  .admin-workspace > .sidebar,
+  .student-workspace > .sidebar {
+    position: sticky;
+    isolation: isolate;
+  }
+
+  .admin-workspace > .sidebar::before,
+  .student-workspace > .sidebar::before {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    top: 63px;
+    right: 0;
+    left: 0;
+    height: 1px;
+    pointer-events: none;
+    background: var(--review-line);
+  }
+
+  .student-workspace > .sidebar > nav {
+    grid-auto-rows: max-content;
+    align-content: start;
+  }
+}
+
 /* Compact page introductions remove the repeated empty band below the app header. */
 .admin-workspace .workspace-main,
 .student-workspace .workspace-main {
