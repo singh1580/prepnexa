@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Field } from "@/features/auth/ui/field";
 import type { ApiFailure, ApiSuccess } from "@/lib/http/api-response";
+import { UiIcon } from "@/components/ui-icon";
 
 type LinkOption = {
   id: string;
@@ -521,7 +522,7 @@ export function MaterialDeleteButton({ id }: { id: string }) {
   }
   return (
     <div className="danger-zone">
-      <button className="button danger" type="button" disabled={Boolean(busy)} onClick={remove}>{busy ? "Deleting…" : "Delete material"}</button>
+      <button className="button danger icon-action" type="button" disabled={Boolean(busy)} onClick={remove}><UiIcon name="trash" />{busy ? "Deleting…" : "Delete material"}</button>
       {error && <p className="notice danger" role="alert">{error}</p>}
     </div>
   );
