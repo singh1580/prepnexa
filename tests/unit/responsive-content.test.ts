@@ -45,6 +45,23 @@ describe("responsive content integrity", () => {
     "src/features/operations/ui/student-actions.tsx",
     "utf8",
   );
+  const adminOrders = readFileSync(
+    "src/app/(workspace)/admin/orders/page.tsx",
+    "utf8",
+  );
+  const adminStudents = readFileSync(
+    "src/app/(workspace)/admin/students/page.tsx",
+    "utf8",
+  );
+  const adminCoupons = readFileSync(
+    "src/app/(workspace)/admin/coupons/page.tsx",
+    "utf8",
+  );
+  const adminNotifications = readFileSync(
+    "src/app/(workspace)/admin/notifications/page.tsx",
+    "utf8",
+  );
+  const adminModal = readFileSync("src/components/admin-modal.tsx", "utf8");
 
   it("keeps product tabs inside their mobile container", () => {
     expect(css).not.toContain(
@@ -149,5 +166,22 @@ describe("responsive content integrity", () => {
     expect(css).toContain(".reference-order-card .admin-table th:first-child");
     expect(css).toContain(".reference-student-card .admin-table th:first-child");
     expect(css).toContain("position:sticky;left:0");
+  });
+
+  it("turns dense admin lists into labelled cards on phones", () => {
+    expect(adminOrders).toContain('data-label="Order ID"');
+    expect(adminStudents).toContain('data-label="Account status"');
+    expect(adminCoupons).toContain('data-label="Discount"');
+    expect(adminNotifications).toContain('data-label="Recipients"');
+    expect(finalReviewPolish).toContain(
+      ".reference-order-card .admin-table td::before",
+    );
+    expect(finalReviewPolish).toContain("content: attr(data-label)");
+  });
+
+  it("protects changed modal forms from accidental dismissal", () => {
+    expect(adminModal).toContain("Discard your unsaved changes?");
+    expect(adminModal).toContain("onCancel=");
+    expect(adminModal).toContain("onInputCapture=");
   });
 });
