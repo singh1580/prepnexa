@@ -4,7 +4,7 @@ import {
   SearchableContentSelect,
   type SellableItems,
 } from "./content-picker";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Field } from "@/features/auth/ui/field";
@@ -93,9 +93,24 @@ export function ProductCreateForm({
   };
 } = {}) {
   const { router, busy, error, mutate } = useMutation();
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverName, setCoverName] = useState("");
+  useEffect(() => () => {
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+  }, [coverPreview]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const mrpInput = form.elements.namedItem("mrpRupees") as HTMLInputElement | null;
+    const priceInput = form.elements.namedItem("priceRupees") as HTMLInputElement | null;
+    mrpInput?.setCustomValidity("");
+    if (mrpInput && priceInput && Number(mrpInput.value) < Number(priceInput.value)) {
+      mrpInput.setCustomValidity("MRP must be equal to or higher than the selling price.");
+      mrpInput.reportValidity();
+      return;
+    }
     const result = await mutate<{ id: string }>("product", () =>
       request(
         product ? `products/${product.id}` : "products",
@@ -126,7 +141,6 @@ export function ProductCreateForm({
     }
     if (result) router.push(`/admin/packages/${result.id}`);
   }
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   return (
     <form className="admin-form product-create-form" onSubmit={submit}>
       <fieldset disabled={Boolean(busy)}>
@@ -143,8 +157,18 @@ export function ProductCreateForm({
             <span className="cover-preview">
               {coverPreview ? <Image src={coverPreview} alt="Selected package cover preview" fill sizes="224px" unoptimized /> : product?.coverObjectKey ? <Image src={`/api/catalog/products/${product.id}/cover`} alt={`${product.name} cover`} fill sizes="224px" /> : <b>Upload package cover</b>}
             </span>
-            <input name="cover" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.currentTarget.files?.[0]; setCoverPreview(file ? URL.createObjectURL(file) : null); }} />
-            <small>JPG, PNG or WebP · up to 5 MB</small>
+            <input ref={coverInputRef} name="cover" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              setCoverPreview(file ? URL.createObjectURL(file) : null);
+              setCoverName(file?.name ?? "");
+            }} />
+            <small>{coverName || "JPG, PNG or WebP · up to 5 MB"}</small>
+            {coverPreview ? <button className="text-button cover-remove-button" type="button" onClick={(event) => {
+              event.preventDefault();
+              if (coverInputRef.current) coverInputRef.current.value = "";
+              setCoverPreview(null);
+              setCoverName("");
+            }}><UiIcon name="trash" /> Remove selected image</button> : null}
           </label>
         </div>
         <div className="product-pricing-grid">
