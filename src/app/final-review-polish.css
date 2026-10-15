@@ -1,0 +1,540 @@
+/* Final screenshot-review layer. Keep this file imported last so shared UI has one
+   authoritative responsive contract instead of accumulating page-specific overrides. */
+
+:root {
+  --review-line: #e6e2de;
+  --review-soft: #faf8f5;
+  --review-ink: #202327;
+  --review-muted: #687077;
+  --review-orange: #e84714;
+  --review-orange-soft: #fff1ea;
+}
+
+/* Compact page introductions remove the repeated empty band below the app header. */
+.admin-workspace .workspace-main,
+.student-workspace .workspace-main {
+  padding-top: 1.25rem !important;
+}
+
+.admin-page-header,
+.student-page-heading {
+  align-items: center;
+  gap: 1.25rem;
+  margin: 0 0 1.1rem !important;
+}
+
+.admin-workspace .admin-page-header h1,
+.student-workspace .student-page-heading h1 {
+  margin: 0 0 .3rem !important;
+  font-size: clamp(1.65rem, 2.4vw, 2.25rem) !important;
+  line-height: 1.08;
+}
+
+.admin-workspace .admin-page-header p,
+.student-workspace .student-page-heading p {
+  margin: 0 !important;
+  max-width: 48rem;
+  color: var(--review-muted) !important;
+  font-size: .88rem !important;
+}
+
+.admin-page-header > .button,
+.admin-page-header > .admin-modal-trigger,
+.admin-page-header > button {
+  flex: 0 0 auto;
+}
+
+.admin-page-header .button svg,
+.admin-page-header button svg,
+.print-actions button svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.admin-page-header .button,
+.admin-page-header button,
+.print-actions button {
+  gap: .45rem;
+}
+
+/* A shared, compact filter bar for coupons, students and orders. */
+.admin-workspace .admin-list-controls {
+  align-items: end !important;
+  gap: .65rem !important;
+  margin: 0 0 .9rem !important;
+  padding: .85rem !important;
+  border: 1px solid var(--review-line);
+  border-radius: .65rem;
+  background: #fff;
+}
+
+.admin-workspace .admin-list-controls label {
+  display: grid;
+  min-width: 0;
+  gap: .35rem;
+}
+
+.admin-workspace .admin-list-controls input,
+.admin-workspace .admin-list-controls select {
+  width: 100%;
+  min-width: 0;
+  height: 2.65rem !important;
+  border-radius: .45rem;
+}
+
+.admin-workspace .admin-list-controls > .button {
+  width: auto !important;
+  min-width: 7.25rem;
+  min-height: 2.65rem !important;
+  padding-inline: 1rem !important;
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.admin-workspace .admin-list-controls > .text-button {
+  align-self: center;
+  min-height: 2.65rem;
+  padding: .72rem .35rem;
+  color: #c83e10;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.coupon-list-controls,
+.student-list-controls {
+  grid-template-columns: minmax(15rem, 1fr) minmax(10rem, .32fr) auto auto !important;
+}
+
+.order-filters {
+  grid-template-columns: minmax(8.5rem, .48fr) minmax(8.5rem, .48fr) minmax(11rem, .65fr) minmax(15rem, 1.15fr) auto !important;
+}
+
+/* Tables stay dense on desktop and become intentionally scrollable before mobile cards. */
+.admin-workspace .admin-card {
+  border-radius: .65rem;
+}
+
+.admin-workspace .admin-table th {
+  padding: .72rem .8rem !important;
+  color: #60676d;
+  font-family: inherit !important;
+  font-size: .72rem !important;
+  letter-spacing: .01em !important;
+  text-transform: none !important;
+  white-space: nowrap;
+}
+
+.admin-workspace .admin-table td {
+  padding: .78rem .8rem !important;
+  font-size: .82rem !important;
+  vertical-align: middle;
+}
+
+.admin-workspace .admin-table td small {
+  color: #777e84;
+  font-size: .72rem !important;
+}
+
+.admin-workspace .admin-table tr.selected-row td {
+  background: #fff8f3 !important;
+}
+
+.reference-student-card .admin-table td:nth-child(2) {
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+}
+
+.reference-student-card .admin-table td:nth-child(3),
+.reference-order-card .admin-table td:nth-child(8) {
+  white-space: nowrap;
+}
+
+.table-pagination:has(nav a:first-child:last-child),
+.table-pagination nav:empty {
+  display: none;
+}
+
+/* Product creation keeps its approved direct material/test selection workflow. */
+.admin-workspace .admin-dialog.dialog-large {
+  width: min(60rem, calc(100vw - 2rem)) !important;
+  max-height: calc(100dvh - 2rem) !important;
+  overflow: hidden !important;
+  background: #fff !important;
+}
+
+.admin-workspace .admin-dialog .dialog-heading {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  flex: 0 0 auto;
+}
+
+.admin-workspace .admin-dialog .dialog-body {
+  min-height: 0;
+  max-height: none !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.product-create-form fieldset {
+  min-width: 0;
+}
+
+.product-create-form .dialog-form-footer {
+  position: sticky;
+  z-index: 4;
+  bottom: -1.4rem;
+  display: flex;
+  justify-content: flex-end;
+  margin: 1rem -1.3rem -1.4rem !important;
+  padding: .9rem 1.3rem !important;
+  border-top: 1px solid var(--review-line);
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 -.7rem 1.5rem rgba(36, 28, 23, .05);
+}
+
+.product-create-form .dialog-form-footer .button {
+  width: auto !important;
+  min-width: 9.5rem;
+}
+
+.product-create-form input[type="file"] {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Order and student details use a centred, restrained dialog-like surface. */
+.admin-detail-backdrop {
+  z-index: 70 !important;
+  background: rgba(24, 22, 20, .42) !important;
+  backdrop-filter: blur(3px) !important;
+}
+
+.admin-side-detail.reference-order-detail {
+  position: fixed !important;
+  z-index: 71 !important;
+  inset: 50% auto auto 50% !important;
+  width: min(46rem, calc(100vw - 2rem)) !important;
+  max-height: calc(100dvh - 2rem) !important;
+  transform: translate(-50%, -50%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--review-line);
+  border-radius: .85rem !important;
+  background: #fff;
+  box-shadow: 0 2rem 6rem rgba(27, 23, 20, .24) !important;
+}
+
+.admin-side-detail.reference-order-detail > header {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  min-height: auto;
+  padding: 1rem 1.15rem !important;
+  border-bottom: 1px solid var(--review-line);
+  background: rgba(255,255,255,.98);
+}
+
+.admin-side-detail.reference-order-detail > header h2 {
+  margin: 0;
+  font-size: 1.12rem !important;
+}
+
+.admin-side-detail.reference-order-detail > header p {
+  margin: .2rem 0 0 !important;
+  color: var(--review-muted);
+}
+
+.admin-side-detail.reference-order-detail .side-detail-section {
+  padding: 1rem 1.15rem !important;
+}
+
+.admin-side-detail.reference-order-detail .side-detail-section + .side-detail-section {
+  border-top: 1px solid #efedea;
+}
+
+.admin-side-detail.reference-order-detail .detail-list > div {
+  padding: .62rem 0;
+}
+
+.admin-side-detail.reference-order-detail .mini-record {
+  min-width: 0;
+}
+
+.admin-side-detail.reference-order-detail .mini-record strong,
+.admin-side-detail.reference-order-detail .detail-list dd {
+  overflow-wrap: anywhere;
+}
+
+.student-side-detail > header > div:first-child {
+  min-width: 0;
+}
+
+.student-side-detail .side-detail-metrics {
+  gap: 0;
+  padding: .8rem 1.15rem;
+  background: var(--review-soft);
+}
+
+.student-side-detail .side-detail-metrics > div {
+  padding: .45rem .8rem;
+}
+
+.student-side-detail .side-detail-metrics > div + div {
+  border-left: 1px solid var(--review-line);
+}
+
+.student-side-detail .side-detail-tabs {
+  position: sticky;
+  z-index: 3;
+  top: 4.65rem;
+  background: #fff;
+}
+
+/* Notifications share the same compact vertical rhythm. */
+.notification-campaigns-card .notification-toolbar {
+  min-height: auto;
+  padding: .8rem .9rem;
+}
+
+.notification-campaigns-card .table-pagination {
+  padding-block: .75rem;
+}
+
+.notification-row-detail {
+  border-radius: .65rem;
+}
+
+/* Invoice has a purpose-built shell; storefront search/cart navigation is not repeated. */
+.invoice-page {
+  min-height: 100vh;
+  max-width: none !important;
+  padding: 0 1.25rem 3rem !important;
+  background: #fff !important;
+}
+
+.invoice-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.5rem;
+  max-width: 70rem;
+  margin: 0 auto 1.25rem;
+  border-bottom: 1px solid var(--review-line);
+}
+
+.invoice-page-header .brand,
+.invoice-page-header .brand-logo-link {
+  width: 188px !important;
+  min-width: 188px !important;
+}
+
+.invoice-page-header .brand-logo {
+  width: 188px !important;
+  height: 34px !important;
+}
+
+.invoice-page .invoice-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .8rem;
+  max-width: none;
+  margin: 0;
+}
+
+.invoice-page .invoice-actions > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: .55rem .75rem;
+  border-radius: .42rem;
+  color: #4d545a;
+  font-weight: 720;
+}
+
+.invoice-page .invoice-actions > a:hover {
+  background: var(--review-orange-soft);
+  color: #c83e10;
+}
+
+.invoice-page .invoice {
+  margin: 0 auto;
+}
+
+@media (max-width: 1000px) {
+  .order-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .order-filters .order-search-field {
+    grid-column: 1 / -1;
+  }
+
+  .coupon-list-controls,
+  .student-list-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(10rem, .4fr) auto auto !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-workspace .workspace-main,
+  .student-workspace .workspace-main {
+    padding-top: 1rem !important;
+  }
+
+  .admin-page-header,
+  .student-page-heading {
+    align-items: stretch !important;
+    flex-direction: column;
+    gap: .8rem;
+  }
+
+  .admin-page-header > .button,
+  .admin-page-header > button {
+    width: 100% !important;
+  }
+
+  .coupon-list-controls,
+  .student-list-controls,
+  .order-filters {
+    grid-template-columns: 1fr !important;
+  }
+
+  .coupon-list-controls > *,
+  .student-list-controls > *,
+  .order-filters > * {
+    grid-column: 1 !important;
+  }
+
+  .admin-workspace .admin-list-controls > .button,
+  .admin-workspace .admin-list-controls > .text-button {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .admin-side-detail.reference-order-detail {
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100dvh;
+    max-height: 100dvh !important;
+    transform: none;
+    border: 0;
+    border-radius: 0 !important;
+  }
+
+  .student-side-detail .side-detail-tabs {
+    top: 4.4rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .student-side-detail .side-detail-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .student-side-detail .side-detail-metrics > div + div {
+    border-top: 1px solid var(--review-line);
+    border-left: 0;
+  }
+
+  .invoice-page {
+    padding: 0 .85rem 2rem !important;
+  }
+
+  .invoice-page-header {
+    align-items: stretch;
+    flex-direction: column;
+    padding: .6rem 0 .9rem;
+  }
+
+  .invoice-page .invoice-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .invoice-page .print-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .invoice-page .print-actions button {
+    min-width: 0;
+  }
+
+  .product-create-form .dialog-form-footer {
+    bottom: -1rem;
+    margin: 1rem -1rem -1rem !important;
+    padding: .8rem 1rem !important;
+  }
+
+  .product-create-form .dialog-form-footer .button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .invoice-page-header .brand,
+  .invoice-page-header .brand-logo-link {
+    width: 177px !important;
+    min-width: 177px !important;
+  }
+
+  .invoice-page-header .brand-logo {
+    width: 177px !important;
+    height: 32px !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .public-header,
+  .workspace-header,
+  .sidebar,
+  .invoice-page-header,
+  .invoice-actions,
+  .print-actions,
+  .public-footer {
+    display: none !important;
+  }
+
+  .invoice-page {
+    min-height: auto;
+    padding: 0 !important;
+  }
+
+  .invoice-page .invoice {
+    width: 100%;
+    max-width: none !important;
+    margin: 0;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .invoice-page .invoice tr,
+  .invoice-page .invoice section {
+    break-inside: avoid;
+  }
+
+  .invoice-page * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

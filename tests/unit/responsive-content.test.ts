@@ -4,6 +4,11 @@ import { describe, expect, it } from "vitest";
 describe("responsive content integrity", () => {
   const css = readFileSync("src/app/styles.css", "utf8");
   const storefrontFixes = readFileSync("src/app/storefront-fixes.css", "utf8");
+  const finalReviewPolish = readFileSync(
+    "src/app/final-review-polish.css",
+    "utf8",
+  );
+  const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
   const orders = readFileSync(
     "src/app/(workspace)/dashboard/orders/page.tsx",
     "utf8",
@@ -84,6 +89,20 @@ describe("responsive content integrity", () => {
     expect(invoicePage).toContain('data-label="Access period"');
     expect(invoicePage).toContain('data-label="Amount"');
     expect(css).toContain(".invoice-page .invoice thead{display:none}");
+    expect(invoicePage).not.toContain("<PublicHeader");
+    expect(invoicePage).toContain("<PrepstoreLogo");
+    expect(finalReviewPolish).toContain(".invoice-page-header");
+    expect(finalReviewPolish).toContain("@media print");
+    expect(finalReviewPolish).toContain(".invoice-page-header,");
+  });
+
+  it("loads the screenshot-review overrides after the shared brand rules", () => {
+    expect(rootLayout.indexOf('import "./brand-system.css"')).toBeLessThan(
+      rootLayout.indexOf('import "./final-review-polish.css"'),
+    );
+    expect(finalReviewPolish).toContain(".admin-workspace .admin-list-controls");
+    expect(finalReviewPolish).toContain(".admin-side-detail.reference-order-detail");
+    expect(finalReviewPolish).toContain(".product-create-form .dialog-form-footer");
   });
 
   it("uses a compact course heading and includes the active view in breadcrumbs", () => {

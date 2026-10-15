@@ -5,6 +5,7 @@ import { formatMoney } from "@/features/commerce/pricing";
 import { getManagedOrder, getManagedOrders } from "@/features/commerce/service";
 import { RefundForm } from "@/features/commerce/ui/refund-form";
 import { AdminModal } from "@/components/admin-modal";
+import { normaliseProductName } from "@/features/catalog/presentation";
 
 type ManagedOrder = {
   id: string;
@@ -145,7 +146,7 @@ export default async function Page({
                     <strong>{order.studentName}</strong>
                     <small>{order.email}</small>
                   </td>
-                  <td>{order.products}</td>
+                  <td>{normaliseProductName(order.products)}</td>
                   <td>
                     {formatMoney(
                       Math.max(0, order.subtotalPaise - order.discountPaise),
@@ -233,7 +234,7 @@ export default async function Page({
               {selected.items.map((item) => (
                 <article className="mini-record" key={item.productId}>
                   <div>
-                    <strong>{item.name}</strong>
+                    <strong>{normaliseProductName(item.name)}</strong>
                     <small>{item.accessDays} days access</small>
                   </div>
                   <b>{formatMoney(item.pricePaise, selected.currency)}</b>

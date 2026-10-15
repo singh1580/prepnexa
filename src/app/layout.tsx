@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./styles.css";
 import "./storefront-fixes.css";
 import "./brand-system.css";
+import "./final-review-polish.css";
 import { AuthHistorySync } from "@/components/auth-history-sync";
 export const metadata: Metadata = {
   title: { default: "Prepstore", template: "%s | Prepstore" },

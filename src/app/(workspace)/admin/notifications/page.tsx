@@ -12,6 +12,7 @@ import {
   NotificationCampaignForm,
   RetryDeliveryButton,
 } from "@/features/operations/ui/admin-actions";
+import { UiIcon } from "@/components/ui-icon";
 
 export const metadata = { title: "Notifications" };
 function SearchIcon() {
@@ -84,7 +85,7 @@ export default async function Page({
             Send announcements to students and review notification delivery.
           </p>
         </div>
-        <AdminModal label="✉ Send notification" title="Send notification">
+        <AdminModal label="Send notification" title="Send notification" icon="send">
           <NotificationCampaignForm products={products} />
         </AdminModal>
       </header>
