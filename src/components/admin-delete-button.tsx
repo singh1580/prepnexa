@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ApiFailure } from "@/lib/http/api-response";
+import { UiIcon } from "./ui-icon";
 
 export function AdminDeleteButton({ endpoint, redirectTo, label, confirmation }: { endpoint: string; redirectTo: string; label: string; confirmation: string }) {
   const router = useRouter();
@@ -19,5 +20,5 @@ export function AdminDeleteButton({ endpoint, redirectTo, label, confirmation }:
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Delete failed."); }
     finally { setBusy(false); }
   }
-  return <div className="delete-action"><button className="button danger" type="button" disabled={busy} onClick={() => void remove()}>{busy ? "Deleting…" : label}</button>{error && <p className="notice danger" role="alert">{error}</p>}</div>;
+  return <div className="delete-action"><button className="button danger icon-action" type="button" disabled={busy} onClick={() => void remove()}><UiIcon name="trash"/>{busy ? "Deleting…" : label}</button>{error && <p className="notice danger" role="alert">{error}</p>}</div>;
 }

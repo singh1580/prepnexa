@@ -2,6 +2,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Field } from "@/features/auth/ui/field";
+import { UiIcon } from "@/components/ui-icon";
 class AdminContentApiError extends Error {
   constructor(public code: string, message: string) { super(message); }
 }
@@ -305,7 +306,7 @@ export function QuestionForm({
                     type="button"
                     onClick={() => removeOption(index)}
                   >
-                    Remove
+                    <UiIcon name="trash" /> Remove
                   </button>
                 )}
               </div>

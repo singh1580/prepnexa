@@ -12,6 +12,14 @@ describe("responsive content integrity", () => {
     "src/app/(workspace)/library/[id]/page.tsx",
     "utf8",
   );
+  const materialContentRoute = readFileSync(
+    "src/app/api/materials/[id]/content/route.ts",
+    "utf8",
+  );
+  const coursePage = readFileSync(
+    "src/app/(workspace)/dashboard/courses/[slug]/page.tsx",
+    "utf8",
+  );
 
   it("keeps product tabs inside their mobile container", () => {
     expect(css).not.toContain(
@@ -40,5 +48,23 @@ describe("responsive content integrity", () => {
     expect(reader).toContain('className="lesson-content reference-reader-content"');
     expect(css).toContain(".reader-heading h1{overflow-wrap:anywhere;word-break:break-word}");
     expect(css).toContain(".reference-reader-content,.material-reader{width:100%;overflow:hidden}");
+  });
+
+  it("allows protected PDFs to render only inside the same-origin reader", () => {
+    expect(materialContentRoute).toContain('"X-Frame-Options": "SAMEORIGIN"');
+    expect(materialContentRoute).toContain("frame-ancestors 'self'");
+    expect(materialContentRoute).not.toContain("default-src 'none'; sandbox");
+  });
+
+  it("uses a compact course heading and includes the active view in breadcrumbs", () => {
+    expect(coursePage).not.toContain('"MY PACKAGE"');
+    expect(coursePage).toContain("<b>{viewLabel}</b>");
+    expect(coursePage).toContain('view==="overview"?"Overview"');
+  });
+
+  it("turns question review rows into mobile cards instead of a wide table", () => {
+    expect(css).not.toContain(".review-table-wrap table{min-width:700px}");
+    expect(css).toContain(".review-row-summary>span:before{content:attr(data-label)");
+    expect(css).toContain(".section-performance-head{display:none}");
   });
 });

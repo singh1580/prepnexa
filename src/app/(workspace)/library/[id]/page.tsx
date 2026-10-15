@@ -6,6 +6,8 @@ import { requireWorkspace } from "@/features/auth/page-access";
 import { getStudentMaterial } from "@/features/materials/service";
 import { AppError } from "@/lib/errors/app-error";
 import { getStudentCourse } from "@/features/student-courses/service";
+import { UiIcon } from "@/components/ui-icon";
+import { normaliseProductName } from "@/features/catalog/presentation";
 
 export default async function Page({
   params,
@@ -41,7 +43,7 @@ export default async function Page({
       activePackageView="materials"
       activeMaterialId={material.id}
     >
-      <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{course?<Link href={courseHref}>{course.name}</Link>:null}<span>›</span>{activeCourseMaterial?<span>{activeCourseMaterial.subject}</span>:null}<span>›</span><b>{material.title}</b></nav>
+      <nav className="student-breadcrumb" aria-label="Breadcrumb"><Link href="/dashboard/courses">My Packages</Link><span>›</span>{course?<Link href={courseHref}>{normaliseProductName(course.name)}</Link>:null}<span>›</span>{activeCourseMaterial?<span>{activeCourseMaterial.subject}</span>:null}<span>›</span><b>{material.title}</b></nav>
       <div className="lesson-content reference-reader-content">
       {material.type === "VIDEO" ? (
         <section className="panel video-lesson">
@@ -57,7 +59,7 @@ export default async function Page({
           </a>
         </section>
       ) : (
-        <section className="material-reader"><header className="reader-heading"><div><i>⌑</i><div><h1>{material.originalFileName??material.title}</h1><p>{material.examName} · {material.type}</p></div></div>{nextMaterial?<Link className="button" href={`/library/${nextMaterial.id}?course=${encodeURIComponent(course?.slug??"")}`}>Next lesson →</Link>:<Link className="button secondary" href={courseHref}>Back to materials</Link>}</header>
+        <section className="material-reader"><header className="reader-heading"><div><i><UiIcon name="document" /></i><div><h1>{material.originalFileName??material.title}</h1><p>{material.examName} · {material.type}</p></div></div>{nextMaterial?<Link className="button" href={`/library/${nextMaterial.id}?course=${encodeURIComponent(course?.slug??"")}`}>Next lesson →</Link>:<Link className="button secondary" href={courseHref}>Back to materials</Link>}</header>
           <div className="panel material-reader-toolbar">
             <div>
               <strong>Secure document viewer</strong><small>{material.sizeBytes?`${(material.sizeBytes/1024/1024).toFixed(2)} MB`:`Version ${material.version}`}</small>

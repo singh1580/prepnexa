@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { UiIcon } from "@/components/ui-icon";
 
 type Item = { id: string; title: string; mode?: string; type?: string };
 export type SellableItems = { tests: Item[]; materials: Item[] };
@@ -31,7 +32,7 @@ function MultiSelect({
       <div className="multiselect-label"><strong>{title}</strong><span>{selected.length ? `${selected.length} selected` : hint}</span></div>
       <div className="multiselect-control">
         <input type="search" value={query} onFocus={() => setOpen(true)} onChange={(event) => { setQuery(event.target.value); setOpen(true); }} placeholder={`Search and select ${title.toLowerCase()}…`} />
-        <button type="button" aria-label={`Show ${title.toLowerCase()}`} onClick={() => setOpen((value) => !value)}>⌄</button>
+        <button type="button" aria-label={`Show ${title.toLowerCase()}`} aria-expanded={open} onClick={() => setOpen((value) => !value)}><UiIcon name="chevron" /></button>
       </div>
       {selected.map((id) => <input key={id} type="hidden" name={field} value={id} />)}
       {open && <div className="multiselect-menu">
@@ -47,7 +48,7 @@ function MultiSelect({
         ))}
         {!visible.length && <p className="muted">{items.length ? "No matching items." : "Nothing available yet."}</p>}
       </div>}
-      {selected.length > 0 && <div className="selected-content-chips">{selected.map((id) => { const item = items.find((candidate) => candidate.id === id); return item ? <span key={id}>{item.title}<button type="button" aria-label={`Remove ${item.title}`} onClick={() => setSelected((current) => current.filter((value) => value !== id))}>×</button></span> : null; })}</div>}
+      {selected.length > 0 && <div className="selected-content-chips">{selected.map((id) => { const item = items.find((candidate) => candidate.id === id); return item ? <span key={id}>{item.title}<button type="button" aria-label={`Remove ${item.title}`} onClick={() => setSelected((current) => current.filter((value) => value !== id))}><UiIcon name="close" /></button></span> : null; })}</div>}
     </section>
   );
 }
