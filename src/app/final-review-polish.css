@@ -50,6 +50,12 @@
     border-bottom: 1px solid var(--review-line) !important;
   }
 
+  /* Continue the student rail through the header itself so its horizontal
+     divider crosses a visible vertical stroke instead of terminating as a T. */
+  .student-workspace .workspace-header {
+    border-left: 1px solid var(--review-line) !important;
+  }
+
   .admin-workspace > .sidebar::before,
   .student-workspace > .sidebar::before {
     content: "";
@@ -188,6 +194,118 @@
     flex: 0 0 auto;
     min-width: 6.5rem !important;
     padding-inline: .55rem !important;
+  }
+}
+
+/* Home shelves become swipeable two-card rails on phones. This keeps larger
+   catalogues short without shrinking the desktop cards or auto-scrolling
+   content away from the user. */
+@media (max-width: 560px) {
+  .store-home .featured-store-grid,
+  .store-home .compact-store-grid {
+    display: grid !important;
+    grid-template-columns: none !important;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, calc((100% - .65rem) / 2));
+    gap: .65rem !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: .1rem 0 .55rem;
+    scroll-padding-inline: .1rem;
+    scroll-snap-type: inline mandatory;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .store-home .featured-store-grid::-webkit-scrollbar,
+  .store-home .compact-store-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .store-home .featured-store-grid:has(> article:only-child),
+  .store-home .compact-store-grid:has(> article:only-child) {
+    grid-auto-columns: 100%;
+  }
+
+  .store-home .featured-store-grid > .store-product-card,
+  .store-home .compact-store-grid > .store-product-card {
+    width: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .store-home .store-product-cover,
+  .store-home .store-product-compact .store-product-cover {
+    height: 7rem;
+    padding: .65rem;
+  }
+
+  .store-home .store-product-body,
+  .store-home .store-product-compact .store-product-body {
+    padding: .6rem;
+  }
+
+  .store-home .store-content-counts {
+    gap: .25rem;
+    font-size: .55rem;
+  }
+
+  .store-home .store-content-counts span {
+    gap: .2rem;
+  }
+
+  .store-home .store-content-counts svg {
+    width: .7rem;
+  }
+
+  .store-home .store-product-title,
+  .store-home .store-product-compact .store-product-title {
+    display: -webkit-box;
+    min-height: 2.2rem;
+    margin: .5rem 0 .3rem;
+    overflow: hidden;
+    font-size: .76rem;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .store-home .store-product-body > p {
+    display: none;
+  }
+
+  .store-home .store-product-facts {
+    grid-template-columns: 1fr;
+    gap: .25rem;
+    margin: .35rem 0;
+    font-size: .56rem;
+  }
+
+  .store-home .store-price-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: .25rem .35rem;
+    margin-top: .45rem;
+  }
+
+  .store-home .store-price-row strong,
+  .store-home .store-product-compact .store-price-row strong {
+    width: 100%;
+    font-size: .86rem;
+  }
+
+  .store-home .store-card-actions {
+    grid-template-columns: 1fr;
+    gap: .35rem;
+    margin-top: .55rem;
+  }
+
+  .store-home .store-outline-action,
+  .store-home .store-cart-action {
+    min-height: 2.15rem;
+    padding: .4rem .3rem;
+    font-size: .62rem;
   }
 }
 
