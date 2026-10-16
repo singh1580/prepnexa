@@ -680,7 +680,7 @@
 
   .workspace-mobile-menu[open] > .mobile-drawer-backdrop {
     position: fixed;
-    z-index: 99;
+    z-index: 208;
     inset: 0;
     display: block;
     width: 100%;
@@ -692,6 +692,7 @@
   }
 
   .workspace-mobile-drawer {
+    z-index: 209;
     top: 0;
     bottom: 0;
     left: 0;
@@ -708,7 +709,7 @@
 
   .workspace-mobile-menu[open] > summary {
     position: fixed !important;
-    z-index: 103;
+    z-index: 210;
     top: 12px;
     right: auto;
     left: calc(var(--workspace-drawer-width) - 58px);
