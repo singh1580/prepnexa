@@ -14,6 +14,13 @@
    continuous divider. Grid rows in the student rail must not stretch simply
    because the navigation owns the remaining viewport height. */
 @media (min-width: 1024px) {
+  /* The student layout previously reserved a 14rem track for a sidebar whose
+     enforced minimum width is 240px. That overflow shifted the visible sidebar
+     divider away from the header boundary. Keep the grid track and rail equal. */
+  .student-workspace.workspace {
+    grid-template-columns: minmax(240px, 256px) minmax(0, 1fr) !important;
+  }
+
   /* The legacy header grid inherited `space-between`, which spread the bell,
      profile and sign-out controls across all remaining desktop space. Keep the
      search flexible, then treat the three account actions as one compact rail. */
