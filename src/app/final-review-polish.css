@@ -334,54 +334,9 @@
 }
 
 @media (max-width: 560px) {
-  .public-site .store-hero {
-    min-height: 19.5rem !important;
-    background: #f8eee7 !important;
-  }
-
-  .public-site .store-hero::after {
-    display: block !important;
-    background: linear-gradient(90deg, #fbf8f3 0%, rgba(251,248,243,.96) 33%, rgba(251,248,243,.68) 50%, rgba(251,248,243,0) 72%) !important;
-  }
-
-  .public-site .store-hero-image {
-    object-position: 63% center !important;
-  }
-
-  .public-site .store-hero-content {
-    min-height: 19.5rem;
-    padding: 1.15rem 1rem 4rem !important;
-  }
-
   .public-site .store-hero-content > span {
     font-size: .62rem;
     font-weight: 720;
-  }
-
-  .public-site .store-hero h1 {
-    max-width: 48%;
-    margin: .55rem 0 .6rem;
-    font-size: clamp(1.45rem, 6.4vw, 1.7rem) !important;
-    line-height: .98;
-  }
-
-  .public-site .store-hero-content > p {
-    max-width: 49%;
-    color: #4f555a;
-    font-size: .72rem !important;
-    line-height: 1.38;
-  }
-
-  .public-site .hero-search {
-    right: 1rem;
-    bottom: .8rem;
-    left: 1rem;
-    height: 2.7rem;
-  }
-
-  .public-site .hero-search input,
-  .public-site .hero-search button {
-    height: 2.7rem !important;
   }
 
   .store-home .store-shelf {
@@ -998,6 +953,192 @@
   .all-packages-page .reference-catalog-grid .store-product-catalog .store-product-cover {
     height: 9.75rem !important;
     min-height: 9.75rem !important;
+  }
+}
+
+/* Storefront visual contract: one predictable hero, search and shelf-card
+   layout. These selectors deliberately live at the end of the final polish
+   layer so legacy responsive rules cannot partially restyle the components. */
+.public-site .hero-search:focus-within {
+  border-radius: .48rem;
+  box-shadow: 0 0 0 2px rgba(232, 71, 20, .22);
+}
+
+.public-site .hero-search input:focus,
+.public-site .hero-search input:focus-visible {
+  outline: 0;
+}
+
+@media (min-width: 561px) {
+  .store-home .featured-store-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .store-home .store-product-featured .store-product-cover {
+    aspect-ratio: 16 / 7;
+    height: auto;
+    min-height: 9.5rem;
+  }
+
+  .store-home .store-product-featured .store-product-body {
+    padding: .72rem;
+  }
+
+  .store-home .store-product-featured .store-product-body > p {
+    min-height: 1.95rem;
+    margin-bottom: .5rem;
+  }
+
+  .store-home .store-product-featured .store-product-facts,
+  .store-home .store-product-featured .store-price-row {
+    margin-top: .45rem;
+  }
+
+  .store-home .store-product-featured .store-card-actions {
+    margin-top: .6rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .public-site .store-hero {
+    min-height: 18rem !important;
+    background: #f8eee7 !important;
+  }
+
+  .public-site .store-hero::after {
+    display: none !important;
+  }
+
+  .public-site .store-hero-image {
+    object-fit: cover !important;
+    object-position: 65% center !important;
+    filter: none !important;
+  }
+
+  .public-site .store-hero-content {
+    width: 100%;
+    min-height: 18rem;
+    padding: 1rem 1rem 3.65rem !important;
+  }
+
+  .public-site .store-hero h1 {
+    max-width: 52%;
+    margin: .48rem 0 .52rem;
+    font-size: clamp(1.42rem, 6.2vw, 1.68rem) !important;
+    line-height: 1;
+  }
+
+  .public-site .store-hero-content > p {
+    max-width: 52%;
+    font-size: .7rem !important;
+    line-height: 1.38;
+  }
+
+  .public-site .hero-search {
+    right: 1rem;
+    bottom: .72rem;
+    left: 1rem;
+    grid-template-columns: minmax(0, 1fr) 5.25rem !important;
+    height: 2.65rem;
+    overflow: hidden;
+    border: 1px solid #ded8d2;
+    border-radius: .48rem;
+    background: #fff;
+    filter: none;
+  }
+
+  .public-site .hero-search svg {
+    left: .9rem;
+  }
+
+  .public-site .hero-search input,
+  .public-site .hero-search button {
+    height: 100% !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .public-site .hero-search input {
+    padding-left: 2.45rem;
+    font-size: .7rem;
+  }
+
+  .public-site .hero-search button {
+    min-width: 0;
+    padding-inline: .55rem;
+    font-size: .7rem;
+  }
+
+  .store-home .featured-store-grid,
+  .store-home .compact-store-grid {
+    grid-auto-columns: minmax(9.55rem, calc((100% - .65rem) / 2));
+    align-items: stretch;
+  }
+
+  .store-home .store-product-card {
+    border-radius: .62rem;
+    box-shadow: 0 .25rem .9rem rgba(37, 27, 20, .06);
+  }
+
+  .store-home .store-product-cover,
+  .store-home .store-product-compact .store-product-cover {
+    aspect-ratio: 4 / 3;
+    height: auto !important;
+    min-height: 0;
+    padding: .58rem;
+    background-position: center !important;
+  }
+
+  .store-home .store-product-body,
+  .store-home .store-product-compact .store-product-body {
+    padding: .58rem;
+  }
+
+  .store-home .store-content-counts {
+    gap: .32rem;
+    padding-bottom: .42rem;
+    font-size: .54rem;
+  }
+
+  .store-home .store-product-title,
+  .store-home .store-product-compact .store-product-title {
+    min-height: 2rem;
+    margin: .45rem 0 .3rem;
+    font-size: .73rem;
+    line-height: 1.32;
+  }
+
+  .store-home .store-product-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .2rem;
+    margin: .28rem 0;
+    font-size: .54rem;
+  }
+
+  .store-home .store-price-row {
+    gap: .22rem .35rem;
+    margin-top: .38rem;
+    padding-top: .2rem;
+  }
+
+  .store-home .store-price-row strong,
+  .store-home .store-product-compact .store-price-row strong {
+    width: auto;
+    font-size: .84rem;
+  }
+
+  .store-home .store-card-actions {
+    gap: .32rem;
+    margin-top: .48rem;
+  }
+
+  .store-home .store-outline-action,
+  .store-home .store-cart-action {
+    min-height: 2rem;
+    padding: .35rem .22rem;
+    font-size: .59rem;
   }
 }
 
