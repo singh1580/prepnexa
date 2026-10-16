@@ -821,3 +821,29 @@
     animation: none;
   }
 }
+
+/* Support ownership: admin tickets always expose a clear management action. */
+.admin-support-split .admin-table {
+  min-width: 820px;
+}
+
+.support-view-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.1rem;
+  padding: 0.42rem 0.68rem;
+  border: 1px solid #e94b17;
+  border-radius: 0.38rem;
+  color: #d94110;
+  font-size: 0.7rem;
+  font-weight: 750;
+  white-space: nowrap;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.support-view-action:hover,
+.support-view-action:focus-visible {
+  background: #e94b17;
+  color: #fff;
+}

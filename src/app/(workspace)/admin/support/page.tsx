@@ -109,6 +109,7 @@ export default async function Page({
                     <th>Order</th>
                     <th>Status</th>
                     <th>Updated</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,6 +154,15 @@ export default async function Page({
                           dateStyle: "medium",
                           timeStyle: "short",
                         })}
+                      </td>
+                      <td>
+                        <Link
+                          className="support-view-action"
+                          href={`/admin/support/${ticket.id}`}
+                          aria-label={`View support ticket ${ticket.subject}`}
+                        >
+                          View ticket
+                        </Link>
                       </td>
                     </tr>
                   ))}

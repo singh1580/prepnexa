@@ -281,18 +281,6 @@ export async function insertStudentSupportReply(ticketId: string, userId: string
   return rows<{ id: string }>(result)[0];
 }
 
-export async function resolveOwnedSupportTicket(ticketId:string,userId:string,requestId:string){
-  const[ticket]=await db.select({id:supportTickets.id,status:supportTickets.status}).from(supportTickets).where(and(eq(supportTickets.id,ticketId),eq(supportTickets.userId,userId))).limit(1);
-  if(!ticket)return undefined;
-  if(ticket.status==="RESOLVED"||ticket.status==="CLOSED")return ticket;
-  const now=new Date();
-  await db.batch([
-    db.update(supportTickets).set({status:"RESOLVED",resolvedAt:now,updatedAt:now}).where(and(eq(supportTickets.id,ticketId),eq(supportTickets.userId,userId))),
-    db.insert(auditLogs).values({actorUserId:userId,action:"support.student_resolved",entityType:"support_ticket",entityId:ticketId,requestId,before:{status:ticket.status},after:{status:"RESOLVED"}}),
-  ]);
-  return{id:ticketId,status:"RESOLVED" as const};
-}
-
 export async function findSupportAttachment(messageId: string, userId: string, canManage: boolean) {
   const result = await db.execute(sql`
     select m.attachment_object_key as "objectKey",m.attachment_file_name as "fileName",m.attachment_content_type as "contentType"
