@@ -66,6 +66,10 @@ describe("responsive content integrity", () => {
     "src/features/account/account-actions.tsx",
     "utf8",
   );
+  const packagesPage = readFileSync(
+    "src/app/(public)/packages/page.tsx",
+    "utf8",
+  );
 
   it("keeps product tabs inside their mobile container", () => {
     expect(css).not.toContain(
@@ -186,6 +190,26 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(
       ".store-home .store-product-compact .store-product-title",
     );
+  });
+
+  it("uses a compact mobile catalogue disclosure and bounded product covers", () => {
+    expect(packagesPage).toContain('className="catalog-filter-disclosure"');
+    expect(packagesPage).toContain("activeFilterCount");
+    expect(packagesPage).not.toContain("<span>⌃</span>");
+    expect(finalReviewPolish).toContain(
+      ".catalog-filter-disclosure > summary",
+    );
+    expect(finalReviewPolish).toContain(
+      "grid-template-columns: 7.5rem minmax(0, 1fr) !important",
+    );
+    expect(finalReviewPolish).toContain("height: 8.5rem !important");
+  });
+
+  it("keeps mobile hero copy clear of the subject and strengthens owned actions", () => {
+    expect(finalReviewPolish).toContain("object-position: 63% center !important");
+    expect(finalReviewPolish).toContain("max-width: 48%");
+    expect(finalReviewPolish).toContain(".store-home .store-owned-action");
+    expect(finalReviewPolish).toContain("background: #c73c0b");
   });
 
   it("keeps admin header account actions in a compact right-side group", () => {
