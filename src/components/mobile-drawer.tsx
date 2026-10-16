@@ -12,15 +12,13 @@ import {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-function MenuIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m6 6 12 12M18 6 6 18" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 7h16M4 12h16M4 17h16" />
-    </svg>
+function MenuIcon() {
+  return (
+    <span className="menu-icon-3d" aria-hidden="true">
+      <i className="menu-icon-bar menu-icon-bar-top" />
+      <i className="menu-icon-bar menu-icon-bar-middle" />
+      <i className="menu-icon-bar menu-icon-bar-bottom" />
+    </span>
   );
 }
 
@@ -98,7 +96,7 @@ export function MobileDrawer({
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary aria-label={open ? "Close navigation" : label}>
-        <MenuIcon open={open} />
+        <MenuIcon />
       </summary>
       <button
         className="mobile-drawer-backdrop"
