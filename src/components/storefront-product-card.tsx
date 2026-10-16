@@ -35,7 +35,7 @@ export function StorefrontProductCard({product,index=0,variant="catalog",badge}:
       {badge?<span className="store-badge">{badge}</span>:null}<span className="cover-title"><b>{productName.replace(/\bpackage\b/ig,"").trim()}</b><small>Complete Package</small></span>
     </Link>
     <div className="store-product-body">
-      <div className="store-content-counts"><span><FileIcon/>{formatCount(product.materialCount,"material")}</span><span><TestIcon/>{formatCount(product.testCount,"test")}</span></div>
+      {variant==="catalog"?<div className="store-content-counts"><span><FileIcon/>{formatCount(product.materialCount,"material")}</span><span><TestIcon/>{formatCount(product.testCount,"test")}</span></div>:null}
       <Link className="store-product-title" href={`/packages/${product.slug}`}>{productName}</Link>
       {variant!=="compact"?<div className="store-product-facts"><span><UiIcon name="language"/>{product.language==="BILINGUAL"?"English & Hindi":product.language.toLowerCase().replace(/^./,letter=>letter.toUpperCase())}</span><span><ClockIcon/>{formatAccessDuration(product.accessDays)} access</span></div>:null}
       <div className="store-price-row"><strong>{price(product.pricePaise)}</strong>{product.mrpPaise&&product.mrpPaise>product.pricePaise?<del>{price(product.mrpPaise)}</del>:null}{discount>0?<span>{discount}% off</span>:null}</div>
