@@ -10,7 +10,7 @@
 .owned-package-actions>span{display:flex;align-items:center;justify-content:center;min-height:3rem;border:1px solid #b9ddc4;border-radius:.4rem;background:#effaf2;color:#27733e;font-size:.76rem;font-weight:800}
 .checkout-brand-heading{position:relative;margin-bottom:1.5rem;padding:1.45rem 1.6rem;border:1px solid #ece4dc;border-radius:.75rem;background:linear-gradient(110deg,#fff 0%,#fff8f3 100%)}
 .checkout-brand-heading>span{display:flex;align-items:center;gap:.55rem;color:#d94412;font-size:.65rem;font-weight:850;letter-spacing:.1em}
-.checkout-brand-heading>span i{display:grid;place-items:center;width:1.75rem;height:1.75rem;border-radius:.42rem;background:#eb4b17;color:#fff;font-size:.58rem;font-style:normal;letter-spacing:0}
+.checkout-brand-heading .checkout-brand-icon{display:block;width:1.75rem;height:1.75rem;flex:0 0 1.75rem;object-fit:contain}
 .checkout-brand-heading h1{margin:.65rem 0 .25rem}
 .checkout-brand-heading ol{display:flex;align-items:center;gap:0;margin:1.25rem 0 0;padding:0;list-style:none}
 .checkout-brand-heading li{position:relative;display:flex;align-items:center;min-width:8rem;color:#92979c;font-size:.7rem;font-weight:750}

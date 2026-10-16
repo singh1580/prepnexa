@@ -5,6 +5,7 @@ import { requireWorkspace } from "@/features/auth/page-access";
 import { getStudentSupportTicket } from "@/features/operations/service";
 import { SupportReplyForm } from "@/features/operations/ui/student-actions";
 import { AppError } from "@/lib/errors/app-error";
+import { PrepstoreIcon } from "@/components/brand";
 
 export const metadata = { title: "Support ticket" };
 export default async function Page({
@@ -34,7 +35,7 @@ export default async function Page({
             }
             key={item.id}
           >
-            <i className="thread-avatar">{item.mine?auth.user.name.slice(0,2).toUpperCase():"PS"}</i><div><header><strong>{item.mine?auth.user.name:"Prepstore Support"}</strong><small>{new Date(item.createdAt).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})}</small></header><p>{item.body}</p>{item.attachmentObjectKey && <a className="message-attachment" href={`/api/operations/support/messages/${item.id}/attachment`} target="_blank" rel="noreferrer">▧ <span>{item.attachmentFileName ?? "Open attachment"}</span></a>}</div>
+            <i className={`thread-avatar${item.mine?"":" support-brand-avatar"}`}>{item.mine?auth.user.name.slice(0,2).toUpperCase():<PrepstoreIcon/>}</i><div><header><strong>{item.mine?auth.user.name:"Prepstore Support"}</strong><small>{new Date(item.createdAt).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})}</small></header><p>{item.body}</p>{item.attachmentObjectKey && <a className="message-attachment" href={`/api/operations/support/messages/${item.id}/attachment`} target="_blank" rel="noreferrer">▧ <span>{item.attachmentFileName ?? "Open attachment"}</span></a>}</div>
           </article>
         ))}
       </div>
