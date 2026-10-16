@@ -235,8 +235,15 @@ describe("responsive content integrity", () => {
   });
 
   it("keeps mobile hero copy clear of the subject and strengthens owned actions", () => {
-    expect(finalReviewPolish).toContain("object-position: 63% center !important");
-    expect(finalReviewPolish).toContain("max-width: 48%");
+    expect(finalReviewPolish).toContain("object-position: 65% center !important");
+    expect(finalReviewPolish).toContain("max-width: 52%");
+    expect(finalReviewPolish).toContain(
+      ".public-site .hero-search:focus-within",
+    );
+    expect(finalReviewPolish).toContain(
+      ".public-site .hero-search input:focus-visible",
+    );
+    expect(finalReviewPolish).toContain("aspect-ratio: 4 / 3");
     expect(finalReviewPolish).toContain(".store-home .store-owned-action");
     expect(finalReviewPolish).toContain("background: #c73c0b");
   });
