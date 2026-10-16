@@ -33,9 +33,27 @@ describe("Prepstore shared brand asset", () => {
 
   it("is rendered through the shared image-backed component", () => {
     expect(component).toContain('src="/brand/prepstore-logo.svg"');
+    expect(component).toContain('src="/prepstore-icon.svg"');
     expect(component).toContain("width={728}");
     expect(component).toContain("height={160}");
     expect(component).not.toContain('className="brand-mark"');
     expect(component).not.toContain('className="brand-word"');
+  });
+
+  it("does not recreate the supplied brand mark in commerce and support surfaces", () => {
+    const sources = [
+      "src/features/commerce/ui/cart-workflow.tsx",
+      "src/features/commerce/ui/razorpay-payment.tsx",
+      "src/app/(workspace)/invoice/[id]/page.tsx",
+      "src/app/(workspace)/dashboard/orders/[id]/page.tsx",
+      "src/app/(workspace)/dashboard/support/[id]/page.tsx",
+    ]
+      .map((path) => readFileSync(path, "utf8"))
+      .join("\n");
+
+    expect(sources).not.toContain("prepstore-checkout-mark.svg");
+    expect(sources).not.toMatch(/>PS<|Prep<span>store<\/span>/);
+    expect(sources).toContain("PrepstoreIcon");
+    expect(sources).toContain("PrepstoreLogo");
   });
 });

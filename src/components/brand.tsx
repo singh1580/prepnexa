@@ -21,4 +21,17 @@ export function PrepstoreLogo() {
   );
 }
 
+export function PrepstoreIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      className={className}
+      src="/prepstore-icon.svg"
+      alt=""
+      width={148}
+      height={148}
+      aria-hidden="true"
+    />
+  );
+}
+
 export const Brand = PrepstoreLogo;
