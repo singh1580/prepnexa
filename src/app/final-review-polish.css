@@ -238,12 +238,13 @@
   }
 
   .store-home .store-shelf > header h2 {
-    font-size: 1.45rem;
+    font-size: 1.25rem;
+    white-space: nowrap;
   }
 
   .store-home .store-shelf > header a {
     flex: 0 0 auto;
-    font-size: .7rem;
+    font-size: .64rem;
   }
 
 
@@ -875,14 +876,14 @@
 
   .public-site .hero-handwriting {
     display: block !important;
-    top: .8rem !important;
-    right: .72rem !important;
+    top: 1rem !important;
+    right: 1.7rem !important;
     left: auto !important;
     max-width: 5.4rem;
     font-size: .68rem !important;
     line-height: 1.35;
     text-align: center;
-    transform: rotate(-5deg);
+    transform: rotate(-9deg);
   }
 
   .public-site .hero-handwriting i {
@@ -936,7 +937,7 @@
     grid-template-columns: none !important;
     grid-auto-flow: column;
     grid-auto-columns: minmax(0, calc((100% - .65rem) / 2));
-    align-items: start !important;
+    align-items: stretch !important;
     gap: .65rem !important;
     overflow-x: auto;
     overflow-y: hidden;
@@ -957,32 +958,36 @@
 
   .store-home .featured-store-grid > .store-product-card,
   .store-home .compact-store-grid > .store-product-card {
-    display: block !important;
+    display: flex !important;
     width: 100%;
-    height: auto !important;
+    height: 100% !important;
+    flex-direction: column;
     scroll-snap-align: start;
   }
 
   .store-home .store-product-cover,
   .store-home .store-product-compact .store-product-cover {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 10;
     height: auto !important;
   }
 
   .store-home .store-product-body,
   .store-home .store-product-compact .store-product-body {
-    display: block !important;
-    padding: .55rem;
+    display: grid !important;
+    flex: 1;
+    grid-template-rows: auto auto auto;
+    align-content: start;
+    padding: .5rem;
   }
 
   .store-home .store-product-title,
   .store-home .store-product-compact .store-product-title {
     display: -webkit-box;
-    min-height: 1.9rem;
-    margin: .42rem 0 .28rem;
+    min-height: 1.68rem;
+    margin: 0 0 .2rem;
     overflow: hidden;
-    font-size: .7rem;
-    line-height: 1.3;
+    font-size: .68rem;
+    line-height: 1.24;
     white-space: normal;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -990,19 +995,43 @@
 
   .store-home .store-product-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: .25rem 0;
-    font-size: .52rem;
+    gap: .16rem;
+    margin: .12rem 0 .2rem;
+    font-size: .5rem;
   }
 
   .store-home .store-price-row {
-    margin-top: .32rem !important;
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-items: center;
+    gap: .16rem .28rem;
+    margin-top: .2rem !important;
     padding-top: 0;
+  }
+
+  .store-home .store-price-row strong,
+  .store-home .store-product-compact .store-price-row strong {
+    width: auto;
+    font-size: .82rem;
+    white-space: nowrap;
+  }
+
+  .store-home .store-price-row del {
+    font-size: .56rem;
+    white-space: nowrap;
+  }
+
+  .store-home .store-price-row > span {
+    justify-self: end;
+    padding: .14rem .25rem;
+    font-size: .52rem;
+    white-space: nowrap;
   }
 
   .store-home .store-card-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: .28rem;
-    margin-top: .42rem;
+    margin-top: .35rem;
   }
 
   .store-home .store-outline-action,
@@ -1026,7 +1055,7 @@
     display: grid !important;
     grid-template-columns: none !important;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(15rem, 82%);
+    grid-auto-columns: minmax(14rem, 76%);
     gap: .75rem;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1056,6 +1085,48 @@
   .reference-related .store-card-actions,
   .cart-recommendations .store-card-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Package detail sections size to their real content. The former fixed panel
+   height and page bottom padding created empty bands and duplicate dividers. */
+.product-reference-page {
+  padding-bottom: 1.5rem;
+}
+
+.reference-product-panel {
+  min-height: 0;
+  padding: 1.25rem 0;
+  border-bottom: 0;
+}
+
+.reference-product-panel > section > :last-child {
+  margin-bottom: 0;
+}
+
+.reference-related {
+  margin-top: .35rem;
+  padding: 1.25rem 0 .5rem;
+  border-top: 1px solid var(--review-line);
+}
+
+@media (max-width: 560px) {
+  .store-home .store-shelf {
+    padding-top: 1.05rem;
+    padding-bottom: .2rem;
+  }
+
+  .store-home .compact-shelf {
+    padding-top: .75rem;
+  }
+
+  .reference-product-panel {
+    padding: 1.05rem 0 .9rem;
+  }
+
+  .reference-related {
+    margin-top: .2rem;
+    padding-top: 1rem;
   }
 }
 
