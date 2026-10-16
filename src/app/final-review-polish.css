@@ -316,6 +316,382 @@
   }
 }
 
+/* Final mobile storefront contract. Older responsive layers used incompatible
+   hero crops, expanded every catalogue filter and stretched catalogue covers
+   to the full card height. Keep this layer authoritative and component-scoped. */
+.catalog-filter-disclosure {
+  min-width: 0;
+}
+
+.catalog-filter-disclosure > summary {
+  display: none;
+}
+
+@media (min-width: 801px) {
+  .catalog-filter-disclosure:not([open]) > .catalog-sidebar {
+    display: block;
+  }
+}
+
+@media (max-width: 560px) {
+  .public-site .store-hero {
+    min-height: 19.5rem !important;
+    background: #f8eee7 !important;
+  }
+
+  .public-site .store-hero::after {
+    display: block !important;
+    background: linear-gradient(90deg, #fbf8f3 0%, rgba(251,248,243,.96) 33%, rgba(251,248,243,.68) 50%, rgba(251,248,243,0) 72%) !important;
+  }
+
+  .public-site .store-hero-image {
+    object-position: 63% center !important;
+  }
+
+  .public-site .store-hero-content {
+    min-height: 19.5rem;
+    padding: 1.15rem 1rem 4rem !important;
+  }
+
+  .public-site .store-hero-content > span {
+    font-size: .62rem;
+    font-weight: 720;
+  }
+
+  .public-site .store-hero h1 {
+    max-width: 48%;
+    margin: .55rem 0 .6rem;
+    font-size: clamp(1.45rem, 6.4vw, 1.7rem) !important;
+    line-height: .98;
+  }
+
+  .public-site .store-hero-content > p {
+    max-width: 49%;
+    color: #4f555a;
+    font-size: .72rem !important;
+    line-height: 1.38;
+  }
+
+  .public-site .hero-search {
+    right: 1rem;
+    bottom: .8rem;
+    left: 1rem;
+    height: 2.7rem;
+  }
+
+  .public-site .hero-search input,
+  .public-site .hero-search button {
+    height: 2.7rem !important;
+  }
+
+  .store-home .store-shelf {
+    padding-inline: 1rem;
+  }
+
+  .store-home .store-shelf > header {
+    align-items: center;
+    gap: .75rem;
+  }
+
+  .store-home .store-shelf > header h2 {
+    font-size: 1.45rem;
+  }
+
+  .store-home .store-shelf > header a {
+    flex: 0 0 auto;
+    font-size: .7rem;
+  }
+
+  .store-home .featured-store-grid,
+  .store-home .compact-store-grid {
+    grid-auto-columns: minmax(9.5rem, calc((100% - .7rem) / 2));
+    gap: .7rem !important;
+  }
+
+  .store-home .store-product-card {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+
+  .store-home .store-product-cover,
+  .store-home .store-product-compact .store-product-cover {
+    height: 7.6rem;
+  }
+
+  .store-home .store-product-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .store-home .store-content-counts {
+    font-size: .6rem;
+  }
+
+  .store-home .store-product-title,
+  .store-home .store-product-compact .store-product-title {
+    min-height: 2.25rem;
+    font-size: .78rem;
+  }
+
+  .store-home .store-product-facts {
+    font-size: .6rem;
+  }
+
+  .store-home .store-price-row {
+    margin-top: auto;
+    padding-top: .45rem;
+  }
+
+  .store-home .store-outline-action,
+  .store-home .store-cart-action {
+    min-height: 2.25rem;
+    font-size: .66rem;
+  }
+
+  .store-home .store-owned-action {
+    border-color: #c73c0b;
+    background: #c73c0b;
+    color: #fff;
+  }
+
+  .all-packages-page {
+    padding: .8rem 1rem 2.5rem !important;
+  }
+
+  .all-packages-page .store-breadcrumb {
+    margin-bottom: .85rem;
+  }
+
+  .all-packages-heading {
+    gap: .85rem;
+    margin-bottom: 1rem;
+  }
+
+  .all-packages-heading h1 {
+    font-size: 1.75rem !important;
+  }
+
+  .all-packages-heading p {
+    margin-top: .25rem;
+    font-size: .76rem;
+  }
+
+  .all-packages-page .catalog-sort {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .5rem;
+  }
+
+  .all-packages-page .catalog-sort > span {
+    color: #6b7176;
+    font-size: .7rem;
+  }
+
+  .all-packages-page .catalog-sort label {
+    height: 2.65rem;
+    padding-left: .8rem;
+  }
+
+  .all-packages-page .catalog-browser {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .85rem;
+  }
+
+  .catalog-filter-disclosure > summary {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: .55rem;
+    padding: .65rem .8rem;
+    border: 1px solid #ddd9d4;
+    border-radius: .5rem;
+    background: #fff;
+    color: #25282b;
+    cursor: pointer;
+    font-size: .78rem;
+    font-weight: 760;
+    list-style: none;
+  }
+
+  .catalog-filter-disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .catalog-filter-disclosure > summary svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: #d74312;
+    stroke-linecap: round;
+    stroke-width: 1.8;
+  }
+
+  .catalog-filter-disclosure > summary b {
+    display: grid;
+    width: 1.2rem;
+    height: 1.2rem;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff0e9;
+    color: #c83d0b;
+    font-size: .62rem;
+  }
+
+  .catalog-filter-disclosure > summary i {
+    width: .5rem;
+    height: .5rem;
+    margin-left: auto;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform .16s ease;
+  }
+
+  .catalog-filter-disclosure[open] > summary i {
+    transform: rotate(225deg) translate(-1px, -1px);
+  }
+
+  .catalog-filter-disclosure[open] > summary {
+    border-color: #efb29b;
+    background: #fffaf7;
+  }
+
+  .catalog-filter-disclosure .catalog-sidebar {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-top: .55rem;
+    overflow: hidden;
+    border-radius: .5rem;
+  }
+
+  .catalog-filter-disclosure .catalog-filter-group {
+    padding: .8rem .9rem;
+  }
+
+  .catalog-filter-disclosure .catalog-filter-group legend {
+    margin-bottom: .4rem;
+    font-size: .78rem;
+  }
+
+  .catalog-filter-disclosure .catalog-filter-group label {
+    min-height: 1.7rem;
+    font-size: .72rem;
+  }
+
+  .reference-catalog-grid {
+    gap: .75rem !important;
+  }
+
+  .reference-catalog-grid .store-product-catalog {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr) !important;
+    align-items: start;
+    padding: .65rem;
+    border-radius: .6rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-product-cover {
+    width: 7.5rem;
+    height: 8.5rem !important;
+    min-height: 8.5rem !important;
+    align-self: start;
+    padding: .7rem;
+    border-radius: .4rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .cover-title {
+    width: 100%;
+  }
+
+  .reference-catalog-grid .store-product-catalog .cover-title b {
+    font-size: 1rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-product-body {
+    min-width: 0;
+    padding: 0 0 0 .75rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-product-title {
+    margin: .55rem 0 .25rem;
+    font-size: .88rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-product-body > p {
+    min-height: 0;
+    margin-bottom: .45rem;
+    font-size: .68rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-product-facts {
+    grid-template-columns: 1fr;
+    gap: .28rem;
+    margin: .4rem 0;
+    font-size: .64rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-price-row {
+    flex-wrap: wrap;
+    gap: .3rem .45rem;
+    margin-top: .45rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-card-actions {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+    gap: .45rem;
+    margin-top: .65rem;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-outline-action,
+  .reference-catalog-grid .store-product-catalog .store-cart-action {
+    min-height: 2.35rem;
+    font-size: .68rem;
+  }
+
+  .public-site .public-footer {
+    gap: 1.4rem !important;
+    padding: 2rem 1.25rem 1rem !important;
+  }
+
+  .public-site .public-footer nav {
+    gap: 1.35rem 1rem !important;
+  }
+
+  .public-site .public-footer nav div {
+    gap: .5rem;
+  }
+
+  .public-site .public-footer > small {
+    margin-top: .25rem;
+  }
+}
+
+@media (max-width: 370px) {
+  .public-site .store-hero h1,
+  .public-site .store-hero-content > p {
+    max-width: 46%;
+  }
+
+  .reference-catalog-grid .store-product-catalog {
+    grid-template-columns: 6.65rem minmax(0, 1fr) !important;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-product-cover {
+    width: 6.65rem;
+    height: 8rem !important;
+    min-height: 8rem !important;
+  }
+
+  .reference-catalog-grid .store-product-catalog .store-card-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Compact page introductions remove the repeated empty band below the app header. */
 .admin-workspace .workspace-main,
 .student-workspace .workspace-main {
