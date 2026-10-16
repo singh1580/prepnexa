@@ -967,7 +967,7 @@
 
   .store-home .store-product-cover,
   .store-home .store-product-compact .store-product-cover {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 3 / 2;
     height: auto !important;
   }
 
@@ -983,7 +983,7 @@
   .store-home .store-product-title,
   .store-home .store-product-compact .store-product-title {
     display: -webkit-box;
-    min-height: 1.68rem;
+    min-height: 0;
     margin: 0 0 .2rem;
     overflow: hidden;
     font-size: .68rem;
@@ -1085,6 +1085,262 @@
   .reference-related .store-card-actions,
   .cart-recommendations .store-card-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Support conversations use one visual surface per level. Generic panel and
+   message rules previously combined into nested bordered boxes on phones. */
+.reference-ticket > header {
+  align-items: center;
+}
+
+.ticket-title-block > div {
+  flex-wrap: wrap;
+}
+
+.ticket-title-block > p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .3rem .7rem;
+}
+
+.ticket-title-block > p > span + span {
+  padding-left: .7rem;
+  border-left: 1px solid var(--review-line);
+  color: #555d63;
+  font-weight: 650;
+}
+
+.reference-ticket > .support-thread {
+  gap: 0;
+  padding: .35rem 1.2rem;
+}
+
+.reference-ticket .support-message {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: .9rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.reference-ticket .support-message + .support-message {
+  border-top: 1px solid #efedea;
+}
+
+.reference-ticket .support-message > div::before {
+  display: none;
+}
+
+.reference-ticket .support-message p {
+  width: fit-content;
+  max-width: min(46rem, 92%);
+  margin: .45rem 0 0;
+  padding: .68rem .8rem;
+  border-radius: .55rem;
+  background: #f5f5f3;
+  color: #353b40;
+}
+
+.reference-ticket .support-message.support p {
+  background: #fff1ea;
+}
+
+.reference-ticket .ticket-reply-box {
+  padding: .85rem 1rem 1rem;
+  background: #fcfbf9;
+}
+
+.reference-ticket .support-reply fieldset {
+  gap: .55rem !important;
+}
+
+.reference-ticket .reply-composer {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .55rem;
+}
+
+.reference-ticket .reply-composer textarea {
+  min-height: 2.8rem;
+  max-height: 9rem;
+  background: #fff;
+}
+
+.reference-ticket .attachment-button {
+  gap: .45rem;
+  padding-inline: .1rem;
+}
+
+@media (max-width: 700px) {
+  .reference-ticket {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .reference-ticket > header {
+    gap: .8rem;
+    padding: .25rem 0 .9rem;
+    border-bottom: 1px solid var(--review-line);
+  }
+
+  .ticket-title-block > div {
+    align-items: center;
+    flex-direction: row;
+    gap: .5rem;
+  }
+
+  .ticket-title-block > p {
+    margin-top: .45rem !important;
+  }
+
+  .ticket-header-actions {
+    width: 100%;
+  }
+
+  .ticket-header-actions .resolve-ticket-action,
+  .ticket-header-actions .button {
+    width: 100%;
+  }
+
+  .reference-ticket > .support-thread {
+    padding: .25rem 0;
+  }
+
+  .reference-ticket .support-message {
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: .6rem;
+    padding: .8rem 0;
+  }
+
+  .reference-ticket .thread-avatar {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .reference-ticket .support-message header {
+    align-items: baseline;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: .2rem .5rem;
+  }
+
+  .reference-ticket .support-message header small {
+    margin-left: auto;
+  }
+
+  .reference-ticket .support-message p {
+    max-width: 100%;
+  }
+
+  .reference-ticket .ticket-reply-box {
+    margin-inline: -.1rem;
+    padding: .8rem 0 0;
+    background: transparent;
+  }
+
+  .reference-ticket .reply-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .reference-ticket .attachment-button {
+    display: grid !important;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .reference-ticket .attachment-button small {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .admin-support-split.has-ticket {
+    gap: 0;
+  }
+
+  .support-split-detail {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .support-split-detail > header {
+    position: sticky;
+    z-index: 3;
+    top: 0;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    padding: .85rem 1rem;
+    background: #fff;
+  }
+
+  .support-split-detail > .ticket-student-strip {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    padding: .75rem 1rem;
+  }
+
+  .support-split-detail .admin-conversation {
+    flex: 1;
+    align-content: start;
+    gap: .7rem;
+    max-height: none;
+    padding: .85rem 1rem;
+  }
+
+  .support-split-detail .support-message {
+    width: min(92%, 30rem);
+    max-width: none;
+    padding: .75rem;
+    border-radius: .65rem;
+  }
+
+  .support-split-detail .support-message.admin-message {
+    justify-self: end;
+  }
+
+  .support-split-detail .support-message header {
+    flex-direction: row;
+  }
+
+  .support-split-detail .support-message p,
+  .support-split-detail .message-attachment {
+    margin-left: 0;
+  }
+
+  .support-split-detail .ticket-action-stack {
+    flex: 0 0 auto;
+    background: #fff;
+  }
+
+  .support-split-detail .ticket-state-form fieldset {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .support-split-detail .ticket-state-form button {
+    grid-column: 1 / -1;
+  }
+
+  .support-split-detail .composer-footer {
+    gap: .55rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .ticket-title-block > p > span + span {
+    width: 100%;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .reference-ticket .support-message header small {
+    width: 100%;
+    margin-left: 0;
   }
 }
 
