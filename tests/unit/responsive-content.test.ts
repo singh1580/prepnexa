@@ -70,6 +70,26 @@ describe("responsive content integrity", () => {
     "src/app/(public)/packages/page.tsx",
     "utf8",
   );
+  const publicLayout = readFileSync(
+    "src/app/(public)/layout.tsx",
+    "utf8",
+  );
+  const authForm = readFileSync(
+    "src/features/auth/ui/auth-form.tsx",
+    "utf8",
+  );
+
+  it("keeps refund navigation canonical and password guidance neutral", () => {
+    expect(publicLayout).not.toContain(">Refund policy<");
+    expect(
+      publicLayout.match(/href="\/legal\/cancellation-refund"/g),
+    ).toHaveLength(1);
+    expect(authForm).toContain('aria-label="Password guidance"');
+    expect(finalReviewPolish).toContain(
+      ".auth-card .password-requirements li::before",
+    );
+    expect(finalReviewPolish).toContain('content: "" !important');
+  });
 
   it("keeps product tabs inside their mobile container", () => {
     expect(css).not.toContain(

@@ -1365,6 +1365,78 @@
   }
 }
 
+/* Auth and footer completion: neutral guidance, viewport-safe desktop forms,
+   and a denser mobile footer without duplicated policy navigation. */
+.auth-card .password-requirements {
+  color: #626a70 !important;
+}
+
+.auth-card .password-requirements li {
+  display: flex;
+  align-items: flex-start;
+  gap: .45rem;
+}
+
+.auth-card .password-requirements li::before {
+  content: "" !important;
+  width: .36rem;
+  height: .36rem;
+  margin: .38rem 0 0 !important;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--prepstore-orange, #e84714);
+}
+
+@media (min-width: 801px) {
+  .auth-shell {
+    height: 100dvh;
+    min-height: 100dvh !important;
+    overflow: hidden;
+  }
+
+  .auth-story,
+  .auth-main {
+    min-height: 0 !important;
+    height: 100dvh;
+  }
+
+  .auth-main {
+    overflow-y: auto;
+    padding-block: clamp(1.5rem, 3vh, 2rem) !important;
+  }
+
+  .auth-main:has(input[name="name"]) .auth-card form {
+    margin-top: 1.25rem;
+  }
+
+  .auth-main:has(input[name="name"]) .auth-card fieldset {
+    gap: .9rem;
+  }
+
+  .auth-main:has(input[name="name"]) .auth-footer {
+    margin-top: 1.6rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .public-site .public-footer {
+    gap: 1.2rem !important;
+    padding: 1.5rem 1.25rem 1rem !important;
+  }
+
+  .public-site .public-footer nav {
+    gap: 1.2rem 1rem !important;
+  }
+
+  .public-site .public-footer nav a {
+    line-height: 1.45;
+  }
+
+  .public-site .public-footer > small {
+    margin-top: 0;
+  }
+}
+
 @media print {
   @page {
     size: A4;
