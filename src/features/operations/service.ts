@@ -27,7 +27,6 @@ import {
   markAllOwnedNotificationsRead,
   markOwnedNotificationRead,
   revokeOwnedSession,
-  resolveOwnedSupportTicket,
   saveNotificationDelivery,
   updateManagedStudentStatus,
   updateManagedSupportTicket,
@@ -128,12 +127,6 @@ export async function replyToStudentSupportTicket(
   if (!message) throw closedTicket();
   return message;
 }
-export async function resolveStudentSupportTicket(ticketId:string,actor:{userId:string;requestId:string}){
-  const ticket=await resolveOwnedSupportTicket(ticketId,actor.userId,actor.requestId);
-  if(!ticket)throw operationNotFound("Support ticket");
-  return ticket;
-}
-
 export async function queueStudentNotification(input: {
   userId: string;
   type: string;
