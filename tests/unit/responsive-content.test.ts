@@ -117,6 +117,9 @@ describe("responsive content integrity", () => {
 
   it("keeps storefront cards compact and related packages swipeable on phones", () => {
     expect(storefrontProductCard).not.toContain("product.description||");
+    expect(storefrontProductCard).toContain(
+      'variant==="catalog"?<div className="store-content-counts">',
+    );
     expect(finalReviewPolish).toContain(
       ".store-home .store-card-actions {\n    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;",
     );
@@ -125,6 +128,20 @@ describe("responsive content integrity", () => {
     );
     expect(finalReviewPolish).toContain("grid-auto-flow: column;");
     expect(finalReviewPolish).toContain("scroll-snap-type: inline mandatory;");
+    expect(finalReviewPolish).toContain("aspect-ratio: 16 / 10;");
+    expect(finalReviewPolish).toContain(
+      "grid-template-columns: auto auto minmax(0, 1fr);",
+    );
+  });
+
+  it("sizes package details from content without duplicate divider bands", () => {
+    expect(finalReviewPolish).toContain(
+      ".reference-product-panel {\n  min-height: 0;",
+    );
+    expect(finalReviewPolish).toContain("border-bottom: 0;");
+    expect(finalReviewPolish).toContain(
+      ".reference-related {\n  margin-top: .35rem;",
+    );
   });
 
   it("anchors mobile hero search to the hero and retains its handwritten cue", () => {
@@ -271,7 +288,7 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(
       ".public-site .hero-search input:focus-visible",
     );
-    expect(finalReviewPolish).toContain("aspect-ratio: 4 / 3");
+    expect(finalReviewPolish).toContain("aspect-ratio: 16 / 10");
     expect(finalReviewPolish).toContain(".store-home .store-owned-action");
     expect(finalReviewPolish).toContain("background: #c73c0b");
   });
