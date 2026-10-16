@@ -34,6 +34,12 @@ describe("responsive navigation", () => {
     );
     expect(drawer).not.toContain("<Brand />");
     expect(publicHeader).not.toContain(">Menu<");
+    expect(drawer).toContain('className="menu-icon-3d"');
+    expect(drawer).toContain('className="menu-icon-bar menu-icon-bar-middle"');
+    expect(drawer).not.toContain('d="m6 6 12 12M18 6 6 18"');
+    expect(responsiveCss).toContain("background: #17191c");
+    expect(responsiveCss).toContain("background: #e94b17");
+    expect(responsiveCss).toContain("gap: 4px !important");
   });
 
   it("keeps public navigation ordered and account actions separate", () => {
