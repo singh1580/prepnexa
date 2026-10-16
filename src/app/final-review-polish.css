@@ -755,6 +755,252 @@
   }
 }
 
+/* Final catalogue control and card layout. The filter panel stays visible as a
+   desktop sidebar and becomes a controlled disclosure on phones. */
+.catalog-filter-trigger {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .all-packages-page .catalog-browser-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+
+  .all-packages-page .all-packages-heading,
+  .all-packages-page .catalog-sort,
+  .all-packages-page .catalog-browser,
+  .all-packages-page .catalog-filter-disclosure {
+    display: contents;
+  }
+
+  .all-packages-page .all-packages-heading > div:first-child,
+  .all-packages-page .catalog-sort > span,
+  .all-packages-page .catalog-results,
+  .all-packages-page .catalog-filter-disclosure .catalog-sidebar {
+    grid-column: 1 / -1;
+  }
+
+  .all-packages-page .all-packages-heading > div:first-child {
+    margin-bottom: -.15rem;
+  }
+
+  .all-packages-page .catalog-sort > span {
+    margin-top: -.1rem;
+  }
+
+  .all-packages-page .catalog-sort label,
+  .all-packages-page .catalog-filter-trigger {
+    width: 100%;
+    height: 2.7rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0 .72rem;
+    border: 1px solid #ddd9d4;
+    border-radius: .55rem;
+    background: #fff;
+    color: #272a2d;
+    box-shadow: none;
+    font-family: inherit;
+    font-size: .7rem;
+    font-weight: 700;
+  }
+
+  .all-packages-page .catalog-sort label {
+    grid-column: 1;
+  }
+
+  .all-packages-page .catalog-sort label > span {
+    margin-right: .25rem;
+    color: #5f666c;
+    font-weight: 550;
+  }
+
+  .all-packages-page .catalog-sort select {
+    min-width: 0;
+    width: 100%;
+    padding: 0 1.35rem 0 0;
+    outline: 0;
+    font-size: .7rem;
+  }
+
+  .all-packages-page .catalog-filter-trigger {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: .48rem;
+    cursor: pointer;
+  }
+
+  .all-packages-page .catalog-filter-trigger svg {
+    width: .95rem;
+    height: .95rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: #d74312;
+    stroke-linecap: round;
+    stroke-width: 1.8;
+  }
+
+  .all-packages-page .catalog-filter-trigger b {
+    display: grid;
+    width: 1.2rem;
+    height: 1.2rem;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff0e9;
+    color: #c83d0b;
+    font-size: .62rem;
+  }
+
+  .all-packages-page .catalog-filter-trigger i {
+    width: .48rem;
+    height: .48rem;
+    margin-left: auto;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform .16s ease;
+  }
+
+  .all-packages-page .catalog-filter-disclosure.is-open .catalog-filter-trigger i {
+    transform: rotate(225deg) translate(-1px, -1px);
+  }
+
+  .all-packages-page .catalog-sort label:focus-within,
+  .all-packages-page .catalog-filter-trigger[aria-expanded="true"] {
+    border-color: #ef9d7e;
+    background: #fffaf7;
+    box-shadow: 0 0 0 2px rgba(232, 71, 20, .08);
+  }
+
+  .all-packages-page .catalog-filter-disclosure .catalog-sidebar {
+    display: none;
+    margin: 0;
+    overflow: hidden;
+    border-color: #e2ded9;
+    border-radius: .65rem;
+  }
+
+  .all-packages-page .catalog-filter-disclosure.is-open .catalog-sidebar {
+    display: grid;
+  }
+
+  .all-packages-page .reference-catalog-grid {
+    gap: .9rem !important;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog {
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    border-color: #e3ded9;
+    border-radius: .72rem;
+    background: #fff;
+    box-shadow: 0 .4rem 1.25rem rgba(43, 31, 22, .06);
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-product-cover {
+    display: block;
+    width: 100%;
+    height: 10.75rem !important;
+    min-height: 10.75rem !important;
+    padding: 1rem;
+    border: 0;
+    border-bottom: 1px solid #ece7e2;
+    border-radius: 0;
+    background-position: center !important;
+    background-size: cover !important;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .cover-title {
+    width: min(72%, 14rem);
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .cover-title b {
+    font-size: 1.25rem;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-product-body {
+    display: block;
+    padding: .85rem;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-content-counts {
+    gap: .75rem;
+    padding: 0 0 .6rem;
+    font-size: .68rem;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-product-title {
+    display: block;
+    margin: .68rem 0 .28rem;
+    overflow: visible;
+    font-size: 1rem;
+    line-height: 1.25;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-product-body > p {
+    display: -webkit-box;
+    min-height: 0;
+    margin: 0 0 .65rem;
+    overflow: hidden;
+    font-size: .72rem;
+    line-height: 1.4;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-product-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .55rem;
+    margin: .55rem 0;
+    font-size: .68rem;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-price-row {
+    gap: .4rem .55rem;
+    margin-top: .65rem;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-price-row strong {
+    font-size: 1.12rem;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-card-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .6rem;
+    width: 100%;
+    margin-top: .8rem;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-outline-action,
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-cart-action {
+    display: inline-flex;
+    min-height: 2.65rem;
+    align-items: center;
+    justify-content: center;
+    padding: .6rem;
+    font-size: .72rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 340px) {
+  .all-packages-page .catalog-sort label,
+  .all-packages-page .catalog-filter-trigger {
+    padding-inline: .58rem;
+    font-size: .66rem;
+  }
+
+  .all-packages-page .reference-catalog-grid .store-product-catalog .store-product-cover {
+    height: 9.75rem !important;
+    min-height: 9.75rem !important;
+  }
+}
+
 /* Compact page introductions remove the repeated empty band below the app header. */
 .admin-workspace .workspace-main,
 .student-workspace .workspace-main {

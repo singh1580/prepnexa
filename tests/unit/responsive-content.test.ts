@@ -70,6 +70,10 @@ describe("responsive content integrity", () => {
     "src/app/(public)/packages/page.tsx",
     "utf8",
   );
+  const catalogFilterDisclosure = readFileSync(
+    "src/features/catalog/ui/catalog-filter-disclosure.tsx",
+    "utf8",
+  );
   const publicLayout = readFileSync(
     "src/app/(public)/layout.tsx",
     "utf8",
@@ -213,17 +217,19 @@ describe("responsive content integrity", () => {
   });
 
   it("uses a compact mobile catalogue disclosure and bounded product covers", () => {
-    expect(packagesPage).toContain('className="catalog-filter-disclosure"');
+    expect(packagesPage).toContain("<CatalogFilterDisclosure");
     expect(packagesPage).toContain("activeFilterCount");
+    expect(packagesPage).not.toContain("<details");
     expect(packagesPage).not.toContain("<span>⌃</span>");
+    expect(catalogFilterDisclosure).toContain('aria-expanded={open}');
+    expect(catalogFilterDisclosure).toContain('type="button"');
     expect(finalReviewPolish).toContain(
-      ".catalog-filter-disclosure > summary",
+      ".catalog-filter-trigger",
     );
     expect(finalReviewPolish).toContain(
-      "grid-template-columns: 7.5rem minmax(0, 1fr) !important",
+      "grid-template-columns: repeat(2, minmax(0, 1fr))",
     );
-    expect(finalReviewPolish).toContain("height: 6.4rem !important");
-    expect(finalReviewPolish).toContain("display: contents");
+    expect(finalReviewPolish).toContain("height: 10.75rem !important");
     expect(finalReviewPolish).toContain("grid-column: 1 / -1");
     expect(finalReviewPolish).toContain("white-space: nowrap");
   });
