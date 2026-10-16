@@ -222,7 +222,10 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(
       "grid-template-columns: 7.5rem minmax(0, 1fr) !important",
     );
-    expect(finalReviewPolish).toContain("height: 8.5rem !important");
+    expect(finalReviewPolish).toContain("height: 6.4rem !important");
+    expect(finalReviewPolish).toContain("display: contents");
+    expect(finalReviewPolish).toContain("grid-column: 1 / -1");
+    expect(finalReviewPolish).toContain("white-space: nowrap");
   });
 
   it("keeps mobile hero copy clear of the subject and strengthens owned actions", () => {
