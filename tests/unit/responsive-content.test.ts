@@ -82,6 +82,10 @@ describe("responsive content integrity", () => {
     "src/features/auth/ui/auth-form.tsx",
     "utf8",
   );
+  const storefrontProductCard = readFileSync(
+    "src/components/storefront-product-card.tsx",
+    "utf8",
+  );
 
   it("keeps refund navigation canonical and password guidance neutral", () => {
     expect(publicLayout).not.toContain(">Refund policy<");
@@ -108,6 +112,30 @@ describe("responsive content integrity", () => {
     );
     expect(storefrontFixes).not.toContain(
       ".store-product-card{border-radius:.55rem}.store-product-catalog{",
+    );
+  });
+
+  it("keeps storefront cards compact and related packages swipeable on phones", () => {
+    expect(storefrontProductCard).not.toContain("product.description||");
+    expect(finalReviewPolish).toContain(
+      ".store-home .store-card-actions {\n    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;",
+    );
+    expect(finalReviewPolish).toContain(
+      ".reference-related > div,\n  .cart-recommendations > div {",
+    );
+    expect(finalReviewPolish).toContain("grid-auto-flow: column;");
+    expect(finalReviewPolish).toContain("scroll-snap-type: inline mandatory;");
+  });
+
+  it("anchors mobile hero search to the hero and retains its handwritten cue", () => {
+    expect(finalReviewPolish).toContain(
+      ".public-site .store-hero-content {\n    position: absolute !important;\n    inset: 0;",
+    );
+    expect(finalReviewPolish).toContain(
+      ".public-site .hero-handwriting {\n    display: block !important;",
+    );
+    expect(finalReviewPolish).toContain(
+      "bottom: .7rem !important;",
     );
   });
 
