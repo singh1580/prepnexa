@@ -2,18 +2,13 @@ import Link from "next/link";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { requireWorkspacePermission } from "@/features/auth/page-access";
 import { OPERATIONS_PERMISSIONS } from "@/features/operations/permissions";
-import {
-  getManagedSupportTicket,
-  getManagedSupportTickets,
-} from "@/features/operations/service";
-import { ManagedTicketActions } from "@/features/operations/ui/admin-actions";
-import { UiIcon } from "@/components/ui-icon";
+import { getManagedSupportTickets } from "@/features/operations/service";
 
 export const metadata = { title: "Support" };
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; ticket?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
   const auth = await requireWorkspacePermission(
     OPERATIONS_PERMISSIONS.manageSupport,
@@ -22,9 +17,6 @@ export default async function Page({
   const tickets = await getManagedSupportTickets();
   const q = query.q?.trim().toLowerCase() ?? "";
   const status = query.status ?? "ALL";
-  const selected = query.ticket
-    ? await getManagedSupportTicket(query.ticket).catch(() => null)
-    : null;
   const visible = tickets.filter(
     (ticket) =>
       (!q ||
@@ -92,11 +84,7 @@ export default async function Page({
           Resolved <b>{counts.RESOLVED}</b>
         </Link>
       </nav>
-      <div
-        className={
-          selected ? "admin-support-split has-ticket" : "admin-support-split"
-        }
-      >
+      <div className="admin-support-split">
         {visible.length ? (
           <section className="admin-card support-table-card">
             <div className="table-scroll">
@@ -114,15 +102,10 @@ export default async function Page({
                 </thead>
                 <tbody>
                   {visible.map((ticket) => (
-                    <tr
-                      className={
-                        selected?.id === ticket.id ? "selected-row" : ""
-                      }
-                      key={ticket.id}
-                    >
+                    <tr key={ticket.id}>
                       <td>
                         <Link
-                          href={`/admin/support?ticket=${ticket.id}${status !== "ALL" ? `&status=${status}` : ""}${q ? `&q=${encodeURIComponent(query.q ?? "")}` : ""}`}
+                          href={`/admin/support/${ticket.id}`}
                         >
                           <strong>{ticket.subject}</strong>
                           <small>#{ticket.id.slice(0, 6).toUpperCase()}</small>
@@ -176,90 +159,6 @@ export default async function Page({
             <p>Try another search or ticket status.</p>
           </section>
         )}
-        {selected ? (
-          <aside className="admin-card support-split-detail">
-            <header>
-              <div>
-                <h2>{selected.subject}</h2>
-                <small>#{selected.id.slice(0, 8).toUpperCase()}</small>
-              </div>
-              <span
-                className={`status-pill content-${selected.status.toLowerCase()}`}
-              >
-                {selected.status.replaceAll("_", " ")}
-              </span>
-              <Link
-                className="icon-button"
-                href="/admin/support"
-                aria-label="Close ticket"
-              >
-                <UiIcon name="close" />
-              </Link>
-            </header>
-            <div className="ticket-student-strip">
-              <span className="avatar">{selected.studentName.slice(0, 1)}</span>
-              <div>
-                <strong>{selected.studentName}</strong>
-                <small>{selected.email}</small>
-              </div>
-              {selected.orderId ? (
-                <Link href={`/admin/orders?order=${selected.orderId}`}>
-                  <small>Related order</small>
-                  <strong>#{selected.orderId.slice(0, 8)}</strong>
-                </Link>
-              ) : null}
-            </div>
-            <section className="support-thread admin-conversation">
-              {selected.messages.map((item) => (
-                <article
-                  className={
-                    item.internal
-                      ? "support-message internal-note"
-                      : item.student
-                        ? "support-message student-message"
-                        : "support-message admin-message"
-                  }
-                  key={item.id}
-                >
-                  <header>
-                    <span className="avatar">
-                      {item.student ? selected.studentName.slice(0, 1) : "A"}
-                    </span>
-                    <strong>
-                      {item.internal
-                        ? "Internal note"
-                        : item.student
-                          ? selected.studentName
-                          : "Admin User"}
-                    </strong>
-                    <small>
-                      {new Date(item.createdAt).toLocaleString("en-IN", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                    </small>
-                  </header>
-                  <p>{item.body}</p>
-                  {item.attachmentObjectKey ? (
-                    <a
-                      className="message-attachment"
-                      href={`/api/operations/support/messages/${item.id}/attachment`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open {item.attachmentFileName ?? "attachment"}
-                    </a>
-                  ) : null}
-                </article>
-              ))}
-            </section>
-            <ManagedTicketActions
-              ticketId={selected.id}
-              status={selected.status}
-              priority={selected.priority}
-            />
-          </aside>
-        ) : null}
       </div>
     </WorkspaceShell>
   );

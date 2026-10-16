@@ -24,6 +24,8 @@ describe("support workflow ownership", () => {
     expect(adminList).toContain('href={`/admin/support/${ticket.id}`}');
     expect(adminList).toContain("View ticket");
     expect(adminDetail).toContain("<ManagedTicketActions");
+    expect(adminList).not.toContain("support-split-detail");
+    expect(adminList).not.toContain("?ticket=");
   });
 
   it("keeps administrative status controls out of the student ticket UI", () => {

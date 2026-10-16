@@ -2131,6 +2131,168 @@
   }
 }
 
+/* Admin support has one list route and one full management route. Keep the
+   conversation hierarchy flat so generic student-thread grid rules cannot
+   overlap the author, timestamp and message body. */
+.admin-ticket-panel {
+  margin-top: .85rem;
+  overflow: hidden;
+  border: 1px solid var(--review-line);
+  border-radius: .75rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(24, 27, 30, .03);
+}
+
+.admin-ticket-panel .ticket-detail-heading {
+  min-height: 0;
+  padding: 1rem 1.25rem;
+}
+
+.admin-ticket-panel .ticket-student-strip {
+  padding: .85rem 1.25rem;
+}
+
+.admin-ticket-panel .admin-conversation {
+  display: flex !important;
+  max-height: min(42rem, 58vh);
+  padding: 1.15rem 1.25rem;
+  flex-direction: column;
+  align-content: normal;
+  gap: .95rem;
+  overflow-y: auto;
+  background: #faf9f7;
+}
+
+.admin-ticket-panel .admin-conversation .support-message {
+  display: block !important;
+  align-self: flex-start;
+  width: min(78%, 46rem);
+  max-width: none;
+  margin: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+}
+
+.admin-ticket-panel .admin-conversation .support-message.admin-message {
+  align-self: flex-end;
+}
+
+.admin-ticket-panel .admin-conversation .support-message.internal-note {
+  width: 100%;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > header {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: .5rem;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > header .avatar {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > header strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #282c30;
+  font-size: .78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > header small {
+  margin-left: auto;
+  color: #747b80;
+  font-size: .68rem;
+  white-space: nowrap;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > p {
+  width: fit-content;
+  max-width: calc(100% - 2.5rem);
+  margin: .4rem 0 0 2.5rem;
+  padding: .68rem .82rem;
+  border: 0;
+  border-radius: .58rem;
+  background: #fff;
+  color: #343a3f;
+  font-size: .78rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  box-shadow: 0 1px 2px rgba(24, 27, 30, .06);
+}
+
+.admin-ticket-panel .admin-conversation .support-message.admin-message > p {
+  margin-left: auto;
+  background: #fff0e8;
+  box-shadow: none;
+}
+
+.admin-ticket-panel .admin-conversation .support-message.internal-note > p {
+  max-width: 100%;
+  margin-left: 0;
+  background: #fff8dc;
+  box-shadow: none;
+}
+
+.admin-ticket-panel .admin-conversation .message-attachment {
+  margin: .45rem 0 0 2.5rem;
+}
+
+@media (max-width: 700px) {
+  .admin-ticket-panel {
+    margin-inline: -.15rem;
+    border-radius: .55rem;
+  }
+
+  .admin-ticket-panel .ticket-detail-heading,
+  .admin-ticket-panel .ticket-student-strip,
+  .admin-ticket-panel .admin-conversation {
+    padding-inline: .85rem;
+  }
+
+  .admin-ticket-panel .ticket-detail-heading {
+    align-items: flex-start;
+  }
+
+  .admin-ticket-panel .admin-conversation {
+    max-height: none;
+  }
+
+  .admin-ticket-panel .admin-conversation .support-message {
+    width: 100%;
+  }
+
+  .admin-ticket-panel .admin-conversation .support-message > header {
+    flex-direction: row;
+  }
+
+  .admin-ticket-panel .admin-conversation .support-message > header small {
+    width: auto;
+    margin-left: auto;
+  }
+
+  .admin-ticket-panel .admin-conversation .support-message > p {
+    max-width: calc(100% - 2.35rem);
+    margin-left: 2.35rem;
+  }
+
+  .admin-ticket-panel .admin-conversation .support-message.admin-message > p {
+    margin-right: 0;
+    margin-left: auto;
+  }
+
+  .admin-ticket-panel .admin-conversation .support-message.internal-note > p {
+    max-width: 100%;
+    margin-left: 0;
+  }
+}
+
 @media print {
   @page {
     size: A4;

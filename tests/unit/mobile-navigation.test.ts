@@ -99,6 +99,9 @@ describe("responsive navigation", () => {
     expect(responsiveCss).toContain("border-radius: 14px");
     expect(responsiveCss).toContain("justify-items: stretch !important");
     expect(responsiveCss).toContain("position: fixed !important");
+    expect(responsiveCss).toContain("z-index: 208");
+    expect(responsiveCss).toContain("z-index: 209");
+    expect(responsiveCss).toContain("z-index: 210");
     expect(responsiveCss).toContain("--mobile-header-height: 60px");
     expect(responsiveCss).toContain("--mobile-header-height: 58px");
   });
