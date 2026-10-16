@@ -128,7 +128,7 @@ describe("responsive content integrity", () => {
     );
     expect(finalReviewPolish).toContain("grid-auto-flow: column;");
     expect(finalReviewPolish).toContain("scroll-snap-type: inline mandatory;");
-    expect(finalReviewPolish).toContain("aspect-ratio: 16 / 10;");
+    expect(finalReviewPolish).toContain("aspect-ratio: 3 / 2;");
     expect(finalReviewPolish).toContain(
       "grid-template-columns: auto auto minmax(0, 1fr);",
     );
@@ -288,9 +288,17 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(
       ".public-site .hero-search input:focus-visible",
     );
-    expect(finalReviewPolish).toContain("aspect-ratio: 16 / 10");
+    expect(finalReviewPolish).toContain("aspect-ratio: 3 / 2");
     expect(finalReviewPolish).toContain(".store-home .store-owned-action");
     expect(finalReviewPolish).toContain("background: #c73c0b");
+  });
+
+  it("removes reserved card-title space and flattens mobile support conversations", () => {
+    expect(finalReviewPolish).toContain("min-height: 0;");
+    expect(finalReviewPolish).toContain(".reference-ticket .support-message {");
+    expect(finalReviewPolish).toContain("border-radius: 0;");
+    expect(finalReviewPolish).toContain(".support-split-detail .admin-conversation");
+    expect(finalReviewPolish).toContain("height: 100dvh;");
   });
 
   it("keeps admin header account actions in a compact right-side group", () => {
