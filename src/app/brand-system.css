@@ -194,10 +194,10 @@
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 12px !important;
+    gap: 4px !important;
     height: 64px !important;
     min-height: 64px !important;
-    padding: 0 clamp(16px, 2.2vw, 20px) !important;
+    padding: 0 clamp(12px, 2vw, 16px) !important;
     overflow: visible !important;
   }
 
@@ -218,8 +218,8 @@
     --mobile-drawer-width: min(380px, calc(100vw - 32px));
     position: relative;
     display: block !important;
-    flex: 0 0 44px;
-    width: 44px;
+    flex: 0 0 25px;
+    width: 25px;
     height: 44px;
     margin: 0 !important;
   }
@@ -232,19 +232,18 @@
   .workspace-mobile-menu > summary {
     position: relative;
     z-index: 103;
-    display: grid !important;
+    display: block !important;
     width: 44px !important;
     min-width: 44px !important;
     height: 44px !important;
     min-height: 44px !important;
-    place-items: center;
     padding: 0 !important;
     list-style: none;
     cursor: pointer;
     color: var(--prepstore-black) !important;
-    border: 1px solid #e4e0db !important;
-    border-radius: 10px !important;
-    background: #fff !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
     box-shadow: none !important;
   }
 
@@ -253,14 +252,108 @@
     display: none;
   }
 
-  .mobile-public-menu > summary svg,
-  .workspace-mobile-menu > summary svg {
-    width: 22px;
-    height: 22px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
+  .menu-icon-3d {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: 25px;
+    height: 24px;
+    perspective: 140px;
+    transform-style: preserve-3d;
+  }
+
+  .menu-icon-bar {
+    position: absolute;
+    display: block;
+    height: 5px;
+    border-radius: 999px;
+    transform-origin: center;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    transition: left 180ms ease, width 180ms ease, transform 180ms ease;
+  }
+
+  .menu-icon-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgb(255 255 255 / 22%), transparent 48%);
+    pointer-events: none;
+  }
+
+  .menu-icon-bar-top {
+    top: 0;
+    left: 0;
+    width: 25px;
+    background: #17191c;
+    box-shadow: 0 2px 0 rgb(0 0 0 / 50%), 0 5px 8px rgb(23 25 28 / 14%);
+    animation: prepstore-menu-top-depth 2s ease-in-out infinite;
+  }
+
+  .menu-icon-bar-middle {
+    top: 9px;
+    left: 3px;
+    width: 19px;
+    background: #e94b17;
+    box-shadow: 0 2px 0 rgb(111 28 4 / 44%), 0 5px 8px rgb(233 75 23 / 18%);
+    animation: prepstore-menu-middle-depth 2s ease-in-out infinite;
+  }
+
+  .menu-icon-bar-bottom {
+    top: 18px;
+    left: 1px;
+    width: 23px;
+    background: #17191c;
+    box-shadow: 0 2px 0 rgb(0 0 0 / 50%), 0 5px 8px rgb(23 25 28 / 14%);
+    animation: prepstore-menu-bottom-depth 2s ease-in-out infinite;
+  }
+
+  @keyframes prepstore-menu-top-depth {
+    0%, 100% { transform: translate3d(0, 0, 0) rotateY(0); }
+    50% { transform: translate3d(1px, -1px, 7px) rotateY(-10deg); }
+  }
+
+  @keyframes prepstore-menu-middle-depth {
+    0%, 100% { transform: translate3d(0, 0, 3px) rotateY(0); }
+    50% { transform: translate3d(-1px, 0, 10px) rotateY(12deg); }
+  }
+
+  @keyframes prepstore-menu-bottom-depth {
+    0%, 100% { transform: translate3d(0, 0, 0) rotateY(0); }
+    50% { transform: translate3d(1px, 1px, 5px) rotateY(-8deg); }
+  }
+
+  .mobile-public-menu[open] .menu-icon-bar,
+  .workspace-mobile-menu[open] .menu-icon-bar {
+    animation: none;
+  }
+
+  .mobile-public-menu[open] .menu-icon-bar-top,
+  .workspace-mobile-menu[open] .menu-icon-bar-top {
+    left: 2px;
+    width: 21px;
+    transform: translateZ(5px);
+  }
+
+  .mobile-public-menu[open] .menu-icon-bar-middle,
+  .workspace-mobile-menu[open] .menu-icon-bar-middle {
+    left: 0;
+    width: 25px;
+    transform: translateZ(11px);
+  }
+
+  .mobile-public-menu[open] .menu-icon-bar-bottom,
+  .workspace-mobile-menu[open] .menu-icon-bar-bottom {
+    left: 3px;
+    width: 19px;
+    transform: translateZ(5px);
+  }
+
+  .public-header > .brand,
+  .workspace-header > .workspace-mobile-brand {
+    position: relative;
+    z-index: 104;
   }
 
   .mobile-public-menu[open] > summary,
@@ -497,10 +590,10 @@
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 12px !important;
+    gap: 4px !important;
     height: 64px !important;
     min-height: 64px !important;
-    padding: 0 clamp(16px, 2.2vw, 20px) !important;
+    padding: 0 clamp(12px, 2vw, 16px) !important;
     overflow: visible;
   }
 
@@ -723,7 +816,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mobile-public-drawer,
-  .workspace-mobile-drawer {
+  .workspace-mobile-drawer,
+  .menu-icon-bar {
     animation: none;
   }
 }
