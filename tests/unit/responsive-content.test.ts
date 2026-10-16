@@ -127,6 +127,12 @@ describe("responsive content integrity", () => {
   });
 
   it("keeps desktop workspace dividers continuous without stretching student navigation", () => {
+    expect(finalReviewPolish).toContain(
+      ".student-workspace.workspace {",
+    );
+    expect(finalReviewPolish).toContain(
+      "grid-template-columns: minmax(240px, 256px) minmax(0, 1fr) !important",
+    );
     expect(finalReviewPolish).toContain(".admin-workspace > .sidebar::before");
     expect(finalReviewPolish).toContain(".student-workspace > .sidebar::before");
     expect(finalReviewPolish).toContain("top: 63px");
