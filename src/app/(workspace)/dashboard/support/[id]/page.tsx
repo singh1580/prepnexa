@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { requireWorkspace } from "@/features/auth/page-access";
 import { getStudentSupportTicket } from "@/features/operations/service";
-import { SupportReplyForm, SupportResolveButton } from "@/features/operations/ui/student-actions";
+import { SupportReplyForm } from "@/features/operations/ui/student-actions";
 import { AppError } from "@/lib/errors/app-error";
 
 export const metadata = { title: "Support ticket" };
@@ -25,7 +25,7 @@ export default async function Page({
     <WorkspaceShell admin={false} name={auth.user.name} email={auth.user.email} section="support">
       <nav className="student-breadcrumb"><Link href="/dashboard">Dashboard</Link><span>›</span><Link href="/dashboard/support">Support</Link><span>›</span><b>Ticket #{String(ticket.id).slice(0,8).toUpperCase()}</b></nav>
       <Link className="back-link" href="/dashboard/support">← Back to Support</Link>
-      <section className="reference-ticket"><header><div className="ticket-title-block"><div><h1>Ticket #{String(ticket.id).slice(0,8).toUpperCase()}</h1><span className={`support-status ${String(ticket.status).toLowerCase()}`}>● {String(ticket.status).replaceAll("_", " ")}</span></div><p><span>Created {new Date(ticket.createdAt as Date).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})}</span><span>{String(ticket.category).replaceAll("_"," ")}</span></p></div><div className="ticket-header-actions">{!['RESOLVED','CLOSED'].includes(String(ticket.status))?<SupportResolveButton ticketId={String(ticket.id)}/>:null}</div></header>
+      <section className="reference-ticket"><header><div className="ticket-title-block"><div><h1>Ticket #{String(ticket.id).slice(0,8).toUpperCase()}</h1><span className={`support-status ${String(ticket.status).toLowerCase()}`}>● {String(ticket.status).replaceAll("_", " ")}</span></div><p><span>Created {new Date(ticket.createdAt as Date).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"})}</span><span>{String(ticket.category).replaceAll("_"," ")}</span></p></div></header>
       <div className="support-thread">
         {ticket.messages.map((item) => (
           <article
