@@ -68,7 +68,7 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
       amount: checkout.amountPaise,
       currency: checkout.currency,
       name: "Prepstore",
-      image: new URL("/prepstore-icon.svg", window.location.origin).toString(),
+      image: new URL("/brand/prepstore-logo.svg", window.location.origin).toString(),
       description: `Order #${checkout.orderId.slice(0, 12).toUpperCase()}`,
       order_id: checkout.providerOrderId,
       prefill: { name: checkout.customer.name, email: checkout.customer.email, ...(checkout.customer.phone ? { contact: checkout.customer.phone } : {}) },

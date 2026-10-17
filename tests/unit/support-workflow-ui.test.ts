@@ -18,6 +18,10 @@ describe("support workflow ownership", () => {
     "src/features/operations/ui/student-actions.tsx",
     "utf8",
   );
+  const liveRefresh = readFileSync(
+    "src/features/operations/ui/support-live-refresh.tsx",
+    "utf8",
+  );
 
   it("gives administrators an explicit route to view and manage every ticket", () => {
     expect(adminList).toContain("<th>Actions</th>");
@@ -34,5 +38,19 @@ describe("support workflow ownership", () => {
     expect(
       existsSync("src/app/api/operations/support/[id]/resolve/route.ts"),
     ).toBe(false);
+  });
+
+  it("uses one support identity and keeps both conversations current", () => {
+    expect(adminDetail).toContain("Prepstore Support");
+    expect(adminDetail).toContain("<PrepstoreIcon />");
+    expect(adminDetail).not.toContain(' : "Admin"');
+    expect(adminDetail).toContain("<SupportLiveRefresh revision=");
+    expect(studentDetail).toContain("<SupportLiveRefresh revision=");
+    expect(adminDetail).toContain('data-support-thread="true"');
+    expect(studentDetail).toContain('data-support-thread="true"');
+    expect(liveRefresh).toContain("SUPPORT_REFRESH_INTERVAL_MS = 4_000");
+    expect(liveRefresh).toContain('document.visibilityState === "visible"');
+    expect(liveRefresh).toContain('window.addEventListener("focus"');
+    expect(liveRefresh).toContain("thread?.scrollTo");
   });
 });
