@@ -24,25 +24,14 @@
 }
 
 .reference-order-items .order-brand-icon,
-.support-message.support .support-brand-avatar {
-  padding: 0.45rem;
-  background: #fff7f2;
+.support-message .thread-avatar.support-brand-avatar {
+  padding: .35rem;
+  border: 1px solid #eadfd8;
+  background: #fff !important;
 }
 
 .reference-order-items .order-brand-icon img,
-.support-message.support .support-brand-avatar img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.admin-ticket-panel .support-brand-avatar {
-  padding: .35rem;
-  background: #fff7f2;
-}
-
-.admin-ticket-panel .support-brand-avatar img {
+.support-message .thread-avatar.support-brand-avatar img {
   display: block;
   width: 100%;
   height: 100%;
@@ -2165,7 +2154,7 @@
   font-weight: 800;
 }
 
-.admin-ticket-panel .admin-conversation .support-message.support .thread-avatar {
+.admin-ticket-panel .admin-conversation .support-message.support .thread-avatar:not(.support-brand-avatar) {
   background: var(--prepstore-icon-orange, #e94b17);
   color: #fff;
 }
