@@ -59,4 +59,16 @@ describe("Prepstore shared brand asset", () => {
     expect(sources).toContain("PrepstoreIcon");
     expect(sources).toContain("PrepstoreLogo");
   });
+
+  it("keeps the two-colour support icon visible on a neutral avatar", () => {
+    const polish = readFileSync("src/app/final-review-polish.css", "utf8");
+
+    expect(polish).toContain(
+      ".support-message .thread-avatar.support-brand-avatar",
+    );
+    expect(polish).toContain("background: #fff !important;");
+    expect(polish).toContain(
+      ".support-message.support .thread-avatar:not(.support-brand-avatar)",
+    );
+  });
 });
