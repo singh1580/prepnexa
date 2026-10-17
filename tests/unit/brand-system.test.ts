@@ -53,6 +53,9 @@ describe("Prepstore shared brand asset", () => {
 
     expect(sources).not.toContain("prepstore-checkout-mark.svg");
     expect(sources).not.toMatch(/>PS<|Prep<span>store<\/span>/);
+    expect(sources).toContain(
+      'new URL("/brand/prepstore-logo.svg", window.location.origin)',
+    );
     expect(sources).toContain("PrepstoreIcon");
     expect(sources).toContain("PrepstoreLogo");
   });

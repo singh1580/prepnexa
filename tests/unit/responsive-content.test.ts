@@ -293,12 +293,14 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain("background: #c73c0b");
   });
 
-  it("removes reserved card-title space and flattens mobile support conversations", () => {
+  it("removes reserved card-title space and keeps both support conversations compact", () => {
     expect(finalReviewPolish).toContain("min-height: 0;");
     expect(finalReviewPolish).toContain(".reference-ticket .support-message {");
     expect(finalReviewPolish).toContain("border-radius: 0;");
-    expect(finalReviewPolish).toContain(".support-split-detail .admin-conversation");
-    expect(finalReviewPolish).toContain("height: 100dvh;");
+    expect(finalReviewPolish).toContain(
+      ".admin-ticket-panel .admin-conversation .support-message",
+    );
+    expect(finalReviewPolish).not.toContain(".support-split-detail");
   });
 
   it("keeps admin header account actions in a compact right-side group", () => {
