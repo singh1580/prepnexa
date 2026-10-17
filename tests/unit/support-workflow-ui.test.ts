@@ -53,4 +53,13 @@ describe("support workflow ownership", () => {
     expect(liveRefresh).toContain('window.addEventListener("focus"');
     expect(liveRefresh).toContain("thread?.scrollTo");
   });
+
+  it("uses the same message hierarchy in admin and student conversations", () => {
+    expect(adminDetail).toContain('"support-message customer"');
+    expect(adminDetail).toContain('"support-message support"');
+    expect(adminDetail).toContain('"support-message internal-note"');
+    expect(adminDetail).toContain("thread-avatar");
+    expect(adminDetail).not.toContain("student-message");
+    expect(adminDetail).not.toContain("admin-message");
+  });
 });

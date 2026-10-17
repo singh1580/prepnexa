@@ -300,6 +300,11 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(
       ".admin-ticket-panel .admin-conversation .support-message",
     );
+    expect(finalReviewPolish).toContain("max-height: none;");
+    expect(finalReviewPolish).toContain("overflow: visible;");
+    expect(finalReviewPolish).toContain(
+      "grid-template-columns: 2.35rem minmax(0, 1fr)",
+    );
     expect(finalReviewPolish).not.toContain(".support-split-detail");
   });
 
