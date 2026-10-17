@@ -151,7 +151,7 @@ export function ManagedTicketActions({
               name="body"
               minLength={2}
               maxLength={4000}
-              rows={5}
+              rows={3}
               placeholder={
                 internal
                   ? "Add a note visible only to administrators…"

@@ -2099,9 +2099,9 @@
   }
 }
 
-/* Admin support has one list route and one full management route. Keep the
-   conversation hierarchy flat so generic student-thread grid rules cannot
-   overlap the author, timestamp and message body. */
+/* Admin support reuses the student conversation contract. Admin-only ticket
+   state controls remain separate, but message rhythm and hierarchy stay
+   identical across both workspaces. */
 .admin-ticket-panel {
   margin-top: .85rem;
   overflow: hidden;
@@ -2121,95 +2121,160 @@
 }
 
 .admin-ticket-panel .admin-conversation {
-  display: flex !important;
-  max-height: min(42rem, 58vh);
-  padding: 1.15rem 1.25rem;
-  flex-direction: column;
-  align-content: normal;
-  gap: .95rem;
-  overflow-y: auto;
-  background: #faf9f7;
+  display: grid !important;
+  max-height: none;
+  padding: .35rem 1.25rem;
+  gap: 0;
+  overflow: visible;
+  background: #fff;
 }
 
 .admin-ticket-panel .admin-conversation .support-message {
-  display: block !important;
-  align-self: flex-start;
-  width: min(78%, 46rem);
+  display: grid !important;
+  grid-template-columns: 2.35rem minmax(0, 1fr);
+  align-items: start;
+  width: 100%;
   max-width: none;
   margin: 0;
-  padding: 0 !important;
+  padding: .9rem 0 !important;
+  gap: .7rem;
   border: 0 !important;
   border-radius: 0;
   background: transparent !important;
 }
 
-.admin-ticket-panel .admin-conversation .support-message.admin-message {
-  align-self: flex-end;
+.admin-ticket-panel .admin-conversation .support-message + .support-message {
+  border-top: 1px solid #efedea !important;
 }
 
 .admin-ticket-panel .admin-conversation .support-message.internal-note {
   width: 100%;
 }
 
-.admin-ticket-panel .admin-conversation .support-message > header {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  gap: .5rem;
-}
-
-.admin-ticket-panel .admin-conversation .support-message > header .avatar {
+.admin-ticket-panel .admin-conversation .thread-avatar {
+  display: grid;
+  place-items: center;
   width: 2rem;
   height: 2rem;
   flex: 0 0 2rem;
+  border-radius: 50%;
+  background: #f1dfd1;
+  color: #675246;
+  font-size: .62rem;
+  font-style: normal;
+  font-weight: 800;
 }
 
-.admin-ticket-panel .admin-conversation .support-message > header strong {
+.admin-ticket-panel .admin-conversation .support-message.support .thread-avatar {
+  background: var(--prepstore-icon-orange, #e94b17);
+  color: #fff;
+}
+
+.admin-ticket-panel .admin-conversation .support-message.internal-note .thread-avatar {
+  background: #fff0bd;
+  color: #795b00;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > div {
+  min-width: 0;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > div::before {
+  display: none;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > div > header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: .2rem .7rem;
+}
+
+.admin-ticket-panel .admin-conversation .support-message > div > header strong {
   min-width: 0;
   overflow: hidden;
   color: #282c30;
-  font-size: .78rem;
+  font-size: .8rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.admin-ticket-panel .admin-conversation .support-message > header small {
-  margin-left: auto;
+.admin-ticket-panel .admin-conversation .support-message > div > header small {
   color: #747b80;
   font-size: .68rem;
   white-space: nowrap;
 }
 
-.admin-ticket-panel .admin-conversation .support-message > p {
+.admin-ticket-panel .admin-conversation .support-message > div > p {
   width: fit-content;
-  max-width: calc(100% - 2.5rem);
-  margin: .4rem 0 0 2.5rem;
-  padding: .68rem .82rem;
+  max-width: min(46rem, 92%);
+  margin: .45rem 0 0;
+  padding: .68rem .8rem;
   border: 0;
-  border-radius: .58rem;
-  background: #fff;
+  border-radius: .55rem;
+  background: #f5f5f3;
   color: #343a3f;
   font-size: .78rem;
   line-height: 1.55;
   overflow-wrap: anywhere;
-  box-shadow: 0 1px 2px rgba(24, 27, 30, .06);
 }
 
-.admin-ticket-panel .admin-conversation .support-message.admin-message > p {
-  margin-left: auto;
-  background: #fff0e8;
-  box-shadow: none;
+.admin-ticket-panel .admin-conversation .support-message.support > div > p {
+  background: #fff1ea;
 }
 
-.admin-ticket-panel .admin-conversation .support-message.internal-note > p {
-  max-width: 100%;
-  margin-left: 0;
+.admin-ticket-panel .admin-conversation .support-message.internal-note > div > p {
+  max-width: min(52rem, 100%);
   background: #fff8dc;
-  box-shadow: none;
 }
 
 .admin-ticket-panel .admin-conversation .message-attachment {
-  margin: .45rem 0 0 2.5rem;
+  margin-top: .5rem;
+}
+
+.admin-ticket-panel .ticket-action-stack {
+  border-top: 1px solid var(--review-line);
+  background: #fcfbf9;
+}
+
+.admin-ticket-panel .ticket-state-form {
+  padding: .75rem 1.25rem;
+}
+
+.admin-ticket-panel .ticket-state-form fieldset {
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) minmax(9rem, 12rem) auto;
+  align-items: end;
+  justify-content: start;
+  gap: .65rem;
+}
+
+.admin-ticket-panel .ticket-state-form select {
+  width: 100%;
+}
+
+.admin-ticket-panel .support-composer {
+  background: #fff;
+}
+
+.admin-ticket-panel .support-composer fieldset {
+  padding: 0 1.25rem 1rem;
+}
+
+.admin-ticket-panel .support-composer textarea {
+  min-height: 6rem;
+  max-height: 14rem;
+  background: #fff;
+}
+
+.admin-ticket-panel .composer-footer {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.admin-ticket-panel .composer-footer > span {
+  margin-right: auto;
 }
 
 @media (max-width: 700px) {
@@ -2230,34 +2295,72 @@
 
   .admin-ticket-panel .admin-conversation {
     max-height: none;
+    overflow: visible;
   }
 
   .admin-ticket-panel .admin-conversation .support-message {
     width: 100%;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: .6rem;
+    padding: .8rem 0 !important;
   }
 
-  .admin-ticket-panel .admin-conversation .support-message > header {
-    flex-direction: row;
+  .admin-ticket-panel .admin-conversation .thread-avatar {
+    width: 2rem;
+    height: 2rem;
   }
 
-  .admin-ticket-panel .admin-conversation .support-message > header small {
-    width: auto;
-    margin-left: auto;
-  }
-
-  .admin-ticket-panel .admin-conversation .support-message > p {
-    max-width: calc(100% - 2.35rem);
-    margin-left: 2.35rem;
-  }
-
-  .admin-ticket-panel .admin-conversation .support-message.admin-message > p {
-    margin-right: 0;
-    margin-left: auto;
-  }
-
-  .admin-ticket-panel .admin-conversation .support-message.internal-note > p {
+  .admin-ticket-panel .admin-conversation .support-message > div > p {
     max-width: 100%;
-    margin-left: 0;
+  }
+
+  .admin-ticket-panel .ticket-state-form fieldset {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .admin-ticket-panel .ticket-state-form .button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .admin-ticket-panel .support-composer fieldset {
+    padding-inline: .85rem;
+  }
+
+  .admin-ticket-panel .composer-tabs {
+    padding-inline: .85rem;
+  }
+
+  .admin-ticket-panel .composer-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .admin-ticket-panel .composer-footer > span {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+  }
+
+  .admin-ticket-panel .composer-footer .button {
+    width: auto;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-ticket-panel .admin-conversation .support-message > div > header small {
+    width: 100%;
+  }
+
+  .admin-ticket-panel .ticket-state-form fieldset,
+  .admin-ticket-panel .composer-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-ticket-panel .composer-footer .button {
+    width: 100%;
   }
 }
 

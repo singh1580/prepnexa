@@ -40,13 +40,53 @@ export default async function Page({
           {ticket.messages.map((item) => (
             <article
               className={
-                item.internal ? "support-message internal-note" : item.student ? "support-message student-message" : "support-message admin-message"
+                item.internal
+                  ? "support-message internal-note"
+                  : item.student
+                    ? "support-message customer"
+                    : "support-message support"
               }
               key={item.id}
             >
-              <header><span className={`avatar${!item.student && !item.internal ? " support-brand-avatar" : ""}`}>{item.student ? ticket.studentName.slice(0,1) : item.internal ? "N" : <PrepstoreIcon />}</span><strong>{item.internal ? "Internal note" : item.student ? ticket.studentName : "Prepstore Support"}</strong><small>{new Date(item.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</small></header>
-              <p>{item.body}</p>
-              {item.attachmentObjectKey && <a className="message-attachment" href={`/api/operations/support/messages/${item.id}/attachment`} target="_blank" rel="noreferrer">⌕ {item.attachmentFileName ?? "Open attachment"}</a>}
+              <i
+                className={`thread-avatar${!item.student && !item.internal ? " support-brand-avatar" : ""}`}
+              >
+                {item.student ? (
+                  ticket.studentName.slice(0, 2).toUpperCase()
+                ) : item.internal ? (
+                  "N"
+                ) : (
+                  <PrepstoreIcon />
+                )}
+              </i>
+              <div>
+                <header>
+                  <strong>
+                    {item.internal
+                      ? "Internal note"
+                      : item.student
+                        ? ticket.studentName
+                        : "Prepstore Support"}
+                  </strong>
+                  <small>
+                    {new Date(item.createdAt).toLocaleString("en-IN", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </small>
+                </header>
+                <p>{item.body}</p>
+                {item.attachmentObjectKey && (
+                  <a
+                    className="message-attachment"
+                    href={`/api/operations/support/messages/${item.id}/attachment`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    ▧ <span>{item.attachmentFileName ?? "Open attachment"}</span>
+                  </a>
+                )}
+              </div>
             </article>
           ))}
         </section>
