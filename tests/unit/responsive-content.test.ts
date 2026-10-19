@@ -157,8 +157,11 @@ describe("responsive content integrity", () => {
     );
     expect(finalReviewPolish).toContain("touch-action: pan-y;");
     expect(finalReviewPolish).toContain("@media (prefers-reduced-motion: reduce)");
-    expect(heroCarousel.match(/home-[a-z-]+\.webp/g)).toHaveLength(4);
+    expect(heroCarousel.match(/home-[a-z-]+\.webp/g)).toHaveLength(8);
     expect(heroCarousel.match(/student-[a-z-]+\.webp/g)).toHaveLength(4);
+    expect(heroCarousel.match(/home-[a-z-]+-responsive\.webp/g)).toHaveLength(4);
+    expect(heroCarousel).toContain('<source media="(max-width: 1199px)"');
+    expect(heroCarousel).toContain('fetchPriority={index === 0 ? "high" : "auto"}');
     expect(heroCarousel).toContain("document.visibilityState");
     expect(heroCarousel).toContain('controls="dots"');
     expect(heroCarousel).toContain('controls="full"');
@@ -168,9 +171,11 @@ describe("responsive content integrity", () => {
       heroCarousel.indexOf("hero-carousel-label"),
     );
     expect(heroCarousel).toContain("unoptimized");
-    expect(finalReviewPolish).toContain("object-fit: contain");
-    expect(finalReviewPolish).toContain("object-position: right center");
+    expect(finalReviewPolish).toContain(".home-hero-carousel .hero-carousel-slide img {\n  object-fit: cover;");
+    expect(finalReviewPolish).toContain(".student-hero-carousel .hero-carousel-slide img {\n  object-fit: contain;");
+    expect(finalReviewPolish).toContain(".hero-carousel-picture {\n  position: absolute;");
     expect(finalReviewPolish).toContain("left: clamp(1rem, 7vw, 7.2rem)");
+    expect(finalReviewPolish).toContain(".home-hero-carousel .hero-carousel-controls {\n    bottom: 9.5rem;");
     expect(finalReviewPolish).toContain("bottom: 3.75rem");
     expect(finalReviewPolish).toContain(".hero-carousel-controls.has-full-controls");
     const homeControls = finalReviewPolish.match(
