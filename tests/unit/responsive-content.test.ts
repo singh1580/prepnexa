@@ -8,6 +8,10 @@ describe("responsive content integrity", () => {
     "src/app/final-review-polish.css",
     "utf8",
   );
+  const heroCarousel = readFileSync(
+    "src/components/hero-carousel.tsx",
+    "utf8",
+  );
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
   const orders = readFileSync(
     "src/app/(workspace)/dashboard/orders/page.tsx",
@@ -144,16 +148,20 @@ describe("responsive content integrity", () => {
     );
   });
 
-  it("anchors mobile hero search to the hero and retains its handwritten cue", () => {
+  it("anchors mobile hero search and uses the shared responsive carousel", () => {
     expect(finalReviewPolish).toContain(
       ".public-site .store-hero-content {\n    position: absolute !important;\n    inset: 0;",
     );
     expect(finalReviewPolish).toContain(
-      ".public-site .hero-handwriting {\n    display: block !important;",
-    );
-    expect(finalReviewPolish).toContain(
       "bottom: .7rem !important;",
     );
+    expect(finalReviewPolish).toContain("touch-action: pan-y;");
+    expect(finalReviewPolish).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(heroCarousel.match(/home-[a-z-]+\.webp/g)).toHaveLength(4);
+    expect(heroCarousel.match(/student-[a-z-]+\.webp/g)).toHaveLength(4);
+    expect(heroCarousel).toContain("document.visibilityState");
+    expect(heroCarousel).toContain("onPointerUp={handlePointerUp}");
+    expect(heroCarousel).not.toContain("hero-handwriting");
   });
 
   it("renders order rows as labelled mobile cards", () => {
@@ -280,7 +288,8 @@ describe("responsive content integrity", () => {
   });
 
   it("keeps mobile hero copy clear of the subject and strengthens owned actions", () => {
-    expect(finalReviewPolish).toContain("object-position: 65% center !important");
+    expect(finalReviewPolish).toContain("object-position: 58% center");
+    expect(finalReviewPolish).toContain("rgba(255, 253, 250, .88) 40%");
     expect(finalReviewPolish).toContain("max-width: 52%");
     expect(finalReviewPolish).toContain(
       ".public-site .hero-search:focus-within",
