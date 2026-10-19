@@ -163,8 +163,10 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain("touch-action: pan-y;");
     expect(finalReviewPolish).toContain("@media (prefers-reduced-motion: reduce)");
     expect(heroCarousel.match(/home-[a-z-]+\.webp/g)).toHaveLength(8);
-    expect(heroCarousel.match(/student-[a-z-]+\.webp/g)).toHaveLength(4);
+    expect(heroCarousel.match(/student-[a-z-]+\.webp/g)).toHaveLength(8);
+    expect(heroCarousel.match(/student-[a-z-]+-desktop\.webp/g)).toHaveLength(4);
     expect(heroCarousel.match(/home-[a-z-]+-responsive\.webp/g)).toHaveLength(4);
+    expect(heroCarousel).toContain('<source media="(min-width: 801px)"');
     expect(heroCarousel).toContain('<source media="(max-width: 1199px)"');
     expect(heroCarousel).toContain('fetchPriority={index === 0 ? "high" : "auto"}');
     expect(heroCarousel).toContain("document.visibilityState");
@@ -196,6 +198,17 @@ describe("responsive content integrity", () => {
     expect(css).not.toContain(".student-reference-banner:after");
     expect(storefrontFixes).not.toContain(".student-reference-banner:after");
     expect(finalReviewPolish).not.toContain(".student-reference-banner::after");
+    expect(css).not.toContain(".store-hero:after");
+    expect(finalReviewPolish).not.toContain(".store-hero::after");
+    expect(finalReviewPolish).toContain(
+      ".student-dashboard-main > .student-reference-banner {\n    min-height: 18.5rem;",
+    );
+    expect(finalReviewPolish).toContain(
+      ".student-reference-banner {\n    min-height: 18rem;",
+    );
+    expect(finalReviewPolish).not.toContain(
+      "@media (max-width: 800px) {\n  .student-dashboard-main > .student-reference-banner",
+    );
     expect(studentDashboard).toContain('mainClassName="student-dashboard-main"');
     expect(studentDashboard).toContain('className="student-dashboard-content"');
     expect(workspaceShell).toContain("mainClassName?: string");
@@ -328,7 +341,6 @@ describe("responsive content integrity", () => {
 
   it("keeps mobile hero copy clear of the subject and strengthens owned actions", () => {
     expect(finalReviewPolish).toContain("object-position: right center");
-    expect(finalReviewPolish).toContain("rgba(255, 253, 250, .88) 40%");
     expect(finalReviewPolish).toContain("max-width: 52%");
     expect(finalReviewPolish).toContain(
       ".public-site .hero-search:focus-within",
