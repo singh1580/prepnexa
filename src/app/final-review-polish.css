@@ -845,11 +845,6 @@
     background: #fbf7f1 !important;
   }
 
-  .public-site .store-hero::after {
-    display: block !important;
-    background: linear-gradient(90deg, #fbf8f3ee 0%, #fbf8f3aa 30%, transparent 53%) !important;
-  }
-
   .store-home .store-product-featured .store-product-body {
     padding: .72rem;
   }
@@ -864,12 +859,6 @@
   .public-site .store-hero {
     position: relative;
     min-height: 18.5rem !important;
-  }
-
-  .public-site .store-hero::after {
-    display: block !important;
-    z-index: 1;
-    background: linear-gradient(90deg, rgba(255, 253, 250, .98) 0%, rgba(255, 253, 250, .88) 40%, rgba(255, 253, 250, .2) 72%, transparent 100%) !important;
   }
 
   .public-site .store-hero-content {
@@ -1337,9 +1326,14 @@
 }
 
 .student-dashboard-main > .student-reference-banner {
-  min-height: 15.5rem;
   border: 0;
   border-radius: 0;
+}
+
+@media (min-width: 801px) {
+  .student-dashboard-main > .student-reference-banner {
+    min-height: 18.5rem;
+  }
 }
 
 .admin-page-header,
@@ -2516,10 +2510,6 @@
 
 .public-site .store-hero-media {
   z-index: auto;
-}
-
-.public-site .store-hero::after {
-  pointer-events: none;
 }
 
 .student-reference-banner > .student-banner-content {

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 type HeroSlide = {
   src: string;
   responsiveSrc?: string;
+  desktopSrc?: string;
   label: string;
 };
 
@@ -25,10 +26,10 @@ const HOME_SLIDES = [
 ] as const;
 
 const STUDENT_SLIDES = [
-  { src: "/images/heroes/student-learning-ecosystem.webp", label: "Connected learning ecosystem" },
-  { src: "/images/heroes/student-exam-studio.webp", label: "Digital exam studio" },
-  { src: "/images/heroes/student-adaptive-console.webp", label: "Adaptive learning console" },
-  { src: "/images/heroes/student-learning-momentum.webp", label: "Learning momentum" },
+  { src: "/images/heroes/student-learning-ecosystem.webp", desktopSrc: "/images/heroes/student-learning-ecosystem-desktop.webp", label: "Connected learning ecosystem" },
+  { src: "/images/heroes/student-exam-studio.webp", desktopSrc: "/images/heroes/student-exam-studio-desktop.webp", label: "Digital exam studio" },
+  { src: "/images/heroes/student-adaptive-console.webp", desktopSrc: "/images/heroes/student-adaptive-console-desktop.webp", label: "Adaptive learning console" },
+  { src: "/images/heroes/student-learning-momentum.webp", desktopSrc: "/images/heroes/student-learning-momentum-desktop.webp", label: "Learning momentum" },
 ] as const;
 
 function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroCarouselProps) {
@@ -98,7 +99,12 @@ function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroC
         aria-hidden={index !== activeIndex}
       >
         <picture className="hero-carousel-picture">
-          {"responsiveSrc" in slide && slide.responsiveSrc ? <source media="(max-width: 1199px)" srcSet={slide.responsiveSrc}/> : null}
+          {"desktopSrc" in slide && slide.desktopSrc ? (
+            <source media="(min-width: 801px)" srcSet={slide.desktopSrc} />
+          ) : null}
+          {"responsiveSrc" in slide && slide.responsiveSrc ? (
+            <source media="(max-width: 1199px)" srcSet={slide.responsiveSrc} />
+          ) : null}
           <Image
             src={slide.src}
             alt=""
