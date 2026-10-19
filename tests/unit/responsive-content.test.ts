@@ -203,6 +203,12 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain(
       ".student-dashboard-main > .student-reference-banner {\n    min-height: 18.5rem;",
     );
+    expect(finalReviewPolish).toContain(
+      ".student-reference-banner {\n    min-height: 18rem;",
+    );
+    expect(finalReviewPolish).not.toContain(
+      "@media (max-width: 800px) {\n  .student-dashboard-main > .student-reference-banner",
+    );
     expect(studentDashboard).toContain('mainClassName="student-dashboard-main"');
     expect(studentDashboard).toContain('className="student-dashboard-content"');
     expect(workspaceShell).toContain("mainClassName?: string");
