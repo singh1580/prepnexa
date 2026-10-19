@@ -12,6 +12,11 @@ describe("responsive content integrity", () => {
     "src/components/hero-carousel.tsx",
     "utf8",
   );
+  const workspaceShell = readFileSync("src/components/workspace-shell.tsx", "utf8");
+  const studentDashboard = readFileSync(
+    "src/app/(workspace)/dashboard/page.tsx",
+    "utf8",
+  );
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
   const orders = readFileSync(
     "src/app/(workspace)/dashboard/orders/page.tsx",
@@ -163,26 +168,38 @@ describe("responsive content integrity", () => {
     expect(heroCarousel).toContain('<source media="(max-width: 1199px)"');
     expect(heroCarousel).toContain('fetchPriority={index === 0 ? "high" : "auto"}');
     expect(heroCarousel).toContain("document.visibilityState");
-    expect(heroCarousel).toContain('controls="dots"');
-    expect(heroCarousel).toContain('controls="full"');
-    expect(heroCarousel).toContain("hasFullControls ? handlePointerUp : undefined");
+    expect(heroCarousel).not.toContain("controls=");
+    expect(heroCarousel).toContain("onPointerUp={handlePointerUp}");
+    expect(heroCarousel).toContain("if (distance > 0) showPrevious(); else showNext();");
+    expect(heroCarousel).not.toContain("ArrowIcon");
+    expect(heroCarousel).not.toContain("PauseIcon");
     expect(heroCarousel).toContain("hero-carousel-label");
     expect(heroCarousel.indexOf("hero-carousel-dots")).toBeLessThan(
       heroCarousel.indexOf("hero-carousel-label"),
     );
     expect(heroCarousel).toContain("unoptimized");
     expect(finalReviewPolish).toContain(".home-hero-carousel .hero-carousel-slide img {\n  object-fit: cover;");
-    expect(finalReviewPolish).toContain(".student-hero-carousel .hero-carousel-slide img {\n  object-fit: contain;");
+    expect(finalReviewPolish).toContain(".student-hero-carousel .hero-carousel-slide img {\n  object-fit: cover;");
     expect(finalReviewPolish).toContain(".hero-carousel-picture {\n  position: absolute;");
     expect(finalReviewPolish).toContain("left: clamp(1rem, 7vw, 7.2rem)");
-    expect(finalReviewPolish).toContain(".home-hero-carousel .hero-carousel-controls {\n    bottom: 9.5rem;");
+    expect(finalReviewPolish).toContain(".public-site .hero-search {\n    margin-top: 2.5rem;");
+    expect(finalReviewPolish).toContain(".home-hero-carousel .hero-carousel-controls {\n    bottom: 6.5rem;");
     expect(finalReviewPolish).toContain("bottom: 3.75rem");
-    expect(finalReviewPolish).toContain(".hero-carousel-controls.has-full-controls");
+    expect(finalReviewPolish).not.toContain(".hero-carousel-controls.has-full-controls");
+    expect(finalReviewPolish).not.toContain(".hero-carousel-arrow");
+    expect(finalReviewPolish).not.toContain(".hero-carousel-toggle");
     const homeControls = finalReviewPolish.match(
       /\.hero-carousel-controls\.has-dot-controls \{([^}]*)\}/,
     )?.[1];
     expect(homeControls).toBeDefined();
     expect(homeControls).not.toMatch(/right:|padding:|border:|background:|box-shadow:|backdrop-filter:/);
+    expect(css).not.toContain(".student-reference-banner:after");
+    expect(storefrontFixes).not.toContain(".student-reference-banner:after");
+    expect(finalReviewPolish).not.toContain(".student-reference-banner::after");
+    expect(studentDashboard).toContain('mainClassName="student-dashboard-main"');
+    expect(studentDashboard).toContain('className="student-dashboard-content"');
+    expect(workspaceShell).toContain("mainClassName?: string");
+    expect(finalReviewPolish).toContain(".student-workspace .workspace-main.student-dashboard-main {\n  max-width: none;\n  padding: 0 !important;");
     expect(heroCarousel).not.toContain("hero-handwriting");
   });
 

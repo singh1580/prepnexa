@@ -450,6 +450,7 @@ export async function WorkspaceShell({
   activePackageView,
   activeMaterialId,
   navigationPackages,
+  mainClassName,
   children,
 }: {
   admin: boolean;
@@ -463,6 +464,7 @@ export async function WorkspaceShell({
   activePackageView?: PackageView;
   activeMaterialId?: string;
   navigationPackages?: StudentCourse[];
+  mainClassName?: string;
   children: React.ReactNode;
 }) {
   const nav = admin ? adminNavigation(permissions) : studentNavigation;
@@ -572,7 +574,7 @@ export async function WorkspaceShell({
           )}
           <LogoutButton />
         </header>
-        <main id="main-content" className="workspace-main">
+        <main id="main-content" className={`workspace-main${mainClassName ? ` ${mainClassName}` : ""}`}>
           {children}
         </main>
       </div>

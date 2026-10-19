@@ -30,7 +30,7 @@
   .reference-order-summary,.reference-checkout-summary{position:static!important}
 }
 @media(max-width:600px){
-  .student-reference-banner{display:block;min-height:18rem;background:#fff8f3}.student-reference-banner:after{display:block;background:linear-gradient(90deg,#fff8f3 0%,#fff8f3f7 45%,#fff8f3a8 67%,transparent 100%)}
+  .student-reference-banner{display:block;min-height:18rem;background:#fff8f3}
   .student-reference-banner>.student-banner-content{width:68%;padding:1.35rem 1.25rem 1.5rem;background:transparent}.student-reference-banner p{max-width:16rem}
 }
 @media(max-width:560px){
