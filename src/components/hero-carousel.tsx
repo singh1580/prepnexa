@@ -129,7 +129,6 @@ function HeroCarousel({ ariaLabel, className, controls, intervalMs, sizes, slide
 
     <div className={`hero-carousel-controls ${hasFullControls ? "has-full-controls" : "has-dot-controls"}`}>
       {hasFullControls ? <button type="button" className="hero-carousel-arrow" onClick={showPrevious} aria-label="Show previous image"><ArrowIcon direction="left"/></button> : null}
-      <span className="hero-carousel-label" aria-live="polite">{slides[activeIndex].label}</span>
       <div className="hero-carousel-dots" role="group" aria-label="Choose an image">
         {slides.map((slide, index) => <button
           type="button"
@@ -140,6 +139,7 @@ function HeroCarousel({ ariaLabel, className, controls, intervalMs, sizes, slide
           aria-current={index === activeIndex ? "true" : undefined}
         />)}
       </div>
+      <span className="hero-carousel-label" aria-live="polite">{slides[activeIndex].label}</span>
       {hasFullControls ? <button
         type="button"
         className="hero-carousel-toggle"
