@@ -160,7 +160,13 @@ describe("responsive content integrity", () => {
     expect(heroCarousel.match(/home-[a-z-]+\.webp/g)).toHaveLength(4);
     expect(heroCarousel.match(/student-[a-z-]+\.webp/g)).toHaveLength(4);
     expect(heroCarousel).toContain("document.visibilityState");
-    expect(heroCarousel).toContain("onPointerUp={handlePointerUp}");
+    expect(heroCarousel).toContain('controls="dots"');
+    expect(heroCarousel).toContain('controls="full"');
+    expect(heroCarousel).toContain("hasFullControls ? handlePointerUp : undefined");
+    expect(heroCarousel).toContain("hero-carousel-label");
+    expect(heroCarousel).toContain("unoptimized");
+    expect(finalReviewPolish).toContain("object-fit: contain");
+    expect(finalReviewPolish).toContain("object-position: right center");
     expect(heroCarousel).not.toContain("hero-handwriting");
   });
 
@@ -288,7 +294,7 @@ describe("responsive content integrity", () => {
   });
 
   it("keeps mobile hero copy clear of the subject and strengthens owned actions", () => {
-    expect(finalReviewPolish).toContain("object-position: 58% center");
+    expect(finalReviewPolish).toContain("object-position: right center");
     expect(finalReviewPolish).toContain("rgba(255, 253, 250, .88) 40%");
     expect(finalReviewPolish).toContain("max-width: 52%");
     expect(finalReviewPolish).toContain(
