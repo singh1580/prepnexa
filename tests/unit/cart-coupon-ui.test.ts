@@ -20,4 +20,10 @@ describe("cart coupon experience", () => {
     expect(cartWorkflow).toContain('>Remove</button>');
     expect(cartWorkflow).toContain('router.replace("/checkout",{scroll:false})');
   });
+
+  it("collects the paid-order mobile number and sends the normalized value",()=>{
+    expect(cartWorkflow).toContain('type="tel" inputMode="numeric"');
+    expect(cartWorkflow).toContain("phone:normalizedPhone");
+    expect(cartWorkflow).not.toContain('value={account.phone??"Not added to your profile"} readOnly');
+  });
 });

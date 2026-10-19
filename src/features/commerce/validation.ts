@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeIndianMobile } from "@/lib/phone";
 
 const optionalDateTime = z.union([z.iso.datetime({ offset: true }), z.literal(""), z.null()]).optional().transform(value => value || null);
 const optionalPositiveInt = z.union([z.coerce.number().int().positive(), z.literal(""), z.null()]).optional().transform(value => value === "" || value == null ? null : value);
@@ -32,6 +33,15 @@ export const checkoutInputSchema = z.object({
   productIds: z.array(z.uuid()).min(1).max(20).optional(),
   couponCode: z.union([couponCodeSchema, z.literal(""), z.null()]).optional().transform(value => value || null),
   idempotencyKey: z.string().trim().min(16).max(100).regex(/^[A-Za-z0-9:_-]+$/),
+  phone: z.string().trim().optional().transform((value, context) => {
+    if (!value) return null;
+    const normalized = normalizeIndianMobile(value);
+    if (!normalized) {
+      context.addIssue({ code: "custom", message: "Enter a valid 10-digit Indian mobile number." });
+      return z.NEVER;
+    }
+    return normalized;
+  }),
 }).strict().superRefine((value, context) => { if (!value.productId && !value.productIds?.length) context.addIssue({ code: "custom", path: ["productIds"], message: "Choose at least one product." }); }).transform((value) => ({ ...value, productIds: [...new Set(value.productIds ?? (value.productId ? [value.productId] : []))] }));
 export const checkoutPreviewSchema = z.object({ productId:z.uuid().optional(),productIds:z.array(z.uuid()).min(1).max(20).optional(),couponCode:z.union([couponCodeSchema,z.literal(""),z.null()]).optional().transform(value=>value||null) }).strict().superRefine((value,context)=>{if(!value.productId&&!value.productIds?.length)context.addIssue({code:"custom",path:["productIds"],message:"Choose at least one product."});}).transform(value=>({...value,productIds:[...new Set(value.productIds??(value.productId?[value.productId]:[]))]}));
 
@@ -42,6 +52,7 @@ export const razorpayConfirmationSchema = z.object({
   razorpay_signature: z.string().trim().regex(/^[a-fA-F0-9]{64}$/),
 }).strict();
 export const razorpayStatusSchema = z.object({ attemptId: z.uuid() }).strict();
+export const razorpayRetrySchema = razorpayStatusSchema;
 
 export const refundInputSchema = z.object({
   amountPaise: z.coerce.number().int().positive(),

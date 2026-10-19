@@ -88,11 +88,14 @@ export const razorpayPaymentProvider: PaymentProvider = {
     if (payment.order_id !== input.providerOrderId || payment.status !== "captured" || payment.captured !== true) throw paymentVerificationFailed("The payment has not been captured.");
     return paymentEvent(payment, "PAYMENT_CAPTURED", `checkout:${input.providerPaymentId}`, { source: "razorpay-checkout-confirmation", payment });
   },
-  async reconcilePayment(providerOrderId: string) {
+  async inspectPayment(providerOrderId: string) {
     const result = await requestRazorpay<RazorpayPaymentCollection>(`/orders/${encodeURIComponent(providerOrderId)}/payments`);
     const payments = Array.isArray(result.items) ? result.items as RazorpayPayment[] : [];
     const payment = payments.find(item => item.order_id === providerOrderId && item.status === "captured" && item.captured === true);
-    return payment ? paymentEvent(payment, "PAYMENT_CAPTURED", `reconcile:${String(payment.id)}`, { source: "razorpay-order-reconciliation", payment }) : null;
+    if (payment) return { state: "CAPTURED" as const, event: paymentEvent(payment, "PAYMENT_CAPTURED", `reconcile:${String(payment.id)}`, { source: "razorpay-order-reconciliation", payment }) };
+    if (!payments.length) return { state: "READY" as const };
+    if (payments.some(item => item.status === "authorized" || item.status === "created")) return { state: "PENDING" as const };
+    return { state: "RETRYABLE" as const };
   },
   async verifyWebhook(rawBody: string, headers: Headers) {
     const signature = headers.get("x-razorpay-signature") ?? "";

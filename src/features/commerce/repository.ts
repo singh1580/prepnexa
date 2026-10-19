@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { auditLogs, couponProducts, coupons, paymentAttempts, products } from "@/db/schema";
+import { auditLogs, couponProducts, coupons, orders, paymentAttempts, products } from "@/db/schema";
 import { productReadySql } from "@/features/catalog/readiness";
 import type { CouponInput } from "./validation";
 import type { ProviderCheckout, VerifiedPaymentEvent } from "./providers";
@@ -114,7 +114,7 @@ export async function evaluateCartCoupon(code: string, productIds: string[], use
 export async function findOrderByIdempotency(userId: string, idempotencyKey: string) {
   const result = await db.execute(sql`
     select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,
-      o.coupon_code as "couponCode",o.expires_at as "expiresAt",pa.id as "paymentAttemptId",pa.provider,pa.checkout_reference as "checkoutReference"
+      o.coupon_code as "couponCode",o.billing_phone as "billingPhone",o.expires_at as "expiresAt",pa.id as "paymentAttemptId",pa.provider,pa.checkout_reference as "checkoutReference"
     from orders o left join lateral (select * from payment_attempts x where x.order_id=o.id order by x.created_at desc limit 1) pa on true
     where o.user_id=${userId} and o.idempotency_key=${idempotencyKey} limit 1
   `);
@@ -125,7 +125,7 @@ export async function findReusableCheckoutOrder(userId: string, productIds: stri
   const ids = JSON.stringify([...new Set(productIds)].sort());
   const result = await db.execute(sql`
     select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,
-      o.coupon_code as "couponCode",o.expires_at as "expiresAt",pa.id as "paymentAttemptId",pa.provider,pa.checkout_reference as "checkoutReference"
+      o.coupon_code as "couponCode",o.billing_phone as "billingPhone",o.expires_at as "expiresAt",pa.id as "paymentAttemptId",pa.provider,pa.checkout_reference as "checkoutReference"
     from orders o
     left join lateral (select * from payment_attempts x where x.order_id=o.id order by x.created_at desc limit 1) pa on true
     where o.user_id=${userId}
@@ -140,10 +140,15 @@ export async function findReusableCheckoutOrder(userId: string, productIds: stri
   return rows<CheckoutOrder>(result)[0];
 }
 
-export type CheckoutOrder = { id:string;status:string;subtotalPaise:number;discountPaise:number;taxPaise:number;totalPaise:number;currency:string;couponCode:string|null;expiresAt:Date;paymentAttemptId:string|null;provider:string|null;checkoutReference:string|null };
+export type CheckoutOrder = { id:string;status:string;subtotalPaise:number;discountPaise:number;taxPaise:number;totalPaise:number;currency:string;couponCode:string|null;billingPhone:string|null;expiresAt:Date;paymentAttemptId:string|null;provider:string|null;checkoutReference:string|null };
 
-export async function insertCartCheckoutOrder(input:{userId:string;productIds:string[];idempotencyKey:string;couponId:string|null;couponCode:string|null;requestId:string}){
-  const orderId=randomUUID();const expiresAt=new Date(Date.now()+30*60_000);const ids=JSON.stringify(input.productIds);
+export async function updateCheckoutBillingPhone(orderId:string,userId:string,billingPhone:string) {
+  const [updated] = await db.update(orders).set({ billingPhone, updatedAt:new Date() }).where(and(eq(orders.id,orderId),eq(orders.userId,userId))).returning({id:orders.id});
+  return updated;
+}
+
+export async function insertCartCheckoutOrder(input:{userId:string;productIds:string[];idempotencyKey:string;couponId:string|null;couponCode:string|null;billingPhone:string|null;requestId:string}){
+  const orderId=randomUUID();const expiresAt=new Date(Date.now()+15*60_000);const ids=JSON.stringify(input.productIds);
   const result=input.couponId?await db.execute(sql`
     with selected as (select jsonb_array_elements_text(${ids}::jsonb)::uuid as id),
     priced as (select p.* from selected s join products p on p.id=s.id where p.is_live=true and ${productReadySql(sql.raw("p.id"))} and not exists(select 1 from entitlements e where e.user_id=${input.userId} and e.product_id=p.id and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())),
@@ -151,16 +156,16 @@ export async function insertCartCheckoutOrder(input:{userId:string;productIds:st
     totals as (select sum(price_paise)::int subtotal,min(currency) currency,count(*)::int item_count from priced),
     eligible as (select coalesce(sum(p.price_paise) filter(where not exists(select 1 from coupon_products cp where cp.coupon_id=c.id) or exists(select 1 from coupon_products cp where cp.coupon_id=c.id and cp.product_id=p.id)),0)::int amount from priced p cross join locked_coupon c),
     final_price as (select t.subtotal,t.currency,c.id coupon_id,c.code coupon_code,least(e.amount,case when c.type='FIXED' then c.value else floor(e.amount*c.value/10000.0)::int end,coalesce(c.max_discount_paise,e.amount))::int discount from totals t cross join locked_coupon c cross join eligible e where t.item_count=${input.productIds.length} and t.subtotal>=c.min_order_paise and (c.currency is null or c.currency=t.currency) and e.amount>0 and (c.total_limit is null or (select count(*) from coupon_redemptions r where r.coupon_id=c.id and (r.status='CONSUMED' or(r.status='RESERVED' and r.expires_at>now())))<c.total_limit) and (select count(*) from coupon_redemptions r where r.coupon_id=c.id and r.user_id=${input.userId} and (r.status='CONSUMED' or(r.status='RESERVED' and r.expires_at>now())))<c.per_user_limit),
-    created_order as (insert into orders(id,user_id,status,subtotal_paise,discount_paise,tax_paise,total_paise,currency,coupon_code,idempotency_key,expires_at,created_at,updated_at) select ${orderId}::uuid,${input.userId}::uuid,case when subtotal-discount=0 then 'CREATED'::order_status else 'PENDING'::order_status end,subtotal,discount,floor((subtotal-discount)*.18)::int,subtotal-discount+floor((subtotal-discount)*.18)::int,currency,coupon_code,${input.idempotencyKey},${expiresAt},now(),now() from final_price on conflict(idempotency_key) do nothing returning *),
+    created_order as (insert into orders(id,user_id,billing_phone,status,subtotal_paise,discount_paise,tax_paise,total_paise,currency,coupon_code,idempotency_key,expires_at,created_at,updated_at) select ${orderId}::uuid,${input.userId}::uuid,${input.billingPhone},case when subtotal-discount=0 then 'CREATED'::order_status else 'PENDING'::order_status end,subtotal,discount,floor((subtotal-discount)*.18)::int,subtotal-discount+floor((subtotal-discount)*.18)::int,currency,coupon_code,${input.idempotencyKey},${expiresAt},now(),now() from final_price on conflict(idempotency_key) do nothing returning *),
     created_items as (insert into order_items(order_id,product_id,product_name,unit_price_paise,access_days,quantity) select o.id,p.id,p.name,p.price_paise,p.access_days,1 from created_order o cross join priced p returning order_id),
     reserved as (insert into coupon_redemptions(coupon_id,user_id,order_id,status,discount_paise,expires_at,created_at) select f.coupon_id,${input.userId}::uuid,o.id,'RESERVED',f.discount,${expiresAt},now() from created_order o cross join final_price f returning order_id),
     logged as (insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,after) select ${input.userId}::uuid,'order.created','order',id::text,${input.requestId},jsonb_build_object('productIds',${ids}::jsonb,'couponCode',${input.couponCode}::text) from created_order)
-    select id,status,subtotal_paise as "subtotalPaise",discount_paise as "discountPaise",tax_paise as "taxPaise",total_paise as "totalPaise",currency,coupon_code as "couponCode",expires_at as "expiresAt",null::uuid as "paymentAttemptId",null::text provider,null::text as "checkoutReference" from created_order
+    select id,status,subtotal_paise as "subtotalPaise",discount_paise as "discountPaise",tax_paise as "taxPaise",total_paise as "totalPaise",currency,coupon_code as "couponCode",billing_phone as "billingPhone",expires_at as "expiresAt",null::uuid as "paymentAttemptId",null::text provider,null::text as "checkoutReference" from created_order
   `):await db.execute(sql`
     with selected as (select jsonb_array_elements_text(${ids}::jsonb)::uuid as id),priced as (select p.* from selected s join products p on p.id=s.id where p.is_live=true and ${productReadySql(sql.raw("p.id"))} and not exists(select 1 from entitlements e where e.user_id=${input.userId} and e.product_id=p.id and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())),totals as (select sum(price_paise)::int subtotal,min(currency) currency,count(*)::int item_count from priced),
-    created_order as (insert into orders(id,user_id,status,subtotal_paise,discount_paise,tax_paise,total_paise,currency,idempotency_key,expires_at,created_at,updated_at) select ${orderId}::uuid,${input.userId}::uuid,case when subtotal=0 then 'CREATED'::order_status else 'PENDING'::order_status end,subtotal,0,floor(subtotal*.18)::int,subtotal+floor(subtotal*.18)::int,currency,${input.idempotencyKey},${expiresAt},now(),now() from totals where item_count=${input.productIds.length} on conflict(idempotency_key) do nothing returning *),
+    created_order as (insert into orders(id,user_id,billing_phone,status,subtotal_paise,discount_paise,tax_paise,total_paise,currency,idempotency_key,expires_at,created_at,updated_at) select ${orderId}::uuid,${input.userId}::uuid,${input.billingPhone},case when subtotal=0 then 'CREATED'::order_status else 'PENDING'::order_status end,subtotal,0,floor(subtotal*.18)::int,subtotal+floor(subtotal*.18)::int,currency,${input.idempotencyKey},${expiresAt},now(),now() from totals where item_count=${input.productIds.length} on conflict(idempotency_key) do nothing returning *),
     created_items as (insert into order_items(order_id,product_id,product_name,unit_price_paise,access_days,quantity) select o.id,p.id,p.name,p.price_paise,p.access_days,1 from created_order o cross join priced p returning order_id),logged as (insert into audit_logs(actor_user_id,action,entity_type,entity_id,request_id,after) select ${input.userId}::uuid,'order.created','order',id::text,${input.requestId},jsonb_build_object('productIds',${ids}::jsonb) from created_order)
-    select id,status,subtotal_paise as "subtotalPaise",discount_paise as "discountPaise",tax_paise as "taxPaise",total_paise as "totalPaise",currency,coupon_code as "couponCode",expires_at as "expiresAt",null::uuid as "paymentAttemptId",null::text provider,null::text as "checkoutReference" from created_order
+    select id,status,subtotal_paise as "subtotalPaise",discount_paise as "discountPaise",tax_paise as "taxPaise",total_paise as "totalPaise",currency,coupon_code as "couponCode",billing_phone as "billingPhone",expires_at as "expiresAt",null::uuid as "paymentAttemptId",null::text provider,null::text as "checkoutReference" from created_order
   `);return rows<CheckoutOrder>(result)[0];
 }
 
@@ -189,9 +194,34 @@ export async function insertPaymentAttempt(input: { orderId:string;provider:stri
   return created ?? (await db.query.paymentAttempts.findFirst({ where: eq(paymentAttempts.idempotencyKey, input.idempotencyKey) }));
 }
 
+export async function createRetryPaymentAttempt(input: { previousAttemptId:string;orderId:string;provider:string;amountPaise:number;currency:string;expiresAt:Date }) {
+  const id=randomUUID();
+  const idempotencyKey=`checkout-retry:${input.previousAttemptId}`;
+  const result=await db.execute(sql`
+    with previous as (
+      update payment_attempts pa set status='ABANDONED',failure_code='CUSTOMER_RETRY',updated_at=now()
+      where pa.id=${input.previousAttemptId} and pa.order_id=${input.orderId} and pa.provider=${input.provider}
+        and pa.id=(select x.id from payment_attempts x where x.order_id=${input.orderId} order by x.created_at desc,x.id desc limit 1)
+        and pa.status in('CREATED','PENDING','FAILED')
+        and exists(select 1 from orders o where o.id=pa.order_id and o.status in('CREATED','PENDING','FAILED') and o.expires_at>now())
+      returning pa.order_id
+    ), created as (
+      insert into payment_attempts(id,order_id,provider,status,idempotency_key,amount_paise,currency,expires_at,created_at,updated_at)
+      select ${id}::uuid,p.order_id,${input.provider},'CREATED',${idempotencyKey},${input.amountPaise},${input.currency},${input.expiresAt},now(),now() from previous p
+      on conflict(idempotency_key) do nothing returning *
+    ) select * from created
+  `);
+  return rows<typeof paymentAttempts.$inferSelect>(result)[0] ?? (await db.query.paymentAttempts.findFirst({where:eq(paymentAttempts.idempotencyKey,idempotencyKey)}));
+}
+
 export async function saveProviderCheckout(attemptId: string, checkout: ProviderCheckout) {
   const [row] = await db.update(paymentAttempts).set({ providerOrderId: checkout.providerOrderId, checkoutReference: checkout.checkoutReference, expiresAt: checkout.expiresAt, rawMetadata: checkout.metadata, status: "PENDING", updatedAt: new Date() }).where(eq(paymentAttempts.id, attemptId)).returning();
   return row;
+}
+
+export async function claimPaymentAttemptForProviderCreation(attemptId:string){
+  const [claimed]=await db.update(paymentAttempts).set({status:"PROVIDER_CREATING",updatedAt:new Date()}).where(and(eq(paymentAttempts.id,attemptId),inArray(paymentAttempts.status,["CREATED","FAILED"]),isNull(paymentAttempts.providerOrderId))).returning({id:paymentAttempts.id});
+  return Boolean(claimed);
 }
 
 export async function failPaymentAttempt(attemptId: string, code: string) {
@@ -200,11 +230,22 @@ export async function failPaymentAttempt(attemptId: string, code: string) {
 
 export async function findStudentPaymentAttempt(attemptId: string, userId: string) {
   const result = await db.execute(sql`
-    select pa.id as "attemptId",pa.order_id as "orderId",pa.provider,pa.provider_order_id as "providerOrderId",pa.status,
-      pa.amount_paise as "amountPaise",pa.currency,pa.expires_at as "expiresAt",o.user_id as "userId",o.status as "orderStatus"
+    select pa.id as "attemptId",pa.order_id as "orderId",pa.provider,pa.provider_order_id as "providerOrderId",pa.checkout_reference as "checkoutReference",pa.status,
+      pa.amount_paise as "amountPaise",pa.currency,pa.expires_at as "expiresAt",o.user_id as "userId",o.status as "orderStatus",o.billing_phone as "billingPhone",
+      pa.id=(select x.id from payment_attempts x where x.order_id=pa.order_id order by x.created_at desc,x.id desc limit 1) as "isLatest"
     from payment_attempts pa join orders o on o.id=pa.order_id where pa.id=${attemptId} and o.user_id=${userId} limit 1
   `);
-  return rows<{attemptId:string;orderId:string;provider:string;providerOrderId:string|null;status:string;amountPaise:number;currency:string;expiresAt:Date|null;userId:string;orderStatus:string}>(result)[0];
+  return rows<{attemptId:string;orderId:string;provider:string;providerOrderId:string|null;checkoutReference:string|null;status:string;amountPaise:number;currency:string;expiresAt:Date|null;userId:string;orderStatus:string;billingPhone:string|null;isLatest:boolean}>(result)[0];
+}
+
+export async function findLatestStudentPaymentAttempt(orderId:string,userId:string){
+  const result=await db.execute(sql`
+    select pa.id as "attemptId",pa.order_id as "orderId",pa.provider,pa.provider_order_id as "providerOrderId",pa.checkout_reference as "checkoutReference",pa.status,
+      pa.amount_paise as "amountPaise",pa.currency,pa.expires_at as "expiresAt",o.user_id as "userId",o.status as "orderStatus",o.billing_phone as "billingPhone",true as "isLatest"
+    from payment_attempts pa join orders o on o.id=pa.order_id
+    where pa.order_id=${orderId} and o.user_id=${userId} order by pa.created_at desc,pa.id desc limit 1
+  `);
+  return rows<NonNullable<Awaited<ReturnType<typeof findStudentPaymentAttempt>>>>(result)[0];
 }
 
 export async function findProviderAttempt(provider: string, providerOrderId: string) {
@@ -225,7 +266,7 @@ export async function processPaymentEvent(provider: string, event: VerifiedPayme
     ), target as (
       select pa.*,o.user_id from payment_attempts pa join orders o on o.id=pa.order_id join received r on true
       where pa.provider=${provider} and pa.provider_order_id=${event.providerOrderId} and pa.amount_paise=${event.amountPaise} and pa.currency=${event.currency}
-        and pa.status in('CREATED','PENDING','FAILED') and o.status in('CREATED','PENDING','FAILED','CANCELLED') for update of pa,o
+        and pa.status in('CREATED','PROVIDER_CREATING','PENDING','FAILED','ABANDONED') and o.status in('CREATED','PENDING','FAILED','CANCELLED') for update of pa,o
     ), captured as (
       insert into payments(id,order_id,provider,provider_order_id,provider_payment_id,idempotency_key,status,amount_paise,currency,verified_at,raw_metadata,created_at,updated_at)
       select ${paymentId}::uuid,t.order_id,${provider},${event.providerOrderId},${event.providerPaymentId},${`webhook:${provider}:${event.eventId}`},'CAPTURED',${event.amountPaise},${event.currency},now(),${JSON.stringify(event.payload)}::jsonb,now(),now() from target t
@@ -285,7 +326,7 @@ export async function listStudentOrders(userId: string) {
 
 export async function findStudentOrder(orderId: string, userId: string) {
   const result = await db.execute(sql`
-    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",o.expires_at as "expiresAt",(o.expires_at>now()) as "checkoutUnexpired",
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.billing_phone as "billingPhone",o.created_at as "createdAt",o.paid_at as "paidAt",o.expires_at as "expiresAt",(o.expires_at>now()) as "checkoutUnexpired",
       p.provider,p.provider_payment_id as "providerPaymentId",p.status as "paymentStatus",
       pa.id as "paymentAttemptId",pa.checkout_reference as "checkoutReference",pa.status as "paymentAttemptStatus",
       coalesce(jsonb_agg(jsonb_build_object('productId',oi.product_id,'name',oi.product_name,'pricePaise',oi.unit_price_paise,'accessDays',oi.access_days) order by oi.id),'[]'::jsonb) as items
@@ -314,7 +355,7 @@ export async function listManagedOrders() {
 
 export async function findManagedOrder(orderId: string) {
   const result = await db.execute(sql`
-    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.created_at as "createdAt",o.paid_at as "paidAt",u.name as "studentName",u.email,
+    select o.id,o.status,o.subtotal_paise as "subtotalPaise",o.discount_paise as "discountPaise",o.tax_paise as "taxPaise",o.total_paise as "totalPaise",o.currency,o.coupon_code as "couponCode",o.billing_phone as "billingPhone",o.created_at as "createdAt",o.paid_at as "paidAt",u.name as "studentName",u.email,
       p.id as "paymentId",p.status as "paymentStatus",p.provider,p.provider_payment_id as "providerPaymentId",p.amount_paise as "paymentAmountPaise",
       coalesce((select sum(r.amount_paise)::int from refunds r where r.payment_id=p.id and r.status in('PROCESSING','SUCCEEDED')),0) as "refundedPaise",
       coalesce(jsonb_agg(jsonb_build_object('productId',oi.product_id,'name',oi.product_name,'pricePaise',oi.unit_price_paise,'accessDays',oi.access_days) order by oi.id),'[]'::jsonb) as items

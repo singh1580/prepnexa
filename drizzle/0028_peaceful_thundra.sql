@@ -1,0 +1,1 @@
+ALTER TABLE "orders" ADD COLUMN "billing_phone" varchar(16);
