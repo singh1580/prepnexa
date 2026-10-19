@@ -2411,8 +2411,10 @@
 }
 
 .hero-carousel-slide img {
-  object-fit: cover;
-  object-position: center;
+  object-fit: contain;
+  object-position: right center;
+  background: #fbf7f1;
+  filter: none;
   pointer-events: none;
   user-select: none;
 }
@@ -2431,6 +2433,23 @@
   background: rgba(255, 253, 252, .82);
   box-shadow: 0 .35rem 1.2rem rgba(52, 31, 17, .14);
   backdrop-filter: blur(10px);
+}
+
+.hero-carousel-controls.has-dot-controls {
+  gap: .55rem;
+  padding: .48rem .7rem;
+  backdrop-filter: none;
+}
+
+.hero-carousel-label {
+  max-width: 12rem;
+  overflow: hidden;
+  color: #34383c;
+  font-size: .68rem;
+  font-weight: 750;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hero-carousel-arrow,
@@ -2536,6 +2555,10 @@
   bottom: .75rem;
 }
 
+.student-hero-carousel .hero-carousel-slide img {
+  background: #fff8f3;
+}
+
 @media (max-width: 560px) {
   .public-site .store-hero {
     min-height: 18.5rem !important;
@@ -2545,10 +2568,6 @@
     display: block !important;
     z-index: 1;
     background: linear-gradient(90deg, rgba(255, 253, 250, .98) 0%, rgba(255, 253, 250, .88) 40%, rgba(255, 253, 250, .2) 72%, transparent 100%) !important;
-  }
-
-  .public-site .home-hero-carousel .hero-carousel-slide img {
-    object-position: 58% center;
   }
 
   .home-hero-carousel .hero-carousel-controls {
@@ -2579,10 +2598,6 @@
   .student-reference-banner > .student-banner-content {
     width: 62%;
     padding: 1.2rem .85rem;
-  }
-
-  .student-hero-carousel .hero-carousel-slide img {
-    object-position: 60% center;
   }
 
   .student-hero-carousel .hero-carousel-controls {
