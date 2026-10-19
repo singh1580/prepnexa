@@ -845,11 +845,6 @@
     background: #fbf7f1 !important;
   }
 
-  .public-site .store-hero-image {
-    object-fit: cover !important;
-    object-position: center 50% !important;
-  }
-
   .public-site .store-hero::after {
     display: block !important;
     background: linear-gradient(90deg, #fbf8f3ee 0%, #fbf8f3aa 30%, transparent 53%) !important;
@@ -869,12 +864,6 @@
   .public-site .store-hero {
     position: relative;
     min-height: 17rem !important;
-  }
-
-  .public-site .store-hero-image {
-    object-fit: cover !important;
-    object-position: 65% center !important;
-    filter: none !important;
   }
 
   .public-site .store-hero::after {
@@ -900,24 +889,6 @@
     max-width: 52%;
     font-size: .7rem !important;
     line-height: 1.38;
-  }
-
-  .public-site .hero-handwriting {
-    display: block !important;
-    top: 1rem !important;
-    right: 1.7rem !important;
-    left: auto !important;
-    max-width: 5.4rem;
-    font-size: .68rem !important;
-    line-height: 1.35;
-    text-align: center;
-    transform: rotate(-9deg);
-  }
-
-  .public-site .hero-handwriting i {
-    width: 1.7rem;
-    height: .12rem;
-    margin-inline: auto;
   }
 
   .public-site .hero-search {
@@ -2398,5 +2369,249 @@
   .invoice-page * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+}
+
+/* Shared home and student hero carousel. This is the single authoritative
+   motion/responsive layer; retired image-specific positioning stays out of
+   the page components. */
+.hero-carousel,
+.hero-carousel-track,
+.hero-carousel-slide {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-carousel {
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.hero-carousel-track {
+  overflow: hidden;
+}
+
+.hero-carousel-slide {
+  visibility: hidden;
+  opacity: 0;
+  transform: translate3d(4%, 0, 0) scale(1.015);
+  transition: opacity .72s ease, transform .9s cubic-bezier(.22, .61, .36, 1), visibility 0s linear .9s;
+  will-change: opacity, transform;
+}
+
+.hero-carousel-slide.is-active {
+  visibility: visible;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-delay: 0s;
+}
+
+.hero-carousel-slide.is-previous {
+  transform: translate3d(-4%, 0, 0) scale(1.015);
+}
+
+.hero-carousel-slide img {
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-carousel-controls {
+  position: absolute;
+  z-index: 4;
+  right: .9rem;
+  bottom: .85rem;
+  display: flex;
+  align-items: center;
+  gap: .38rem;
+  padding: .32rem;
+  border: 1px solid rgba(255, 255, 255, .74);
+  border-radius: 999px;
+  background: rgba(255, 253, 252, .82);
+  box-shadow: 0 .35rem 1.2rem rgba(52, 31, 17, .14);
+  backdrop-filter: blur(10px);
+}
+
+.hero-carousel-arrow,
+.hero-carousel-toggle,
+.hero-carousel-dots button {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.hero-carousel-arrow,
+.hero-carousel-toggle {
+  display: grid;
+  width: 1.85rem;
+  height: 1.85rem;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #33373b;
+  transition: background .2s ease, color .2s ease, transform .2s ease;
+}
+
+.hero-carousel-arrow:hover,
+.hero-carousel-toggle:hover,
+.hero-carousel-arrow:focus-visible,
+.hero-carousel-toggle:focus-visible {
+  outline: 0;
+  background: #e84714;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.hero-carousel-arrow svg,
+.hero-carousel-toggle svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hero-carousel-toggle svg path[d="m9 7 8 5-8 5z"] {
+  fill: currentColor;
+  stroke: none;
+}
+
+.hero-carousel-dots {
+  display: flex;
+  align-items: center;
+  gap: .32rem;
+  padding-inline: .12rem;
+}
+
+.hero-carousel-dots button {
+  width: .42rem;
+  height: .42rem;
+  padding: 0;
+  border-radius: 999px;
+  background: #b8b4af;
+  transition: width .25s ease, background .25s ease;
+}
+
+.hero-carousel-dots button.is-active {
+  width: 1.18rem;
+  background: #e84714;
+}
+
+.hero-carousel-dots button:focus-visible {
+  outline: 2px solid #e84714;
+  outline-offset: 2px;
+}
+
+.public-site .store-hero-media {
+  z-index: auto;
+}
+
+.public-site .store-hero::after,
+.student-reference-banner::after {
+  pointer-events: none;
+}
+
+.student-reference-banner::after {
+  z-index: 1;
+}
+
+.student-reference-banner > .student-banner-content {
+  position: relative;
+  z-index: 2;
+}
+
+.student-reference-banner > .student-hero-carousel {
+  position: absolute;
+  z-index: 0;
+  width: auto;
+  padding: 0;
+}
+
+.student-hero-carousel .hero-carousel-controls {
+  right: .75rem;
+  bottom: .75rem;
+}
+
+@media (max-width: 560px) {
+  .public-site .store-hero {
+    min-height: 18.5rem !important;
+  }
+
+  .public-site .store-hero::after {
+    display: block !important;
+    z-index: 1;
+    background: linear-gradient(90deg, rgba(255, 253, 250, .98) 0%, rgba(255, 253, 250, .88) 40%, rgba(255, 253, 250, .2) 72%, transparent 100%) !important;
+  }
+
+  .public-site .home-hero-carousel .hero-carousel-slide img {
+    object-position: 58% center;
+  }
+
+  .home-hero-carousel .hero-carousel-controls {
+    right: .75rem;
+    bottom: 3.8rem;
+  }
+
+  .hero-carousel-controls {
+    gap: .22rem;
+    padding: .24rem;
+  }
+
+  .hero-carousel-arrow,
+  .hero-carousel-toggle {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  .student-reference-banner {
+    min-height: 18rem;
+  }
+
+  .student-reference-banner::after {
+    display: block;
+    background: linear-gradient(90deg, rgba(255, 248, 243, .98) 0%, rgba(255, 248, 243, .82) 48%, rgba(255, 248, 243, .12) 83%, transparent 100%);
+  }
+
+  .student-reference-banner > .student-banner-content {
+    width: 62%;
+    padding: 1.2rem .85rem;
+  }
+
+  .student-hero-carousel .hero-carousel-slide img {
+    object-position: 60% center;
+  }
+
+  .student-hero-carousel .hero-carousel-controls {
+    right: .55rem;
+    bottom: .55rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .public-site .store-hero-content {
+    padding-inline: .8rem !important;
+  }
+
+  .public-site .store-hero h1,
+  .public-site .store-hero-content > p {
+    max-width: 56%;
+  }
+
+  .student-reference-banner > .student-banner-content {
+    width: 66%;
+    padding-inline: .75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-carousel-slide,
+  .hero-carousel-arrow,
+  .hero-carousel-toggle,
+  .hero-carousel-dots button {
+    transition: none !important;
   }
 }

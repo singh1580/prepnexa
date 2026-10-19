@@ -4,7 +4,6 @@
 .store-product-cover.uploaded-cover{background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#f8f4ef}
 .store-product-cover.uploaded-cover:after{display:none}
 .store-product-cover.uploaded-cover .cover-title{display:none}
-.hero-handwriting{top:3.1rem;right:auto;left:80.5%;font-size:1.08rem}
 .cart-ready-action{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .store-owned-action{background:#fff7f2;color:#d74312;border-color:#f2bca8}
 .owned-package-actions>span{display:flex;align-items:center;justify-content:center;min-height:3rem;border:1px solid #b9ddc4;border-radius:.4rem;background:#effaf2;color:#27733e;font-size:.76rem;font-weight:800}
@@ -24,9 +23,6 @@
 .checkout-card-title>i{display:grid;place-items:center;width:1.8rem;height:1.8rem;flex:0 0 auto;border-radius:50%;background:#fff0e9;color:#dc4312;font-size:.72rem;font-style:normal;font-weight:850}
 .checkout-card-title h2{margin:0;color:#202326;font-size:1.05rem}.checkout-card-title p{margin:.25rem 0 0;color:#72787d;font-size:.7rem;line-height:1.45}
 .secure-payment>b{display:grid;place-items:center;width:1.55rem;height:1.55rem;flex:0 0 auto;border-radius:50%;background:#e7f6eb;color:#24743b}
-.student-reference-banner>div:first-child{position:relative;z-index:1;width:min(47%,31rem);padding:2.2rem}
-.student-banner-media{position:absolute!important;inset:0;z-index:-2!important;width:auto!important;padding:0!important;overflow:hidden}
-.student-banner-media img{object-fit:cover;object-position:center 38%}
 @media(max-width:800px){
   .auth-site-header{min-width:0;padding-inline:1rem}.auth-site-header .brand{flex:0 0 auto}.auth-site-header nav{min-width:0;gap:.75rem}
   .reference-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
@@ -35,8 +31,7 @@
 }
 @media(max-width:600px){
   .student-reference-banner{display:block;min-height:18rem;background:#fff8f3}.student-reference-banner:after{display:block;background:linear-gradient(90deg,#fff8f3 0%,#fff8f3f7 45%,#fff8f3a8 67%,transparent 100%)}
-  .student-reference-banner>div:first-child{width:68%;padding:1.35rem 1.25rem 1.5rem;background:transparent}
-  .student-banner-media{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;overflow:hidden}.student-banner-media img{object-fit:cover;object-position:66% center}.student-reference-banner p{max-width:16rem}
+  .student-reference-banner>.student-banner-content{width:68%;padding:1.35rem 1.25rem 1.5rem;background:transparent}.student-reference-banner p{max-width:16rem}
 }
 @media(max-width:560px){
   .reference-catalog-grid{grid-template-columns:1fr!important}
@@ -58,10 +53,9 @@
 
 @media(max-width:560px){
   .student-reference-banner{min-height:18rem}
-  .student-reference-banner>div:first-child{width:58%;padding:1.2rem .85rem}
+  .student-reference-banner>.student-banner-content{width:58%;padding:1.2rem .85rem}
   .student-reference-banner h1{font-size:clamp(1.3rem,5vw,1.6rem)}
   .student-reference-banner p{font-size:.74rem;line-height:1.4}
-  .student-banner-media img{object-position:62% center}
   .student-package-grid{grid-template-columns:1fr!important}
   .student-package-copy>p{min-height:0}
   .student-package-image{min-height:9rem}

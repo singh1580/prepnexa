@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { WorkspaceShell } from "@/components/workspace-shell";
+import { StudentHeroCarousel } from "@/components/hero-carousel";
 import { requireWorkspace } from "@/features/auth/page-access";
 import { getStudentNotifications } from "@/features/operations/service";
 import { getStudentCourseDashboard } from "@/features/student-courses/service";
@@ -53,8 +54,8 @@ export default async function Page() {
 
   return <WorkspaceShell admin={false} name={auth.user.name} email={auth.user.email} section="overview" unreadNotifications={notifications.unreadCount}>
     <section className="student-reference-banner">
-      <div><span>WELCOME BACK</span><h1>Keep learning, {firstName}!</h1><p>Pick up where you left off and keep moving towards your goals.</p>{continueCourse ? <Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue learning <b>→</b></Link> : <Link href="/packages">Explore packages <b>→</b></Link>}</div>
-      <div className="student-banner-media"><Image src="/images/student-dashboard-banner.webp" alt="Student learning online" fill priority sizes="(max-width: 800px) 100vw, 70vw" /></div>
+      <div className="student-banner-content"><span>WELCOME BACK</span><h1>Keep learning, {firstName}!</h1><p>Pick up where you left off and keep moving towards your goals.</p>{continueCourse ? <Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue learning <b>→</b></Link> : <Link href="/packages">Explore packages <b>→</b></Link>}</div>
+      <StudentHeroCarousel/>
     </section>
 
     {continueCourse ? <section className="student-section"><div className="student-section-heading"><h2>Continue learning</h2><Link href={`/dashboard/courses/${continueCourse.slug}`}>View package</Link></div><article className="continue-learning-card"><div className="course-tile">{continueCourse.coverObjectKey ? <Image src={`/api/catalog/products/${continueCourse.id}/cover`} alt="" fill sizes="88px" /> : <b>{continueCourseName.slice(0, 2).toUpperCase()}</b>}</div><div><small>{continueCourse.activeAttemptId ? "TEST IN PROGRESS" : "YOUR PACKAGE"}</small><h3>{continueCourse.activeTestTitle ?? continueCourseName}</h3><p>{continueSubtitle}</p></div><div className="continue-progress"><span>{continueProgress}% complete</span><progress max="100" value={continueProgress}/><Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue <b>→</b></Link></div></article></section> : null}
