@@ -2412,13 +2412,21 @@
   transform: translate3d(-4%, 0, 0) scale(1.015);
 }
 
+.hero-carousel-picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
 .hero-carousel-slide img {
-  object-fit: contain;
-  object-position: right center;
-  background: #fbf7f1;
   filter: none;
   pointer-events: none;
   user-select: none;
+}
+
+.home-hero-carousel .hero-carousel-slide img {
+  object-fit: cover;
+  object-position: right center;
 }
 
 .hero-carousel-controls {
@@ -2560,7 +2568,15 @@
 }
 
 .student-hero-carousel .hero-carousel-slide img {
+  object-fit: contain;
+  object-position: right center;
   background: #fff8f3;
+}
+
+@media (min-width: 561px) {
+  .home-hero-carousel .hero-carousel-controls {
+    bottom: 9.5rem;
+  }
 }
 
 @media (max-width: 560px) {

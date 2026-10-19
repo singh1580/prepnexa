@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type HeroSlide = {
   src: string;
+  responsiveSrc?: string;
   label: string;
 };
 
@@ -18,10 +19,10 @@ type HeroCarouselProps = {
 };
 
 const HOME_SLIDES = [
-  { src: "/images/heroes/home-knowledge-orbit.webp", label: "Knowledge orbit" },
-  { src: "/images/heroes/home-knowledge-city.webp", label: "Knowledge city" },
-  { src: "/images/heroes/home-path-progress.webp", label: "Path to progress" },
-  { src: "/images/heroes/home-precision-engine.webp", label: "Precision learning engine" },
+  { src: "/images/heroes/home-knowledge-orbit.webp", responsiveSrc: "/images/heroes/home-knowledge-orbit-responsive.webp", label: "Knowledge orbit" },
+  { src: "/images/heroes/home-knowledge-city.webp", responsiveSrc: "/images/heroes/home-knowledge-city-responsive.webp", label: "Knowledge city" },
+  { src: "/images/heroes/home-path-progress.webp", responsiveSrc: "/images/heroes/home-path-progress-responsive.webp", label: "Path to progress" },
+  { src: "/images/heroes/home-precision-engine.webp", responsiveSrc: "/images/heroes/home-precision-engine-responsive.webp", label: "Precision learning engine" },
 ] as const;
 
 const STUDENT_SLIDES = [
@@ -115,15 +116,18 @@ function HeroCarousel({ ariaLabel, className, controls, intervalMs, sizes, slide
         key={slide.src}
         aria-hidden={index !== activeIndex}
       >
-        <Image
-          src={slide.src}
-          alt=""
-          fill
-          priority={index === 0}
-          loading={index === 0 ? "eager" : "lazy"}
-          sizes={sizes}
-          unoptimized
-        />
+        <picture className="hero-carousel-picture">
+          {"responsiveSrc" in slide && slide.responsiveSrc ? <source media="(max-width: 1199px)" srcSet={slide.responsiveSrc}/> : null}
+          <Image
+            src={slide.src}
+            alt=""
+            fill
+            fetchPriority={index === 0 ? "high" : "auto"}
+            loading={index === 0 ? "eager" : "lazy"}
+            sizes={sizes}
+            unoptimized
+          />
+        </picture>
       </div>)}
     </div>
 
