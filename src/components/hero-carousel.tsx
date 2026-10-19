@@ -11,6 +11,7 @@ type HeroSlide = {
 type HeroCarouselProps = {
   ariaLabel: string;
   className: string;
+  controls: "dots" | "full";
   intervalMs: number;
   sizes: string;
   slides: readonly HeroSlide[];
@@ -38,13 +39,14 @@ function PauseIcon({ paused }: { paused: boolean }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paused ? <path d="m9 7 8 5-8 5z"/> : <><path d="M9 7v10M15 7v10"/></>}</svg>;
 }
 
-function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroCarouselProps) {
+function HeroCarousel({ ariaLabel, className, controls, intervalMs, sizes, slides }: HeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [userPaused, setUserPaused] = useState(false);
   const [interactionPaused, setInteractionPaused] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const pointerStartX = useRef<number | null>(null);
+  const hasFullControls = controls === "full";
 
   const showPrevious = useCallback(() => {
     setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
@@ -70,10 +72,10 @@ function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroC
   }, []);
 
   useEffect(() => {
-    if (userPaused || interactionPaused || reducedMotion || !pageVisible) return;
+    if (userPaused || (hasFullControls && interactionPaused) || reducedMotion || !pageVisible) return;
     const timer = window.setInterval(showNext, intervalMs);
     return () => window.clearInterval(timer);
-  }, [interactionPaused, intervalMs, pageVisible, reducedMotion, showNext, userPaused]);
+  }, [hasFullControls, interactionPaused, intervalMs, pageVisible, reducedMotion, showNext, userPaused]);
 
   function slidePosition(index: number) {
     const distance = (index - activeIndex + slides.length) % slides.length;
@@ -84,6 +86,7 @@ function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroC
   }
 
   function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    if (!hasFullControls) return;
     if (pointerStartX.current === null) return;
     const distance = event.clientX - pointerStartX.current;
     pointerStartX.current = null;
@@ -96,15 +99,15 @@ function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroC
     role="region"
     aria-roledescription="carousel"
     aria-label={ariaLabel}
-    onMouseEnter={() => setInteractionPaused(true)}
-    onMouseLeave={() => setInteractionPaused(false)}
-    onFocusCapture={() => setInteractionPaused(true)}
-    onBlurCapture={(event) => {
+    onMouseEnter={hasFullControls ? () => setInteractionPaused(true) : undefined}
+    onMouseLeave={hasFullControls ? () => setInteractionPaused(false) : undefined}
+    onFocusCapture={hasFullControls ? () => setInteractionPaused(true) : undefined}
+    onBlurCapture={hasFullControls ? (event) => {
       if (!event.currentTarget.contains(event.relatedTarget)) setInteractionPaused(false);
-    }}
-    onPointerDown={(event) => { pointerStartX.current = event.clientX; }}
-    onPointerCancel={() => { pointerStartX.current = null; }}
-    onPointerUp={handlePointerUp}
+    } : undefined}
+    onPointerDown={hasFullControls ? (event) => { pointerStartX.current = event.clientX; } : undefined}
+    onPointerCancel={hasFullControls ? () => { pointerStartX.current = null; } : undefined}
+    onPointerUp={hasFullControls ? handlePointerUp : undefined}
   >
     <div className="hero-carousel-track">
       {slides.map((slide, index) => <div
@@ -119,12 +122,14 @@ function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroC
           priority={index === 0}
           loading={index === 0 ? "eager" : "lazy"}
           sizes={sizes}
+          unoptimized
         />
       </div>)}
     </div>
 
-    <div className="hero-carousel-controls">
-      <button type="button" className="hero-carousel-arrow" onClick={showPrevious} aria-label="Show previous image"><ArrowIcon direction="left"/></button>
+    <div className={`hero-carousel-controls ${hasFullControls ? "has-full-controls" : "has-dot-controls"}`}>
+      {hasFullControls ? <button type="button" className="hero-carousel-arrow" onClick={showPrevious} aria-label="Show previous image"><ArrowIcon direction="left"/></button> : null}
+      <span className="hero-carousel-label" aria-live="polite">{slides[activeIndex].label}</span>
       <div className="hero-carousel-dots" role="group" aria-label="Choose an image">
         {slides.map((slide, index) => <button
           type="button"
@@ -135,22 +140,22 @@ function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroC
           aria-current={index === activeIndex ? "true" : undefined}
         />)}
       </div>
-      <button
+      {hasFullControls ? <button
         type="button"
         className="hero-carousel-toggle"
         onClick={() => setUserPaused((paused) => !paused)}
         aria-label={userPaused ? "Play automatic images" : "Pause automatic images"}
         aria-pressed={userPaused}
-      ><PauseIcon paused={userPaused}/></button>
+      ><PauseIcon paused={userPaused}/></button> : null}
     </div>
     <span className="sr-only">Image {activeIndex + 1} of {slides.length}: {slides[activeIndex].label}</span>
   </div>;
 }
 
 export function HomeHeroCarousel() {
-  return <HeroCarousel ariaLabel="Prepstore learning highlights" className="home-hero-carousel" intervalMs={7000} sizes="100vw" slides={HOME_SLIDES}/>;
+  return <HeroCarousel ariaLabel="Prepstore learning highlights" className="home-hero-carousel" controls="dots" intervalMs={7000} sizes="100vw" slides={HOME_SLIDES}/>;
 }
 
 export function StudentHeroCarousel() {
-  return <HeroCarousel ariaLabel="Prepstore student learning highlights" className="student-hero-carousel" intervalMs={8000} sizes="(max-width: 800px) 100vw, 75vw" slides={STUDENT_SLIDES}/>;
+  return <HeroCarousel ariaLabel="Prepstore student learning highlights" className="student-hero-carousel" controls="full" intervalMs={8000} sizes="(max-width: 800px) 100vw, 75vw" slides={STUDENT_SLIDES}/>;
 }
