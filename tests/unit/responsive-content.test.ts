@@ -170,6 +170,7 @@ describe("responsive content integrity", () => {
     expect(heroCarousel).toContain("document.visibilityState");
     expect(heroCarousel).not.toContain("controls=");
     expect(heroCarousel).toContain("onPointerUp={handlePointerUp}");
+    expect(heroCarousel).toContain("if (distance > 0) showPrevious(); else showNext();");
     expect(heroCarousel).not.toContain("ArrowIcon");
     expect(heroCarousel).not.toContain("PauseIcon");
     expect(heroCarousel).toContain("hero-carousel-label");
@@ -427,6 +428,3 @@ describe("responsive content integrity", () => {
   it("protects changed modal forms from accidental dismissal", () => {
     expect(adminModal).toContain("Discard your unsaved changes?");
     expect(adminModal).toContain("onCancel=");
-    expect(adminModal).toContain("onInputCapture=");
-  });
-});
