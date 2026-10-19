@@ -164,9 +164,20 @@ describe("responsive content integrity", () => {
     expect(heroCarousel).toContain('controls="full"');
     expect(heroCarousel).toContain("hasFullControls ? handlePointerUp : undefined");
     expect(heroCarousel).toContain("hero-carousel-label");
+    expect(heroCarousel.indexOf("hero-carousel-dots")).toBeLessThan(
+      heroCarousel.indexOf("hero-carousel-label"),
+    );
     expect(heroCarousel).toContain("unoptimized");
     expect(finalReviewPolish).toContain("object-fit: contain");
     expect(finalReviewPolish).toContain("object-position: right center");
+    expect(finalReviewPolish).toContain("left: clamp(1rem, 7vw, 7.2rem)");
+    expect(finalReviewPolish).toContain("bottom: 3.75rem");
+    expect(finalReviewPolish).toContain(".hero-carousel-controls.has-full-controls");
+    const homeControls = finalReviewPolish.match(
+      /\.hero-carousel-controls\.has-dot-controls \{([^}]*)\}/,
+    )?.[1];
+    expect(homeControls).toBeDefined();
+    expect(homeControls).not.toMatch(/right:|padding:|border:|background:|box-shadow:|backdrop-filter:/);
     expect(heroCarousel).not.toContain("hero-handwriting");
   });
 

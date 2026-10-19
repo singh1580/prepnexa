@@ -863,11 +863,13 @@
 @media (max-width: 560px) {
   .public-site .store-hero {
     position: relative;
-    min-height: 17rem !important;
+    min-height: 18.5rem !important;
   }
 
   .public-site .store-hero::after {
-    display: none !important;
+    display: block !important;
+    z-index: 1;
+    background: linear-gradient(90deg, rgba(255, 253, 250, .98) 0%, rgba(255, 253, 250, .88) 40%, rgba(255, 253, 250, .2) 72%, transparent 100%) !important;
   }
 
   .public-site .store-hero-content {
@@ -2422,11 +2424,14 @@
 .hero-carousel-controls {
   position: absolute;
   z-index: 4;
-  right: .9rem;
   bottom: .85rem;
   display: flex;
   align-items: center;
   gap: .38rem;
+}
+
+.hero-carousel-controls.has-full-controls {
+  right: .9rem;
   padding: .32rem;
   border: 1px solid rgba(255, 255, 255, .74);
   border-radius: 999px;
@@ -2436,17 +2441,16 @@
 }
 
 .hero-carousel-controls.has-dot-controls {
-  gap: .55rem;
-  padding: .48rem .7rem;
-  backdrop-filter: none;
+  left: clamp(1rem, 7vw, 7.2rem);
+  gap: .72rem;
 }
 
 .hero-carousel-label {
   max-width: 12rem;
   overflow: hidden;
-  color: #34383c;
-  font-size: .68rem;
-  font-weight: 750;
+  color: #3b3f43;
+  font-size: .7rem;
+  font-weight: 780;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2560,24 +2564,9 @@
 }
 
 @media (max-width: 560px) {
-  .public-site .store-hero {
-    min-height: 18.5rem !important;
-  }
-
-  .public-site .store-hero::after {
-    display: block !important;
-    z-index: 1;
-    background: linear-gradient(90deg, rgba(255, 253, 250, .98) 0%, rgba(255, 253, 250, .88) 40%, rgba(255, 253, 250, .2) 72%, transparent 100%) !important;
-  }
-
   .home-hero-carousel .hero-carousel-controls {
-    right: .75rem;
-    bottom: 3.8rem;
-  }
-
-  .hero-carousel-controls {
-    gap: .22rem;
-    padding: .24rem;
+    left: 1rem;
+    bottom: 3.75rem;
   }
 
   .hero-carousel-arrow,
@@ -2603,6 +2592,8 @@
   .student-hero-carousel .hero-carousel-controls {
     right: .55rem;
     bottom: .55rem;
+    gap: .22rem;
+    padding: .24rem;
   }
 }
 
