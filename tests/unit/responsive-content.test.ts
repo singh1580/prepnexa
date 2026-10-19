@@ -161,6 +161,7 @@ describe("responsive content integrity", () => {
     expect(heroCarousel.match(/student-[a-z-]+\.webp/g)).toHaveLength(4);
     expect(heroCarousel.match(/home-[a-z-]+-responsive\.webp/g)).toHaveLength(4);
     expect(heroCarousel).toContain('<source media="(max-width: 1199px)"');
+    expect(heroCarousel).toContain('fetchPriority={index === 0 ? "high" : "auto"}');
     expect(heroCarousel).toContain("document.visibilityState");
     expect(heroCarousel).toContain('controls="dots"');
     expect(heroCarousel).toContain('controls="full"');
