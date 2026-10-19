@@ -52,11 +52,13 @@ export default async function Page() {
   const average = recentResults.length ? Math.round(recentResults.reduce((total, result) => total + (Number(result.maxScore) ? Number(result.score) / Number(result.maxScore) * 100 : 0), 0) / recentResults.length) : null;
   const firstName = auth.user.name.split(" ")[0];
 
-  return <WorkspaceShell admin={false} name={auth.user.name} email={auth.user.email} section="overview" unreadNotifications={notifications.unreadCount}>
+  return <WorkspaceShell admin={false} name={auth.user.name} email={auth.user.email} section="overview" unreadNotifications={notifications.unreadCount} mainClassName="student-dashboard-main">
     <section className="student-reference-banner">
       <div className="student-banner-content"><span>WELCOME BACK</span><h1>Keep learning, {firstName}!</h1><p>Pick up where you left off and keep moving towards your goals.</p>{continueCourse ? <Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue learning <b>→</b></Link> : <Link href="/packages">Explore packages <b>→</b></Link>}</div>
       <StudentHeroCarousel/>
     </section>
+
+    <div className="student-dashboard-content">
 
     {continueCourse ? <section className="student-section"><div className="student-section-heading"><h2>Continue learning</h2><Link href={`/dashboard/courses/${continueCourse.slug}`}>View package</Link></div><article className="continue-learning-card"><div className="course-tile">{continueCourse.coverObjectKey ? <Image src={`/api/catalog/products/${continueCourse.id}/cover`} alt="" fill sizes="88px" /> : <b>{continueCourseName.slice(0, 2).toUpperCase()}</b>}</div><div><small>{continueCourse.activeAttemptId ? "TEST IN PROGRESS" : "YOUR PACKAGE"}</small><h3>{continueCourse.activeTestTitle ?? continueCourseName}</h3><p>{continueSubtitle}</p></div><div className="continue-progress"><span>{continueProgress}% complete</span><progress max="100" value={continueProgress}/><Link href={continueCourse.activeAttemptId ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}` : `/dashboard/courses/${continueCourse.slug}`}>Continue <b>→</b></Link></div></article></section> : null}
 
@@ -75,5 +77,6 @@ export default async function Page() {
     </div>
 
     <section className="student-section"><div className="student-section-heading"><h2>Quick links</h2></div><div className="student-quick-links"><Link href="/packages"><i><DashboardIcon name="explore"/></i><span><b>Explore packages</b><small>Find your next learning package</small></span><strong>→</strong></Link><Link href="/dashboard/orders"><i><DashboardIcon name="order"/></i><span><b>My orders</b><small>View payments and invoices</small></span><strong>→</strong></Link><Link href="/dashboard/support"><i><DashboardIcon name="support"/></i><span><b>Support</b><small>Get help from our team</small></span><strong>→</strong></Link></div></section>
+    </div>
   </WorkspaceShell>;
 }
