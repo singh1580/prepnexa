@@ -171,6 +171,7 @@ describe("responsive content integrity", () => {
     expect(finalReviewPolish).toContain("object-fit: contain");
     expect(finalReviewPolish).toContain("object-position: right center");
     expect(finalReviewPolish).toContain("left: clamp(1rem, 7vw, 7.2rem)");
+    expect(finalReviewPolish).toContain("bottom: 3.75rem");
     expect(finalReviewPolish).toContain(".hero-carousel-controls.has-full-controls");
     const homeControls = finalReviewPolish.match(
       /\.hero-carousel-controls\.has-dot-controls \{([^}]*)\}/,
