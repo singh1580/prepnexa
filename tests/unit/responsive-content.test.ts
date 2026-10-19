@@ -428,3 +428,6 @@ describe("responsive content integrity", () => {
   it("protects changed modal forms from accidental dismissal", () => {
     expect(adminModal).toContain("Discard your unsaved changes?");
     expect(adminModal).toContain("onCancel=");
+    expect(adminModal).toContain("onInputCapture=");
+  });
+});
