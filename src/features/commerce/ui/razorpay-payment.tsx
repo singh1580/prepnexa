@@ -23,6 +23,7 @@ type Checkout = {
   expiresAt: string | null;
   customer: { name: string; email: string; phone: string | null };
 };
+type PaymentState = "READY" | "PENDING" | "RETRYABLE" | "EXPIRED" | null;
 
 export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
   const router = useRouter();
@@ -30,6 +31,8 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [paymentState, setPaymentState] = useState<PaymentState>(null);
 
   async function confirm(response: CheckoutResponse) {
     try {
@@ -44,10 +47,13 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
   async function checkPaymentStatus() {
     setChecking(true);
     setError("");
+    setMessage("");
     try {
-      const result = await commerceRequest<{ orderId: string; paid: boolean }>("commerce/razorpay/status", { attemptId: checkout.attemptId });
+      const result = await commerceRequest<{ orderId: string; paid: boolean; state?: "CAPTURED" | "PENDING" | "READY" | "RETRYABLE" }>("commerce/razorpay/status", { attemptId: checkout.attemptId });
       if (result.paid) router.replace(`/payment-success?order=${result.orderId}`);
-      else setError("Razorpay has not captured this payment yet. You can safely retry the checkout.");
+      else if(result.state==="PENDING"){setPaymentState("PENDING");setMessage("Payment confirmation is still pending. Please check the status again before making another payment.");}
+      else if(result.state==="RETRYABLE"){setPaymentState("RETRYABLE");setMessage("The previous payment was not completed. Start a fresh payment attempt when you are ready.");}
+      else{setPaymentState("READY");setMessage("Checkout was closed before a payment started. You can reopen this checkout safely.");}
     } catch (value) {
       setError(value instanceof Error ? value.message : "We could not check this payment yet. Please try again.");
     } finally {
@@ -57,12 +63,14 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
 
   function openCheckout() {
     setError("");
+    setMessage("");
     if (!window.Razorpay) {
       setError("Secure checkout is still loading. Please try again.");
       return;
     }
+    const remainingSeconds = checkout.expiresAt ? Math.floor((new Date(checkout.expiresAt).getTime() - Date.now()) / 1000) : 900;
+    if(remainingSeconds<=0){setPaymentState("EXPIRED");setError("This checkout has expired. Return to your cart and create a new order.");return;}
     setBusy(true);
-    const remainingSeconds = checkout.expiresAt ? Math.max(60, Math.floor((new Date(checkout.expiresAt).getTime() - Date.now()) / 1000)) : 900;
     const instance = new window.Razorpay({
       key: checkout.keyId,
       amount: checkout.amountPaise,
@@ -76,14 +84,25 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
       theme: { color: "#e94b16", backdrop_color: "#fff7f2" },
       timeout: Math.min(900, remainingSeconds),
       retry: { enabled: true },
-      modal: { confirm_close: true, ondismiss: () => { setBusy(false); setError("Checkout was closed. If you completed payment in another window, check its status before retrying."); } },
+      modal: { confirm_close: true, ondismiss: () => { setBusy(false); void checkPaymentStatus(); } },
       handler: (response: CheckoutResponse) => { void confirm(response); },
     });
     instance.on("payment.failed", response => {
-      setError(response.error?.description ?? "Payment failed. No package access was granted.");
+      setMessage(response.error?.description ?? "Payment failed. No package access was granted. Close checkout to start a fresh attempt.");
       setBusy(false);
     });
     instance.open();
+  }
+
+  async function retryPayment(){
+    setChecking(true);setError("");setMessage("");
+    try{
+      const result=await commerceRequest<{paid:boolean;orderId:string;checkoutReference?:string}>("commerce/razorpay/retry",{attemptId:checkout.attemptId});
+      if(result.paid)router.replace(`/payment-success?order=${result.orderId}`);
+      else if(result.checkoutReference)router.replace(result.checkoutReference);
+      else setError("A new payment attempt could not be opened. Please return to your order and try again.");
+    }catch(value){setError(value instanceof Error?value.message:"We could not start a fresh payment attempt.");}
+    finally{setChecking(false);}
   }
 
   return <>
@@ -97,10 +116,12 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
         <div><dt>Order</dt><dd>#{checkout.orderId.slice(0, 12).toUpperCase()}</dd></div>
         <div><dt>Amount payable</dt><dd>{formatMoney(checkout.amountPaise, checkout.currency)}</dd></div>
       </dl>
-      <button className="reference-checkout-button" type="button" disabled={!scriptReady || busy} onClick={openCheckout}>{busy ? "Verifying payment…" : scriptReady ? "Pay securely with Razorpay" : "Loading secure checkout…"}</button>
+      <button className="reference-checkout-button" type="button" disabled={!scriptReady || busy || checking || paymentState==="PENDING" || paymentState==="RETRYABLE" || paymentState==="EXPIRED"} onClick={openCheckout}>{busy ? "Razorpay checkout open…" : scriptReady ? "Pay securely with Razorpay" : "Loading secure checkout…"}</button>
+      {paymentState==="RETRYABLE"?<button className="reference-checkout-button" type="button" disabled={checking} onClick={retryPayment}>{checking?"Preparing fresh payment…":"Try payment again"}</button>:null}
       <button className="reference-outline-button razorpay-status-button" type="button" disabled={busy || checking} onClick={checkPaymentStatus}>{checking ? "Checking payment…" : "Check payment status"}</button>
       <small>Cards, UPI, netbanking and other enabled methods will appear inside Razorpay Checkout.</small>
       {error ? <p className="notice danger" role="alert">{error}</p> : null}
+      {message ? <p className="notice" role="status">{message}</p> : null}
     </section>
   </>;
 }

@@ -96,6 +96,14 @@ describe("responsive content integrity", () => {
     "utf8",
   );
 
+  it("keeps account password changes in-session and package content destinations explicit",()=>{
+    expect(profilePage).toContain("<ChangePasswordForm/>");
+    expect(profilePage).not.toContain('href="/forgot-password">Change password');
+    expect(coursePage).toContain('?view=materials`');
+    expect(coursePage).toContain('?view=tests`');
+    expect(coursePage).not.toContain('Package content</h2><p>Everything included');
+  });
+
   it("keeps refund navigation canonical and password guidance neutral", () => {
     expect(publicLayout).not.toContain(">Refund policy<");
     expect(

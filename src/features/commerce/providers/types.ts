@@ -43,11 +43,15 @@ export type ProviderPaymentConfirmation = {
   signature: string;
 };
 
+export type ProviderPaymentInspection =
+  | { state: "CAPTURED"; event: VerifiedPaymentEvent }
+  | { state: "PENDING" | "READY" | "RETRYABLE" };
+
 export interface PaymentProvider {
   readonly key: string;
   createCheckout(input: ProviderCheckoutInput): Promise<ProviderCheckout>;
   verifyWebhook(rawBody: string, headers: Headers): Promise<VerifiedPaymentEvent>;
   verifyPaymentConfirmation?(input: ProviderPaymentConfirmation): Promise<VerifiedPaymentEvent>;
-  reconcilePayment?(providerOrderId: string): Promise<VerifiedPaymentEvent | null>;
+  inspectPayment?(providerOrderId: string): Promise<ProviderPaymentInspection>;
   refund(input: ProviderRefundInput): Promise<ProviderRefund>;
 }

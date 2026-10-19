@@ -13,4 +13,4 @@ export function getPaymentProvider(key = env.PAYMENT_PROVIDER.toLowerCase()) {
   return provider;
 }
 
-export type { PaymentProvider, ProviderCheckout, ProviderCheckoutInput, ProviderPaymentConfirmation, ProviderRefund, ProviderRefundInput, VerifiedPaymentEvent } from "./types";
+export type { PaymentProvider, ProviderCheckout, ProviderCheckoutInput, ProviderPaymentConfirmation, ProviderPaymentInspection, ProviderRefund, ProviderRefundInput, VerifiedPaymentEvent } from "./types";

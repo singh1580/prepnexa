@@ -54,11 +54,20 @@ describe("Razorpay signature verification", () => {
     const orderId = "order_Example123";
     const paymentId = "pay_Example456";
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ items: [{ id: paymentId, order_id: orderId, amount: 11800, currency: "INR", status: "captured", captured: true, created_at: 1_800_000_000 }] }), { status: 200, headers: { "Content-Type": "application/json" } })));
-    await expect(razorpayPaymentProvider.reconcilePayment!(orderId)).resolves.toMatchObject({ type: "PAYMENT_CAPTURED", providerOrderId: orderId, providerPaymentId: paymentId, amountPaise: 11800 });
+    await expect(razorpayPaymentProvider.inspectPayment!(orderId)).resolves.toMatchObject({ state:"CAPTURED",event:{ type: "PAYMENT_CAPTURED", providerOrderId: orderId, providerPaymentId: paymentId, amountPaise: 11800 } });
   });
 
   it("keeps an incomplete Razorpay order pending during reconciliation", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ items: [{ id: "pay_Pending", order_id: "order_Example123", amount: 11800, currency: "INR", status: "authorized", captured: false }] }), { status: 200, headers: { "Content-Type": "application/json" } })));
-    await expect(razorpayPaymentProvider.reconcilePayment!("order_Example123")).resolves.toBeNull();
+    await expect(razorpayPaymentProvider.inspectPayment!("order_Example123")).resolves.toEqual({state:"PENDING"});
+  });
+
+  it("distinguishes an unopened checkout from a failed payment",async()=>{
+    const request=vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({items:[]}),{status:200,headers:{"Content-Type":"application/json"}}))
+      .mockResolvedValueOnce(new Response(JSON.stringify({items:[{id:"pay_Failed",order_id:"order_Example123",amount:11800,currency:"INR",status:"failed",captured:false}]}),{status:200,headers:{"Content-Type":"application/json"}}));
+    vi.stubGlobal("fetch",request);
+    await expect(razorpayPaymentProvider.inspectPayment!("order_Example123")).resolves.toEqual({state:"READY"});
+    await expect(razorpayPaymentProvider.inspectPayment!("order_Example123")).resolves.toEqual({state:"RETRYABLE"});
   });
 });
