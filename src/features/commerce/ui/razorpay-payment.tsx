@@ -106,7 +106,7 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
   }
 
   return <>
-    <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" onLoad={() => setScriptReady(true)} onError={() => setError("Secure checkout could not be loaded. Check your connection and try again.")}/>
+    <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setError("Secure checkout could not be loaded. Check your connection and try again.")}/>
     <section className="razorpay-payment-card" aria-labelledby="razorpay-heading">
       <span className="eyebrow">SECURE CHECKOUT</span>
       <div className="razorpay-lock" aria-hidden="true">▣</div>
