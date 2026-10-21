@@ -10,6 +10,7 @@ import {
   BUSINESS_SUPPORT_PHONE,
   BUSINESS_SUPPORT_PHONE_E164,
 } from "@/config/business";
+import { ContactForm } from "@/features/contact/ui/contact-form";
 import styles from "./contact.module.css";
 
 export const metadata = {
@@ -41,13 +42,23 @@ export default async function Page() {
     <section className={styles.hero}>
       <div>
         <span className={styles.eyebrow}>CONTACT PREPSTORE</span>
-        <h1>Talk to the right team.</h1>
-        <p>Whether you need help with a purchase, want to discuss a business enquiry or need to raise a formal grievance, choose the channel that matches your request.</p>
+        <h1>We&apos;re here to help.</h1>
+        <p>Get tracked learner support or send a general, business, privacy or grievance enquiry directly to the Prepstore team.</p>
       </div>
       <div className={styles.heroNote}>
         <ContactIcon name="shield" />
         <div><strong>Your security comes first</strong><span>We will never ask for your password, OTP, UPI PIN, CVV or full card details.</span></div>
       </div>
+    </section>
+
+    <section className={styles.formSection} aria-labelledby="contact-form-heading">
+      <div className={styles.formIntro}>
+        <span className={styles.eyebrow}>SEND AN ENQUIRY</span>
+        <h2 id="contact-form-heading">Tell us what you need.</h2>
+        <p>Use this form for general, business, content-permission, privacy and formal grievance matters. Your submission is recorded securely and receives a reference number.</p>
+        <ul><li>Choose the closest enquiry type</li><li>Use an email address you monitor</li><li>Include an order ID only when relevant</li></ul>
+      </div>
+      <div className={styles.formCard}><ContactForm defaultName={auth?.user.name} defaultEmail={auth?.user.email} defaultPhone={auth?.user.phone} /></div>
     </section>
 
     <section className={styles.routeSection} aria-labelledby="contact-route-heading">
@@ -99,7 +110,7 @@ export default async function Page() {
     <section className={styles.businessSection}>
       <div><span>LEGAL OPERATOR</span><h2>{BUSINESS_LEGAL_OWNER}</h2><p>{BUSINESS_ENTITY_TYPE} operating under the brand name Prepstore.</p></div>
       <div><span>GRIEVANCE OFFICER</span><h2>{BUSINESS_GRIEVANCE_OFFICER}</h2><p>Formal consumer, privacy and grievance matters may be sent through the verified email or phone details above.</p></div>
-      <div className={styles.policyLinks}><span>POLICIES</span><Link href="/legal/terms">Terms of service</Link><Link href="/legal/privacy">Privacy policy</Link><Link href="/legal/cancellation-refund">Cancellation &amp; refund</Link></div>
+      <div className={styles.policyLinks}><span>POLICIES</span><Link href="/legal/terms">Terms of service</Link><Link href="/legal/privacy">Privacy policy</Link><Link href="/legal/cancellation-refund">Cancellation &amp; refund</Link><Link href="/legal/fair-use">Fair use policy</Link></div>
     </section>
   </main>;
 }

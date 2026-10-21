@@ -26,6 +26,7 @@ export async function PublicHeader({
     : "/dashboard";
   const desktopNavigation = (
     <>
+      <Link href="/">Home</Link>
       <Link href="/packages">Packages</Link>
       <Link href="/contact">Contact</Link>
       <Link className="header-cart" href="/cart" aria-label="Cart">

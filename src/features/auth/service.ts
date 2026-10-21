@@ -6,6 +6,7 @@ import { ADMIN_ROLE_KEYS, TOKEN_PURPOSE } from "./constants";
 import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, findUserById, findUserByLogin, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin, updatePassword } from "./repository";
 import type { EmailInput, LoginInput, RegisterInput, ResetPasswordInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
+import { LEGAL_POLICY_VERSION } from "@/config/legal";
 
 const genericCredentialsError = () => new AppError("INVALID_CREDENTIALS", "Email, phone number or password is incorrect.", 401);
 
@@ -13,7 +14,7 @@ export async function register(input: RegisterInput) {
   const email = normalizeEmail(input.email);
   if (await findUserByEmail(email)) throw new AppError("EMAIL_ALREADY_REGISTERED", "An account with this email already exists.", 409);
   const { token, tokenHash } = createOpaqueToken();
-  const user = await createUserWithVerification({ name: input.name.trim(), email, passwordHash: await hashPassword(input.password), tokenHash, expiresAt: new Date(Date.now() + env.EMAIL_VERIFICATION_TTL_HOURS * 3_600_000) });
+  const user = await createUserWithVerification({ name: input.name.trim(), email, passwordHash: await hashPassword(input.password), tokenHash, expiresAt: new Date(Date.now() + env.EMAIL_VERIFICATION_TTL_HOURS * 3_600_000), legalAcceptedAt: new Date(), legalAcceptedVersion: LEGAL_POLICY_VERSION });
   const emailSent = await authNotifier.sendEmailVerification({ to: user.email, name: user.name, token });
   return { user, emailSent };
 }

@@ -7,6 +7,10 @@ export const registerInputSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email,
   password,
+  acceptPolicies: z.preprocess(
+    (value) => value === true || value === "true" || value === "on",
+    z.literal(true, { error: "You must accept the Terms, Privacy Policy, Cancellation & Refund Policy and Fair Use Policy." }),
+  ),
 });
 
 export const loginInputSchema = z.object({ email: z.string().trim().max(320).refine(value=>email.safeParse(value).success||/^\+?[0-9 ()-]{7,20}$/.test(value),"Enter a valid email address or phone number."), password });

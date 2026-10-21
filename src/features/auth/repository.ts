@@ -35,12 +35,12 @@ export async function updatePassword(userId:string,passwordHash:string,currentSe
   ]);
 }
 
-export async function createUserWithVerification(input: { name: string; email: string; passwordHash: string; tokenHash: string; expiresAt: Date }) {
+export async function createUserWithVerification(input: { name: string; email: string; passwordHash: string; tokenHash: string; expiresAt: Date; legalAcceptedAt?: Date; legalAcceptedVersion?: string }) {
   const role = await db.query.roles.findFirst({ where: eq(roles.key, "STUDENT"), columns: { id: true } });
   if (!role) throw new Error("STUDENT role is not seeded");
   const userId = randomUUID();
   await db.batch([
-    db.insert(users).values({ id: userId, name: input.name, email: input.email, passwordHash: input.passwordHash }),
+    db.insert(users).values({ id: userId, name: input.name, email: input.email, passwordHash: input.passwordHash, legalAcceptedAt: input.legalAcceptedAt, legalAcceptedVersion: input.legalAcceptedVersion }),
     db.insert(verificationTokens).values({ userId, purpose: "EMAIL_VERIFICATION", tokenHash: input.tokenHash, expiresAt: input.expiresAt }),
     db.insert(userRoles).values({ userId, roleId: role.id }),
   ]);
