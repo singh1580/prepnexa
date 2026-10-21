@@ -1,4 +1,4 @@
-export const BUSINESS_BRAND_NAME = "PrepStore";
+export const BUSINESS_BRAND_NAME = "Prepstore";
 export const BUSINESS_LEGAL_OWNER = "Sunil Singh";
 export const BUSINESS_ENTITY_TYPE = "Sole Proprietorship";
 export const BUSINESS_GRIEVANCE_OFFICER = "Sanjeev Kumar";

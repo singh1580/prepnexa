@@ -14,7 +14,7 @@ describe("commerce pricing", () => {
     expect(normalizeCouponCode("  welcome_25 ")).toBe("WELCOME_25");
   });
 
-  it("does not add tax while PrepStore is not GST registered", () => {
+  it("does not add tax while Prepstore is not GST registered", () => {
     expect(calculateOrderTotals(99_900)).toEqual({ taxPaise: 0, totalPaise: 99_900 });
     expect(calculateOrderTotals(99_900, 12_487)).toEqual({ taxPaise: 0, totalPaise: 87_413 });
     expect(() => calculateOrderTotals(10_000, 10_001)).toThrow("Invalid discount.");
