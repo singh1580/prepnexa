@@ -6,8 +6,8 @@ import {
   BUSINESS_SUPPORT_PHONE,
   BUSINESS_SUPPORT_PHONE_E164,
 } from "@/config/business";
+export { LEGAL_EFFECTIVE_DATE } from "@/config/legal";
 
-export const LEGAL_EFFECTIVE_DATE = "21 October 2026";
 export const LEGAL_CONTACT_EMAIL = BUSINESS_SUPPORT_EMAIL;
 export const LEGAL_OWNER_NAME = BUSINESS_LEGAL_OWNER;
 export const LEGAL_GRIEVANCE_OFFICER = BUSINESS_GRIEVANCE_OFFICER;

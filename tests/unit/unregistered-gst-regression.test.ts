@@ -23,6 +23,9 @@ describe("unregistered GST safeguards", () => {
     expect(packagePage).not.toContain("applicable GST");
     expect(receipt).toContain("Payment receipt");
     expect(receipt).toContain("It is not a GST tax invoice.");
+    expect(receipt).toContain("Digital exam-preparation platform");
+    expect(receipt).not.toContain("BUSINESS_LEGAL_OWNER");
+    expect(receipt).not.toContain("BUSINESS_ADDRESS");
     expect(receipt).not.toContain("INV-");
   });
 });

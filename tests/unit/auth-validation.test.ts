@@ -3,8 +3,14 @@ import { changePasswordInputSchema, loginInputSchema, mfaEnrollmentConfirmSchema
 
 describe("auth validation", () => {
   it("normalizes an email during registration", () => {
-    const result = registerInputSchema.parse({ name: "Learner", email: "  USER@Example.COM ", password: "a-secure-password" });
+    const result = registerInputSchema.parse({ name: "Learner", email: "  USER@Example.COM ", password: "a-secure-password", acceptPolicies: "true" });
     expect(result.email).toBe("user@example.com");
+    expect(result.acceptPolicies).toBe(true);
+  });
+
+  it("requires explicit acceptance of every registration policy", () => {
+    expect(() => registerInputSchema.parse({ name: "Learner", email: "user@example.com", password: "a-secure-password" })).toThrow();
+    expect(() => registerInputSchema.parse({ name: "Learner", email: "user@example.com", password: "a-secure-password", acceptPolicies: false })).toThrow();
   });
 
   it("rejects short passwords", () => {

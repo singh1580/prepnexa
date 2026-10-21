@@ -5,6 +5,9 @@ const contactPage = readFileSync("src/app/(public)/contact/page.tsx", "utf8");
 const publicLayout = readFileSync("src/app/(public)/layout.tsx", "utf8");
 const publicHeader = readFileSync("src/components/public-header.tsx", "utf8");
 const legalDocuments = readFileSync("src/app/(public)/legal/[document]/legal-documents.ts", "utf8");
+const contactForm = readFileSync("src/features/contact/ui/contact-form.tsx", "utf8");
+const contactRoute = readFileSync("src/app/api/contact/route.ts", "utf8");
+const authForm = readFileSync("src/features/auth/ui/auth-form.tsx", "utf8");
 
 describe("contact and support routing", () => {
   it("keeps Contact us separate from the authenticated Help Centre", () => {
@@ -16,12 +19,23 @@ describe("contact and support routing", () => {
     expect(contactPage).toContain('"/login?next=%2Fdashboard%2Fsupport"');
   });
 
-  it("publishes verified contact channels and does not duplicate the ticket form", () => {
+  it("publishes verified contact channels and a separate enquiry form", () => {
     expect(contactPage).toContain("BUSINESS_SUPPORT_EMAIL");
     expect(contactPage).toContain("BUSINESS_SUPPORT_PHONE_E164");
     expect(contactPage).toContain("BUSINESS_ADDRESS");
     expect(contactPage).not.toContain("NewSupportTicketForm");
-    expect(contactPage).not.toContain("<form");
+    expect(contactPage).toContain("<ContactForm");
+    expect(contactForm).toContain('fetch("/api/contact"');
+    expect(contactRoute).toContain("contactInquirySchema.parse");
+    expect(contactPage).toContain('href="/legal/fair-use"');
+  });
+
+  it("requires all four policies during account registration", () => {
+    expect(authForm).toContain('name="acceptPolicies"');
+    expect(authForm).toContain('href="/legal/terms"');
+    expect(authForm).toContain('href="/legal/privacy"');
+    expect(authForm).toContain('href="/legal/cancellation-refund"');
+    expect(authForm).toContain('href="/legal/fair-use"');
   });
 
   it("uses the approved Prepstore casing throughout every legal document", () => {
