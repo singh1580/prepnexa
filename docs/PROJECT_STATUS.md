@@ -1,102 +1,48 @@
-# Prepstore implementation audit — 2026-09-23
+# Prepstore implementation status — 22 October 2026
 
-Evidence: inspected requirements, delivery plan, source routes/services/schema and merged PRs through #7. CI passed lint, TypeScript, 73 tests and the production build for the Phase 10 tree; the isolated Neon Phase 10 migration was also verified. This is not yet the final consolidated browser or production acceptance.
+This document records the current repository state. Historical phase documents explain how the product evolved; they do not override this checkpoint.
 
-## Agreed product
-Exactly two roles and dashboards: Student and Admin. One Admin creates, publishes and operates the platform without staff approval. Existing public catalogue remains. Coupons, commerce, materials, results and support remain in scope. Reviewer, content-admin, support-agent, finance-admin and super-admin roles are removed rather than treated as hidden staff types.
+## Current product
 
-## Historical inventory — see the current checkpoint below
-| Area | Evidence/status | Remaining |
-| --- | --- | --- |
-| Architecture/CI | Modular source, validation/service/repository, migrations, GitHub CI exist | Release/security/load and restore verification |
-| Database | Schema/migrations for content, RBAC, commerce, coupons, attempts, results, operations | Schema alone is not implementation; migration/constraint and live integration acceptance |
-| Signup, verification, login, logout, profile | Implemented; user logs confirm successful core flows | Password-reset completion, device/session listing/revocation and two-device limit acceptance |
-| Admin MFA | Enroll/confirm/login implemented; user confirmed success after SQL fix | Regression and broader security acceptance |
-| Public catalogue | Landing, exam/package details and free-test discovery exist; user visited successfully | Published dataset acceptance; test start/checkout not yet delivered |
-| Two workspace shells | Student/Admin routes exist, no specialist dashboard routes | Student purchased-content/results experience and admin operational metrics |
-| Exams/subjects/topics | Create/edit/publish/archive code; user creation confirmed | Published taxonomy names/order and additions are now editable; IDs and links are preserved |
-| Question bank | Four types, validation, revisions, preview/import and publication | Direct publication and editable draft copies implemented; original published question stays unchanged |
-| Test builder/schedules | Create, section/question assignment, publish and live schedule code | Section edit, question removal/reordering, duplicate/archive controls implemented; integration/browser acceptance required |
-| Packages | Create, bundle links, price/validity, publish code | Draft editing/unlinking, editable package copies and archive implemented; acceptance required |
-| Materials | Article/file metadata, version 1 and direct publish | Draft edit, HTTPS video validation, copy and guarded archive implemented. Actual PDF/file upload, reader/download and access protection remain Phase 9 |
-| CSV | Parsing, row errors and atomic draft import code; invalid job observed | CSV file picker implemented; valid import/rollback live acceptance required |
-| Student test engine — Phase 6 | On-demand student library, instructions, immutable snapshots, server deadline, responsive runner, versioned autosave, resume and submission implemented | Final browser visual acceptance is deferred; scoring/results remain Phase 7 |
-| Results — Phase 7 | Snapshot-based scoring, immediate mock result publication, section breakdowns, per-question timing, rank/percentile and protected answer review implemented and QA-tested | Scheduled live-test cohorts and manual result corrections remain deferred |
-| Coupons — Phase 8 | Admin create/edit/enable controls, validation, schedules, limits, product targeting and atomic reservations implemented | Final browser acceptance with the consolidated platform |
-| Orders/payments — Phase 8 | Server-priced checkout, mock adapter, verified idempotent capture, access, history and refunds implemented | Select a production gateway; provider invoice/reconciliation and production acceptance |
-| Protected materials — Phase 9 | Admin private upload/version/publish, Student library, signed delivery, current entitlement/revocation checks, checksum, PDF watermark and audit log implemented | Select/configure a production S3-compatible provider; consolidated browser acceptance |
-| Notifications/support — Phase 10 | In-app events, retryable Resend delivery, inbox, tickets and replies implemented; verified-domain external Resend delivery passed | Runtime API-key configuration and application-flow acceptance |
-| Student/admin operations — Phase 10 | Student summaries/devices/support plus Admin students/support/delivery/activity and metrics implemented; role model consolidated to STUDENT and one ADMIN; isolated migration/seed verification passed | Complete Phase 11 acceptance |
-| Release — Phase 11 | Local release candidate implemented; see `PHASE_11_SCOPE.md` and `LOCAL_ACCEPTANCE.md` | Owner's authenticated workflow/UI review, then production storage/operations evidence and final payment-gateway sign-off |
+- Brand: **Prepstore**.
+- Roles: exactly one `ADMIN` role type and the `STUDENT` role type.
+- Runtime: Next.js 16.4.1 on Node.js 22.
+- Data: PostgreSQL through Drizzle and versioned SQL migrations.
+- Deployment target: EC2. The application has no Vercel deployment requirement.
+- Payments: Razorpay checkout, verification, retry and webhook handling are implemented; the mock provider is restricted to non-production use.
+- Email: Resend-backed transactional delivery with in-app delivery records and retry support.
+- Protected files: local storage for development and S3-compatible private storage for production.
 
-## Changes in this update
-- Remove mandatory reviewer approval from question publishing; allow the creator to publish.
-- Preserve legacy IN_REVIEW content and allow it to publish without a data migration.
-- Retire submit/review API actions with explicit 410 guidance.
-- Replace reviewer-dependent UI with publish/archive actions.
-- Fix archiving's empty revision update (Drizzle cannot update with an empty SET).
-- Complete draft package/material editing, bundle unlink, content copies and dependency-aware archives.
-- Complete section edits, question order/removal, test copies and test archives.
-- Fix taxonomy async form reset and redact raw database errors.
-- Published content changes use explicit draft copies so existing tests/packages keep their original linked records.
-- Update requirements and phase plan; retain coupons and every original product module.
+## Implemented journeys
 
-## Remaining order
-1. Complete Resend runtime configuration and real application email-flow acceptance.
-2. Run consolidated browser, responsive UI, keyboard/accessibility, security and performance checks.
-3. Configure and verify production private-object storage, monitoring and backup/restore.
-4. Integrate the real production payment gateway last.
-5. Complete beta sign-off, then promote `develop` to `main` and deploy with explicit release approval.
+- Public catalogue, package details, cart, billing and checkout.
+- Signup with policy consent, email verification, login, password reset, profile and password changes.
+- Student dashboard, purchases, entitled courses/materials, test attempts with autosave, results, notifications and support.
+- Admin content, packages, materials, tests, students, orders, refunds, notification delivery and support operations.
+- Legal documents, a branded contact form and authenticated support routing.
+- Responsive public/workspace shells, skip links, focus styles and reduced-motion handling.
 
-## Mock-first scope update
-Live tests and standalone practice-mode creation are deferred by the owner. Existing database modes/schedules remain for compatibility. Current test creation is MOCK only; free diagnostic and paid mock packages remain. Students start a prepared test on demand and its timer begins at attempt creation (Phase 6). Live scheduling is not part of current acceptance.
+## Verification checkpoint
 
-This update hides schedule controls, rejects non-mock creation/publication, fixes async form reset, adds draft question/empty-section removal and prevents publishing papers with empty sections. Actual student attempts, autosave/resume and results remain pending.
+- ESLint, TypeScript, Vitest and the production build are repository gates.
+- Playwright and axe checks cover public pages at 390 px mobile, tablet, laptop and wide-desktop viewports.
+- Authenticated Student/Admin Playwright checks use supplied storage-state files so credentials are never committed.
+- Production dependencies currently report no known npm audit vulnerabilities.
 
+Browser automation still requires a machine on which Playwright Chromium can be installed. The current container could not download that browser binary, so the test definitions are committed but an all-device browser pass must be recorded from CI or the release host before claiming final acceptance.
 
-## Consolidated maintenance acceptance
-The current batch targets Phase 5 content maintenance, not the remaining entire product. Live tests remain deferred. Phase 6 student attempts/timer/autosave/submission, Phase 7 results, Phase 8 coupons/payments, Phase 9 actual storage upload/protected delivery and Phase 10 operations remain separate.
+## Compatibility decisions
 
-QA uses the isolated Neon branch `phase-5-acceptance`. The complete auth/MFA database flow passed. The admin database flow successfully exercised taxonomy creation and published editing, CSV import, direct question publication, mock-test remove/reorder/publish, material version editing, and package edit/link/unlink/publish. The runner then hit its 20-minute limit while executing final dependency assertions, so the full admin suite is not recorded as passed; those guards also have passing unit coverage. The integration timeout is configurable because this runner's Neon requests take roughly 20–50 seconds each. Browser acceptance should cover create/edit/copy/publish/archive and failed dependency checks.
+- The `prepnexa_session` cookie name is intentionally retained for now. Renaming it would invalidate every existing session and sign users out.
+- Historical migration identifiers, database names and migration text containing `Prepnexa` are immutable operational history and are not user-visible branding.
+- New user-facing and active configuration names use Prepstore.
 
+## Release evidence still required
 
-## Approved test-centred simplification
-See [ADMIN_SIMPLIFICATION.md](ADMIN_SIMPLIFICATION.md) for the approved scope, delivered test/import/product-assembly changes, verification evidence and remaining student/material/commerce work. This supersedes the earlier question-bank-first authoring flow; prepared topic and subject practice sets remain in scope, while live scheduling stays deferred. Phase 5 browser acceptance is still pending.
+1. Run the Playwright matrix with QA Student/Admin storage states and record the authenticated workflow result.
+2. Verify production S3-compatible storage, signed delivery and entitlement revocation against the configured provider.
+3. Record monitoring, database backup and restore evidence.
+4. Complete Razorpay production-key, webhook, failed-payment, retry and reconciliation acceptance.
+5. Promote `develop` to `main` and deploy only after explicit release approval.
 
-
-## Current checkpoint: consolidated scope and Admin usability
-
-The current implementation is documented in ADMIN_SIMPLIFICATION.md; the historical inventory above is not a second competing plan. Product requirements and Phase 5 acceptance now match paper-level publication, prepared topic/subject practice sets and standalone/bundle assembly. Live reminders follow deferred live scheduling.
-
-This batch adds test-name/exam/status filters and a contextual Edit in this test screen. Saving creates an isolated question/answer copy and replaces that paper's assignment atomically, keeping its position and preserving the original for other papers. Missing/stale assignments, wrong-exam topics and non-draft papers reject edits.
-
-Saved full-mock/subject/topic categories and atomic same-section repeat-CSV protection are now implemented with migration 0006. Existing papers remain Uncategorised; publish enforces single-subject/topic content for the corresponding type. Subject/topic filtering, bundle-content search and paginated test-list filtering are implemented; combined browser acceptance remains. Then deliver student test execution/results, real protected materials/library, commerce/coupons, operations and release checks. No separate staff dashboards are introduced.
-
-
-## Selector usability follow-up
-
-Question entry and CSV authoring now offer subject filters and topic search. Bundle creation offers exam/type/title filters, selected-only review and selection preservation across searches; existing bundle links have searchable selectors. No new migration or env changes. Overall test-list curriculum filtering/pagination is implemented; browser acceptance remains. The student engine and commerce phases are not marked complete.
-
-The Admin test list now performs exam/category/status/title/subject/topic filtering and 20-item pagination in Postgres. Subject/topic membership comes from assigned questions, with dependent selectors preventing stale combinations. Combined browser acceptance remains pending.
-
-## Phase 6 student runner checkpoint
-
-The on-demand student execution path is implemented. Students can discover accessible published papers, inspect instructions, start or resume one active attempt, answer supported question types with versioned autosave, mark questions for review and submit manually or at the server deadline. Attempt content is copied from published revisions into immutable snapshots, and active APIs do not expose solutions. Migration `0007_gray_karen_page` supplies snapshot metadata, answer versions and the database-enforced one-active-attempt rule.
-
-See [PHASE_6_SCOPE.md](PHASE_6_SCOPE.md) for the exact security, migration and verification boundary. The isolated QA integration passed the complete start/resume/autosave/submit/lock flow and removed its synthetic fixtures. Lint, TypeScript, 55 unit tests and the 42-page production build passed. Phase 7 scoring/result review is not folded into this phase. The owner has deferred consolidated local browser/visual acceptance until the remaining platform phases are complete.
-
-## Phase 7 scoring checkpoint
-
-See [PHASE_7_SCOPE.md](PHASE_7_SCOPE.md). Submitted mock attempts now evaluate from immutable snapshots and publish an owner-scoped result with exact-choice, numeric-tolerance and text-answer rules, negative marks, totals, accuracy, time, section breakdowns and post-submit explanations. On-demand test results now also show best-per-student rank/percentile and per-question time; scheduled live-test cohorts remain deferred.
-
-## Phase 8 commerce checkpoint
-
-See [PHASE_8_SCOPE.md](PHASE_8_SCOPE.md). Students can apply coupons on published packages, create idempotent server-priced orders, complete a non-production mock payment or free checkout and review order status. Verified capture grants access atomically. The same Admin dashboard manages coupon rules and partial/full refunds with optional entitlement revocation. The isolated `phase-8-commerce` Neon flow passed coupon-capacity, duplicate checkout/capture, entitlement, idempotent partial refund, full refund/revoke, free-order and cleanup assertions. Migration `0008_damp_patriot.sql` was applied and inspected only on that isolated branch. A real production gateway remains deliberately unselected; the mock adapter is blocked in production. Consolidated browser/visual acceptance remains deferred by the owner.
-
-## Phase 9 protected-material checkpoint
-
-See [PHASE_9_SCOPE.md](PHASE_9_SCOPE.md). The manual private-object-key placeholder is replaced by validated Admin uploads, immutable file versions and automatic checksum/metadata capture. Students have one `My library` surface for entitled/free articles, videos, PDFs and files. File delivery uses short-lived scoped tokens, rechecks access on every request, verifies stored bytes, watermarks PDFs and writes audit records. The isolated Neon `phase-9-materials` branch passed paid access, revoke, free access, constraints and cleanup. The production storage provider and consolidated browser acceptance remain deferred; local storage cannot run in production.
-
-## Phase 10 operations checkpoint
-
-See [PHASE_10_SCOPE.md](PHASE_10_SCOPE.md). Student dashboard summaries, two-device enforcement, active-session revocation, in-app notifications and owned support conversations are implemented. The same Admin workspace exposes student operations, support queue/replies, notification delivery/retry, audit activity and operational metrics. Purchase/payment/result/suspicious-login/support events queue idempotent in-app and email delivery; delivery failure is recorded without rolling back the primary operation. Migration `0012_single_admin_roles.sql` converts the owner from the legacy `CONTENT_ADMIN` key to `ADMIN`, removes all unused staff/admin role types, rejects ambiguous legacy assignments and prevents a second Admin assignment. Production/main remain untouched. Isolated migration verification passed and PR #7 was merged into `develop`; real provider configuration and consolidated browser acceptance remain Phase 11 release work.
+An inbound contact-form inbox inside Admin is intentionally deferred. The present form stores every genuine enquiry with a reference and sends it through Resend to `contactprepstore@gmail.com`; the authenticated support centre remains the in-app ticket workflow.

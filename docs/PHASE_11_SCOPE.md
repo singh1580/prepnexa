@@ -1,53 +1,34 @@
 # Phase 11 — release readiness
 
-Phase 11 is the only active delivery phase. Phases 0–10 are implemented and merged into `develop`. The product keeps exactly two roles (`STUDENT` and one `ADMIN`) and the existing Student/Admin workspaces.
+Phase 11 is the release-evidence phase. Product phases 0–10 are implemented in `develop`; this phase must verify the complete system without introducing a second product plan.
 
-## Agreed execution order
+## Implemented release foundations
 
-1. Configure and verify Resend with the verified `prepstore.in` sender.
-2. Run consolidated browser, responsive UI, keyboard and accessibility acceptance.
-3. Complete security and performance/load checks.
-4. Select and verify production private-object storage.
-5. Verify monitoring, backup/restore and beta readiness.
-6. Integrate and verify the real production payment gateway last, after the application and UI checks are stable.
-7. Promote `develop` to `main` and deploy only after the production checklist and explicit release approval.
+- Resend delivery contract and verified Prepstore sender configuration.
+- Responsive public, Student and Admin layouts with keyboard/focus support.
+- Session, RBAC, MFA, CSRF/origin, security-header and protected-route controls.
+- Razorpay checkout, verification, retry, webhook and payment-state handling.
+- Local development storage and production S3-compatible private-object support.
+- EC2 deployment target with health/readiness endpoints; no Vercel deployment dependency.
+- Playwright viewport matrix and axe serious/critical accessibility checks for public and authenticated routes.
 
-## Resend checkpoint — 2026-09-23
+## Evidence required before release sign-off
 
-- `prepstore.in` is verified in Resend with sending and receiving enabled.
-- A real external delivery from `Prepstore <no-reply@prepstore.in>` reached an external Gmail mailbox with Resend status `delivered`.
-- The application environment example now uses that verified sender.
-- Environment validation requires `RESEND_API_KEY` and `EMAIL_FROM` together and rejects `@resend.dev` senders in production.
-- The API key remains a deployment secret and is never committed. Application-level signup, verification and password-reset acceptance still requires the key in the runtime environment.
+1. Run public browser checks at 390×844, 768×1024, 1366×768 and 1920×1080.
+2. Run the authenticated Student/Admin matrices with non-production storage-state files.
+3. Exercise test refresh/autosave, invoice rendering, PDF/material reading and post-logout Back-button behaviour.
+4. Verify production private storage and entitlement revocation.
+5. Record monitoring plus database backup/restore evidence.
+6. Verify Razorpay production credentials, webhook delivery, abandoned/failed/retried payments and reconciliation.
+7. Run the final code gates, approve the release explicitly, promote `develop` to `main`, and deploy to EC2.
 
-Receiving being enabled at the domain level does not by itself create an inbound support workflow. Prepstore support remains the authenticated in-app ticket system unless a separate inbound-email feature is approved later.
+Passing source checks alone is not evidence of all-device correctness. Record viewport, route, account role, expected result, actual result and a screenshot for every failure.
 
-## Browser and accessibility checkpoint — 2026-09-23
+## Deferred extensions
 
-- Created isolated Neon branch `phase-11-browser-qa` from the fully migrated Phase 10 QA branch; production remained untouched.
-- HTTP smoke checks passed for the home page, exams, packages, free tests, login, signup, forgot-password and health routes. Unauthenticated Student/Admin routes redirected to login as expected.
-- Fixed the public mobile header, which previously hid Exams, Packages, Free tests and Sign in. It now exposes an accessible mobile menu while preserving desktop navigation.
-- Replaced the fixed three-column workspace mobile navigation with a single-row, horizontally scrollable navigation so the full Student/Admin link set does not cover the page.
-- Added keyboard skip links for public and workspace content, focus styling for menu/select/textarea controls, reduced-motion support remains enabled, and 44px-class mobile targets are maintained.
-- Lint, TypeScript, 76 unit tests and the 62-page production build pass after the changes.
+- Scheduled live/cohort test windows.
+- Manual result-correction workflows.
+- An Admin inbox for unauthenticated contact-form submissions.
+- Inbound-email automation.
 
-The automated visual runner could not attach inside the current execution environment, so screenshot-level desktop/mobile inspection and authenticated click-through acceptance remain open; HTTP, rendered-markup and source-level checks are recorded separately rather than presenting them as visual proof.
-
-## Local release candidate — 2026-09-24
-
-- Added one `qa:preflight` command that validates local environment readiness, the isolated database, critical schema, exactly two roles, exactly one Admin, and selected providers without displaying secrets.
-- Added one `qa:smoke` command covering public pages, database readiness, security headers, latency, and protected Student/Admin redirects.
-- Added a database-backed `/api/ready` dependency check while keeping `/api/health` as cheap liveness.
-- Added global anti-framing, MIME-sniffing, referrer, permissions, and cross-origin opener headers; expanded structured-log secret redaction.
-- Consolidated the real email, Student, Admin, responsive, keyboard and UI review into `LOCAL_ACCEPTANCE.md` so the owner can run the entire workflow once in VS Code and return one UI-change list.
-
-The code-level Phase 11 release candidate is ready for local acceptance. Production storage, monitoring/restore evidence, the real payment adapter, `main` promotion and deployment are deliberately not prerequisites for this local review. The real payment adapter remains the last implementation step after workflow/UI acceptance.
-
-## Deferred, non-blocking product extensions
-
-- Scheduled live/cohort test windows (on-demand mock rank and percentile are implemented).
-- Manual result correction workflows.
-- A separate inbound-email automation pipeline.
-- Broader standalone practice creation beyond the approved prepared sets.
-
-These extensions are not release blockers for the currently approved mock-test product.
+These items are not blockers for the approved on-demand mock-test product.

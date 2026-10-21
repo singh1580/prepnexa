@@ -7,6 +7,7 @@ import {
   parseQuestionCsv,
   testQuestionCsvTemplate,
 } from "@/features/admin-imports/question-csv";
+import { csvCell } from "@/lib/csv";
 
 const optionKeys = ["A", "B", "C", "D"] as const;
 
@@ -78,13 +79,16 @@ export function AddTestQuestions({ sectionId }: { sectionId: string }) {
       return;
     }
     try {
-      if (/\.xlsx?$/i.test(file.name)) {
-        const XLSX = await import("xlsx");
-        const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        if (!sheet) throw new Error("This workbook has no worksheet.");
-        setCsv(XLSX.utils.sheet_to_csv(sheet));
-      } else setCsv(await file.text());
+      if (/\.xlsx$/i.test(file.name)) {
+        const { readSheet } = await import("read-excel-file/browser");
+        const rows = await readSheet(file);
+        if (!rows.length) throw new Error("This workbook has no worksheet data.");
+        setCsv(rows.map((row) => row.map(csvCell).join(",")).join("\n"));
+      } else if (/\.csv$/i.test(file.name) || file.type === "text/csv") {
+        setCsv(await file.text());
+      } else {
+        throw new Error("Choose a CSV or modern .xlsx workbook.");
+      }
     } catch (cause) {
       setCsv("");
       setError(cause instanceof Error ? cause.message : "Could not read this file.");
@@ -175,7 +179,7 @@ export function AddTestQuestions({ sectionId }: { sectionId: string }) {
         <form className="admin-form" onSubmit={submitSheet}>
           <fieldset disabled={busy}>
             <div className="import-toolbar">
-              <label className="button secondary file-button">Choose Excel / CSV<input type="file" accept=".xlsx,.xls,.csv,text/csv" onChange={(event) => void readSheet(event.target.files?.[0])} /></label>
+              <label className="button secondary file-button">Choose Excel / CSV<input type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => void readSheet(event.target.files?.[0])} /></label>
               <button className="button secondary" type="button" onClick={downloadTemplate}>Download template</button>
             </div>
             <label className="field field-wide"><span>Spreadsheet preview</span><textarea value={csv} rows={9} required onChange={(event) => { setCsv(event.target.value); setPreview(undefined); }} placeholder="Upload a file or paste CSV rows" /></label>

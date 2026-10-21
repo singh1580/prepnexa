@@ -1,5 +1,7 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { ProductDetailCover } from "@/components/product-detail-cover";
 import { StorefrontProductCard } from "@/components/storefront-product-card";
 import { getCurrentAuth } from "@/features/auth/authorization";
@@ -20,6 +22,27 @@ import { SyllabusAccordion } from "@/features/catalog/ui/syllabus-accordion";
 import { CheckoutCard } from "@/features/commerce/ui/checkout-card";
 
 export const dynamic = "force-dynamic";
+const getAvailableProduct = cache(findAvailableProduct);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const product = await getAvailableProduct((await params).slug);
+  if (!product) return { title: "Package not found" };
+  const name = normaliseProductName(product.name);
+  return {
+    title: name,
+    description: meaningfulProductDescription(
+      product.description,
+      product.name,
+      product.slug,
+      `Explore ${name} study materials and practice tests on Prepstore.`,
+    ),
+  };
+}
+
 const money = (value: number) =>
   value === 0
     ? "Free"
@@ -77,7 +100,7 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const auth = await getCurrentAuth();
-  const product = await findAvailableProduct((await params).slug);
+  const product = await getAvailableProduct((await params).slug);
   if (!product) notFound();
   const [owned, available] = await Promise.all([
     hasActiveProductAccess(product.id, auth?.user.id),

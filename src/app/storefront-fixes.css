@@ -24,7 +24,6 @@
 .checkout-card-title h2{margin:0;color:#202326;font-size:1.05rem}.checkout-card-title p{margin:.25rem 0 0;color:#72787d;font-size:.7rem;line-height:1.45}
 .secure-payment>b{display:grid;place-items:center;width:1.55rem;height:1.55rem;flex:0 0 auto;border-radius:50%;background:#e7f6eb;color:#24743b}
 @media(max-width:800px){
-  .auth-site-header{min-width:0;padding-inline:1rem}.auth-site-header .brand{flex:0 0 auto}.auth-site-header nav{min-width:0;gap:.75rem}
   .reference-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .reference-cart-layout,.reference-checkout-layout{gap:1rem}
   .reference-order-summary,.reference-checkout-summary{position:static!important}

@@ -294,8 +294,9 @@ describe("responsive content integrity", () => {
   });
 
   it("asks for confirmation before ending a signed-in session", () => {
-    expect(accountActions).toContain('className="logout-confirm-backdrop"');
-    expect(accountActions).toContain('aria-modal="true"');
+    expect(accountActions).toContain('<dialog ref={dialogRef} className="logout-confirm-backdrop"');
+    expect(accountActions).toContain("dialog.showModal()");
+    expect(accountActions).toContain("aria-labelledby={titleId}");
     expect(accountActions).toContain("Sign out of Prepstore?");
     expect(accountActions).toContain("setConfirming(true)");
     expect(finalReviewPolish).toContain(".logout-confirm-dialog");
