@@ -27,6 +27,7 @@ export async function PublicHeader({
   const desktopNavigation = (
     <>
       <Link href="/packages">Packages</Link>
+      <Link href="/contact">Contact</Link>
       <Link className="header-cart" href="/cart" aria-label="Cart">
         <CartIcon />
         <CartCount />
@@ -81,6 +82,7 @@ export async function PublicHeader({
             <CartCount />
           </Link>
           <Link href="/packages">All packages</Link>
+          <Link href="/contact">Contact us</Link>
           {auth ? <Link href={dashboard}>Dashboard</Link> : null}
         </nav>
         <div className="mobile-drawer-actions">
