@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { logger } from "@/lib/logger";
-import { calculateDiscount, normalizeCouponCode } from "./pricing";
+import { calculateDiscount, calculateOrderTotals, normalizeCouponCode } from "./pricing";
 import { checkoutConflict, commerceNotFound, couponUnavailable, invalidCommerceState, paymentUnavailable, paymentVerificationFailed } from "./errors";
 import { claimPaymentAttemptForProviderCreation, createRetryPaymentAttempt, evaluateCartCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProducts, findLatestStudentPaymentAttempt, findManagedCoupon, findManagedOrder, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findReusableCheckoutOrder, findStudentOrder, findStudentPaymentAttempt, insertCartCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCheckoutBillingPhone, updateCouponRecord } from "./repository";
 import { getPaymentProvider, type VerifiedPaymentEvent } from "./providers";
@@ -64,14 +64,13 @@ async function priceCheckout(productIds: string[], couponCode: string | null, us
   const currencies = new Set(products.map((product) => product.currency));
   if (currencies.size !== 1) throw checkoutConflict("All cart products must use the same currency.");
   const subtotalPaise = products.reduce((sum, product) => sum + product.pricePaise, 0); const currency = products[0]?.currency ?? "INR";
-  if (!couponCode) { const taxPaise = Math.floor(subtotalPaise * .18); return { products, coupon: null, subtotalPaise, discountPaise: 0, taxPaise, totalPaise: subtotalPaise + taxPaise, currency }; }
+  if (!couponCode) return { products, coupon: null, subtotalPaise, discountPaise: 0, ...calculateOrderTotals(subtotalPaise), currency };
   const code = normalizeCouponCode(couponCode);
   const coupon = await evaluateCartCoupon(code, productIds, userId, subtotalPaise, currency);
   if (!coupon || coupon.totalLimit !== null && coupon.totalUsed >= coupon.totalLimit || coupon.userUsed >= coupon.perUserLimit) throw couponUnavailable();
   const discountPaise = calculateDiscount(coupon.eligibleSubtotal, coupon);
   if (discountPaise <= 0) throw couponUnavailable("This coupon does not reduce the price of this product.");
-  const taxPaise=Math.floor((subtotalPaise-discountPaise)*.18);
-  return { products, coupon, subtotalPaise, discountPaise, taxPaise, totalPaise: subtotalPaise - discountPaise + taxPaise, currency };
+  return { products, coupon, subtotalPaise, discountPaise, ...calculateOrderTotals(subtotalPaise, discountPaise), currency };
 }
 
 export async function previewCheckout(productIds: string[] | string, couponCode: string | null, userId: string) {
@@ -81,6 +80,7 @@ export async function previewCheckout(productIds: string[] | string, couponCode:
 }
 
 async function startProviderCheckout(order: NonNullable<Awaited<ReturnType<typeof findOrderByIdempotency>>>, student: StudentActor) {
+  if (order.taxPaise > 0) throw invalidCommerceState("This checkout uses an outdated price. Return to your cart and start a new checkout.");
   if (order.totalPaise <= 0) {
     await finalizeFreeOrder(order.id, student.userId, student.requestId);
     await queueStudentNotification({ userId: student.userId, type: "PURCHASE_CONFIRMED", deduplicationKey: `order-paid:${order.id}`, title: "Access is ready", body: "Your order is complete and the included tests and materials are available.", requestId: student.requestId });
@@ -106,7 +106,7 @@ async function startProviderCheckout(order: NonNullable<Awaited<ReturnType<typeo
 export async function createCheckout(input: CheckoutInput, student: StudentActor) {
   await releaseExpiredCommerce();
   const productIds=input.productIds;
-  const scopedKey = `${student.userId}:${input.idempotencyKey}`.slice(0, 100);
+  const scopedKey = `${student.userId}:${input.idempotencyKey}:tax-free-v1`.slice(0, 100);
   const existing = await findOrderByIdempotency(student.userId, scopedKey);
   if (existing) {
     if(existing.totalPaise>0&&!input.phone)throw invalidCommerceState("A mobile number is required for paid checkout.");
@@ -156,10 +156,12 @@ export async function confirmMockPayment(attemptId: string, student: StudentActo
 }
 
 export async function getRazorpayCheckout(attemptId: string, student: StudentActor) {
+  await releaseExpiredCommerce();
   const attempt = await findStudentPaymentAttempt(attemptId, student.userId);
   if (!attempt) throw commerceNotFound("Payment attempt");
   if (attempt.provider !== "razorpay" || !attempt.providerOrderId) throw invalidCommerceState("This is not a Razorpay checkout.");
   if (attempt.orderStatus === "PAID") return { paid: true as const, orderId: attempt.orderId };
+  if (attempt.taxPaise > 0) throw invalidCommerceState("This checkout uses an outdated price. Return to your cart and start a new checkout.");
   if (!attempt.isLatest || !new Set(["CREATED", "PENDING", "FAILED"]).has(attempt.status) || !new Set(["CREATED", "PENDING", "FAILED"]).has(attempt.orderStatus)) throw invalidCommerceState("This payment is no longer available.");
   const expiresAt = attempt.expiresAt ? new Date(attempt.expiresAt) : null;
   if (expiresAt && Number.isNaN(expiresAt.getTime())) throw invalidCommerceState("This checkout has an invalid expiry. Please create a new order.");
@@ -212,11 +214,13 @@ export async function reconcileRazorpayPayment(attemptId: string, student: Stude
 }
 
 export async function retryRazorpayPayment(attemptId: string, student: StudentActor) {
+  await releaseExpiredCommerce();
   let previous=await findStudentPaymentAttempt(attemptId,student.userId);
   if(!previous)throw commerceNotFound("Payment attempt");
   if(!previous.isLatest)previous=await findLatestStudentPaymentAttempt(previous.orderId,student.userId);
   if(!previous)throw commerceNotFound("Payment attempt");
   if(previous.orderStatus==="PAID")return{paid:true as const,orderId:previous.orderId};
+  if(previous.taxPaise>0||!["CREATED","PENDING","FAILED"].includes(previous.orderStatus))throw invalidCommerceState("This checkout is closed. Return to your cart and start a new checkout.");
   if(previous.provider!=="razorpay")throw invalidCommerceState("This payment can no longer be retried.");
   const expiresAt=previous.expiresAt?new Date(previous.expiresAt):null;
   if(!expiresAt||expiresAt<=new Date())throw invalidCommerceState("This checkout has expired. Please create a new order.");

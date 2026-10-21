@@ -84,7 +84,7 @@ export default async function Page({
       <header className="admin-page-header">
         <div>
           <h1>Orders &amp; Payments</h1>
-          <p>View and manage student orders, payments and invoices.</p>
+          <p>View and manage student orders, payments and receipts.</p>
         </div>
       </header>
       <form className="admin-list-controls order-filters">
@@ -127,7 +127,7 @@ export default async function Page({
                 <th>Student</th>
                 <th>Packages</th>
                 <th>Base amount</th>
-                <th>GST</th>
+                <th>Tax</th>
                 <th>Total</th>
                 <th>Payment status</th>
                 <th>Date</th>
@@ -154,7 +154,7 @@ export default async function Page({
                       order.currency,
                     )}
                   </td>
-                  <td data-label="GST">{formatMoney(order.taxPaise, order.currency)}</td>
+                  <td data-label="Tax">{order.taxPaise > 0 ? formatMoney(order.taxPaise, order.currency) : "—"}</td>
                   <td data-label="Total">
                     <strong>
                       {formatMoney(order.totalPaise, order.currency)}
@@ -262,10 +262,12 @@ export default async function Page({
                     </dd>
                   </div>
                 ) : null}
-                <div>
-                  <dt>GST (18%)</dt>
-                  <dd>{formatMoney(selected.taxPaise, selected.currency)}</dd>
-                </div>
+                {selected.taxPaise > 0 ? (
+                  <div>
+                    <dt>Tax recorded</dt>
+                    <dd>{formatMoney(selected.taxPaise, selected.currency)}</dd>
+                  </div>
+                ) : null}
                 <div className="side-total">
                   <dt>Total amount</dt>
                   <dd>{formatMoney(selected.totalPaise, selected.currency)}</dd>
@@ -306,7 +308,7 @@ export default async function Page({
                   className="button secondary"
                   href={`/invoice/${selected.id}`}
                 >
-                  Download invoice
+                  Download receipt
                 </Link>
                 {selected.paymentId &&
                 Math.max(
