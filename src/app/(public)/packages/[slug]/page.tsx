@@ -147,7 +147,7 @@ export default async function Page({
             </del>
             <strong>{money(product.pricePaise)}</strong>
             {discount > 0 ? <span>{discount}% OFF</span> : null}
-            <small>+ applicable GST</small>
+            <small>Final price shown at checkout</small>
           </div>
           <div className="reference-facts">
             <span>

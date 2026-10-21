@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateDiscount, normalizeCouponCode } from "../../src/features/commerce/pricing";
+import { calculateDiscount, calculateOrderTotals, normalizeCouponCode } from "../../src/features/commerce/pricing";
 import { checkoutInputSchema, couponInputSchema } from "../../src/features/commerce/validation";
 
 describe("commerce pricing", () => {
@@ -12,6 +12,12 @@ describe("commerce pricing", () => {
   it("never creates a negative payable amount", () => {
     expect(calculateDiscount(10_000, { type: "FIXED", value: 50_000, maxDiscountPaise: null })).toBe(10_000);
     expect(normalizeCouponCode("  welcome_25 ")).toBe("WELCOME_25");
+  });
+
+  it("does not add tax while PrepStore is not GST registered", () => {
+    expect(calculateOrderTotals(99_900)).toEqual({ taxPaise: 0, totalPaise: 99_900 });
+    expect(calculateOrderTotals(99_900, 12_487)).toEqual({ taxPaise: 0, totalPaise: 87_413 });
+    expect(() => calculateOrderTotals(10_000, 10_001)).toThrow("Invalid discount.");
   });
 
   it("validates coupon limits and percentage basis points", () => {

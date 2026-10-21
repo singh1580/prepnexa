@@ -17,6 +17,12 @@ export function calculateDiscount(subtotalPaise: number, coupon: CouponTerms) {
   return Math.max(0, Math.min(subtotalPaise, capped));
 }
 
+export function calculateOrderTotals(subtotalPaise: number, discountPaise = 0) {
+  if (!Number.isSafeInteger(subtotalPaise) || subtotalPaise < 0) throw new Error("Invalid subtotal.");
+  if (!Number.isSafeInteger(discountPaise) || discountPaise < 0 || discountPaise > subtotalPaise) throw new Error("Invalid discount.");
+  return { taxPaise: 0, totalPaise: subtotalPaise - discountPaise };
+}
+
 export function formatMoney(paise: number, currency = "INR") {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 2 }).format(paise / 100);
 }
