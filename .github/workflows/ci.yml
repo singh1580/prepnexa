@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 env:
-  NEXT_PUBLIC_APP_NAME: PrepNexa
+  NEXT_PUBLIC_APP_NAME: Prepstore
   NEXT_PUBLIC_APP_URL: http://localhost:3000
   DATABASE_URL: postgresql://ci:ci@localhost/ci
   DATABASE_URL_UNPOOLED: postgresql://ci:ci@localhost/ci

@@ -116,11 +116,24 @@
   position: fixed;
   z-index: 120;
   inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
   display: grid;
   place-items: center;
   padding: 1rem;
+  border: 0;
   background: rgba(28, 25, 23, .46);
   backdrop-filter: blur(3px);
+}
+
+.logout-confirm-backdrop::backdrop {
+  background: transparent;
+}
+
+.logout-confirm-backdrop:not([open]) {
+  display: none;
 }
 
 .logout-confirm-dialog {
@@ -1186,15 +1199,6 @@
 
   .ticket-title-block > p {
     margin-top: .45rem !important;
-  }
-
-  .ticket-header-actions {
-    width: 100%;
-  }
-
-  .ticket-header-actions .resolve-ticket-action,
-  .ticket-header-actions .button {
-    width: 100%;
   }
 
   .reference-ticket > .support-thread {

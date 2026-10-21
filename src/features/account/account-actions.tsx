@@ -1,35 +1,37 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authRequest, ClientApiError } from "@/features/auth/ui/api";
 import { Field } from "@/features/auth/ui/field";
 
 export function LogoutButton() {
-  const router = useRouter();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
   const [busy, setBusy] = useState(false); const [confirming, setConfirming] = useState(false); const [error, setError] = useState("");
   useEffect(() => {
-    if (!confirming) return;
-    function closeOnEscape(event: KeyboardEvent) { if (event.key === "Escape" && !busy) setConfirming(false); }
-    document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (confirming && !dialog.open) dialog.showModal();
+    if (!confirming && dialog.open) dialog.close();
   }, [busy, confirming]);
   async function logout() {
     setBusy(true); setError("");
-    try { await authRequest("logout", {}); router.push("/login"); router.refresh(); }
+    try { await authRequest("logout", {}); window.location.replace("/login"); }
     catch { setError("Couldn't sign out. Please try again."); setBusy(false); setConfirming(false); }
   }
   return <>
-    <button className="button secondary" disabled={busy} onClick={() => setConfirming(true)}>{busy ? "Signing out…" : "Sign out"}</button>
-    {confirming ? <div className="logout-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setConfirming(false); }}>
-      <section className="logout-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title" aria-describedby="logout-confirm-description">
-        <h2 id="logout-confirm-title">Sign out of Prepstore?</h2>
-        <p id="logout-confirm-description">You will need to sign in again to access your account and learning dashboard.</p>
+    <button className="button secondary" type="button" disabled={busy} onClick={() => setConfirming(true)}>{busy ? "Signing out…" : "Sign out"}</button>
+    <dialog ref={dialogRef} className="logout-confirm-backdrop" aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={(event) => { if (busy) event.preventDefault(); else setConfirming(false); }} onClose={() => setConfirming(false)} onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setConfirming(false); }}>
+      <section className="logout-confirm-dialog">
+        <h2 id={titleId}>Sign out of Prepstore?</h2>
+        <p id={descriptionId}>You will need to sign in again to access your account and learning dashboard.</p>
         <div className="logout-confirm-actions">
           <button className="button secondary" type="button" disabled={busy} autoFocus onClick={() => setConfirming(false)}>Cancel</button>
           <button className="button" type="button" disabled={busy} onClick={() => void logout()}>{busy ? "Signing out…" : "Sign out"}</button>
         </div>
       </section>
-    </div> : null}
+    </dialog>
     {error && <p role="alert">{error}</p>}
   </>;
 }
