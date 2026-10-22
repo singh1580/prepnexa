@@ -745,6 +745,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .store-product-cover.uploaded-cover{background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#f8f4ef}
 .store-product-cover.uploaded-cover:after{display:none}
 .store-product-cover.uploaded-cover .cover-title{display:none}
+.store-product-cover:not(.uploaded-cover):before{content:"";position:absolute;right:-2.4rem;bottom:-3.5rem;width:10rem;height:10rem;border:1.35rem solid rgba(255,255,255,.34);border-radius:50%;box-shadow:0 0 0 1.4rem rgba(255,255,255,.12)}
+.cover-tone-0{background-color:#f3ddd1;background-image:linear-gradient(135deg,#fff8f3 0%,#f3c5b0 52%,#e75a25 100%)}
+.cover-tone-1{background-color:#e7edf8;background-image:linear-gradient(135deg,#f9fbff 0%,#d7e1f3 52%,#7289bb 100%)}
+.cover-tone-2{background-color:#e3f0e9;background-image:linear-gradient(135deg,#fbfffc 0%,#cfe6d8 52%,#579876 100%)}
+.cover-tone-3{background-color:#f2ead2;background-image:linear-gradient(135deg,#fffdf7 0%,#eadcae 52%,#b8933e 100%)}
+.cover-tone-4{background-color:#ede3f3;background-image:linear-gradient(135deg,#fdfaff 0%,#ddcbea 52%,#8e69a6 100%)}
+.cover-tone-5{background-color:#dcecef;background-image:linear-gradient(135deg,#f8feff 0%,#c3e0e5 52%,#4f9099 100%)}
 .cart-ready-action{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .store-owned-action{background:#fff7f2;color:#d74312;border-color:#f2bca8}
 .owned-package-actions>span{display:flex;align-items:center;justify-content:center;min-height:3rem;border:1px solid #b9ddc4;border-radius:.4rem;background:#effaf2;color:#27733e;font-size:.76rem;font-weight:800}
@@ -857,15 +864,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 
 .auth-back-home {
-  position: absolute;
-  z-index: 2;
-  top: 24px;
-  left: clamp(20px, 3vw, 40px);
+  position: static;
   display: inline-flex;
+  width: min(100%, 30rem);
   min-height: 44px;
+  align-self: center;
   align-items: center;
   gap: 8px;
-  padding: 0 10px;
+  margin: 0 0 .65rem;
+  padding: 0;
   color: #454a4f;
   border-radius: 9px;
   font-size: 14px;
@@ -876,7 +883,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 .auth-back-home:hover {
   color: var(--prepstore-orange);
-  background: #fff3ed;
 }
 
 .auth-back-home svg {
@@ -1565,12 +1571,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
 
   .auth-main {
-    padding-top: 76px !important;
-  }
-
-  .auth-back-home {
-    top: 10px;
-    left: 8px;
+    padding-top: 1rem !important;
   }
 
 }
@@ -2974,7 +2975,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   width: 100%;
   max-width: 1240px;
   margin-inline: auto;
-  padding: 1.5rem clamp(1.25rem, 3vw, 2.5rem) 4rem;
+  padding: 2rem clamp(1.25rem, 3vw, 2.5rem) 4rem;
 }
 
 .student-dashboard-main > .student-reference-banner {
@@ -3364,7 +3365,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
 
   .student-dashboard-content {
-    padding: 1rem 1rem 3rem;
+    padding: 1.5rem 1rem 3rem;
   }
 
   .admin-page-header,
@@ -3492,9 +3493,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 .reference-reader-content .pdf-reader,
 .reference-reader-content .pdf-reader-state {
-  height: clamp(28rem, 62dvh, 44rem) !important;
-  min-height: 0 !important;
-  max-height: 44rem !important;
+  height: calc(100dvh - 12rem) !important;
+  min-height: 36rem !important;
+  max-height: none !important;
 }
 
 .reference-performance > div {
@@ -3532,9 +3533,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
   .reference-reader-content .pdf-reader,
   .reference-reader-content .pdf-reader-state {
-    height: min(56dvh, 32rem) !important;
-    min-height: 21rem !important;
-    max-height: 32rem !important;
+    height: calc(100dvh - 12.5rem) !important;
+    min-height: 28rem !important;
+    max-height: none !important;
   }
 
   .reference-reader-content .material-reader-toolbar {
@@ -3658,8 +3659,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
   .reference-reader-content .pdf-reader,
   .reference-reader-content .pdf-reader-state {
-    height: 50dvh !important;
-    min-height: 19rem !important;
+    height: calc(100dvh - 12.5rem) !important;
+    min-height: 26rem !important;
   }
 }
 
