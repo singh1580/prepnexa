@@ -16,12 +16,7 @@ describe("responsive navigation", () => {
     "src/components/workspace-route-effects.tsx",
     "utf8",
   );
-  const responsiveCss = readFileSync("src/app/brand-system.css", "utf8");
-  const baseCss = readFileSync("src/app/styles.css", "utf8");
-  const storefrontFixes = readFileSync(
-    "src/app/storefront-fixes.css",
-    "utf8",
-  );
+  const css = readFileSync("src/app/styles.css", "utf8");
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
   const authShell = readFileSync(
     "src/features/auth/ui/auth-shell.tsx",
@@ -37,9 +32,9 @@ describe("responsive navigation", () => {
     expect(drawer).toContain('className="menu-icon-3d"');
     expect(drawer).toContain('className="menu-icon-bar menu-icon-bar-middle"');
     expect(drawer).not.toContain('d="m6 6 12 12M18 6 6 18"');
-    expect(responsiveCss).toContain("background: #17191c");
-    expect(responsiveCss).toContain("background: #e94b17");
-    expect(responsiveCss).toContain("gap: 4px !important");
+    expect(css).toContain("background: #17191c");
+    expect(css).toContain("background: #e94b17");
+    expect(css).toContain("gap: 4px !important");
   });
 
   it("keeps public navigation ordered and account actions separate", () => {
@@ -91,40 +86,40 @@ describe("responsive navigation", () => {
     expect(drawer).toContain('document.body.style.overflow = "hidden"');
     expect(drawer).toContain('aria-label="Close navigation"');
     expect(drawer).toContain('aria-modal="true"');
-    expect(responsiveCss).toContain(
+    expect(css).toContain(
       "--mobile-drawer-width: min(380px, calc(100vw - 32px))",
     );
-    expect(responsiveCss).toContain("top: calc(var(--mobile-header-height) + 8px)");
-    expect(responsiveCss).toContain("max-height: calc(100dvh - var(--mobile-header-height) - 24px)");
-    expect(responsiveCss).toContain("border-radius: 14px");
-    expect(responsiveCss).toContain("justify-items: stretch !important");
-    expect(responsiveCss).toContain("position: fixed !important");
-    expect(responsiveCss).toContain("z-index: 208");
-    expect(responsiveCss).toContain("z-index: 209");
-    expect(responsiveCss).toContain("z-index: 210");
-    expect(responsiveCss).toContain("--mobile-header-height: 60px");
-    expect(responsiveCss).toContain("--mobile-header-height: 58px");
+    expect(css).toContain("top: calc(var(--mobile-header-height) + 8px)");
+    expect(css).toContain("max-height: calc(100dvh - var(--mobile-header-height) - 24px)");
+    expect(css).toContain("border-radius: 14px");
+    expect(css).toContain("justify-items: stretch !important");
+    expect(css).toContain("position: fixed !important");
+    expect(css).toContain("z-index: 208");
+    expect(css).toContain("z-index: 209");
+    expect(css).toContain("z-index: 210");
+    expect(css).toContain("--mobile-header-height: 60px");
+    expect(css).toContain("--mobile-header-height: 58px");
   });
 
   it("separates the compact public menu from full-height workspace drawers", () => {
-    expect(responsiveCss).toContain(
+    expect(css).toContain(
       ".workspace-mobile-menu[open] > .mobile-drawer-backdrop",
     );
-    expect(responsiveCss).toContain(
+    expect(css).toContain(
       "--workspace-drawer-width: min(360px, calc(100vw - 32px))",
     );
-    expect(responsiveCss).toContain("min-height: 100dvh");
-    expect(responsiveCss).toContain("transform: translateX(-100%)");
-    expect(responsiveCss).toContain(".workspace-drawer-logout {");
-    expect(responsiveCss).toContain("margin-top: auto");
-    expect(responsiveCss).toContain(
+    expect(css).toContain("min-height: 100dvh");
+    expect(css).toContain("transform: translateX(-100%)");
+    expect(css).toContain(".workspace-drawer-logout {");
+    expect(css).toContain("margin-top: auto");
+    expect(css).toContain(
       ".mobile-public-menu[open] > summary {",
     );
-    expect(responsiveCss).toContain(
+    expect(css).toContain(
       "top: calc(var(--mobile-header-height) + 18px)",
     );
-    expect(responsiveCss).toContain(".workspace-drawer-brand {");
-    expect(responsiveCss).toContain("border-bottom: 1px solid #ebe7e2");
+    expect(css).toContain(".workspace-drawer-brand {");
+    expect(css).toContain("border-bottom: 1px solid #ebe7e2");
   });
 
   it("provides a consistent back-to-home action across auth pages", () => {
@@ -133,19 +128,14 @@ describe("responsive navigation", () => {
     expect(authShell).toContain("Back to home");
   });
 
-  it("keeps the complete base stylesheet and applies responsive overrides last", () => {
-    expect(baseCss).toContain("body{margin:0;min-width:320px}");
-    expect(baseCss).toContain(".store-product-card");
-    expect(baseCss).toContain(".workspace{");
-    expect(baseCss).not.toContain(".mobile-public-menu");
-    expect(baseCss).not.toContain(".student-mobile-menu");
-    expect(baseCss).not.toContain(".admin-mobile-menu");
-    expect(storefrontFixes).not.toContain(".mobile-public-menu");
-    expect(storefrontFixes).not.toContain(".student-mobile-menu");
-    expect(storefrontFixes).not.toContain(".admin-mobile-menu");
-    expect(rootLayout.indexOf('import "./styles.css"')).toBeLessThan(
-      rootLayout.indexOf('import "./brand-system.css"'),
-    );
+  it("keeps base and responsive navigation rules in one global stylesheet", () => {
+    expect(css).toContain("body{margin:0;min-width:320px}");
+    expect(css).toContain(".store-product-card");
+    expect(css).toContain(".workspace{");
+    expect(css).toContain(".mobile-public-menu");
+    expect(rootLayout).toContain('import "./styles.css"');
+    expect(rootLayout).not.toContain("brand-system.css");
+    expect(rootLayout).not.toContain("storefront-fixes.css");
     expect(publicHeader).not.toContain("brand-mark");
     expect(workspaceShell).not.toContain("student-mobile-menu");
     expect(workspaceShell).not.toContain("admin-mobile-menu");

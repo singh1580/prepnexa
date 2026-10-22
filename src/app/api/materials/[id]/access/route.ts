@@ -14,6 +14,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const courseSlug = new URL(request.url).searchParams.get("course") ?? undefined;
     const token = await createStudentMaterialLink(id, action, auth.user.id, courseSlug);
     const suffix = action === "DOWNLOAD" ? "&download=1" : "";
-    return Response.redirect(new URL(`/api/materials/${id}/content?token=${encodeURIComponent(token)}${suffix}`, request.url), 303);
+    const location = `/api/materials/${id}/content?token=${encodeURIComponent(token)}${suffix}`;
+    return new Response(null, {
+      status: 303,
+      headers: {
+        // Keep the redirect on the browser's current origin. Building an
+        // absolute URL from request.url leaks an EC2 reverse proxy's internal
+        // localhost host into the public Location header.
+        Location: location,
+        "Cache-Control": "private, no-store, max-age=0",
+      },
+    });
   });
 }

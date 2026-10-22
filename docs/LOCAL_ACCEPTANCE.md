@@ -109,3 +109,16 @@ npm run build
 ```
 
 Production storage, monitoring/restore, Razorpay production reconciliation, `main` promotion and EC2 deployment remain explicit release actions. This project has no Vercel deployment step.
+
+## 7. EC2 post-deploy material check
+
+Keep the public app URL set to `https://prepstore.in`. The material access endpoint now returns a relative same-origin redirect, but the reverse proxy should still forward the original request context:
+
+```nginx
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+```
+
+After deployment, sign in with an entitled QA Student and open one PDF/material from its course. In browser network tools confirm that the 303 `Location` starts with `/api/materials/` and that no request targets `localhost`. Also verify inline reading, authorised download when enabled, and denial for a non-entitled Student.
