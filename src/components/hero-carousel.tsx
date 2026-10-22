@@ -140,5 +140,5 @@ export function HomeHeroCarousel() {
 }
 
 export function StudentHeroCarousel() {
-  return <HeroCarousel ariaLabel="Prepstore student learning highlights" className="student-hero-carousel" intervalMs={8000} sizes="(max-width: 800px) 100vw, calc(100vw - 240px)" slides={STUDENT_SLIDES}/>;
+  return <HeroCarousel ariaLabel="Prepstore student learning highlights" className="student-hero-carousel" intervalMs={8000} sizes="(max-width: 899px) 100vw, calc(100vw - 240px)" slides={STUDENT_SLIDES}/>;
 }

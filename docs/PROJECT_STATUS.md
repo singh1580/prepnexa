@@ -25,6 +25,8 @@ This document records the current repository state. Historical phase documents e
 ## Verification checkpoint
 
 - ESLint, TypeScript, Vitest and the production build are repository gates.
+- On 22 October 2026, all four opt-in database integration suites passed against the isolated Neon `phase-11-browser-qa` branch: authentication, commerce, protected-material access and the complete Student attempt/autosave/submit/result flow. The integration runner now preserves an explicitly supplied QA database URL instead of replacing it with the local placeholder.
+- Student-attempt integration fixtures use unpublished paid products plus explicit test entitlements, so a running suite cannot expose synthetic packages in the public catalogue. Its successful run removed its own fixtures; the older incident-linked synthetic product remains unpublished because deleting its referenced QA attempt would be unsafe.
 - Playwright and axe checks cover public pages at 390 px mobile, tablet, laptop and wide-desktop viewports.
 - Authenticated Student/Admin Playwright checks use supplied storage-state files so credentials are never committed.
 - Production dependencies currently report no known npm audit vulnerabilities.
@@ -36,7 +38,7 @@ Browser automation still requires a machine on which Playwright Chromium can be 
 
 ## Compatibility decisions
 
-- New sessions use the `prepstore_session` cookie. During migration the application still reads `prepnexa_session`; the next successful login replaces the legacy cookie, while logout clears both names. Existing signed-in users therefore keep working without a forced global logout.
+- Authentication uses only the `prepstore_session` cookie. The pre-launch legacy cookie fallback has been removed so the production contract contains no obsolete session name.
 - Historical migration identifiers, database names and migration text containing `Prepnexa` are immutable operational history and are not user-visible branding.
 - New user-facing and active configuration names use Prepstore.
 

@@ -175,6 +175,7 @@ describe("responsive content integrity", () => {
     expect(heroCarousel.match(/home-[a-z-]+-responsive\.webp/g)).toHaveLength(4);
     expect(heroCarousel).toContain('<source media="(min-width: 900px)"');
     expect(heroCarousel).toContain('<source media="(max-width: 899px)"');
+    expect(heroCarousel).toContain('sizes="(max-width: 899px) 100vw, calc(100vw - 240px)"');
     expect(css).toContain("@media (max-width: 899px)");
     expect(css).toContain("@media (min-width: 900px) and (max-width: 1279px)");
     expect(css).not.toContain("@media(max-width:950px){.course-outline{position:static}.auth-shell");
@@ -196,8 +197,10 @@ describe("responsive content integrity", () => {
     expect(css).toContain(".student-hero-carousel .hero-carousel-slide img {\n  object-fit: cover;");
     expect(css).toContain(".hero-carousel-picture {\n  position: absolute;");
     expect(css).toContain("left: clamp(1rem, 7vw, 7.2rem)");
-    expect(css).toContain(".public-site .hero-search {\n    margin-top: 2.5rem;");
-    expect(css).toContain(".home-hero-carousel .hero-carousel-controls {\n    bottom: 6.5rem;");
+    expect(css).toContain(".public-site .hero-search {\n    position: absolute;");
+    expect(css).toContain("bottom: 2rem;");
+    expect(css).toContain("left: clamp(2rem, 7vw, 7.2rem);");
+    expect(css).toContain(".home-hero-carousel .hero-carousel-controls {\n    bottom: 6.25rem;");
     expect(css).toContain("bottom: 3.75rem");
     expect(css).not.toContain(".hero-carousel-controls.has-full-controls");
     expect(css).not.toContain(".hero-carousel-arrow");

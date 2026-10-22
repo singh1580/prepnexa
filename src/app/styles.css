@@ -2494,6 +2494,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     background: #fbf7f1 !important;
   }
 
+  .public-site .store-hero-content {
+    position: absolute;
+    inset: 0 auto 0 0;
+  }
+
+  .public-site .hero-search {
+    position: absolute;
+    bottom: 2rem;
+    left: clamp(2rem, 7vw, 7.2rem);
+    margin-top: 0;
+  }
+
   .store-home .store-product-featured .store-product-body {
     padding: .72rem;
   }
@@ -4175,12 +4187,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 
 @media (min-width: 561px) {
-  .public-site .hero-search {
-    margin-top: 2.5rem;
-  }
-
   .home-hero-carousel .hero-carousel-controls {
-    bottom: 6.5rem;
+    bottom: 6.25rem;
   }
 }
 

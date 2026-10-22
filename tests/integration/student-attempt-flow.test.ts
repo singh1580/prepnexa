@@ -9,6 +9,7 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
     const userId = randomUUID();
     const questionId = randomUUID(), revisionId = randomUUID(), testId = randomUUID(), secondTestId = randomUUID();
     const sectionId = randomUUID(), secondSectionId = randomUUID(), productId = randomUUID(), secondProductId = randomUUID();
+    const orderId = randomUUID(), secondOrderId = randomUUID(), entitlementId = randomUUID(), secondEntitlementId = randomUUID();
     const requestId = randomUUID();
     try {
       await db.batch([
@@ -32,10 +33,18 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
           { testId: secondTestId, sectionId: secondSectionId, questionId, sortOrder: 0 },
         ]),
         db.insert(schema.products).values([
-          { id: productId, slug: productId, name: "Attempt QA Free", pricePaise: 0, accessDays: 30, isLive: true },
-          { id: secondProductId, slug: secondProductId, name: "Attempt QA Second Package", pricePaise: 0, accessDays: 30, isLive: true },
+          { id: productId, slug: productId, name: "Attempt QA Entitled", pricePaise: 100, accessDays: 30, isLive: false },
+          { id: secondProductId, slug: secondProductId, name: "Attempt QA Second Entitled", pricePaise: 100, accessDays: 30, isLive: false },
         ]),
         db.insert(schema.productTests).values([{ productId, testId }, { productId, testId: secondTestId }, { productId: secondProductId, testId }]),
+        db.insert(schema.orders).values([
+          { id: orderId, userId, status: "PAID", subtotalPaise: 100, discountPaise: 0, totalPaise: 100, currency: "INR", idempotencyKey: `attempt-${orderId}`, expiresAt: new Date(Date.now() + 3_600_000), paidAt: new Date() },
+          { id: secondOrderId, userId, status: "PAID", subtotalPaise: 100, discountPaise: 0, totalPaise: 100, currency: "INR", idempotencyKey: `attempt-${secondOrderId}`, expiresAt: new Date(Date.now() + 3_600_000), paidAt: new Date() },
+        ]),
+        db.insert(schema.entitlements).values([
+          { id: entitlementId, userId, productId, orderId, status: "ACTIVE", startsAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) },
+          { id: secondEntitlementId, userId, productId: secondProductId, orderId: secondOrderId, status: "ACTIVE", startsAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) },
+        ]),
       ]);
 
       const started = await service.startOrResumeAttempt(testId, productId, { userId, requestId });
@@ -71,6 +80,8 @@ describe.skipIf(process.env.RUN_ATTEMPT_INTEGRATION !== "true")("student attempt
     } finally {
       await db.batch([
         db.delete(schema.attempts).where(eq(schema.attempts.userId, userId)),
+        db.delete(schema.entitlements).where(eq(schema.entitlements.userId, userId)),
+        db.delete(schema.orders).where(eq(schema.orders.userId, userId)),
         db.delete(schema.products).where(eq(schema.products.id, productId)),
         db.delete(schema.products).where(eq(schema.products.id, secondProductId)),
         db.delete(schema.tests).where(eq(schema.tests.id, testId)),

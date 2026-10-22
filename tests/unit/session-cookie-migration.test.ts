@@ -17,59 +17,44 @@ vi.mock("@/config/env", () => ({
 
 import {
   clearSessionCookie,
-  LEGACY_SESSION_COOKIE,
   readSessionCookie,
   SESSION_COOKIE,
   setSessionCookie,
 } from "@/features/auth/session-cookie";
 
-describe("Prepstore session cookie migration", () => {
+describe("Prepstore session cookie", () => {
   beforeEach(() => {
     cookieStore.get.mockReset();
     cookieStore.set.mockReset();
   });
 
-  it("prefers the Prepstore cookie and falls back to an existing legacy session", async () => {
+  it("reads only the Prepstore cookie", async () => {
     cookieStore.get.mockImplementation((name: string) =>
-      name === SESSION_COOKIE ? undefined : { value: "legacy-token" },
-    );
-    await expect(readSessionCookie()).resolves.toBe("legacy-token");
-
-    cookieStore.get.mockImplementation((name: string) =>
-      name === SESSION_COOKIE ? { value: "prepstore-token" } : { value: "legacy-token" },
+      name === SESSION_COOKIE ? { value: "prepstore-token" } : undefined,
     );
     await expect(readSessionCookie()).resolves.toBe("prepstore-token");
+    expect(cookieStore.get).toHaveBeenCalledTimes(1);
+    expect(cookieStore.get).toHaveBeenCalledWith(SESSION_COOKIE);
   });
 
-  it("writes the Prepstore cookie and expires the legacy name on login", async () => {
+  it("writes the Prepstore cookie on login", async () => {
     const expiresAt = new Date("2026-11-21T00:00:00.000Z");
     await setSessionCookie("new-token", expiresAt);
 
-    expect(cookieStore.set).toHaveBeenNthCalledWith(
-      1,
+    expect(cookieStore.set).toHaveBeenCalledTimes(1);
+    expect(cookieStore.set).toHaveBeenCalledWith(
       SESSION_COOKIE,
       "new-token",
       expect.objectContaining({ httpOnly: true, sameSite: "lax", path: "/", expires: expiresAt }),
     );
-    expect(cookieStore.set).toHaveBeenNthCalledWith(
-      2,
-      LEGACY_SESSION_COOKIE,
-      "",
-      expect.objectContaining({ expires: new Date(0) }),
-    );
   });
 
-  it("expires both cookie names on logout", async () => {
+  it("expires the Prepstore cookie on logout", async () => {
     await clearSessionCookie();
 
-    expect(cookieStore.set).toHaveBeenCalledTimes(2);
+    expect(cookieStore.set).toHaveBeenCalledTimes(1);
     expect(cookieStore.set).toHaveBeenCalledWith(
       SESSION_COOKIE,
-      "",
-      expect.objectContaining({ expires: new Date(0) }),
-    );
-    expect(cookieStore.set).toHaveBeenCalledWith(
-      LEGACY_SESSION_COOKIE,
       "",
       expect.objectContaining({ expires: new Date(0) }),
     );
