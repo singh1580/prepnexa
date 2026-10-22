@@ -24,6 +24,17 @@ Phase 11 is the release-evidence phase. Product phases 0–10 are implemented in
 
 Passing source checks alone is not evidence of all-device correctness. Record viewport, route, account role, expected result, actual result and a screenshot for every failure.
 
+## 22 October 2026 live checkpoint
+
+- Production desktop public routes: checked without broken images or page-level horizontal overflow.
+- Production desktop Student routes: dashboard, courses/course overview, orders, notifications, support, profile, invoice and material-reader entry checked.
+- Student test persistence: an answer and review flag survived refresh and navigation; the attempt was deliberately left in progress rather than submitted.
+- Logout security: Escape closed the focused confirmation dialog; confirmed logout returned browser Back to the login/session-expired screen rather than protected content.
+- Production desktop Admin routes: dashboard, materials, tests, packages, coupons, orders, students, support and notifications checked, with representative dynamic detail pages.
+- Admin authentication: password and authenticator MFA completed using a secure credential handoff; no credential or OTP entered chat or logs.
+- Material reader: current production failed because the access route emitted `https://localhost:3000/...` behind the EC2 proxy. The release candidate now returns a same-origin relative `Location` header with `private, no-store`; post-deploy verification remains required.
+- Four-viewport Playwright/axe execution remains unrecorded because this container could not download the Chromium binary. The suite itself is present; this is an execution-environment blocker, not a passing result.
+
 ## Deferred extensions
 
 - Scheduled live/cohort test windows.

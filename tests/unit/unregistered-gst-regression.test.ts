@@ -20,9 +20,11 @@ describe("unregistered GST safeguards", () => {
     const receipt = source("src/app/(workspace)/invoice/[id]/page.tsx");
     expect(checkout).not.toContain("GST (18%)");
     expect(checkout).not.toContain("Taxable value");
+    expect(checkout).not.toContain("Tax recorded");
     expect(packagePage).not.toContain("applicable GST");
     expect(receipt).toContain("Payment receipt");
     expect(receipt).toContain("It is not a GST tax invoice.");
+    expect(receipt).not.toContain("Tax recorded");
     expect(receipt).toContain("Digital exam-preparation platform");
     expect(receipt).not.toContain("BUSINESS_LEGAL_OWNER");
     expect(receipt).not.toContain("BUSINESS_ADDRESS");

@@ -100,10 +100,10 @@ function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroC
       >
         <picture className="hero-carousel-picture">
           {"desktopSrc" in slide && slide.desktopSrc ? (
-            <source media="(min-width: 801px)" srcSet={slide.desktopSrc} />
+            <source media="(min-width: 900px)" srcSet={slide.desktopSrc} />
           ) : null}
           {"responsiveSrc" in slide && slide.responsiveSrc ? (
-            <source media="(max-width: 1199px)" srcSet={slide.responsiveSrc} />
+            <source media="(max-width: 899px)" srcSet={slide.responsiveSrc} />
           ) : null}
           <Image
             src={slide.src}
@@ -140,5 +140,5 @@ export function HomeHeroCarousel() {
 }
 
 export function StudentHeroCarousel() {
-  return <HeroCarousel ariaLabel="Prepstore student learning highlights" className="student-hero-carousel" intervalMs={8000} sizes="(max-width: 800px) 100vw, calc(100vw - 240px)" slides={STUDENT_SLIDES}/>;
+  return <HeroCarousel ariaLabel="Prepstore student learning highlights" className="student-hero-carousel" intervalMs={8000} sizes="(max-width: 899px) 100vw, calc(100vw - 240px)" slides={STUDENT_SLIDES}/>;
 }
