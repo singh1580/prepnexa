@@ -103,7 +103,7 @@ function HeroCarousel({ ariaLabel, className, intervalMs, sizes, slides }: HeroC
             <source media="(min-width: 801px)" srcSet={slide.desktopSrc} />
           ) : null}
           {"responsiveSrc" in slide && slide.responsiveSrc ? (
-            <source media="(max-width: 1199px)" srcSet={slide.responsiveSrc} />
+            <source media="(max-width: 899px)" srcSet={slide.responsiveSrc} />
           ) : null}
           <Image
             src={slide.src}

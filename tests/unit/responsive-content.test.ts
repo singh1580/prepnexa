@@ -174,7 +174,9 @@ describe("responsive content integrity", () => {
     expect(heroCarousel.match(/student-[a-z-]+-desktop\.webp/g)).toHaveLength(4);
     expect(heroCarousel.match(/home-[a-z-]+-responsive\.webp/g)).toHaveLength(4);
     expect(heroCarousel).toContain('<source media="(min-width: 801px)"');
-    expect(heroCarousel).toContain('<source media="(max-width: 1199px)"');
+    expect(heroCarousel).toContain('<source media="(max-width: 899px)"');
+    expect(css).toContain("@media (max-width: 899px)");
+    expect(css).toContain("@media (min-width: 900px) and (max-width: 1279px)");
     expect(heroCarousel).toContain('fetchPriority={index === 0 ? "high" : "auto"}');
     expect(heroCarousel).toContain("document.visibilityState");
     expect(heroCarousel).not.toContain("controls=");
