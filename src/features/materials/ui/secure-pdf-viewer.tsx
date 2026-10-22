@@ -32,5 +32,10 @@ export function SecurePdfViewer({ src, title }: { src: string; title: string }) 
 
   if (error) return <div className="pdf-reader-state" role="alert"><strong>Document unavailable</strong><p>{error}</p><button type="button" onClick={() => window.location.reload()}>Try again</button></div>;
   if (!objectUrl) return <div className="pdf-reader-state" role="status"><span className="pdf-loader"/><strong>Loading secure document…</strong></div>;
-  return <iframe title={title} src={`${objectUrl}#toolbar=1&navpanes=0&view=FitH`} className="pdf-reader"/>;
+  return <iframe
+    title={title}
+    src={`${objectUrl}#toolbar=0&navpanes=0&scrollbar=1&view=Fit`}
+    className="pdf-reader"
+    referrerPolicy="no-referrer"
+  />;
 }

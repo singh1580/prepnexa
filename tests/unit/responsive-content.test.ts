@@ -251,6 +251,9 @@ describe("responsive content integrity", () => {
     expect(reader).toContain("<SecurePdfViewer");
     expect(securePdfViewer).toContain("URL.createObjectURL(blob)");
     expect(securePdfViewer).toContain('credentials: "same-origin"');
+    expect(securePdfViewer).toContain("toolbar=0&navpanes=0&scrollbar=1&view=Fit");
+    expect(securePdfViewer).not.toContain("toolbar=1");
+    expect(reader).toContain("Personalised watermark · access logged");
     expect(materialAccessRoute).toContain("Location: location");
     expect(materialAccessRoute).not.toContain("Response.redirect");
     expect(materialAccessRoute).not.toContain("new URL(`/api/materials/");
@@ -369,6 +372,7 @@ describe("responsive content integrity", () => {
       ".public-site .hero-search input:focus-visible",
     );
     expect(css).toContain("aspect-ratio: 3 / 2");
+    expect(css).toContain(".cover-tone-1{background-color:#e7edf8");
     expect(css).toContain(".store-home .store-owned-action");
     expect(css).toContain("background: #c73c0b");
   });
