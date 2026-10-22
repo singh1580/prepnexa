@@ -173,10 +173,13 @@ describe("responsive content integrity", () => {
     expect(heroCarousel.match(/student-[a-z-]+\.webp/g)).toHaveLength(8);
     expect(heroCarousel.match(/student-[a-z-]+-desktop\.webp/g)).toHaveLength(4);
     expect(heroCarousel.match(/home-[a-z-]+-responsive\.webp/g)).toHaveLength(4);
-    expect(heroCarousel).toContain('<source media="(min-width: 801px)"');
+    expect(heroCarousel).toContain('<source media="(min-width: 900px)"');
     expect(heroCarousel).toContain('<source media="(max-width: 899px)"');
     expect(css).toContain("@media (max-width: 899px)");
     expect(css).toContain("@media (min-width: 900px) and (max-width: 1279px)");
+    expect(css).not.toContain("@media(max-width:950px){.course-outline{position:static}.auth-shell");
+    expect(css).toContain("@media(max-width:899px){.featured-store-grid{grid-template-columns:repeat(2,1fr)}");
+    expect(css).not.toContain(".hero-search{max-width:32rem}.featured-store-grid{grid-template-columns:1fr}");
     expect(heroCarousel).toContain('fetchPriority={index === 0 ? "high" : "auto"}');
     expect(heroCarousel).toContain("document.visibilityState");
     expect(heroCarousel).not.toContain("controls=");
