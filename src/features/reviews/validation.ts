@@ -10,6 +10,4 @@ export const submitReviewSchema = z.object({
 export const moderateReviewSchema = z.object({
   status: z.enum(["APPROVED", "REJECTED"]),
   note: z.string().trim().max(1000).optional().transform(value => value || null),
-}).superRefine((value, context) => {
-  if (value.status === "REJECTED" && !value.note) context.addIssue({ code: "custom", path: ["note"], message: "Add a short reason so the learner knows what to change." });
 });
