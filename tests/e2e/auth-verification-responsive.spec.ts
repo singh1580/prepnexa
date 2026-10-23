@@ -25,7 +25,7 @@ test("registration keeps consent and all account fields usable without horizonta
   await page.goto("/signup");
   await expect(page.getByRole("textbox", { name: "Full name" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Email address" })).toBeVisible();
-  await expect(page.getByLabel("Create password")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Create password", exact: true })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: /I agree to/i })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
