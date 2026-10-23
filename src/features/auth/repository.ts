@@ -55,23 +55,47 @@ export async function replaceVerificationToken(input: { userId: string; purpose:
   ]);
 }
 
-export async function consumeEmailVerification(tokenHash: string) {
+export async function consumeEmailVerificationOtp(email: string, tokenHash: string, maxAttempts: number) {
   const result = await db.execute<{ user_id: string }>(sql`
-    with consumed as (
-      update ${verificationTokens}
-      set "consumed_at" = now()
-      where ${verificationTokens.tokenHash} = ${tokenHash}
-        and ${verificationTokens.purpose} = 'EMAIL_VERIFICATION'
-        and ${verificationTokens.consumedAt} is null
-        and ${verificationTokens.expiresAt} > now()
-      returning ${verificationTokens.userId}
+    with candidate as (
+      select vt.id, vt.user_id, vt.token_hash, vt.attempt_count
+      from ${verificationTokens} vt
+      join ${users} u on u.id = vt.user_id
+      where u.email = ${email}
+        and u.status = 'PENDING_VERIFICATION'
+        and vt.purpose = 'EMAIL_VERIFICATION'
+        and vt.consumed_at is null
+        and vt.expires_at > now()
+      order by vt.created_at desc
+      limit 1
+      for update of vt
+    ), attempted as (
+      update ${verificationTokens} vt
+      set attempt_count = candidate.attempt_count + 1,
+          consumed_at = case
+            when candidate.token_hash = ${tokenHash} or candidate.attempt_count + 1 >= ${maxAttempts} then now()
+            else null
+          end
+      from candidate
+      where vt.id = candidate.id
+      returning candidate.user_id, candidate.token_hash = ${tokenHash} as matched
     )
-    update ${users}
-    set "status" = 'ACTIVE', "email_verified_at" = now(), "updated_at" = now()
-    where ${users.id} in (select user_id from consumed)
-    returning ${users.id} as user_id
+    update ${users} u
+    set status = 'ACTIVE', email_verified_at = now(), updated_at = now()
+    where u.id in (select user_id from attempted where matched)
+    returning u.id as user_id
   `);
   return result.rows[0]?.user_id;
+}
+
+export async function getEmailVerificationSendState(userId: string) {
+  const result = await db.execute<{ last_created_at: Date | null; sends_last_hour: number }>(sql`
+    select max(created_at) as last_created_at,
+      count(*) filter (where created_at >= now() - interval '1 hour')::int as sends_last_hour
+    from ${verificationTokens}
+    where user_id = ${userId} and purpose = 'EMAIL_VERIFICATION'
+  `);
+  return { lastCreatedAt: result.rows[0]?.last_created_at ?? null, sendsLastHour: result.rows[0]?.sends_last_hour ?? 0 };
 }
 
 export async function consumePasswordReset(tokenHash: string, passwordHash: string) {

@@ -15,14 +15,14 @@ Accepted files are PDF, ZIP, TXT, DOCX and PPTX. The default limit is 25 MB and 
 ## Student flow
 
 - `My library` lists published materials from zero-price published products or an active, unexpired entitlement.
-- The material detail page supports articles, HTTPS video links, inline PDF reading and permitted file downloads.
+- The material detail page supports articles, HTTPS video links, app-owned responsive PDF reading and permitted file downloads.
 - A private file request first creates a five-minute HMAC-signed, user/material/version/action-scoped link.
 - Delivery rechecks the current entitlement and published version, so refund revocation takes effect even when an earlier link still exists.
 - Stored bytes are verified against the version checksum before delivery.
 - Every PDF view/download receives a user/date watermark. Every successful delivery writes a material access audit record.
 - Raw object keys and storage credentials are never sent to the browser.
 
-`allow_download=false` removes the application download action, but browser PDF viewers are not DRM. Watermarking and access logs provide attribution; screenshots cannot be technically prevented.
+`allow_download=false` removes the application download action. PDFs render through the application-owned PDF.js canvas reader instead of the browser's native PDF toolbar, so the interface does not expose native print/download controls and fits phone, tablet and desktop widths. This remains access control and deterrence, not DRM: authorised bytes reach the learner's browser and screenshots or developer-tool extraction cannot be technically prevented. Watermarking and access logs provide attribution.
 
 ## Storage adapters
 

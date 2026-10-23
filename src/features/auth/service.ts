@@ -1,9 +1,9 @@
 import { AppError } from "@/lib/errors/app-error";
 import { env } from "@/config/env";
-import { createOpaqueToken, hashIdentifier, hashPassword, normalizeEmail, verifyPassword } from "./crypto";
+import { createEmailVerificationOtp, createOpaqueToken, hashEmailVerificationOtp, hashIdentifier, hashPassword, normalizeEmail, verifyPassword } from "./crypto";
 import { authNotifier } from "./notifier";
 import { ADMIN_ROLE_KEYS, TOKEN_PURPOSE } from "./constants";
-import { consumeEmailVerification, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, findUserById, findUserByLogin, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin, updatePassword } from "./repository";
+import { consumeEmailVerificationOtp, consumePasswordReset, countRecentFailedAttempts, createSession, createUserWithVerification, findActiveTotpFactor, findRoleKeysForUser, findUserByEmail, findUserById, findUserByLogin, getEmailVerificationSendState, recordLoginAttempt, replaceVerificationToken, revokeSession, touchLastLogin, updatePassword } from "./repository";
 import type { EmailInput, LoginInput, RegisterInput, ResetPasswordInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
 import { LEGAL_POLICY_VERSION } from "@/config/legal";
@@ -13,9 +13,9 @@ const genericCredentialsError = () => new AppError("INVALID_CREDENTIALS", "Email
 export async function register(input: RegisterInput) {
   const email = normalizeEmail(input.email);
   if (await findUserByEmail(email)) throw new AppError("EMAIL_ALREADY_REGISTERED", "An account with this email already exists.", 409);
-  const { token, tokenHash } = createOpaqueToken();
-  const user = await createUserWithVerification({ name: input.name.trim(), email, passwordHash: await hashPassword(input.password), tokenHash, expiresAt: new Date(Date.now() + env.EMAIL_VERIFICATION_TTL_HOURS * 3_600_000), legalAcceptedAt: new Date(), legalAcceptedVersion: LEGAL_POLICY_VERSION });
-  const emailSent = await authNotifier.sendEmailVerification({ to: user.email, name: user.name, token });
+  const { code, tokenHash } = createEmailVerificationOtp(email);
+  const user = await createUserWithVerification({ name: input.name.trim(), email, passwordHash: await hashPassword(input.password), tokenHash, expiresAt: new Date(Date.now() + env.EMAIL_VERIFICATION_OTP_TTL_MINUTES * 60_000), legalAcceptedAt: new Date(), legalAcceptedVersion: LEGAL_POLICY_VERSION });
+  const emailSent = await authNotifier.sendEmailVerification({ to: user.email, name: user.name, code, deliveryId: tokenHash.slice(0, 24) });
   return { user, emailSent };
 }
 
@@ -39,7 +39,7 @@ export async function login(input: LoginInput, context: { ip?: string; userAgent
   if (user.status !== "ACTIVE") {
     await recordLoginAttempt({ emailHash, ipHash, succeeded: false, failureReason: user.status });
     if (user.status === "PENDING_VERIFICATION") {
-      throw new AppError("EMAIL_NOT_VERIFIED", "Verify your email before signing in. You can request a new verification link below.", 403);
+      throw new AppError("EMAIL_NOT_VERIFIED", "Verify your email before signing in. You can request a new code from the verification page.", 403);
     }
     if (user.status === "SUSPENDED") {
       throw new AppError("ACCOUNT_SUSPENDED", "This account is suspended. Contact support if you believe this is a mistake.", 403);
@@ -74,15 +74,20 @@ export async function logout(token: string | undefined) {
 
 export async function resendEmailVerification(input: EmailInput) {
   const user = await findUserByEmail(normalizeEmail(input.email));
-  if (!user || user.status !== "PENDING_VERIFICATION") return { accepted: true };
-  const { token, tokenHash } = createOpaqueToken();
-  await replaceVerificationToken({ userId: user.id, purpose: TOKEN_PURPOSE.EMAIL_VERIFICATION, tokenHash, expiresAt: new Date(Date.now() + env.EMAIL_VERIFICATION_TTL_HOURS * 3_600_000) });
-  await authNotifier.sendEmailVerification({ to: user.email, name: user.name, token });
-  return { accepted: true };
+  if (!user || user.status !== "PENDING_VERIFICATION") return { accepted: true, retryAfterSeconds: env.EMAIL_VERIFICATION_RESEND_SECONDS };
+  const state = await getEmailVerificationSendState(user.id);
+  const ageSeconds = state.lastCreatedAt ? Math.floor((Date.now() - new Date(state.lastCreatedAt).getTime()) / 1000) : Number.POSITIVE_INFINITY;
+  if (ageSeconds < env.EMAIL_VERIFICATION_RESEND_SECONDS) return { accepted: true, retryAfterSeconds: env.EMAIL_VERIFICATION_RESEND_SECONDS - ageSeconds };
+  if (state.sendsLastHour >= env.EMAIL_VERIFICATION_MAX_SENDS_PER_HOUR) return { accepted: true, retryAfterSeconds: 3600 };
+  const { code, tokenHash } = createEmailVerificationOtp(user.email);
+  await replaceVerificationToken({ userId: user.id, purpose: TOKEN_PURPOSE.EMAIL_VERIFICATION, tokenHash, expiresAt: new Date(Date.now() + env.EMAIL_VERIFICATION_OTP_TTL_MINUTES * 60_000) });
+  await authNotifier.sendEmailVerification({ to: user.email, name: user.name, code, deliveryId: tokenHash.slice(0, 24) });
+  return { accepted: true, retryAfterSeconds: env.EMAIL_VERIFICATION_RESEND_SECONDS };
 }
 
-export async function verifyEmail(token: string) {
-  if (!await consumeEmailVerification(hashIdentifier(token))) throw new AppError("INVALID_OR_EXPIRED_TOKEN", "This verification link is invalid or expired.", 400);
+export async function verifyEmail(input: { email: string; code: string }) {
+  const email = normalizeEmail(input.email);
+  if (!await consumeEmailVerificationOtp(email, hashEmailVerificationOtp(email, input.code), env.EMAIL_VERIFICATION_MAX_ATTEMPTS)) throw new AppError("INVALID_OR_EXPIRED_OTP", "That code is incorrect, expired or has reached its attempt limit. Request a new code if needed.", 400);
   return { verified: true };
 }
 

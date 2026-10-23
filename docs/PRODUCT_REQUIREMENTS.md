@@ -123,9 +123,17 @@ The primary test workflow is exam → draft paper → write/import/edit question
 - Active or completed test attempts retain their original snapshots.
 - Bulk imports produce row-level validation errors and never partially publish invalid content.
 
+### Verified-purchase reviews
+
+- A student can submit or edit a review only for a package backed by their paid order and entitlement record.
+- Review text and rating enter `PENDING`; they are never published directly from a public package page.
+- Admin can approve or reject a submission from the moderation workspace. Only `APPROVED` reviews contribute to public review lists, counts and averages.
+- Editing a previously approved review clears its moderation metadata and returns it to `PENDING`.
+- Optional private feedback is visible to Admin but is never rendered in the public review.
+
 ## 10. Notifications and support
 
-The MVP supports in-app and email notifications for verification, password reset, purchase confirmation, payment failure, result publication, suspicious login, and support-ticket updates.
+The MVP supports in-app and branded HTML/plain-text email notifications for verification, password reset, purchase confirmation, payment failure, result publication, suspicious login, and support-ticket updates. Account verification uses a six-digit OTP rather than an emailed activation link.
 
 Notification failure does not roll back a successful payment or test submission. Failed deliveries are recorded for retry.
 

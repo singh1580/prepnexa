@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, randomInt } from "node:crypto";
 import { hash, verify } from "@node-rs/argon2";
 import { env } from "@/config/env";
 
@@ -29,6 +29,15 @@ export async function verifyPassword(passwordHash: string, password: string) {
 export function createOpaqueToken() {
   const token = randomBytes(32).toString("base64url");
   return { token, tokenHash: hashIdentifier(token) };
+}
+
+export function createEmailVerificationOtp(email: string) {
+  const code = randomInt(100_000, 1_000_000).toString();
+  return { code, tokenHash: hashIdentifier(`email-verification:${normalizeEmail(email)}:${code}`) };
+}
+
+export function hashEmailVerificationOtp(email: string, code: string) {
+  return hashIdentifier(`email-verification:${normalizeEmail(email)}:${code}`);
 }
 
 function mfaKey() {

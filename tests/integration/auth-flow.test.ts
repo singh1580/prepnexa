@@ -17,13 +17,14 @@ describe.skipIf(!run)("auth database flow", () => {
       import("drizzle-orm"), import("../../src/db/client"), import("../../src/db/schema"), import("../../src/features/auth/crypto"),
       import("../../src/features/auth/constants"), import("../../src/features/auth/repository"),
     ]);
-    const { createOpaqueToken, hashIdentifier, hashPassword } = cryptoModule;
-    const { confirmTotpFactor, consumeEmailVerification, consumePasswordReset, createUserWithVerification, findActiveSession, findAuthorizationForUser, replacePendingTotpFactor, replaceVerificationToken } = repository;
-    const verification = createOpaqueToken();
+    const { createEmailVerificationOtp, createOpaqueToken, hashEmailVerificationOtp, hashIdentifier, hashPassword } = cryptoModule;
+    const { confirmTotpFactor, consumeEmailVerificationOtp, consumePasswordReset, createUserWithVerification, findActiveSession, findAuthorizationForUser, replacePendingTotpFactor, replaceVerificationToken } = repository;
+    const verification = createEmailVerificationOtp(email);
     const user = await createUserWithVerification({ name: "Integration Learner", email, passwordHash: await hashPassword("initial-password"), tokenHash: verification.tokenHash, expiresAt: new Date(Date.now() + 60_000) });
     userId = user.id;
-    expect(await consumeEmailVerification(hashIdentifier(verification.token))).toBe(user.id);
-    expect(await consumeEmailVerification(hashIdentifier(verification.token))).toBeUndefined();
+    expect(await consumeEmailVerificationOtp(email, hashEmailVerificationOtp(email, "000000"), 5)).toBeUndefined();
+    expect(await consumeEmailVerificationOtp(email, hashEmailVerificationOtp(email, verification.code), 5)).toBe(user.id);
+    expect(await consumeEmailVerificationOtp(email, hashEmailVerificationOtp(email, verification.code), 5)).toBeUndefined();
 
     const grants = await findAuthorizationForUser(user.id);
     expect(grants.some((grant) => grant.role === "STUDENT" && grant.permission === "test.attempt")).toBe(true);

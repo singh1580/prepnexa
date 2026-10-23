@@ -1,4 +1,4 @@
-# Prepstore implementation status — 22 October 2026
+# Prepstore implementation status — 23 October 2026
 
 This document records the current repository state. Historical phase documents explain how the product evolved; they do not override this checkpoint.
 
@@ -10,15 +10,16 @@ This document records the current repository state. Historical phase documents e
 - Data: PostgreSQL through Drizzle and versioned SQL migrations.
 - Deployment target: EC2. The application has no Vercel deployment requirement.
 - Payments: Razorpay checkout, verification, retry and webhook handling are implemented; the mock provider is restricted to non-production use.
-- Email: Resend-backed transactional delivery with in-app delivery records and retry support.
-- Protected files: local storage for development and S3-compatible private storage for production.
+- Email: Resend-backed branded HTML/plain-text transactional delivery through one provider boundary, with idempotency keys and in-app delivery records/retry support.
+- Protected files: local storage for development and S3-compatible private storage for production; PDFs use an application-owned responsive PDF.js canvas reader.
 
 ## Implemented journeys
 
 - Public catalogue, package details, cart, billing and checkout.
-- Signup with policy consent, email verification, login, password reset, profile and password changes.
+- Signup with policy consent, attempt/rate-limited six-digit email OTP verification, login, password reset, profile and password changes.
 - Student dashboard, purchases, entitled courses/materials, test attempts with autosave, results, notifications and support.
-- Admin content, packages, materials, tests, students, orders, refunds, notification delivery and support operations.
+- Student Review & Feedback for paid packages, with private feedback and moderation status.
+- Admin content, packages, materials, tests, students, orders, refunds, review moderation, notification delivery and support operations.
 - Legal documents, a branded contact form and authenticated support routing.
 - Responsive public/workspace shells, skip links, focus styles and reduced-motion handling.
 

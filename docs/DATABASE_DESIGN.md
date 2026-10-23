@@ -19,6 +19,8 @@ The Phase 2 schema contains 60 tables divided into six modules:
 - Unique idempotency keys protect retryable commerce operations.
 - Money uses integer minor units and critical amounts have database checks.
 - Schedules, entitlement windows, durations, and counters receive database checks.
+- Product reviews are unique per student/package, require paid-order entitlement at the mutation boundary, and publish only after an auditable Admin moderation decision. Private feedback is stored separately from public review text.
+- Email-verification OTP attempts are counted in the token row; successful verification activates the user and consumes the OTP atomically.
 
 ## Phase 2 migration review
 
