@@ -5,6 +5,13 @@ import { findStudentMaterial, findStudentMaterialForProduct, listStudentMaterial
 import { invalidMaterialLink, materialDownloadDisabled, materialNotFound } from "./errors";
 import { watermarkPdf } from "./watermark";
 
+function maskedEmail(email: string) {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return "verified learner";
+  const visible = local.slice(0, Math.min(2, local.length));
+  return `${visible}${"•".repeat(Math.max(3, Math.min(6, local.length - visible.length)))}@${domain}`;
+}
+
 export const getStudentLibrary = (userId: string) => listStudentMaterials(userId);
 
 export async function getStudentMaterial(materialId: string, userId: string, productSlug?: string) {
@@ -29,7 +36,7 @@ export async function deliverStudentMaterial(token: string, user: { id: string; 
   const checksum = createHash("sha256").update(stored.bytes).digest("hex");
   if (!material.checksum || checksum !== material.checksum) throw new Error("Stored material checksum mismatch.");
   const bytes = material.contentType === "application/pdf"
-    ? await watermarkPdf(stored.bytes, `Licensed to ${user.name} (${user.email}) · ${new Date().toISOString().slice(0, 10)}`)
+    ? await watermarkPdf(stored.bytes, `Prepstore · Personal study copy · ${user.name} · ${maskedEmail(user.email)} · ${new Date().toISOString().slice(0, 10)}`)
     : stored.bytes;
   await logMaterialAccess({ userId: user.id, materialId: material.id, productId: material.productId, versionId: material.versionId, entitlementId: material.entitlementId, accessSource: material.accessSource, action: payload.action, requestId: audit.requestId, ipHash: audit.ipHash });
   return { material, bytes };

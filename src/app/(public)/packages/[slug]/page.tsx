@@ -316,7 +316,7 @@ export default async function Page({
                   Be the first verified learner to review this package.
                 </p>
               )}
-              <p className="review-moderation-note"><Link href={auth?reviewWorkspace:"/login?next=%2Fdashboard%2Freviews"}>{auth?(reviewWorkspace==="/admin/reviews"?"Open review moderation":"Review a purchased package from Review & Feedback"):"Sign in to review a purchased package"}</Link>. Reviews appear here after moderation.</p>
+              <p className="review-moderation-note"><Link href={auth?reviewWorkspace:"/login?next=%2Fdashboard%2Freviews"}>{auth?(reviewWorkspace==="/admin/reviews"?"Manage package reviews":"Review this package from Review & Feedback"):"Sign in to review a purchased package"}</Link>.</p>
             </section>
           ),
           faqs: (

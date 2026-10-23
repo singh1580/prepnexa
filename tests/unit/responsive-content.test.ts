@@ -256,7 +256,11 @@ describe("responsive content integrity", () => {
     expect(securePdfViewer).not.toContain("URL.createObjectURL");
     expect(css).toContain(".secure-pdf-reader{");
     expect(css).toContain(".secure-pdf-stage{");
-    expect(reader).toContain("Personalised watermark · access logged");
+    expect(reader).toContain("Personal study copy · access protected");
+    expect(securePdfViewer).toContain('fitMode === "page"');
+    expect(securePdfViewer).toContain("availableHeight / base.height");
+    expect(securePdfViewer).toContain(">Fit page</button>");
+    expect(securePdfViewer).toContain(">Fit width</button>");
     expect(materialAccessRoute).toContain("Location: location");
     expect(materialAccessRoute).not.toContain("Response.redirect");
     expect(materialAccessRoute).not.toContain("new URL(`/api/materials/");

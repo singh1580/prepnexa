@@ -3,6 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import { validateMaterialFile } from "../../src/features/materials/files";
 import { createMaterialToken, verifyMaterialToken } from "../../src/features/materials/tokens";
 import { watermarkPdf } from "../../src/features/materials/watermark";
+import { readFileSync } from "node:fs";
 
 describe("protected material primitives", () => {
   it("accepts real PDFs, creates a checksum and rejects MIME spoofing", async () => {
@@ -30,5 +31,12 @@ describe("protected material primitives", () => {
     const loaded = await PDFDocument.load(result);
     expect(loaded.getPageCount()).toBe(2);
     expect(result.byteLength).toBeGreaterThan(original.byteLength);
+  });
+
+  it("labels delivered copies for personal study without exposing a full email address", () => {
+    const source = readFileSync("src/features/materials/service.ts", "utf8");
+    expect(source).toContain("Personal study copy");
+    expect(source).toContain("maskedEmail(user.email)");
+    expect(source).not.toContain("Licensed to");
   });
 });

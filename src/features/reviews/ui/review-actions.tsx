@@ -20,16 +20,16 @@ export function StudentReviewForm({ productId, initial }: { productId: string; i
     const data = new FormData(event.currentTarget);
     try {
       await request("/api/reviews", { productId, rating: data.get("rating"), comment: data.get("comment"), feedback: data.get("feedback") });
-      setMessage("Submitted for moderation. You can update it while it is being reviewed.");
+      setMessage("Thanks—your review and feedback were submitted.");
       router.refresh();
     } catch (value) { setError(value instanceof Error ? value.message : "Couldn't submit your review."); }
     finally { setBusy(false); }
   }
   return <form className="student-review-form" onSubmit={submit}><fieldset disabled={busy}>
     <label className="field"><span>Rating</span><select name="rating" defaultValue={initial?.rating??5}><option value="5">5 — Excellent</option><option value="4">4 — Very good</option><option value="3">3 — Good</option><option value="2">2 — Fair</option><option value="1">1 — Poor</option></select></label>
-    <label className="field"><span>Public review</span><textarea name="comment" defaultValue={initial?.comment} minLength={10} maxLength={1000} rows={4} required placeholder="What helped you, and what should another learner know?"/><small>This is published only after admin approval.</small></label>
+    <label className="field"><span>Package review</span><textarea name="comment" defaultValue={initial?.comment} minLength={10} maxLength={1000} rows={4} required placeholder="What helped you, and what should another learner know?"/><small>Your review may be shown on the package details page.</small></label>
     <label className="field"><span>Private feedback <small>(optional)</small></span><textarea name="feedback" defaultValue={initial?.feedback??""} maxLength={2000} rows={3} placeholder="Suggestions for Prepstore. This is never shown publicly."/></label>
-    <button className="button" type="submit">{busy?"Submitting…":initial?"Update & resubmit":"Submit for review"}</button>
+    <button className="button" type="submit">{busy?"Submitting…":initial?"Update review":"Submit review"}</button>
   </fieldset>{error?<p className="notice danger" role="alert">{error}</p>:null}{message?<p className="notice success" role="status">{message}</p>:null}</form>;
 }
 
