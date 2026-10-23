@@ -12,6 +12,8 @@ describe("Prepstore transactional email templates", () => {
     expect(html).toContain("482915");
     expect(html).toContain("10 minutes");
     expect(html).not.toContain("verify-email?token=");
+    expect(html).not.toContain("or call");
+    expect(html).not.toContain("92342");
   });
 
   it("renders secure reset and notification actions with absolute Prepstore URLs", async () => {

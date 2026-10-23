@@ -1,7 +1,7 @@
 /* Email markup intentionally uses raw head/img elements for broad inbox compatibility. */
 /* eslint-disable @next/next/no-head-element, @next/next/no-img-element */
 import type { ReactNode } from "react";
-import { BUSINESS_SUPPORT_EMAIL, BUSINESS_SUPPORT_PHONE } from "@/config/business";
+import { BUSINESS_SUPPORT_EMAIL } from "@/config/business";
 import { env } from "@/config/env";
 
 const colors = { orange: "#e84714", ink: "#191919", muted: "#646464", line: "#e7e2dc", canvas: "#f6f4f1", white: "#ffffff" };
@@ -19,7 +19,7 @@ function EmailLayout({ preview, title, eyebrow, children }: { preview: string; t
           {children}
         </td></tr>
         <tr><td lang="en" dir="ltr" style={{ padding: "22px 28px", backgroundColor: "#fff8f4", borderTop: `1px solid ${colors.line}`, color: colors.muted, fontSize: 13, lineHeight: 1.6 }}>
-          Need help? Email <a href={`mailto:${BUSINESS_SUPPORT_EMAIL}`} style={{ color: colors.orange }}>{BUSINESS_SUPPORT_EMAIL}</a> or call <a href={`tel:${BUSINESS_SUPPORT_PHONE.replaceAll(" ", "")}`} style={{ color: colors.orange }}>{BUSINESS_SUPPORT_PHONE}</a>.<br/>
+          Need help? Email <a href={`mailto:${BUSINESS_SUPPORT_EMAIL}`} style={{ color: colors.orange }}>{BUSINESS_SUPPORT_EMAIL}</a>.<br/>
           <span>Prepstore · Focused preparation, clearly organised.</span>
         </td></tr>
       </tbody></table>

@@ -3,11 +3,12 @@ import { db } from "@/db/client";
 import { auditLogs, entitlements, orders, productReviews, products, users } from "@/db/schema";
 
 export async function listReviewableProducts(userId: string) {
+  const latestPurchase = sql<Date | null>`max(${orders.paidAt})`;
   return db.select({
     productId: products.id,
     slug: products.slug,
     name: products.name,
-    purchasedAt: sql<Date | null>`max(${orders.paidAt})`,
+    purchasedAt: latestPurchase,
     reviewId: productReviews.id,
     rating: productReviews.rating,
     comment: productReviews.comment,
@@ -21,7 +22,7 @@ export async function listReviewableProducts(userId: string) {
     .leftJoin(productReviews, and(eq(productReviews.productId, products.id), eq(productReviews.userId, userId)))
     .where(and(eq(entitlements.userId, userId), eq(orders.status, "PAID"), inArray(entitlements.status, ["ACTIVE", "EXPIRED"])))
     .groupBy(products.id, productReviews.id)
-    .orderBy(desc(orders.paidAt), products.name);
+    .orderBy(desc(latestPurchase), products.name);
 }
 
 export async function saveStudentReview(userId: string, input: { productId: string; rating: number; comment: string; feedback: string | null }) {

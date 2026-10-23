@@ -72,7 +72,7 @@ export default async function Page({
                 Download protected copy
               </a>
             ) : (
-              <span className="quiet-tag">Personalised watermark · access logged</span>
+              <span className="quiet-tag">Personal study copy · access protected</span>
             )}
           </div>
           {material.contentType === "application/pdf" ? (
