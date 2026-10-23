@@ -7,7 +7,8 @@ Prepstore owns its authentication data so sessions and RBAC remain explicit and 
 - Passwords use Argon2id and an application-level `PASSWORD_PEPPER`.
 - Session cookies contain a 256-bit opaque token. Only an HMAC-SHA-256 digest is stored in Postgres.
 - Cookies are `HttpOnly`, `SameSite=Lax`, path-scoped to `/`, and `Secure` in production.
-- Email verification and password-reset tokens are single-use, hashed at rest, purpose-bound, and time-limited.
+- Email verification uses a cryptographically random six-digit, single-use OTP. Only its purpose-bound HMAC is stored; the code expires after ten minutes, is attempt-limited, and resend is cooldown/rate limited.
+- Password-reset tokens are single-use, hashed at rest, purpose-bound, and time-limited.
 - Password reset revokes every active session for the user in the same SQL statement.
 - Login failures store hashed email/IP identifiers and enforce separate account and IP windows.
 - Password-reset and resend-verification responses do not reveal whether an account exists.
@@ -17,9 +18,9 @@ Prepstore owns its authentication data so sessions and RBAC remain explicit and 
 
 | Method | Route | Purpose |
 |---|---|---|
-| POST | `/api/auth/register` | Create a pending student and issue verification email |
-| POST | `/api/auth/verify-email` | Consume verification token and activate account |
-| POST | `/api/auth/resend-verification` | Replace prior verification token |
+| POST | `/api/auth/register` | Create a pending student and issue a six-digit verification OTP |
+| POST | `/api/auth/verify-email` | Verify email + OTP and activate the account atomically |
+| POST | `/api/auth/resend-verification` | Issue a replacement OTP subject to cooldown and hourly limits |
 | POST | `/api/auth/login` | Validate credentials and create session cookie |
 | POST | `/api/auth/logout` | Revoke current server-side session |
 | GET | `/api/auth/me` | Return current user, roles, permissions, and expiry |
@@ -35,7 +36,7 @@ Every non-student system role is treated as administrative. Password login for t
 
 ## Email adapter
 
-Auth services call the provider boundary in `notifier.ts`. Resend is the first adapter, but tokens and business services contain no Resend-specific logic. Set both `RESEND_API_KEY` and `EMAIL_FROM` for delivery. When absent or temporarily failing, the token remains valid and delivery failure is logged without exposing the token.
+Auth, operations and contact services call a shared transactional-email boundary. The adapter renders responsive Prepstore HTML plus a plain-text fallback, uses a consistent support reply address, and supplies a provider idempotency key. Resend remains isolated to `src/features/email/sender.ts`; business services and templates contain no provider-specific calls. Set both `RESEND_API_KEY` and `EMAIL_FROM` for delivery. When auth delivery is absent or temporarily failing, the OTP/reset credential remains valid and failure is logged without exposing it.
 
 ## Route protection
 
@@ -49,4 +50,4 @@ Run against an isolated Neon branch only:
 RUN_INTEGRATION_TESTS=true npm run test:integration
 ```
 
-The test creates a temporary student, verifies email, checks RBAC, resets the password, confirms session revocation, and removes the temporary user.
+The test creates a temporary student, verifies the OTP flow, checks RBAC, resets the password, confirms session revocation, and removes the temporary user.

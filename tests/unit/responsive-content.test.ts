@@ -249,10 +249,13 @@ describe("responsive content integrity", () => {
     expect(materialContentRoute).toContain("frame-ancestors 'self'");
     expect(materialContentRoute).not.toContain("default-src 'none'; sandbox");
     expect(reader).toContain("<SecurePdfViewer");
-    expect(securePdfViewer).toContain("URL.createObjectURL(blob)");
+    expect(securePdfViewer).toContain('await import("pdfjs-dist")');
     expect(securePdfViewer).toContain('credentials: "same-origin"');
-    expect(securePdfViewer).toContain("toolbar=0&navpanes=0&scrollbar=1&view=Fit");
-    expect(securePdfViewer).not.toContain("toolbar=1");
+    expect(securePdfViewer).toContain("page.render({ canvas, viewport");
+    expect(securePdfViewer).not.toContain("<iframe");
+    expect(securePdfViewer).not.toContain("URL.createObjectURL");
+    expect(css).toContain(".secure-pdf-reader{");
+    expect(css).toContain(".secure-pdf-stage{");
     expect(reader).toContain("Personalised watermark · access logged");
     expect(materialAccessRoute).toContain("Location: location");
     expect(materialAccessRoute).not.toContain("Response.redirect");

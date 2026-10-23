@@ -5,6 +5,7 @@ import { cache } from "react";
 import { ProductDetailCover } from "@/components/product-detail-cover";
 import { StorefrontProductCard } from "@/components/storefront-product-card";
 import { getCurrentAuth } from "@/features/auth/authorization";
+import { ADMIN_ROLE_KEYS } from "@/features/auth/constants";
 import {
   findAvailableProduct,
   hasActiveProductAccess,
@@ -16,7 +17,6 @@ import {
   meaningfulProductDescription,
   normaliseProductName,
 } from "@/features/catalog/presentation";
-import { ProductReviewForm } from "@/features/catalog/review-form";
 import { ProductDetailTabs } from "@/features/catalog/ui/product-detail-tabs";
 import { SyllabusAccordion } from "@/features/catalog/ui/syllabus-accordion";
 import { CheckoutCard } from "@/features/commerce/ui/checkout-card";
@@ -124,6 +124,7 @@ export default async function Page({
           .toLowerCase()
           .replace(/^./, (value) => value.toUpperCase());
   const productName = normaliseProductName(product.name);
+  const reviewWorkspace = auth?.roles.some(role => ADMIN_ROLE_KEYS.has(role)) ? "/admin/reviews" : "/dashboard/reviews";
   const productDescription = meaningfulProductDescription(
     product.description,
     product.name,
@@ -315,7 +316,7 @@ export default async function Page({
                   Be the first verified learner to review this package.
                 </p>
               )}
-              <ProductReviewForm productId={product.id} />
+              <p className="review-moderation-note"><Link href={auth?reviewWorkspace:"/login?next=%2Fdashboard%2Freviews"}>{auth?(reviewWorkspace==="/admin/reviews"?"Open review moderation":"Review a purchased package from Review & Feedback"):"Sign in to review a purchased package"}</Link>. Reviews appear here after moderation.</p>
             </section>
           ),
           faqs: (

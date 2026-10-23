@@ -7,13 +7,12 @@ import { authRequest, ClientApiError } from "./api";
 import { Field } from "./field";
 import { MfaFlow } from "./mfa-flow";
 
-export type AuthMode = "login" | "signup" | "forgot-password" | "reset-password" | "verify-email";
+export type AuthMode = "login" | "signup" | "forgot-password" | "reset-password";
 const copy: Record<AuthMode, { title: string; description: string; action: string }> = {
   login: { title: "Welcome back", description: "Sign in to continue your preparation.", action: "Sign in" },
   signup: { title: "Create your account", description: "A fresh start for your exam preparation.", action: "Create account" },
   "forgot-password": { title: "Forgot your password?", description: "Enter your email and we'll send a reset link if your account is eligible.", action: "Send reset link" },
   "reset-password": { title: "Choose a new password", description: "Use a unique password you haven't used elsewhere.", action: "Reset password" },
-  "verify-email": { title: "Verify your email", description: "Confirm your email address to activate your account.", action: "Verify email" },
 };
 
 export function AuthForm({ mode, token, expiredSession = false, nextPath = "/dashboard" }: { mode: AuthMode; token?: string; expiredSession?: boolean; nextPath?: string }) {
@@ -22,16 +21,17 @@ export function AuthForm({ mode, token, expiredSession = false, nextPath = "/das
   const [error, setError] = useState("");
   const [invalidLink, setInvalidLink] = useState(false);
   const [done, setDone] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
   const [challenge, setChallenge] = useState<{ token: string; setup: boolean } | null>(null);
   const c = copy[mode];
   const hasPassword = mode === "login" || mode === "signup" || mode === "reset-password";
-  const hasEmail = mode !== "reset-password" && (mode !== "verify-email" || !token || invalidLink);
+  const hasEmail = mode !== "reset-password";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
     const values = Object.fromEntries(new FormData(event.currentTarget));
-    setError(""); setMessage("");
+    setError(""); setMessage(""); setVerificationEmail("");
     if (mode === "reset-password" && values.password !== values.confirmPassword) { setError("The passwords don't match. Please try again."); return; }
     setBusy(true);
     try {
@@ -40,25 +40,22 @@ export function AuthForm({ mode, token, expiredSession = false, nextPath = "/das
         if (result.mfaRequired && result.challengeToken) setChallenge({ token: result.challengeToken, setup: Boolean(result.mfaSetupRequired) });
         else window.location.replace(nextPath);
       } else if (mode === "signup") {
-        const result = await authRequest<{ emailSent: boolean }>("register", values);
-        setMessage(result.emailSent ? "Account created. Check your inbox for the verification link before signing in." : "Account created, but we couldn't send the verification email. Try resending it below; contact your administrator if delivery remains unavailable."); setDone(true);
+        const result = await authRequest<{ user: { email: string }; emailSent: boolean }>("register", values);
+        window.location.replace(`/verify-email?email=${encodeURIComponent(result.user.email)}${result.emailSent?"":"&delivery=failed"}`);
       } else if (mode === "forgot-password") {
         await authRequest("request-password-reset", values); setMessage("If your account is eligible, a reset link will arrive shortly. Check your inbox and spam folder."); setDone(true);
       } else if (mode === "reset-password") {
         await authRequest("reset-password", { token, password: values.password }); setMessage("Password updated. Your previous sessions have been signed out."); setDone(true);
-      } else if (token && !invalidLink) {
-        await authRequest("verify-email", { token }); setMessage("Email verified. You can now sign in."); setDone(true);
-      } else {
-        await authRequest("resend-verification", values); setMessage("If your account needs verification, a new link will be sent. Check your inbox and spam folder."); setDone(true);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
       if (e instanceof ClientApiError && e.code === "INVALID_OR_EXPIRED_TOKEN") setInvalidLink(true);
+      if (e instanceof ClientApiError && e.code === "EMAIL_NOT_VERIFIED" && typeof values.email === "string" && values.email.includes("@")) setVerificationEmail(values.email);
     } finally { setBusy(false); }
   }
 
   if (challenge) return <MfaFlow challengeToken={challenge.token} setup={challenge.setup} nextPath={nextPath} onBack={() => { setChallenge(null); setError(""); }} />;
   if (mode === "reset-password" && (!token || invalidLink)) return <><span className="eyebrow">ACCOUNT RECOVERY</span><h1>This link isn't available</h1><p className="muted">It may have expired or already been used. Request a new password reset link.</p><Link className="button" href="/forgot-password">Request a new link</Link><Link className="text-link" href="/login">Back to sign in</Link></>;
-  const doneTitle=mode==="forgot-password"?"Check your email":mode==="verify-email"?"Verification sent":"You're one step closer";
-  return <><h1>{done ? doneTitle : c.title}</h1><p className="muted">{!done && c.description}</p>{expiredSession && <p className="notice">Please sign in again to continue securely.</p>}{error && <div className="notice danger" role="alert">{error}</div>}{message && <div className="notice success" role="status">{message}</div>}{!done && <form onSubmit={submit} aria-busy={busy}><fieldset disabled={busy}>{mode === "signup" && <Field label="Full name" name="name" autoComplete="name" required minLength={2} maxLength={120} />}{hasEmail && <Field label={mode==="login"?"Email or phone number":"Email address"} name="email" type="email" autoComplete="email" required maxLength={320} placeholder="you@example.com" />}{hasPassword && <Field label={mode === "reset-password" ? "New password" : mode==="signup"?"Create password":"Password"} name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={10} maxLength={128} />}{mode==="signup"?<ul className="password-requirements" aria-label="Password guidance"><li>At least 10 characters</li><li>Use a unique password</li><li>A long passphrase works best</li></ul>:null}{mode === "reset-password" && <Field label="Confirm password" name="confirmPassword" type="password" autoComplete="new-password" required minLength={10} maxLength={128} />}{mode === "signup" && <label className="legal-consent"><input type="checkbox" name="acceptPolicies" value="true" required/><span>I agree to the <Link href="/legal/terms" target="_blank">Terms of service</Link>, <Link href="/legal/privacy" target="_blank">Privacy policy</Link>, <Link href="/legal/cancellation-refund" target="_blank">Cancellation &amp; refund policy</Link> and <Link href="/legal/fair-use" target="_blank">Fair use policy</Link>.</span></label>}{mode === "login" && <div className="login-form-options"><label><input type="checkbox" name="remember"/> Keep me signed in on this device</label><Link href="/forgot-password">Forgot password?</Link></div>}<button className="button full" type="submit">{busy ? "Please wait…" : mode === "verify-email" && (!token || invalidLink) ? "Resend verification email" : c.action}</button></fieldset></form>}{mode === "login" && <p className="form-switch">Don&apos;t have an account? <Link href="/signup">Create account</Link></p>}{mode !== "login" && <Link className="text-link" href="/login">Back to sign in</Link>}{done && (mode === "signup"||mode==="verify-email") && <Link className="text-link" href="/verify-email">Resend verification email</Link>}</>;
+  const doneTitle=mode==="forgot-password"?"Check your email":"You're one step closer";
+  return <><h1>{done ? doneTitle : c.title}</h1><p className="muted">{!done && c.description}</p>{expiredSession && <p className="notice">Please sign in again to continue securely.</p>}{error && <div className="notice danger" role="alert">{error}{verificationEmail?<><br/><Link href={`/verify-email?email=${encodeURIComponent(verificationEmail)}`}>Enter or resend verification code</Link></>:null}</div>}{message && <div className="notice success" role="status">{message}</div>}{!done && <form onSubmit={submit} aria-busy={busy}><fieldset disabled={busy}>{mode === "signup" && <Field label="Full name" name="name" autoComplete="name" required minLength={2} maxLength={120} />}{hasEmail && <Field label={mode==="login"?"Email or phone number":"Email address"} name="email" type="email" autoComplete="email" required maxLength={320} placeholder="you@example.com" />}{hasPassword && <Field label={mode === "reset-password" ? "New password" : mode==="signup"?"Create password":"Password"} name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={10} maxLength={128} />}{mode==="signup"?<ul className="password-requirements" aria-label="Password guidance"><li>At least 10 characters</li><li>Use a unique password</li><li>A long passphrase works best</li></ul>:null}{mode === "reset-password" && <Field label="Confirm password" name="confirmPassword" type="password" autoComplete="new-password" required minLength={10} maxLength={128} />}{mode === "signup" && <label className="legal-consent"><input type="checkbox" name="acceptPolicies" value="true" required/><span>I agree to the <Link href="/legal/terms" target="_blank">Terms of service</Link>, <Link href="/legal/privacy" target="_blank">Privacy policy</Link>, <Link href="/legal/cancellation-refund" target="_blank">Cancellation &amp; refund policy</Link> and <Link href="/legal/fair-use" target="_blank">Fair use policy</Link>.</span></label>}{mode === "login" && <div className="login-form-options"><label><input type="checkbox" name="remember"/> Keep me signed in on this device</label><Link href="/forgot-password">Forgot password?</Link></div>}<button className="button full" type="submit">{busy ? "Please wait…" : c.action}</button></fieldset></form>}{mode === "login" && <p className="form-switch">Don&apos;t have an account? <Link href="/signup">Create account</Link></p>}{mode !== "login" && <Link className="text-link" href="/login">Back to sign in</Link>}</>;
 }

@@ -15,6 +15,7 @@ export const registerInputSchema = z.object({
 
 export const loginInputSchema = z.object({ email: z.string().trim().max(320).refine(value=>email.safeParse(value).success||/^\+?[0-9 ()-]{7,20}$/.test(value),"Enter a valid email address or phone number."), password });
 export const emailInputSchema = z.object({ email });
+export const emailVerificationInputSchema = z.object({ email, code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit verification code.") });
 export const tokenInputSchema = z.object({ token: z.string().min(32).max(200) });
 export const resetPasswordInputSchema = tokenInputSchema.extend({ password });
 export const mfaCodeSchema = z.string().trim().regex(/^\d{6}$/);

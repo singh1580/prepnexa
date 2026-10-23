@@ -21,4 +21,14 @@ describe("auth cryptography", () => {
     expect(codes).toHaveLength(10);
     expect(new Set(codes).size).toBe(10);
   });
+
+  it("creates six-digit email codes and stores only deterministic hashes", async () => {
+    const { createEmailVerificationOtp, hashEmailVerificationOtp } = await import("../../src/features/auth/crypto");
+    const first = createEmailVerificationOtp("Learner@Example.com");
+    const second = createEmailVerificationOtp("learner@example.com");
+    expect(first.code).toMatch(/^\d{6}$/);
+    expect(first.tokenHash).not.toContain(first.code);
+    expect(first.tokenHash).toBe(hashEmailVerificationOtp("learner@example.com", first.code));
+    expect(second.code).toMatch(/^\d{6}$/);
+  });
 });

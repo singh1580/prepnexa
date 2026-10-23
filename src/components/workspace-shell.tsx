@@ -82,6 +82,12 @@ function NavIcon({ name }: { name: string }) {
         <path d="M10 21h4" />
       </>
     ),
+    reviews: (
+      <>
+        <path d="M4 4h16v13H8l-4 4z" />
+        <path d="m8 10 2.2 2.2L16 7" />
+      </>
+    ),
     profile: (
       <>
         <circle cx="12" cy="8" r="4" />
@@ -148,6 +154,12 @@ function adminNavigation(permissions: readonly string[]): NavItem[] {
         ]
       : []),
     {
+      key: "reviews",
+      href: "/admin/reviews",
+      label: "Reviews & feedback",
+      icon: "reviews",
+    },
+    {
       key: "coupons",
       href: "/admin/coupons",
       label: "Coupons",
@@ -204,6 +216,12 @@ const studentNavigation: NavItem[] = [
     href: "/dashboard/orders",
     label: "My orders",
     icon: "orders",
+  },
+  {
+    key: "reviews",
+    href: "/dashboard/reviews",
+    label: "Review & Feedback",
+    icon: "reviews",
   },
   {
     key: "notifications",

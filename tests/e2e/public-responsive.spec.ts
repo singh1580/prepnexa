@@ -9,7 +9,7 @@ const publicPages = [
   { path: "/login", heading: /welcome back/i },
   { path: "/signup", heading: /create your account/i },
   { path: "/forgot-password", heading: /forgot your password/i },
-  { path: "/verify-email", heading: /verify your email/i },
+  { path: "/verify-email", heading: /check your email/i },
   { path: "/contact", heading: /we're here to help/i },
   { path: "/legal/terms", heading: /terms of service/i },
   { path: "/legal/privacy", heading: /privacy policy/i },
