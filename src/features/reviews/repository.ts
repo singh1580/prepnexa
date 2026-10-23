@@ -66,11 +66,30 @@ export async function listManagedReviews() {
 }
 
 export async function moderateReview(reviewId: string, adminId: string, input: { status: "APPROVED" | "REJECTED"; note: string | null }, requestId: string) {
-  return db.transaction(async tx => {
-    const before = await tx.query.productReviews.findFirst({ where: eq(productReviews.id, reviewId) });
-    if (!before) return undefined;
-    const [updated] = await tx.update(productReviews).set({ status: input.status, moderationNote: input.note, moderatedBy: adminId, moderatedAt: new Date(), updatedAt: new Date() }).where(eq(productReviews.id, reviewId)).returning();
-    await tx.insert(auditLogs).values({ actorUserId: adminId, action: `review.${input.status.toLowerCase()}`, entityType: "product_review", entityId: reviewId, requestId, before: { status: before.status }, after: { status: input.status, note: input.note } });
-    return updated;
-  });
+  const result = await db.execute<{ id: string; status: "APPROVED" | "REJECTED" }>(sql`
+    with target as (
+      select id,status from ${productReviews}
+      where id=${reviewId}::uuid
+      for update
+    ), updated as (
+      update ${productReviews} pr set
+        status=${input.status}::review_status,
+        moderation_note=${input.note}::text,
+        moderated_by=${adminId}::uuid,
+        moderated_at=now(),
+        updated_at=now()
+      from target t
+      where pr.id=t.id
+      returning pr.id,pr.status,t.status as before_status
+    ), logged as (
+      insert into ${auditLogs} (actor_user_id,action,entity_type,entity_id,request_id,before,after)
+      select ${adminId}::uuid,${`review.${input.status.toLowerCase()}`}::text,'product_review',u.id::text,${requestId}::text,
+        jsonb_build_object('status',u.before_status),
+        jsonb_build_object('status',u.status,'note',${input.note}::text)
+      from updated u
+      returning id
+    )
+    select u.id,u.status from updated u cross join logged
+  `);
+  return result.rows[0];
 }

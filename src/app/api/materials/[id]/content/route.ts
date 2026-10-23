@@ -26,6 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return new Response(Buffer.from(result.bytes), { headers: {
       "Content-Type": result.material.contentType ?? "application/octet-stream",
       "Content-Disposition": `${disposition}; filename="${fileName}"`,
+      "Content-Length": String(result.bytes.byteLength),
       "Cache-Control": "private, no-store, max-age=0",
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "SAMEORIGIN",
