@@ -27,6 +27,10 @@ describe("verified-purchase review moderation", () => {
     expect(reviewRepo).toContain("status='PENDING'");
     expect(reviewRepo).toContain("desc(latestPurchase)");
     expect(reviewRepo).not.toContain("desc(orders.paidAt)");
+    expect(reviewRepo).not.toContain("db.transaction(");
+    expect(reviewRepo).toContain("with target as (");
+    expect(reviewRepo).toContain("for update");
+    expect(reviewRepo).toContain("from updated u cross join logged");
     expect(packagePage).not.toContain("ProductReviewForm");
     expect(packagePage).toContain("/dashboard/reviews");
     expect(packagePage).not.toContain("Reviews appear here after moderation");

@@ -4,6 +4,7 @@ import type { OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy, Re
 import { useEffect, useId, useRef, useState } from "react";
 
 const clamp = (value: number, minimum: number, maximum: number) => Math.min(maximum, Math.max(minimum, value));
+const MAX_RENDER_PIXELS = 12_000_000;
 
 export function SecurePdfViewer({ src, title }: { src: string; title: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -53,11 +54,29 @@ export function SecurePdfViewer({ src, title }: { src: string; title: string }) 
     if (!stage) return;
     const resize = new ResizeObserver(entries => {
       const box = entries[0]?.contentRect;
-      setStageSize({ width: Math.floor(box?.width ?? 0), height: Math.floor(box?.height ?? 0) });
+      const width = Math.floor(box?.width ?? 0);
+      const height = Math.floor(box?.height ?? 0);
+      setStageSize(current => current.width === width && current.height === height ? current : { width, height });
     });
     resize.observe(stage);
     return () => resize.disconnect();
   }, []);
+
+  useEffect(() => {
+    const document = documentRef.current;
+    if (!document || !pageCount) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const page = await document.getPage(pageNumber);
+        const textContent = await page.getTextContent();
+        if (!cancelled) setPageText(textContent.items.map(item => "str" in item ? item.str : "").filter(Boolean).join(" "));
+      } catch {
+        if (!cancelled) setPageText("");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [pageCount, pageNumber]);
 
   useEffect(() => {
     const document = documentRef.current;
@@ -70,9 +89,6 @@ export function SecurePdfViewer({ src, title }: { src: string; title: string }) 
         const page = await document.getPage(pageNumber);
         if (cancelled) return;
         setRendering(true); setError("");
-        const textContent = await page.getTextContent();
-        if (cancelled) return;
-        setPageText(textContent.items.map(item => "str" in item ? item.str : "").filter(Boolean).join(" "));
         const base = page.getViewport({ scale: 1 });
         const stagePadding = stageSize.width < 700 ? 16 : 48;
         const availableWidth = Math.max(1, stageSize.width - stagePadding);
@@ -81,7 +97,9 @@ export function SecurePdfViewer({ src, title }: { src: string; title: string }) 
           ? Math.min(availableWidth / base.width, availableHeight / base.height)
           : availableWidth / base.width;
         const viewport = page.getViewport({ scale: Math.max(.1, fittedScale * zoom) });
-        const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const pixelBudgetScale = Math.sqrt(MAX_RENDER_PIXELS / Math.max(1, viewport.width * viewport.height));
+        const outputScale = Math.min(pixelRatio, pixelBudgetScale);
         canvas.width = Math.floor(viewport.width * outputScale);
         canvas.height = Math.floor(viewport.height * outputScale);
         canvas.style.width = `${Math.floor(viewport.width)}px`;

@@ -259,11 +259,14 @@ describe("responsive content integrity", () => {
     expect(reader).toContain("Personal study copy · access protected");
     expect(securePdfViewer).toContain('fitMode === "page"');
     expect(securePdfViewer).toContain("availableHeight / base.height");
+    expect(securePdfViewer).toContain("MAX_RENDER_PIXELS");
+    expect(securePdfViewer).toContain("pixelBudgetScale");
     expect(securePdfViewer).toContain(">Fit page</button>");
     expect(securePdfViewer).toContain(">Fit width</button>");
     expect(materialAccessRoute).toContain("Location: location");
     expect(materialAccessRoute).not.toContain("Response.redirect");
     expect(materialAccessRoute).not.toContain("new URL(`/api/materials/");
+    expect(materialContentRoute).toContain('"Content-Length"');
   });
 
   it("renders invoice items as labelled mobile rows", () => {

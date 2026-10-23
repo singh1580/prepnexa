@@ -38,5 +38,8 @@ describe("protected material primitives", () => {
     expect(source).toContain("Personal study copy");
     expect(source).toContain("maskedEmail(user.email)");
     expect(source).not.toContain("Licensed to");
+    expect(source).toContain("MAX_CONCURRENT_PREPARATIONS");
+    expect(source).toContain("MAX_CACHE_BYTES");
+    expect(source).toContain("preparationInFlight");
   });
 });
