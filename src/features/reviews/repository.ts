@@ -13,9 +13,6 @@ export async function listReviewableProducts(userId: string) {
     rating: productReviews.rating,
     comment: productReviews.comment,
     feedback: productReviews.feedback,
-    reviewStatus: productReviews.status,
-    moderationNote: productReviews.moderationNote,
-    reviewedAt: productReviews.updatedAt,
   }).from(entitlements)
     .innerJoin(orders, eq(orders.id, entitlements.orderId))
     .innerJoin(products, eq(products.id, entitlements.productId))
@@ -49,7 +46,6 @@ export async function listManagedReviews() {
     comment: productReviews.comment,
     feedback: productReviews.feedback,
     status: productReviews.status,
-    moderationNote: productReviews.moderationNote,
     createdAt: productReviews.createdAt,
     updatedAt: productReviews.updatedAt,
     moderatedAt: productReviews.moderatedAt,
