@@ -204,7 +204,14 @@ export async function uploadProductCover(
 export async function getProductCover(id: string) {
   const product = await findProduct(id);
   if (!product?.coverObjectKey) throw new AppError("CONTENT_NOT_FOUND", "Product cover was not found.", 404);
-  const stored = await privateStorage().get(product.coverObjectKey);
+  let stored;
+  try {
+    stored = await privateStorage().get(product.coverObjectKey);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT")
+      throw new AppError("CONTENT_NOT_FOUND", "Product cover was not found.", 404);
+    throw error;
+  }
   return { bytes: stored.bytes, contentType: product.coverContentType ?? stored.contentType ?? "image/jpeg" };
 }
 export async function deleteProduct(id: string, actor: Actor) {

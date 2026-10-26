@@ -5,12 +5,12 @@ import { brand } from "@/config/brand";
 export function PrepstoreLogo() {
   return (
     <Link
-      className="brand brand-logo-link"
+      className="brand brand-logo-link inline-flex min-h-11 w-[199px] min-w-[199px] shrink-0 items-center justify-start border-0 bg-transparent p-0 shadow-none max-[899px]:w-[188px] max-[899px]:min-w-[188px] max-[340px]:w-[177px] max-[340px]:min-w-[177px]"
       href="/"
       aria-label={`${brand.name} home`}
     >
       <Image
-        className="brand-logo"
+        className="brand-logo block h-9 w-[199px] max-w-none bg-transparent object-contain object-left shadow-none max-[899px]:h-[34px] max-[899px]:w-[188px] max-[340px]:h-8 max-[340px]:w-[177px]"
         src="/brand/prepstore-logo.svg"
         alt="Prepstore"
         width={728}

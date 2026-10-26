@@ -33,7 +33,18 @@ Passing source checks alone is not evidence of all-device correctness. Record vi
 - Production desktop Admin routes: dashboard, materials, tests, packages, coupons, orders, students, support and notifications checked, with representative dynamic detail pages.
 - Admin authentication: password and authenticator MFA completed using a secure credential handoff; no credential or OTP entered chat or logs.
 - Material reader: current production failed because the access route emitted `https://localhost:3000/...` behind the EC2 proxy. The release candidate now returns a same-origin relative `Location` header with `private, no-store`; post-deploy verification remains required.
-- Four-viewport Playwright/axe execution remains unrecorded because this container could not download the Chromium binary. The suite itself is present; this is an execution-environment blocker, not a passing result.
+- At this checkpoint the four-viewport run was initially blocked by the standard Chromium download. The 26 October checkpoint below supersedes that limitation with completed execution using an ephemeral compatible Chromium binary.
+
+## 26 October 2026 Tailwind and browser checkpoint
+
+- Public, authentication, Student, Admin, commerce, test-runner, invoice and protected-reader layouts have been migrated to Tailwind CSS 4 utilities while preserving their existing product structure and behaviour.
+- The previous global component selector and override layers are removed. Only the Tailwind entry/theme file and a minimal reset/token/print stylesheet remain, with zero `!important` declarations.
+- The migration passes ESLint, TypeScript, all 160 default Vitest checks and the final Next.js 16.4.1 production build, including all 73 generated static pages.
+- All four isolated database integration suites pass: authentication, commerce, protected materials and Student attempts.
+- Playwright/axe passes 60/60 public cases and 8/8 authentication cases across 390×844, 768×1024, 1366×768 and 1920×1080.
+- Authenticated responsive coverage passes all 80 Student/Admin route/viewport cases; the final laptop and wide-desktop matrix passes 40/40.
+- Automated workflow evidence passes receipt responsiveness, protected A4 PDF rendering and navigation, test autosave across refresh, Admin dialog focus/Escape, missing-cover fallback and post-logout Back-button protection.
+- The work container used an ephemeral compatible Chromium binary because the standard Playwright download endpoint was unavailable. The browser matrix was executed; this is not an outstanding acceptance item.
 
 ## Deferred extensions
 

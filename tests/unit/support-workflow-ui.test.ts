@@ -25,7 +25,7 @@ describe("support workflow ownership", () => {
 
   it("gives administrators an explicit route to view and manage every ticket", () => {
     expect(adminList).toContain("<th>Actions</th>");
-    expect(adminList).toContain('href={`/admin/support/${ticket.id}`}');
+    expect(adminList).toContain("href={`/admin/support/${ticket.id}`}");
     expect(adminList).toContain("View ticket");
     expect(adminDetail).toContain("<ManagedTicketActions");
     expect(adminList).not.toContain("support-split-detail");
@@ -55,10 +55,17 @@ describe("support workflow ownership", () => {
   });
 
   it("uses the same message hierarchy in admin and student conversations", () => {
-    expect(adminDetail).toContain('"support-message customer"');
-    expect(adminDetail).toContain('"support-message support"');
-    expect(adminDetail).toContain('"support-message internal-note"');
-    expect(adminDetail).toContain("thread-avatar");
+    expect(adminDetail).toContain(
+      "grid w-full grid-cols-[2.35rem_minmax(0,1fr)]",
+    );
+    expect(studentDetail).toContain(
+      "grid w-full grid-cols-[2.75rem_minmax(0,1fr)]",
+    );
+    expect(adminDetail).toContain('item.internal ? "bg-[#fff0bd]');
+    expect(adminDetail).toContain('item.student ? "bg-[#f1dfd1]');
+    expect(studentDetail).toMatch(/item\.mine\s*\?\s*"bg-\[#f1dfd1\]/);
+    expect(adminDetail).toContain("<PrepstoreIcon />");
+    expect(studentDetail).toContain("<PrepstoreIcon />");
     expect(adminDetail).not.toContain("student-message");
     expect(adminDetail).not.toContain("admin-message");
   });

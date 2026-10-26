@@ -34,7 +34,12 @@ describe.skipIf(!run)("protected material access flow", () => {
     await db.insert(schema.productMaterials).values({ productId, materialId });
     await db.insert(schema.orders).values({ id: orderId, userId, status: "PAID", subtotalPaise: 10_000, discountPaise: 0, totalPaise: 10_000, currency: "INR", idempotencyKey: `materials-${orderId}`, expiresAt: new Date(Date.now() + 3_600_000), paidAt: new Date() });
     await db.insert(schema.entitlements).values({ id: entitlementId, userId, productId, orderId, status: "ACTIVE", startsAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) });
-    expect(await materials.getStudentLibrary(userId)).toHaveLength(1);
+    const library = await materials.getStudentLibrary(userId);
+    expect(library.filter((item) => item.id === materialId)).toHaveLength(1);
+    expect(library.find((item) => item.id === materialId)).toMatchObject({
+      accessSource: "ENTITLEMENT",
+      productId,
+    });
     const token = await materials.createStudentMaterialLink(materialId, "VIEW", userId);
     const delivered = await materials.deliverStudentMaterial(token, { id: userId, name: "Material QA", email: `materials-${userId}@example.invalid` }, { requestId: randomUUID() });
     expect(delivered.bytes.byteLength).toBeGreaterThan(file.bytes.byteLength);

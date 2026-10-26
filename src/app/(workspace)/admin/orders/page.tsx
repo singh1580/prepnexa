@@ -7,6 +7,24 @@ import { RefundForm } from "@/features/commerce/ui/refund-form";
 import { AdminModal } from "@/components/admin-modal";
 import { normaliseProductName } from "@/features/catalog/presentation";
 import { UiIcon } from "@/components/ui-icon";
+import { AdminPageHeader } from "@/components/admin-page-header";
+import {
+  adminCard,
+  adminControl,
+  adminDetailBackdrop,
+  adminDetailHeader,
+  adminDetailList,
+  adminEmptyState,
+  adminFilterForm,
+  adminMiniRecord,
+  adminPrimaryButton,
+  adminResponsiveTable,
+  adminSecondaryButton,
+  adminSideDetail,
+  adminSideSection,
+  adminStatusClass,
+  adminStatusPill,
+} from "@/components/admin-styles";
 
 type ManagedOrder = {
   id: string;
@@ -77,28 +95,39 @@ export default async function Page({
   return (
     <WorkspaceShell
       admin
-      name={auth.user.name} email={auth.user.email}
+      name={auth.user.name}
+      email={auth.user.email}
       permissions={auth.permissions}
       section="orders"
     >
-      <header className="admin-page-header">
-        <div>
-          <h1>Orders &amp; Payments</h1>
-          <p>View and manage student orders, payments and receipts.</p>
-        </div>
-      </header>
-      <form className="admin-list-controls order-filters">
+      <AdminPageHeader
+        title="Orders & Payments"
+        description="View and manage student orders, payments and receipts."
+      />
+      <form
+        className={`${adminFilterForm} grid-cols-[minmax(8.5rem,0.48fr)_minmax(8.5rem,0.48fr)_minmax(11rem,0.65fr)_minmax(15rem,1.15fr)_auto] max-[1050px]:grid-cols-2 max-[700px]:grid-cols-1`}
+      >
         <label>
           <span>From</span>
-          <input type="date" name="from" defaultValue={query.from} />
+          <input
+            className={adminControl}
+            type="date"
+            name="from"
+            defaultValue={query.from}
+          />
         </label>
         <label>
           <span>To</span>
-          <input type="date" name="to" defaultValue={query.to} />
+          <input
+            className={adminControl}
+            type="date"
+            name="to"
+            defaultValue={query.to}
+          />
         </label>
         <label>
           <span>Payment status</span>
-          <select name="status" defaultValue={status}>
+          <select className={adminControl} name="status" defaultValue={status}>
             <option value="all">All statuses</option>
             <option value="PAID">Paid</option>
             <option value="PENDING">Pending</option>
@@ -108,19 +137,22 @@ export default async function Page({
             <option value="CANCELLED">Cancelled</option>
           </select>
         </label>
-        <label className="order-search-field">
+        <label>
           <span>Search</span>
           <input
+            className={adminControl}
             name="q"
             defaultValue={query.q}
             placeholder="Order ID, student or package"
           />
         </label>
-        <button className="button">Search</button>
+        <button className={adminPrimaryButton}>Search</button>
       </form>
-      <section className="admin-card support-table-card reference-order-card">
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+      <section className={adminCard}>
+        <div className="overflow-x-auto max-[800px]:overflow-visible">
+          <table
+            className={`${adminResponsiveTable} min-w-[980px] max-[700px]:min-w-0`}
+          >
             <thead>
               <tr>
                 <th>Order ID</th>
@@ -137,7 +169,7 @@ export default async function Page({
             <tbody>
               {rows.map((order) => (
                 <tr
-                  className={selected?.id === order.id ? "selected-row" : ""}
+                  className={selected?.id === order.id ? "bg-[#fff2e9]" : ""}
                   key={order.id}
                 >
                   <td data-label="Order ID">
@@ -147,14 +179,20 @@ export default async function Page({
                     <strong>{order.studentName}</strong>
                     <small>{order.email}</small>
                   </td>
-                  <td data-label="Packages">{normaliseProductName(order.products)}</td>
+                  <td data-label="Packages">
+                    {normaliseProductName(order.products)}
+                  </td>
                   <td data-label="Base amount">
                     {formatMoney(
                       Math.max(0, order.subtotalPaise - order.discountPaise),
                       order.currency,
                     )}
                   </td>
-                  <td data-label="Tax">{order.taxPaise > 0 ? formatMoney(order.taxPaise, order.currency) : "—"}</td>
+                  <td data-label="Tax">
+                    {order.taxPaise > 0
+                      ? formatMoney(order.taxPaise, order.currency)
+                      : "—"}
+                  </td>
                   <td data-label="Total">
                     <strong>
                       {formatMoney(order.totalPaise, order.currency)}
@@ -162,7 +200,7 @@ export default async function Page({
                   </td>
                   <td data-label="Payment status">
                     <span
-                      className={`commerce-status status-${order.status.toLowerCase()}`}
+                      className={`${adminStatusPill} ${adminStatusClass(order.status)}`}
                     >
                       {order.status.replaceAll("_", " ")}
                     </span>
@@ -175,7 +213,7 @@ export default async function Page({
                   </td>
                   <td data-label="Actions">
                     <Link
-                      className="table-open-link"
+                      className="font-bold text-prep-orange-dark hover:underline"
                       href={`/admin/orders?${keep.toString()}${keep.size ? "&" : ""}order=${order.id}`}
                     >
                       View
@@ -187,7 +225,7 @@ export default async function Page({
           </table>
         </div>
         {!rows.length && (
-          <div className="clean-empty">
+          <div className={adminEmptyState}>
             <strong>No orders found</strong>
             <span>Try another search or filter.</span>
           </div>
@@ -196,44 +234,48 @@ export default async function Page({
       {selected && (
         <>
           <Link
-            className="admin-detail-backdrop"
+            className={adminDetailBackdrop}
             href={`/admin/orders${keep.size ? `?${keep.toString()}` : ""}`}
             aria-label="Close order details"
           />
-          <section className="admin-side-detail order-side-detail reference-order-detail">
-            <header>
+          <section className={adminSideDetail}>
+            <header
+              className={`${adminDetailHeader} grid grid-cols-[1fr_auto_auto]`}
+            >
               <div>
                 <h2>Order #{selected.id.slice(0, 10).toUpperCase()}</h2>
               </div>
               <span
-                className={`commerce-status status-${selected.status.toLowerCase()}`}
+                className={`${adminStatusPill} ${adminStatusClass(selected.status)}`}
               >
                 {selected.status.replaceAll("_", " ")}
               </span>
               <Link
-                className="icon-button"
+                className="grid size-[2.35rem] place-items-center rounded-[0.55rem] border border-[#dedbd7] bg-white text-[#535a60] hover:bg-[#f6f5f3] [&_svg]:size-5"
                 href={`/admin/orders${keep.size ? `?${keep.toString()}` : ""}`}
                 aria-label="Close"
               >
                 <UiIcon name="close" />
               </Link>
             </header>
-            <div className="side-detail-section student-order-person">
+            <div className={adminSideSection}>
               <h3>Student details</h3>
-              <div>
-                <span className="avatar">
+              <div className="flex items-center gap-[0.65rem]">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#eef2fb] text-xs font-bold text-[#46649a]">
                   {selected.studentName.slice(0, 1)}
                 </span>
-                <p>
-                  <strong>{selected.studentName}</strong>
-                  <small>{selected.email}</small>
+                <p className="m-0 grid text-[0.76rem]">
+                  <strong className="block">{selected.studentName}</strong>
+                  <small className="block text-prep-muted">
+                    {selected.email}
+                  </small>
                 </p>
               </div>
             </div>
-            <div className="side-detail-section">
+            <div className={adminSideSection}>
               <h3>Order items</h3>
               {selected.items.map((item) => (
-                <article className="mini-record" key={item.productId}>
+                <article className={adminMiniRecord} key={item.productId}>
                   <div>
                     <strong>{normaliseProductName(item.name)}</strong>
                     <small>{item.accessDays} days access</small>
@@ -242,9 +284,9 @@ export default async function Page({
                 </article>
               ))}
             </div>
-            <div className="side-detail-section">
+            <div className={adminSideSection}>
               <h3>Price breakdown</h3>
-              <dl className="detail-list">
+              <dl className={adminDetailList}>
                 <div>
                   <dt>Base amount</dt>
                   <dd>
@@ -268,18 +310,18 @@ export default async function Page({
                     <dd>{formatMoney(selected.taxPaise, selected.currency)}</dd>
                   </div>
                 ) : null}
-                <div className="side-total">
+                <div className="border-t border-prep-line pt-2 text-[0.82rem] font-bold">
                   <dt>Total amount</dt>
                   <dd>{formatMoney(selected.totalPaise, selected.currency)}</dd>
                 </div>
               </dl>
             </div>
-            <div className="side-detail-section">
+            <div className={adminSideSection}>
               <h3>
                 Payment details{" "}
                 {selected.provider ? `(${selected.provider})` : ""}
               </h3>
-              <dl className="detail-list">
+              <dl className={adminDetailList}>
                 <div>
                   <dt>Provider payment ID</dt>
                   <dd>{selected.providerPaymentId ?? "—"}</dd>
@@ -303,9 +345,9 @@ export default async function Page({
                   </dd>
                 </div>
               </dl>
-              <div className="order-detail-actions">
+              <div className="mt-4 grid grid-cols-2 gap-[0.65rem] max-[700px]:grid-cols-1 [&>*]:w-full">
                 <Link
-                  className="button secondary"
+                  className={adminSecondaryButton}
                   href={`/invoice/${selected.id}`}
                 >
                   Download receipt

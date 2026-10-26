@@ -3,8 +3,27 @@ import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Field } from "@/features/auth/ui/field";
 import { UiIcon } from "@/components/ui-icon";
+import {
+  adminCard,
+  adminControl,
+  adminPrimaryButton,
+  adminSecondaryButton,
+} from "@/components/admin-styles";
+
+const questionField =
+  "grid gap-[0.38rem] text-[0.76rem] font-bold text-[#596168]";
+const questionTextarea =
+  "w-full resize-y rounded-[0.45rem] border border-[#cacac5] bg-white p-3 font-normal outline-none focus:border-prep-orange focus:ring-2 focus:ring-[#ffdfd2]";
+const questionGrid = "grid grid-cols-2 gap-4 max-[760px]:grid-cols-1";
+const questionError =
+  "rounded-prep-control border border-[#efc1bd] bg-[#fdebea] p-3 text-sm text-[#ad3028]";
 class AdminContentApiError extends Error {
-  constructor(public code: string, message: string) { super(message); }
+  constructor(
+    public code: string,
+    message: string,
+  ) {
+    super(message);
+  }
 }
 
 type QuestionType = "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "NUMERIC" | "TEXT";
@@ -173,12 +192,13 @@ export function QuestionForm({
     ? answer.acceptedAnswers.join("\n")
     : "";
   return (
-    <form className="question-form panel" onSubmit={submit}>
-      <fieldset disabled={busy}>
-        <div className="question-grid">
-          <label className="field">
+    <form className={`${adminCard} max-w-[70rem]`} onSubmit={submit}>
+      <fieldset className="m-0 grid gap-5 border-0 p-0" disabled={busy}>
+        <div className={questionGrid}>
+          <label className={questionField}>
             <span>Question type</span>
             <select
+              className={adminControl}
               value={type}
               onChange={(event) => {
                 setType(event.target.value as QuestionType);
@@ -194,9 +214,10 @@ export function QuestionForm({
             </select>
           </label>
         </div>
-        <label className="field">
+        <label className={questionField}>
           <span>Question</span>
           <textarea
+            className={`${questionTextarea} min-h-36`}
             name="stem"
             defaultValue={question?.stem}
             required
@@ -206,20 +227,21 @@ export function QuestionForm({
             placeholder="Write a complete, unambiguous question."
           />
         </label>
-        <label className="field">
+        <label className={questionField}>
           <span>Question image URL (optional)</span>
           <input
+            className={adminControl}
             name="imageUrl"
             type="url"
             defaultValue={question?.imageUrl ?? ""}
             maxLength={2048}
             placeholder="https://…/diagram.png"
           />
-          <small>
+          <small className="font-normal leading-relaxed text-prep-muted">
             Add a diagram, chart or image-based question using a secure URL.
           </small>
         </label>
-        <div className="question-grid three">
+        <div className="grid grid-cols-3 gap-4 max-[760px]:grid-cols-1">
           <Field
             id={`${formId}-question-marks`}
             label="Marks"
@@ -242,9 +264,10 @@ export function QuestionForm({
             defaultValue={question?.negativeMarks ?? "0"}
             required
           />
-          <label className="field">
+          <label className={questionField}>
             <span>Difficulty</span>
             <select
+              className={adminControl}
               name="difficulty"
               defaultValue={question?.difficulty ?? "MEDIUM"}
             >
@@ -255,12 +278,14 @@ export function QuestionForm({
           </label>
         </div>
         {(type === "SINGLE_CHOICE" || type === "MULTIPLE_CHOICE") && (
-          <section className="answer-builder">
-            <div className="section-heading">
+          <section className="rounded-[0.7rem] border border-[#d9e8eb] bg-[#f6fafb] p-[1.2rem]">
+            <div className="mb-4 flex items-center justify-between gap-4 max-[650px]:items-start">
               <div>
                 <span className="eyebrow">ANSWER OPTIONS</span>
-                <h2>Mark the correct answer</h2>
-                <p className="muted">
+                <h2 className="mt-1 text-[1.15rem] font-bold">
+                  Mark the correct answer
+                </h2>
+                <p className="mt-1 text-sm text-prep-muted">
                   {type === "SINGLE_CHOICE"
                     ? "Select one correct answer."
                     : "Select every correct answer (at least two)."}
@@ -268,7 +293,7 @@ export function QuestionForm({
               </div>
               {type === "MULTIPLE_CHOICE" && options.length < 8 && (
                 <button
-                  className="button secondary"
+                  className={adminSecondaryButton}
                   type="button"
                   onClick={addOption}
                 >
@@ -277,9 +302,13 @@ export function QuestionForm({
               )}
             </div>
             {options.map((option, index) => (
-              <div className="option-editor" key={option.stableKey}>
-                <label className="correct-control">
+              <div
+                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-end gap-[0.8rem] border-t border-[#dce7e9] py-3 first:border-t-0 max-[650px]:grid-cols-[auto_minmax(0,1fr)]"
+                key={option.stableKey}
+              >
+                <label className="flex min-h-12 cursor-pointer items-center gap-2">
                   <input
+                    className="peer sr-only"
                     type={type === "SINGLE_CHOICE" ? "radio" : "checkbox"}
                     name="correct-option"
                     checked={option.isCorrect}
@@ -287,11 +316,14 @@ export function QuestionForm({
                       changeOption(index, { isCorrect: event.target.checked })
                     }
                   />
-                  <span>{option.stableKey} · Correct</span>
+                  <span className="grid min-h-9 min-w-9 place-items-center rounded-full bg-prep-navy px-2 text-xs font-extrabold text-white peer-focus-visible:ring-2 peer-focus-visible:ring-prep-orange peer-focus-visible:ring-offset-2 peer-checked:bg-prep-orange">
+                    {option.stableKey} · Correct
+                  </span>
                 </label>
-                <label className="field">
+                <label className={questionField}>
                   <span>Option {option.stableKey}</span>
                   <input
+                    className={adminControl}
                     value={option.body}
                     onChange={(event) =>
                       changeOption(index, { body: event.target.value })
@@ -302,7 +334,7 @@ export function QuestionForm({
                 </label>
                 {type === "MULTIPLE_CHOICE" && options.length > 2 && (
                   <button
-                    className="text-button danger-text"
+                    className="inline-flex items-center gap-1 border-0 bg-transparent px-1 py-2 text-[0.7rem] font-bold text-[#ad3028] disabled:cursor-not-allowed disabled:opacity-40 max-[650px]:col-start-2 max-[650px]:justify-self-start [&_svg]:size-4"
                     type="button"
                     onClick={() => removeOption(index)}
                   >
@@ -314,7 +346,7 @@ export function QuestionForm({
           </section>
         )}
         {type === "NUMERIC" && (
-          <div className="question-grid">
+          <div className={questionGrid}>
             <Field
               id={`${formId}-numeric-answer`}
               label="Accepted answer"
@@ -339,9 +371,10 @@ export function QuestionForm({
         )}
         {type === "TEXT" && (
           <>
-            <label className="field">
+            <label className={questionField}>
               <span>Accepted answers</span>
               <textarea
+                className={questionTextarea}
                 name="acceptedAnswers"
                 defaultValue={accepted}
                 required
@@ -349,7 +382,7 @@ export function QuestionForm({
                 placeholder="One accepted answer per line"
               />
             </label>
-            <label className="check-row">
+            <label className="flex cursor-pointer items-center gap-2 text-[0.76rem] font-bold text-prep-ink [&_input]:accent-prep-orange">
               <input
                 name="caseSensitive"
                 type="checkbox"
@@ -359,9 +392,10 @@ export function QuestionForm({
             </label>
           </>
         )}
-        <label className="field">
+        <label className={questionField}>
           <span>Explanation</span>
           <textarea
+            className={questionTextarea}
             name="explanation"
             defaultValue={question?.explanation ?? ""}
             maxLength={20000}
@@ -369,8 +403,8 @@ export function QuestionForm({
             placeholder="Explain why the answer is correct."
           />
         </label>
-        <div className="form-actions">
-          <button className="button" type="submit">
+        <div className="flex flex-wrap gap-[0.7rem]">
+          <button className={adminPrimaryButton} type="submit">
             {busy
               ? "Saving…"
               : question
@@ -378,18 +412,16 @@ export function QuestionForm({
                 : "Add question to this test"}
           </button>
           <button
-            className="button secondary"
+            className={adminSecondaryButton}
             type="button"
-            onClick={() =>
-              onCancel ? onCancel() : router.push(returnTo)
-            }
+            onClick={() => (onCancel ? onCancel() : router.push(returnTo))}
           >
             Cancel
           </button>
         </div>
       </fieldset>
       {error && (
-        <p className="notice danger" role="alert">
+        <p className={`${questionError} mt-4`} role="alert">
           {error}
         </p>
       )}

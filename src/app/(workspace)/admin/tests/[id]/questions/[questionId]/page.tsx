@@ -30,19 +30,26 @@ export default async function Page({
   return (
     <WorkspaceShell
       admin
-      name={auth.user.name} email={auth.user.email}
+      name={auth.user.name}
+      email={auth.user.email}
       permissions={auth.permissions}
       section="tests"
     >
-      <Link className="back-link" href={returnTo}>
+      <Link
+        className="mb-4 inline-flex items-center gap-1 text-sm font-bold text-prep-orange-dark hover:underline"
+        href={returnTo}
+      >
         ← Back to {test.title}
       </Link>
-      <header className="page-heading">
+      <header className="mb-5">
         <span className="eyebrow">
-          {test.mode === "PRACTICE" ? "Practice set" : "Mock test"} · {section.title}
+          {test.mode === "PRACTICE" ? "Practice set" : "Mock test"} ·{" "}
+          {section.title}
         </span>
-        <h1>Edit question in this test</h1>
-        <p>
+        <h1 className="mt-1 text-[clamp(1.65rem,3vw,2.35rem)] font-bold tracking-[-0.035em]">
+          Edit question in this test
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-prep-muted">
           Your changes apply to this paper. Other tests using the original
           question keep their existing content.
         </p>

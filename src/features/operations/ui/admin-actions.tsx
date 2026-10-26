@@ -4,6 +4,14 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { operationsRequest, operationsUpload, OperationsApiError } from "./api";
 import { UiIcon } from "@/components/ui-icon";
+import {
+  adminControl,
+  adminPrimaryButton,
+  adminSecondaryButton,
+} from "@/components/admin-styles";
+
+const campaignField =
+  "grid gap-[0.38rem] text-[0.76rem] font-bold text-[#596168]";
 
 function message(error: unknown) {
   return error instanceof OperationsApiError
@@ -23,9 +31,11 @@ export function StudentStatusAction({
   const [error, setError] = useState("");
   const next = status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED";
   return (
-    <div className="inline-action">
+    <div className="grid gap-2">
       <button
-        className={next === "SUSPENDED" ? "button secondary" : "button"}
+        className={
+          next === "SUSPENDED" ? adminSecondaryButton : adminPrimaryButton
+        }
         disabled={busy}
         onClick={async () => {
           setBusy(true);
@@ -46,7 +56,11 @@ export function StudentStatusAction({
       >
         {busy ? "Updating…" : next === "SUSPENDED" ? "Suspend" : "Reactivate"}
       </button>
-      {error && <small role="alert">{error}</small>}
+      {error && (
+        <small className="text-[#ad3028]" role="alert">
+          {error}
+        </small>
+      )}
     </div>
   );
 }
@@ -100,12 +114,19 @@ export function ManagedTicketActions({
     }
   }
   return (
-    <div className="ticket-action-stack">
-      <form className="ticket-state-form" onSubmit={update}>
-        <fieldset disabled={Boolean(busy)}>
-          <label>
+    <div className="border-t border-prep-line bg-[#fcfbf9]">
+      <form className="px-5 py-3 max-[700px]:px-[0.85rem]" onSubmit={update}>
+        <fieldset
+          className="grid grid-cols-[minmax(10rem,14rem)_minmax(9rem,12rem)_auto] items-end justify-start gap-[0.65rem] border-0 p-0 max-[700px]:grid-cols-2 max-[380px]:grid-cols-1"
+          disabled={Boolean(busy)}
+        >
+          <label className="grid gap-1 text-[0.72rem] font-bold text-[#596168]">
             <span>Status</span>
-            <select name="status" defaultValue={status}>
+            <select
+              className={adminControl}
+              name="status"
+              defaultValue={status}
+            >
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In progress</option>
               <option value="WAITING_FOR_STUDENT">Waiting for student</option>
@@ -113,40 +134,51 @@ export function ManagedTicketActions({
               <option value="CLOSED">Closed</option>
             </select>
           </label>
-          <label>
+          <label className="grid gap-1 text-[0.72rem] font-bold text-[#596168]">
             <span>Priority</span>
-            <select name="priority" defaultValue={priority}>
+            <select
+              className={adminControl}
+              name="priority"
+              defaultValue={priority}
+            >
               <option value="LOW">Low</option>
               <option value="NORMAL">Normal</option>
               <option value="HIGH">High</option>
               <option value="URGENT">Urgent</option>
             </select>
           </label>
-          <button className="button secondary small" type="submit">
+          <button
+            className={`${adminSecondaryButton} max-[700px]:col-span-full max-[380px]:col-span-1`}
+            type="submit"
+          >
             {busy === "status" ? "Saving…" : "Save state"}
           </button>
         </fieldset>
       </form>
       {status !== "CLOSED" && (
-        <form className="support-composer" onSubmit={reply}>
-          <div className="composer-tabs">
+        <form className="border-t border-prep-line bg-white" onSubmit={reply}>
+          <div className="flex gap-4 px-5 max-[700px]:px-[0.85rem]">
             <button
               type="button"
-              className={!internal ? "active" : ""}
+              className={`border-b-2 px-[0.1rem] py-3 font-semibold ${!internal ? "border-prep-orange text-prep-ink" : "border-transparent text-prep-muted"}`}
               onClick={() => setInternal(false)}
             >
               Reply
             </button>
             <button
               type="button"
-              className={internal ? "active" : ""}
+              className={`border-b-2 px-[0.1rem] py-3 font-semibold ${internal ? "border-prep-orange text-prep-ink" : "border-transparent text-prep-muted"}`}
               onClick={() => setInternal(true)}
             >
               Internal note
             </button>
           </div>
-          <fieldset disabled={Boolean(busy)}>
+          <fieldset
+            className="border-0 px-5 pb-4 max-[700px]:px-[0.85rem]"
+            disabled={Boolean(busy)}
+          >
             <textarea
+              className="min-h-24 max-h-56 w-full resize-y rounded-[0.55rem] border border-prep-line bg-white p-3 outline-none focus:border-prep-orange focus:ring-2 focus:ring-[#ffdfd2]"
               aria-label={internal ? "Internal note" : "Reply to student"}
               name="body"
               minLength={2}
@@ -159,21 +191,25 @@ export function ManagedTicketActions({
               }
               required
             />
-            <div className="composer-footer">
-              <label className="attachment-button">
+            <div className="mt-[0.65rem] flex flex-wrap items-center justify-start gap-4 max-[700px]:grid max-[700px]:grid-cols-[minmax(0,1fr)_auto] max-[380px]:grid-cols-1">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-prep-control border border-prep-line px-3 py-2 text-[0.72rem] font-bold [&_svg]:size-4">
                 <UiIcon name="paperclip" /> Attach file
                 <input
+                  className="sr-only"
                   name="attachment"
                   type="file"
                   accept="image/png,image/jpeg,image/webp,application/pdf"
                 />
               </label>
-              <span>
+              <span className="mr-auto text-[0.68rem] text-prep-muted max-[700px]:col-span-full max-[700px]:row-start-2 max-[700px]:m-0 max-[380px]:row-auto">
                 {internal
                   ? "Student will not see this note"
                   : "Reply will notify the student"}
               </span>
-              <button className="button small" type="submit">
+              <button
+                className={`${adminPrimaryButton} max-[380px]:w-full`}
+                type="submit"
+              >
                 {busy === "reply"
                   ? "Sending…"
                   : internal
@@ -185,7 +221,10 @@ export function ManagedTicketActions({
         </form>
       )}
       {error && (
-        <p className="notice danger" role="alert">
+        <p
+          className="m-3 rounded-prep-control border border-[#efc1bd] bg-[#fdebea] p-3 text-sm text-[#ad3028]"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -233,11 +272,12 @@ export function NotificationCampaignForm({
     }
   }
   return (
-    <form className="notification-campaign-form" onSubmit={submit}>
-      <fieldset disabled={busy}>
-        <label className="field">
+    <form onSubmit={submit}>
+      <fieldset className="grid gap-[0.9rem] border-0 p-0" disabled={busy}>
+        <label className={campaignField}>
           <span>Audience</span>
           <select
+            className={adminControl}
             name="audience"
             value={audience}
             onChange={(event) => setAudience(event.target.value)}
@@ -248,9 +288,9 @@ export function NotificationCampaignForm({
           </select>
         </label>
         {audience === "PACKAGE_CUSTOMERS" && (
-          <label className="field">
+          <label className={campaignField}>
             <span>Product package</span>
-            <select name="productId" required>
+            <select className={adminControl} name="productId" required>
               <option value="">Choose a package</option>
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
@@ -260,9 +300,10 @@ export function NotificationCampaignForm({
             </select>
           </label>
         )}
-        <label className="field">
+        <label className={campaignField}>
           <span>Title</span>
           <input
+            className={adminControl}
             name="title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -272,9 +313,10 @@ export function NotificationCampaignForm({
             required
           />
         </label>
-        <label className="field">
+        <label className={campaignField}>
           <span>Message</span>
           <textarea
+            className="min-h-[7.5rem] w-full resize-y rounded-[0.45rem] border border-[#cacac5] bg-white p-[0.8rem] font-normal outline-none focus:border-prep-orange focus:ring-2 focus:ring-[#ffdfd2]"
             name="body"
             value={body}
             onChange={(event) => setBody(event.target.value)}
@@ -284,12 +326,19 @@ export function NotificationCampaignForm({
             placeholder="Write a clear message for students…"
             required
           />
-          <small>{body.length}/500</small>
+          <small className="justify-self-end font-normal text-prep-muted">
+            {body.length}/500
+          </small>
         </label>
-        <div className="notification-channel" role="radiogroup" aria-label="Notification channel">
+        <div
+          className="grid grid-cols-[auto_auto_1fr] items-center gap-3 max-[460px]:grid-cols-1 [&>strong]:col-span-full [&>strong]:text-[0.76rem] [&>strong]:text-[#4b5258]"
+          role="radiogroup"
+          aria-label="Notification channel"
+        >
           <strong>Channel</strong>
-          <label>
+          <label className="flex w-max cursor-pointer items-center gap-[0.4rem] rounded-[0.42rem] border border-[#ddd] bg-white px-3 py-2 max-[700px]:w-full max-[700px]:justify-center">
             <input
+              className="accent-prep-orange"
               type="radio"
               name="channel"
               value="EMAIL"
@@ -298,8 +347,9 @@ export function NotificationCampaignForm({
             />{" "}
             Email
           </label>
-          <label>
+          <label className="flex w-max cursor-pointer items-center gap-[0.4rem] rounded-[0.42rem] border border-[#ddd] bg-white px-3 py-2 max-[700px]:w-full max-[700px]:justify-center">
             <input
+              className="accent-prep-orange"
               type="radio"
               name="channel"
               value="IN_APP"
@@ -309,25 +359,38 @@ export function NotificationCampaignForm({
             In-app
           </label>
         </div>
-        <section className="notification-preview">
-          <span>Preview</span>
-          <article>
-            <b>{channel === "EMAIL" ? "Email preview" : "In-app preview"}</b>
+        <section className="grid gap-[0.4rem]">
+          <span className="text-[0.76rem] font-bold text-[#4b5258]">
+            Preview
+          </span>
+          <article className="grid gap-[0.22rem] rounded-[0.48rem] border border-[#e1e4e7] bg-[#f8fafc] p-[0.85rem]">
+            <b className="text-[0.68rem] text-[#4b6c9d]">
+              {channel === "EMAIL" ? "Email preview" : "In-app preview"}
+            </b>
             <strong>{title || "Notification title"}</strong>
-            <p>{body || "Your message preview will appear here."}</p>
+            <p className="m-0 text-[0.74rem] leading-[1.5] text-[#687078]">
+              {body || "Your message preview will appear here."}
+            </p>
           </article>
         </section>
-        <div className="dialog-form-footer">
-          <button className="button secondary" type="button" onClick={(event) => event.currentTarget.closest("dialog")?.close()}>
+        <div className="mt-[0.15rem] flex justify-end gap-[0.65rem] border-t border-[#e8e6e3] pt-[0.9rem]">
+          <button
+            className={adminSecondaryButton}
+            type="button"
+            onClick={(event) => event.currentTarget.closest("dialog")?.close()}
+          >
             Cancel
           </button>
-          <button className="button" type="submit">
+          <button className={adminPrimaryButton} type="submit">
             {busy ? "Sending…" : "Send notification"}
           </button>
         </div>
       </fieldset>
       {error && (
-        <p className="notice danger" role="alert">
+        <p
+          className="rounded-prep-control border border-[#efc1bd] bg-[#fdebea] p-3 text-sm text-[#ad3028]"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -340,9 +403,9 @@ export function RetryDeliveryButton({ id }: { id: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   return (
-    <div className="inline-action">
+    <div className="grid gap-2">
       <button
-        className="button secondary"
+        className={adminSecondaryButton}
         disabled={busy}
         onClick={async () => {
           setBusy(true);
@@ -359,7 +422,11 @@ export function RetryDeliveryButton({ id }: { id: string }) {
       >
         {busy ? "Sending…" : "Retry email"}
       </button>
-      {error && <small role="alert">{error}</small>}
+      {error && (
+        <small className="text-[#ad3028]" role="alert">
+          {error}
+        </small>
+      )}
     </div>
   );
 }

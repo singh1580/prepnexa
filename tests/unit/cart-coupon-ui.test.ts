@@ -5,25 +5,38 @@ const cartWorkflow = readFileSync(
   new URL("../../src/features/commerce/ui/cart-workflow.tsx", import.meta.url),
   "utf8",
 );
+const compactWorkflow = cartWorkflow.replace(/\s+/g, "");
 
 describe("cart coupon experience", () => {
   it("persists only the coupon code and revalidates it through checkout preview", () => {
-    expect(cartWorkflow).toContain('couponStorageKey="prepstore-cart-coupon-v1"');
-    expect(cartWorkflow).toContain("localStorage.setItem(couponStorageKey,normalized)");
-    expect(cartWorkflow).toContain('commerceRequest<Preview>("commerce/checkout/preview"');
-    expect(cartWorkflow).not.toContain("localStorage.setItem(couponStorageKey,JSON.stringify(preview))");
+    expect(compactWorkflow).toContain(
+      'couponStorageKey="prepstore-cart-coupon-v1"',
+    );
+    expect(compactWorkflow).toContain(
+      "localStorage.setItem(couponStorageKey,normalized)",
+    );
+    expect(compactWorkflow).toContain(
+      'commerceRequest<Preview>("commerce/checkout/preview"',
+    );
+    expect(compactWorkflow).not.toContain(
+      "localStorage.setItem(couponStorageKey,JSON.stringify(preview))",
+    );
   });
 
   it("offers an explicit remove action on cart and checkout", () => {
-    expect(cartWorkflow).toContain("async function removeCoupon()");
-    expect(cartWorkflow).toContain('couponCode:null');
-    expect(cartWorkflow).toContain('>Remove</button>');
-    expect(cartWorkflow).toContain('router.replace("/checkout",{scroll:false})');
+    expect(compactWorkflow).toContain("asyncfunctionremoveCoupon()");
+    expect(compactWorkflow).toContain("couponCode:null");
+    expect(compactWorkflow).toContain(">Remove</button>");
+    expect(compactWorkflow).toContain(
+      'router.replace("/checkout",{scroll:false})',
+    );
   });
 
-  it("collects the paid-order mobile number and sends the normalized value",()=>{
-    expect(cartWorkflow).toContain('type="tel" inputMode="numeric"');
-    expect(cartWorkflow).toContain("phone:normalizedPhone");
-    expect(cartWorkflow).not.toContain('value={account.phone??"Not added to your profile"} readOnly');
+  it("collects the paid-order mobile number and sends the normalized value", () => {
+    expect(compactWorkflow).toContain('type="tel"inputMode="numeric"');
+    expect(compactWorkflow).toContain("phone:normalizedPhone");
+    expect(compactWorkflow).not.toContain(
+      'value={account.phone??"Notaddedtoyourprofile"}readOnly',
+    );
   });
 });

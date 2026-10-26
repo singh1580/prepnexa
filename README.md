@@ -36,7 +36,7 @@ Rule: route -> feature service -> repository -> database. Routes must not contai
 5. Run `npm run db:generate` only after changing the schema, then inspect the SQL migration.
 6. Run `npm run db:migrate` only against that feature branch's direct Neon URL.
 7. Run `npm run dev`, then run `npm run qa:smoke` in a second terminal.
-8. Run `npm run test:e2e` for the public responsive and accessibility checks.
+8. Run `npm run test:e2e` for the public, authentication and conditional authenticated responsive/accessibility checks. Authenticated suites require temporary QA storage states; stateful receipt/PDF/autosave checks also require the disposable fixture documented in `docs/LOCAL_ACCEPTANCE.md`.
 
 Follow [`docs/LOCAL_ACCEPTANCE.md`](docs/LOCAL_ACCEPTANCE.md) for the complete Student/Admin workflow and UI checklist.
 

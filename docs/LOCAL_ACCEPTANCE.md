@@ -72,6 +72,24 @@ npm run test:e2e
 
 The suite runs at 390×844, 768×1024, 1366×768 and 1920×1080. It checks page-level overflow, broken images and serious/critical axe findings. Conditional authenticated tests are reported as skipped when their storage state is not supplied; a skipped matrix is not a release pass.
 
+The stateful receipt, protected-reader and autosave tests additionally require a disposable hidden workflow fixture. Seed it only against the isolated QA database, keep the generated JSON outside the repository, and clean it after the run:
+
+```bash
+E2E_STUDENT_ID=<qa-student-id> \
+E2E_WORKFLOW_FIXTURE=/tmp/prepstore-workflow-fixture.json \
+node --import tsx scripts/qa-e2e-workflow-fixture.ts seed
+
+E2E_STUDENT_STORAGE_STATE=/absolute/path/student.json \
+E2E_ADMIN_STORAGE_STATE=/absolute/path/admin.json \
+E2E_WORKFLOW_FIXTURE=/tmp/prepstore-workflow-fixture.json \
+npm run test:e2e -- tests/e2e/authenticated-workflows.spec.ts
+
+E2E_WORKFLOW_FIXTURE=/tmp/prepstore-workflow-fixture.json \
+node --import tsx scripts/qa-e2e-workflow-fixture.ts cleanup
+```
+
+Run the destructive logout-history proof last by adding `E2E_RUN_LOGOUT=true`; it invalidates the Student storage state.
+
 ## 5. Manual workflow
 
 ### Student
