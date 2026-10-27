@@ -13,7 +13,7 @@ export default async function Page({
     ? { name: auth.user.name, email: auth.user.email, phone: auth.user.phone }
     : null;
   return (
-    <main className="min-w-0 min-h-[calc(100vh-4.75rem)] overflow-x-hidden pt-5 [&_img]:max-w-full">
+    <main className="mx-auto min-h-[calc(100vh-4.75rem)] w-full max-w-[1500px] min-w-0 overflow-x-clip px-[clamp(1rem,4vw,4rem)] pt-5 pb-12 [&_img]:max-w-full">
       <CheckoutPageClient account={account} initialCoupon={coupon} />
     </main>
   );

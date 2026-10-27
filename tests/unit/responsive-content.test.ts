@@ -79,6 +79,7 @@ describe("responsive content integrity", () => {
     "utf8",
   );
   const adminModal = readFileSync("src/components/admin-modal.tsx", "utf8");
+  const uiIcon = readFileSync("src/components/ui-icon.tsx", "utf8");
   const accountActions = readFileSync(
     "src/features/account/account-actions.tsx",
     "utf8",
@@ -109,6 +110,10 @@ describe("responsive content integrity", () => {
   const homePage = readFileSync("src/app/(public)/page.tsx", "utf8");
   const cartWorkflow = readFileSync(
     "src/features/commerce/ui/cart-workflow.tsx",
+    "utf8",
+  );
+  const checkoutPage = readFileSync(
+    "src/app/(public)/checkout/page.tsx",
     "utf8",
   );
   const supportDetail = readFileSync(
@@ -193,6 +198,19 @@ describe("responsive content integrity", () => {
     );
   });
 
+  it("keeps checkout inside the same responsive commerce container as cart", () => {
+    expect(checkoutPage).toContain("mx-auto");
+    expect(checkoutPage).toContain("max-w-[1500px]");
+    expect(checkoutPage).toContain("min-w-0");
+    expect(checkoutPage).toContain("overflow-x-clip");
+    expect(checkoutPage).toContain("px-[clamp(1rem,4vw,4rem)]");
+    expect(cartWorkflow).toContain("max-[800px]:grid-cols-1");
+    expect(cartWorkflow).toContain("[&>*]:min-w-0");
+    expect(cartWorkflow).toContain(
+      "max-[560px]:grid-cols-[3.5rem_minmax(0,1fr)]",
+    );
+  });
+
   it("sizes package details from content without duplicate divider bands", () => {
     expect(productDetailTabs).toContain("min-h-0 bg-white py-5");
     expect(packageDetail).toContain("mt-[0.35rem] border-t");
@@ -265,6 +283,16 @@ describe("responsive content integrity", () => {
       '"workspace-main student-dashboard-main min-w-0 w-full max-w-none',
     );
     expect(heroCarousel).not.toContain("hero-handwriting");
+  });
+
+  it("keeps shared admin icons compact and lowers the student hero action", () => {
+    expect(uiIcon).toContain("size-4 shrink-0");
+    expect(studentDashboard.match(/className="mt-8 inline-flex/g)).toHaveLength(
+      2,
+    );
+    expect(adminSupportDetail).toContain(
+      'border border-[#eadfd8] bg-white p-[0.35rem]',
+    );
   });
 
   it("renders order rows as labelled mobile cards", () => {

@@ -115,3 +115,18 @@
     transform: translateX(0);
   }
 }
+
+@keyframes prepstore-menu-top-depth {
+  0%, 100% { transform: translate3d(0, 0, 0) rotateY(0); }
+  50% { transform: translate3d(1px, -1px, 7px) rotateY(-10deg); }
+}
+
+@keyframes prepstore-menu-middle-depth {
+  0%, 100% { transform: translate3d(0, 0, 3px) rotateY(0); }
+  50% { transform: translate3d(-1px, 0, 10px) rotateY(12deg); }
+}
+
+@keyframes prepstore-menu-bottom-depth {
+  0%, 100% { transform: translate3d(0, 0, 0) rotateY(0); }
+  50% { transform: translate3d(1px, 1px, 5px) rotateY(-8deg); }
+}

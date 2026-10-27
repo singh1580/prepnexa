@@ -583,7 +583,7 @@ export async function WorkspaceShell({
       </a>
       <aside className={sidebarClass}>
         <div className="mb-4 ml-1.5 flex h-16 min-h-16 w-[188px] items-center [&_.brand-logo]:h-[34px] [&_.brand-logo]:w-[188px] [&_.brand-logo-link]:min-h-0 [&_.brand-logo-link]:min-w-[188px] [&_.brand-logo-link]:w-[188px]">
-          <Brand />
+          <Brand variant="compact" />
         </div>
         <div className="mx-[.7rem] mt-1 mb-[.7rem] font-mono text-[.7rem] tracking-[.17em] text-prep-muted">
           {admin ? "ADMIN WORKSPACE" : "LEARNING WORKSPACE"}
@@ -621,7 +621,7 @@ export async function WorkspaceShell({
             variant="workspace"
           >
             <div className="mb-2 flex min-h-12 items-center border-b border-[#ebe7e2] pr-[52px] pb-2 [&_.brand-logo]:h-[34px] [&_.brand-logo]:w-[188px] [&_.brand-logo-link]:min-w-[188px] [&_.brand-logo-link]:w-[188px]">
-              <Brand />
+              <Brand variant="compact" />
             </div>
             <Link
               className="mb-1.5 flex flex-col items-center border-b border-[#ebe7e2] px-2 pb-[9px] text-center text-[#17191c]"
@@ -648,7 +648,7 @@ export async function WorkspaceShell({
             </div>
           </MobileDrawer>
           <div className="order-2 block min-w-[188px] basis-[188px] min-[1100px]:hidden max-[340px]:min-w-[177px] max-[340px]:basis-[177px] [&_.brand-logo]:max-[340px]:h-8 [&_.brand-logo]:max-[340px]:w-[177px] [&_.brand-logo-link]:max-[340px]:min-w-[177px] [&_.brand-logo-link]:max-[340px]:w-[177px]">
-            <Brand />
+            <Brand variant="compact" />
           </div>
           {admin ? (
             <>

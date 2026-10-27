@@ -158,7 +158,7 @@ export default async function Page() {
           </p>
           {continueCourse ? (
             <Link
-              className="mt-3 inline-flex items-center gap-[0.6rem] rounded-[0.35rem] bg-prep-orange px-4 py-[0.7rem] text-[0.72rem] font-[750] text-white"
+              className="mt-8 inline-flex items-center gap-[0.6rem] rounded-[0.35rem] bg-prep-orange px-4 py-[0.7rem] text-[0.72rem] font-[750] text-white"
               href={
                 continueCourse.activeAttemptId
                   ? `/attempts/${continueCourse.activeAttemptId}?course=${continueCourse.slug}`
@@ -169,7 +169,7 @@ export default async function Page() {
             </Link>
           ) : (
             <Link
-              className="mt-3 inline-flex items-center gap-[0.6rem] rounded-[0.35rem] bg-prep-orange px-4 py-[0.7rem] text-[0.72rem] font-[750] text-white"
+              className="mt-8 inline-flex items-center gap-[0.6rem] rounded-[0.35rem] bg-prep-orange px-4 py-[0.7rem] text-[0.72rem] font-[750] text-white"
               href="/packages"
             >
               Explore packages <b>→</b>

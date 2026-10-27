@@ -58,7 +58,7 @@ export default async function Page({
   return (
     <main className="min-h-screen bg-white px-5 pb-12 text-[#14171b] print:min-h-0 print:p-0 max-[700px]:px-[.85rem] max-[700px]:pb-8">
       <header className="mx-auto mb-5 flex min-h-[4.5rem] max-w-[70rem] items-center justify-between gap-4 border-b border-[#e6e2de] print:hidden max-[700px]:flex-col max-[700px]:items-stretch max-[700px]:py-[.6rem] max-[700px]:pb-[.9rem] [&_.brand-logo-link]:w-[188px] [&_.brand-logo-link]:min-w-[188px] [&_.brand-logo]:h-[34px] [&_.brand-logo]:w-[188px] max-[420px]:[&_.brand-logo-link]:w-[177px] max-[420px]:[&_.brand-logo-link]:min-w-[177px] max-[420px]:[&_.brand-logo]:h-8 max-[420px]:[&_.brand-logo]:w-[177px]">
-        <PrepstoreLogo />
+        <PrepstoreLogo variant="invoice" />
         <div className="flex items-center justify-end gap-[.8rem] max-[700px]:flex-col max-[700px]:items-stretch">
           <Link
             className="inline-flex min-h-10 items-center rounded-[.42rem] px-3 py-[.55rem] font-[720] text-[#4d545a] hover:bg-[#fff1ea] hover:text-[#c83e10]"
@@ -72,7 +72,7 @@ export default async function Page({
       <article className="mx-auto max-w-[70rem] rounded-[.55rem] border border-[#e1dfdc] bg-white p-[2.2rem] shadow-[0_.65rem_2rem_#3a2b2110] print:m-0 print:w-full print:max-w-none print:break-inside-avoid print:rounded-none print:border-0 print:p-0 print:shadow-none max-[700px]:p-4">
         <header className="flex items-start justify-between gap-8 border-b border-[#bbb] pb-6 max-[700px]:grid max-[700px]:gap-4 max-[700px]:pb-4">
           <div className="grid min-w-0 gap-1 [&_.brand-logo-link]:min-h-9 [&_.brand-logo-link]:w-[164px] [&_.brand-logo-link]:min-w-[164px] [&_.brand-logo]:h-auto [&_.brand-logo]:w-[164px]">
-            <PrepstoreLogo />
+            <PrepstoreLogo variant="invoice" />
             <b className="mt-[.7rem] text-[.74rem]">
               Prepstore Digital Learning
             </b>

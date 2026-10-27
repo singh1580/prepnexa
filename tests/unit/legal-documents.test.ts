@@ -25,12 +25,12 @@ describe("legal documents", () => {
     }
   });
 
-  it("keeps statutory grievance timing and escalation visible", () => {
+  it("keeps statutory grievance timing visible without the deferred helpline", () => {
     const terms = JSON.stringify(documents.terms);
     const refunds = JSON.stringify(documents["cancellation-refund"]);
     expect(terms).toContain("acknowledged within 48 hours");
     expect(terms).toContain("resolved within one month");
-    expect(terms).toContain("https://consumerhelpline.gov.in/");
-    expect(refunds).toContain("https://consumerhelpline.gov.in/");
+    expect(terms).not.toMatch(/National Consumer Helpline|consumerhelpline|1915/i);
+    expect(refunds).not.toMatch(/National Consumer Helpline|consumerhelpline|1915/i);
   });
 });

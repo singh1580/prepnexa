@@ -13,7 +13,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen bg-white min-[801px]:h-dvh min-[801px]:grid-cols-[minmax(25rem,44%)_1fr] min-[801px]:overflow-hidden">
       <aside className="relative hidden min-w-0 overflow-hidden bg-[linear-gradient(145deg,#fff9f3,#f0e4d8)] px-[clamp(2rem,5vw,5rem)] py-[2.3rem] text-prep-ink before:pointer-events-none before:absolute before:-right-20 before:top-1/2 before:block before:size-56 before:-translate-y-1/2 before:rounded-full before:border before:border-[#ef4d1820] before:shadow-[0_0_0_4rem_#ef4d1805,0_0_0_8rem_#ef4d1803] min-[801px]:flex min-[801px]:h-dvh min-[801px]:flex-col min-[801px]:justify-between [&_.brand-logo]:h-auto [&_.brand-logo]:w-[188px]">
-        <Brand />
+        <Brand variant="compact" />
         <div className="relative z-[1] max-w-[34rem]">
           <span className="text-[0.72rem] font-[760] uppercase tracking-[0.16em] text-prep-orange-dark">
             PREPARATION, REFINED
@@ -49,7 +49,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <span>Back to home</span>
         </Link>
         <div className="mb-6 w-full max-w-[30rem] min-[801px]:hidden [&_.brand-logo]:h-auto [&_.brand-logo]:w-[172px]">
-          <Brand />
+          <Brand variant="mobile" />
         </div>
         <div className="w-full max-w-[30rem] [&>h1]:mt-3 [&>h1]:mb-[0.55rem] [&>h1]:text-[clamp(2rem,4vw,3rem)] [&>h1]:leading-[1.08] [&>h1]:font-bold [&>h1]:tracking-[-0.035em] [&>form]:mt-[1.7rem]">
           {children}

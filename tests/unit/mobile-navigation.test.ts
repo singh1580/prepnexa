@@ -28,10 +28,15 @@ describe("responsive navigation", () => {
     );
     expect(drawer).not.toContain("<Brand />");
     expect(publicHeader).not.toContain(">Menu<");
-    expect(drawer).not.toContain("[perspective:140px]");
+    expect(drawer).toContain("[perspective:140px]");
     expect(drawer).toContain("bg-prep-orange");
-    expect(drawer).not.toContain('d="m6 6 12 12M18 6 6 18"');
+    expect(drawer).toContain("prepstore-menu-top-depth");
+    expect(drawer).toContain("group-open:[transform:translateZ(5px)]");
+    expect(drawer).toContain("group-open:[transform:translateZ(11px)]");
+    expect(drawer).not.toContain("group-open:rotate-45");
+    expect(drawer).not.toContain("group-open:-rotate-45");
     expect(drawer).toContain("bg-[#17191c]");
+    expect(css).toContain("@keyframes prepstore-menu-top-depth");
     expect(publicHeader).toContain("max-[1099px]:gap-1");
   });
 
@@ -109,10 +114,16 @@ describe("responsive navigation", () => {
     expect(drawer).toContain(
       "[--workspace-drawer-width:min(360px,calc(100vw-32px))]",
     );
+    expect(drawer.indexOf("[--workspace-drawer-width:min(360px")).toBeLessThan(
+      drawer.indexOf("<summary"),
+    );
+    expect(drawer).toContain(
+      "group-open:left-[calc(var(--workspace-drawer-width)-58px)]",
+    );
     expect(drawer).toContain("min-h-dvh");
     expect(drawer).toContain("prepstore-workspace-drawer-enter");
     expect(workspaceShell).toContain("z-[4] mt-auto border-t");
-    expect(drawer).toContain(
+    expect(drawer).not.toContain(
       "group-open:top-[calc(var(--mobile-header-height)+18px)]",
     );
     expect(workspaceShell).toContain("border-b border-[#ebe7e2]");
