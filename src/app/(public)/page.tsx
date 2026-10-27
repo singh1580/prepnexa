@@ -37,7 +37,7 @@ export default async function Home() {
   const shelfClass =
     "mx-auto max-w-[1440px] px-[clamp(1.25rem,4.5vw,4.5rem)] pt-[1.4rem] pb-2 max-[560px]:px-4 max-[560px]:pt-[1.05rem] max-[560px]:pb-[0.2rem] [&>header]:mb-[0.85rem] [&>header]:flex [&>header]:items-center [&>header]:justify-between [&>header]:gap-4 [&>header_h2]:m-0 [&>header_h2]:text-[1.45rem] [&>header_h2]:tracking-[-0.025em] [&>header_a]:text-[0.73rem] [&>header_a]:font-[680] [&>header_a]:text-[#0759a3] max-[560px]:[&>header]:gap-3 max-[560px]:[&>header_h2]:text-xl max-[560px]:[&>header_h2]:whitespace-nowrap max-[560px]:[&>header_a]:shrink-0 max-[560px]:[&>header_a]:text-[0.64rem]";
   const shelfRail =
-    "grid grid-flow-col items-stretch gap-4 overflow-x-auto overflow-y-hidden px-[0.1rem] pt-[0.1rem] pb-[0.65rem] [scroll-padding-inline:0.1rem] [scroll-snap-type:inline_mandatory] [overscroll-behavior-inline:contain] [scrollbar-width:thin] [-webkit-overflow-scrolling:touch] [&>*]:flex [&>*]:h-full [&>*]:w-full [&>*]:snap-start [&>*]:flex-col";
+    "grid grid-flow-col items-stretch gap-4 overflow-x-auto overflow-y-hidden px-[0.1rem] pt-[0.1rem] pb-[0.65rem] [scroll-padding-inline:0.1rem] [scroll-snap-type:inline_mandatory] [overscroll-behavior-inline:contain] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden [&>*]:flex [&>*]:h-full [&>*]:w-full [&>*]:snap-start [&>*]:flex-col";
   const featuredRail =
     "auto-cols-[minmax(17.5rem,calc((100%_-_2rem)/3))] max-[560px]:auto-cols-[minmax(16.5rem,82vw)]";
   const fourCardRail =

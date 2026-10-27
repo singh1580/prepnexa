@@ -27,7 +27,9 @@ describe("contact and support routing", () => {
     expect(contactPage).toContain("<ContactForm");
     expect(contactForm).toContain('fetch("/api/contact"');
     expect(contactRoute).toContain("contactInquirySchema.parse");
-    expect(contactPage).toContain('href="/legal/fair-use"');
+    expect(contactPage).not.toContain("LEGAL OPERATOR");
+    expect(contactPage).not.toContain("BUSINESS_ENTITY_TYPE");
+    expect(publicLayout).toContain('href="/legal/fair-use"');
   });
 
   it("requires all four policies during account registration", () => {

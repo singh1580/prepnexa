@@ -238,12 +238,19 @@ export default async function Page({
             href={`/admin/orders${keep.size ? `?${keep.toString()}` : ""}`}
             aria-label="Close order details"
           />
-          <section className={adminSideDetail}>
+          <section
+            className={adminSideDetail}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="order-detail-title"
+          >
             <header
               className={`${adminDetailHeader} grid grid-cols-[1fr_auto_auto]`}
             >
               <div>
-                <h2>Order #{selected.id.slice(0, 10).toUpperCase()}</h2>
+                <h2 id="order-detail-title">
+                  Order #{selected.id.slice(0, 10).toUpperCase()}
+                </h2>
               </div>
               <span
                 className={`${adminStatusPill} ${adminStatusClass(selected.status)}`}

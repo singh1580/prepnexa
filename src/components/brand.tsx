@@ -21,7 +21,7 @@ export function PrepstoreLogo() {
   );
 }
 
-export function PrepstoreIcon({ className }: { className?: string }) {
+export function PrepstoreIcon({ className = "block size-full object-contain" }: { className?: string }) {
   return (
     <Image
       className={className}

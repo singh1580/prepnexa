@@ -1,4 +1,4 @@
-# Prepstore implementation status — 26 October 2026
+# Prepstore implementation status — 27 October 2026
 
 This document records the current repository state. Historical phase documents explain how the product evolved; they do not override this checkpoint.
 
@@ -26,7 +26,7 @@ This document records the current repository state. Historical phase documents e
 ## Verification checkpoint
 
 - ESLint, TypeScript, Vitest and the production build are repository gates.
-- On 26 October 2026, the Tailwind migration branch passed ESLint, TypeScript, all 160 default Vitest checks and the final Next.js 16.4.1 production build, including all 73 generated static pages.
+- On 27 October 2026, the current Tailwind release candidate passed ESLint, TypeScript, all 163 default Vitest checks and the final Next.js 16.4.1 production build, including all 73 generated static pages.
 - On 26 October 2026, all four opt-in database integration suites passed individually against the isolated Neon `phase-11-browser-qa` branch: authentication, commerce, protected-material access and the complete Student attempt/autosave/submit/result flow. The integration runner preserves an explicitly supplied QA database URL instead of replacing it with the local placeholder.
 - Student-attempt integration fixtures use unpublished paid products plus explicit test entitlements, so a running suite cannot expose synthetic packages in the public catalogue. Its successful run removed its own fixtures; the older incident-linked synthetic product remains unpublished because deleting its referenced QA attempt would be unsafe.
 - Playwright and axe passed all 60 public route/viewport cases and all eight authentication route/viewport cases at 390×844, 768×1024, 1366×768 and 1920×1080.
@@ -40,6 +40,16 @@ This document records the current repository state. Historical phase documents e
 
 The normal Playwright browser download was unavailable in the work container, so the completed browser runs used an ephemeral compatible Chromium binary. That environment limitation is no longer an unexecuted-test blocker; EC2 post-deploy smoke remains a separate release check.
 
+## 27 October 2026 regression checkpoint
+
+- The cart, catalogue search, home package rails, result metrics, protected PDF reader, workspace navigation, Admin package cards and centered order/student details received targeted responsive fixes.
+- Free packages now require an explicit active entitlement just like paid packages; zero-price checkout remains the acquisition path.
+- Submitted attempts replace the attempt URL with the result URL, and reopening a closed attempt server-redirects to its result instead of rendering a stale runner.
+- The contact page no longer exposes the legal-operator/entity/grievance-officer panel. Legal documents no longer print owner, entity type, street address or a named officer; verified public contact channels and the required grievance response process remain available.
+- `src/app/tailwind.css` is the only application stylesheet. The obsolete plain-CSS layer was deleted, all remaining CSS-variable references resolve to active tokens and the application stylesheet contains zero `!important` declarations.
+- A local production-server smoke returned HTTP 200 for home, cart, catalogue, contact, all four legal pages, login, signup, favicon, brand icon and health routes.
+- Playwright still discovers all 176 responsive/accessibility/workflow cases. The current container no longer has the ephemeral Chromium binary and the standard download endpoint is unavailable, so the 27 October UI delta still requires the normal post-deploy four-viewport browser rerun; the earlier rendered baseline is not being presented as proof of this changed delta.
+
 ## Compatibility decisions
 
 - Authentication uses only the `prepstore_session` cookie. The pre-launch legacy cookie fallback has been removed so the production contract contains no obsolete session name.
@@ -49,9 +59,9 @@ The normal Playwright browser download was unavailable in the work container, so
 ## CSS consolidation
 
 - Tailwind CSS 4 is the active component/layout styling system. Responsive behaviour now lives with the affected JSX through direct utilities instead of accumulating selector overrides.
-- `src/app/tailwind.css` contains the Tailwind import, shared theme tokens, the reusable eyebrow utility and the drawer keyframes. `src/app/styles.css` is limited to global tokens, reset, focus/selection, reduced-motion and print rules.
+- `src/app/tailwind.css` is the single application stylesheet. It contains the Tailwind import, shared theme tokens, browser defaults, focus/selection, reduced-motion, print rules and the drawer animation.
 - The former `storefront-fixes.css`, `brand-system.css`, `final-review-polish.css` and contact CSS module are removed rather than retained as later override layers.
-- No `!important` declaration remains in either application stylesheet. The two stylesheet sources total 200 lines; no historical component/layout selector layer remains.
+- No `!important` declaration or historical component/layout selector layer remains in the application stylesheet.
 - Source-level responsive regression checks and rendered Playwright checks cover the migrated public, authentication, Student, Admin, checkout, test-runner, invoice and protected-reader surfaces.
 
 ## Release evidence still required

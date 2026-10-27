@@ -36,3 +36,8 @@ async function evaluatePending(userId: string) {
 
 export async function getStudentResults(userId: string) { await evaluatePending(userId); return listStudentResults(userId); }
 export async function getStudentResult(resultId: string, userId: string) { const result = await findStudentResult(resultId, userId); if (!result) throw resultNotFound(); return result; }
+export async function getStudentResultForAttempt(attemptId: string, userId: string) {
+  const existing = await findResultIdByAttempt(attemptId, userId);
+  if (existing) return existing.id;
+  return (await evaluateAttempt(attemptId, userId, crypto.randomUUID())).id;
+}

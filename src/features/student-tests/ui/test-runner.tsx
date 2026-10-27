@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { ApiFailure, ApiSuccess } from "@/lib/http/api-response";
 import { answerInputFromState } from "@/features/student-tests/answer-payload";
 import { UiIcon } from "@/components/ui-icon";
+import { useRouter } from "next/navigation";
 
 type Answer = {
   selectedOptionIds: string[];
@@ -80,6 +81,7 @@ export function TestRunner({
   attempt: Attempt;
   courseSlug?: string;
 }) {
+  const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, Answer>>(() =>
     Object.fromEntries(
       attempt.questions.map((question) => [question.id, question.answer]),
@@ -311,6 +313,9 @@ export function TestRunner({
       setResultId(payload.data.resultId);
       setSubmitted(true);
       setRemaining(0);
+      router.replace(
+        `/results/${payload.data.resultId}${courseSlug ? `?course=${encodeURIComponent(courseSlug)}` : ""}`,
+      );
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Couldn't submit the test.",

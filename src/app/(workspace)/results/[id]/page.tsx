@@ -154,8 +154,8 @@ export default async function Page({
         <h2 className="m-0 border-b border-[#e3e1de] px-4 py-3 text-[.95rem]">
           Your performance
         </h2>
-        <div className="grid grid-cols-5 max-[900px]:grid-cols-3 max-[500px]:grid-cols-2 [&>article]:grid [&>article]:min-w-0 [&>article]:gap-1 [&>article]:border-r [&>article]:border-[#e3e1de] [&>article]:p-4 max-[900px]:[&>article:nth-child(n+4)]:border-t max-[500px]:[&>article:nth-child(n+3)]:border-t max-[500px]:[&>article:nth-child(2n)]:border-r-0 [&_strong]:text-[1.35rem] [&_span]:text-[.68rem] [&_span]:leading-snug [&_span]:text-prep-muted">
-          <article className="max-[900px]:border-r">
+        <div className="grid grid-cols-5 gap-px overflow-hidden bg-[#e3e1de] max-[900px]:grid-cols-3 max-[500px]:grid-cols-2 [&>article]:grid [&>article]:min-w-0 [&>article]:gap-1 [&>article]:bg-white [&>article]:p-4 [&_strong]:text-[1.35rem] [&_span]:text-[.68rem] [&_span]:leading-snug [&_span]:text-prep-muted">
+          <article>
             <strong className="text-[#25292c]!">{result.score}</strong>
             <span>
               Score
@@ -167,7 +167,7 @@ export default async function Page({
             <strong className="text-[#16804c]!">{accuracy}%</strong>
             <span>Accuracy</span>
           </article>
-          <article className="max-[900px]:border-r-0 max-[500px]:border-r">
+          <article>
             <strong className="text-[#16804c]!">{result.correctCount}</strong>
             <span>Correct</span>
           </article>
@@ -175,7 +175,7 @@ export default async function Page({
             <strong className="text-[#d9342c]!">{result.incorrectCount}</strong>
             <span>Incorrect</span>
           </article>
-          <article className="border-r-0!">
+          <article>
             <strong className="text-[#686e73]!">
               {result.unansweredCount}
             </strong>

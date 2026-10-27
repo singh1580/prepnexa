@@ -39,12 +39,12 @@ export const adminPagination =
   "flex items-center justify-between gap-4 border-t border-[#e8e6e3] px-4 py-3 text-[0.67rem] text-prep-muted max-[800px]:flex-col max-[800px]:items-start max-[800px]:gap-2.5 [&_nav]:flex [&_nav]:gap-1 [&_a]:grid [&_a]:h-[1.8rem] [&_a]:min-w-[1.8rem] [&_a]:place-items-center [&_a]:rounded-[0.3rem] [&_a]:border [&_a:not([aria-current=page])]:border-[#ddd] [&_a[aria-current=page]]:border-prep-orange [&_a[aria-current=page]]:bg-prep-orange [&_a[aria-current=page]]:text-white [&_a[aria-disabled=true]]:pointer-events-none [&_a[aria-disabled=true]]:opacity-40";
 
 export const adminDetailBackdrop =
-  "fixed inset-0 z-40 bg-black/15 backdrop-blur-[1px]";
+  "fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]";
 
 const adminSideDetailBase =
-  "fixed inset-[4.45rem_0_0_auto] z-[45] overflow-y-auto border-l border-prep-line bg-white shadow-[-1.2rem_0_3.5rem_rgba(26,28,31,0.18)] max-[800px]:inset-[0_0_0_auto]";
-export const adminSideDetail = `${adminSideDetailBase} w-[min(36rem,100vw)]`;
-export const adminStudentSideDetail = `${adminSideDetailBase} w-[min(32rem,100vw)]`;
+  "fixed top-1/2 left-1/2 z-[45] max-h-[calc(100dvh-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-prep-line bg-white shadow-[0_2rem_7rem_rgba(26,28,31,0.28)] max-[600px]:top-0 max-[600px]:left-0 max-[600px]:h-dvh max-[600px]:max-h-dvh max-[600px]:translate-x-0 max-[600px]:translate-y-0 max-[600px]:rounded-none";
+export const adminSideDetail = `${adminSideDetailBase} w-[min(50rem,calc(100vw-2rem))] max-[600px]:w-full`;
+export const adminStudentSideDetail = `${adminSideDetailBase} w-[min(64rem,calc(100vw-2rem))] max-[600px]:w-full`;
 
 export const adminSideSection =
   "border-b border-prep-line px-[1.3rem] py-[1.15rem] [&_h3]:mb-3 [&_h3]:text-[0.82rem] [&_h3]:font-bold";

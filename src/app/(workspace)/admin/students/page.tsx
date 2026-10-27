@@ -249,14 +249,21 @@ export default async function Page({
             href={listHref(page)}
             aria-label="Close student details"
           />
-          <section className={adminStudentSideDetail}>
+          <section
+            className={adminStudentSideDetail}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="student-detail-title"
+          >
             <header className={adminDetailHeader}>
               <div className="flex min-w-0 items-center gap-[0.7rem]">
                 <span className="grid size-10 shrink-0 place-items-center rounded-[0.7rem] bg-[#eef2fb] text-xs font-extrabold text-[#46649a]">
                   {selected.name.slice(0, 2).toUpperCase()}
                 </span>
                 <div className="min-w-0">
-                  <h2 className="truncate">{selected.name}</h2>
+                  <h2 id="student-detail-title" className="truncate">
+                    {selected.name}
+                  </h2>
                   <p className="my-0.5 truncate text-[0.72rem] text-prep-muted">
                     {selected.email}
                   </p>

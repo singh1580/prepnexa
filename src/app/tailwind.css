@@ -23,6 +23,55 @@
   --radius-prep-panel: 0.85rem;
 }
 
+@layer base {
+  :root {
+    --orange: #c73c0b;
+    --orange-dark: #a92e06;
+    --orange-soft: #fff0e9;
+    --orange-wash: #fff8f3;
+    --ink: #17191d;
+    --muted: #6d7077;
+    --line: #e4dfd8;
+    --canvas: #f7f4ef;
+    --surface: #fff;
+    --success: #2f7a55;
+    --danger: #a33c35;
+    --warning: #95681f;
+    font-family: var(--font-geist-sans), "Segoe UI", Arial, sans-serif;
+    font-size: 16px;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: var(--canvas);
+    color: var(--ink);
+    font-feature-settings: "ss01" 1, "cv02" 1;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; text-decoration: none; }
+  button, input, select, textarea { font: inherit; }
+  button, a {
+    transition: background-color .18s, color .18s, border-color .18s, transform .18s;
+  }
+  button:focus-visible, a:focus-visible, input:focus-visible,
+  select:focus-visible, textarea:focus-visible, summary:focus-visible {
+    outline: 3px solid #c73c0b4d;
+    outline-offset: 2px;
+  }
+  ::selection { background: #ffd8c5; color: #351207; }
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto; transition: none; }
+  }
+  @media print {
+    @page { size: A4; margin: 12mm; }
+    html, body { background: #fff; }
+  }
+}
+
 @utility eyebrow {
   font-family: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
   font-size: 0.68rem;
@@ -44,36 +93,6 @@
 @media (max-width: 340px) {
   :root {
     --mobile-header-height: 58px;
-  }
-}
-
-@keyframes prepstore-menu-top-depth {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotateY(0);
-  }
-  50% {
-    transform: translate3d(1px, -1px, 7px) rotateY(-10deg);
-  }
-}
-
-@keyframes prepstore-menu-middle-depth {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 3px) rotateY(0);
-  }
-  50% {
-    transform: translate3d(-1px, 0, 10px) rotateY(12deg);
-  }
-}
-
-@keyframes prepstore-menu-bottom-depth {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotateY(0);
-  }
-  50% {
-    transform: translate3d(1px, 1px, 5px) rotateY(-8deg);
   }
 }
 

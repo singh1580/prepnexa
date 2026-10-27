@@ -22,7 +22,7 @@ describe.skipIf(!run)("protected material access flow", () => {
     if (objectKey) await privateStorage().delete(objectKey).catch(() => undefined);
   }, timeout * 2);
 
-  it("delivers a watermarked entitled PDF, revokes access, then permits free access", async () => {
+  it("delivers a watermarked entitled PDF and requires entitlement even when a package is free", async () => {
     const [{ db }, schema, materials, files, { privateStorage }, { eq }] = await Promise.all([import("../../src/db/client"), import("../../src/db/schema"), import("../../src/features/materials/service"), import("../../src/features/materials/files"), import("../../src/features/materials/storage"), import("drizzle-orm")]);
     const pdf = await PDFDocument.create(); pdf.addPage(); const raw = await pdf.save(); const copy = new Uint8Array(raw.byteLength); copy.set(raw);
     const file = await files.validateMaterialFile(new File([copy], "qa-guide.pdf", { type: "application/pdf" }), materialId); objectKey = file.objectKey;
@@ -49,6 +49,6 @@ describe.skipIf(!run)("protected material access flow", () => {
     await db.update(schema.entitlements).set({ status: "REVOKED", revokedAt: new Date() }).where(eq(schema.entitlements.id, entitlementId));
     await expect(materials.getStudentMaterial(materialId, userId)).rejects.toMatchObject({ code: "MATERIAL_NOT_FOUND" });
     await db.update(schema.products).set({ pricePaise: 0, isLive: true }).where(eq(schema.products.id, productId));
-    expect((await materials.getStudentMaterial(materialId, userId)).accessSource).toBe("FREE");
+    await expect(materials.getStudentMaterial(materialId, userId)).rejects.toMatchObject({ code: "MATERIAL_NOT_FOUND" });
   }, timeout * 12);
 });

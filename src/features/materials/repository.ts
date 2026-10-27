@@ -17,7 +17,7 @@ const accessSql = (userId: string, productSlug?: string, productId?: string) => 
     v.id as "versionId", v.version, v.original_file_name as "originalFileName", v.content_type as "contentType",
     v.size_bytes as "sizeBytes", v.private_object_key as "privateObjectKey", v.checksum,
     access.product_id as "productId", access.product_slug as "productSlug", access.entitlement_id as "entitlementId",
-    case when access.entitlement_id is null then 'FREE' else 'ENTITLEMENT' end as "accessSource"
+    'ENTITLEMENT' as "accessSource"
   from materials m
   join lateral (
     select mv.* from material_versions mv where mv.material_id = m.id
@@ -31,8 +31,8 @@ const accessSql = (userId: string, productSlug?: string, productId?: string) => 
       and en.status = 'ACTIVE' and en.starts_at <= now() and en.expires_at > now()
     where pm.material_id = m.id and (${productSlug ?? null}::text is null or p.slug=${productSlug ?? null})
       and (${productId ?? null}::uuid is null or p.id=${productId ?? null}::uuid)
-      and ((p.is_live = true and p.price_paise = 0) or en.id is not null)
-    order by case when p.slug=${productSlug ?? null} then 0 else 1 end,(en.id is not null) desc limit 1
+      and en.id is not null
+    order by case when p.slug=${productSlug ?? null} then 0 else 1 end limit 1
   ) access on true
 `;
 

@@ -57,11 +57,11 @@ export default async function Page({
     : `/dashboard/orders/${order.id}`;
   return (
     <main className="min-h-screen bg-white px-5 pb-12 text-[#14171b] print:min-h-0 print:p-0 max-[700px]:px-[.85rem] max-[700px]:pb-8">
-      <header className="mx-auto mb-5 flex min-h-[4.5rem] max-w-[70rem] items-center justify-between gap-4 border-b border-[var(--review-line)] print:hidden max-[700px]:flex-col max-[700px]:items-stretch max-[700px]:py-[.6rem] max-[700px]:pb-[.9rem] [&_.brand-logo-link]:w-[188px] [&_.brand-logo-link]:min-w-[188px] [&_.brand-logo]:h-[34px] [&_.brand-logo]:w-[188px] max-[420px]:[&_.brand-logo-link]:w-[177px] max-[420px]:[&_.brand-logo-link]:min-w-[177px] max-[420px]:[&_.brand-logo]:h-8 max-[420px]:[&_.brand-logo]:w-[177px]">
+      <header className="mx-auto mb-5 flex min-h-[4.5rem] max-w-[70rem] items-center justify-between gap-4 border-b border-[#e6e2de] print:hidden max-[700px]:flex-col max-[700px]:items-stretch max-[700px]:py-[.6rem] max-[700px]:pb-[.9rem] [&_.brand-logo-link]:w-[188px] [&_.brand-logo-link]:min-w-[188px] [&_.brand-logo]:h-[34px] [&_.brand-logo]:w-[188px] max-[420px]:[&_.brand-logo-link]:w-[177px] max-[420px]:[&_.brand-logo-link]:min-w-[177px] max-[420px]:[&_.brand-logo]:h-8 max-[420px]:[&_.brand-logo]:w-[177px]">
         <PrepstoreLogo />
         <div className="flex items-center justify-end gap-[.8rem] max-[700px]:flex-col max-[700px]:items-stretch">
           <Link
-            className="inline-flex min-h-10 items-center rounded-[.42rem] px-3 py-[.55rem] font-[720] text-[#4d545a] hover:bg-[var(--review-orange-soft)] hover:text-[#c83e10]"
+            className="inline-flex min-h-10 items-center rounded-[.42rem] px-3 py-[.55rem] font-[720] text-[#4d545a] hover:bg-[#fff1ea] hover:text-[#c83e10]"
             href={backHref}
           >
             ← <span>Back to order</span>

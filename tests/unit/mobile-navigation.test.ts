@@ -16,8 +16,8 @@ describe("responsive navigation", () => {
     "src/components/workspace-route-effects.tsx",
     "utf8",
   );
-  const css = readFileSync("src/app/styles.css", "utf8");
-  const tailwindCss = readFileSync("src/app/tailwind.css", "utf8");
+  const css = readFileSync("src/app/tailwind.css", "utf8");
+  const tailwindCss = css;
   const compactCss = css.replace(/\s+/g, "");
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
   const authShell = readFileSync("src/features/auth/ui/auth-shell.tsx", "utf8");
@@ -28,11 +28,11 @@ describe("responsive navigation", () => {
     );
     expect(drawer).not.toContain("<Brand />");
     expect(publicHeader).not.toContain(">Menu<");
-    expect(drawer).toContain("[perspective:140px]");
-    expect(drawer).toContain("bg-[#e94b17]");
+    expect(drawer).not.toContain("[perspective:140px]");
+    expect(drawer).toContain("bg-prep-orange");
     expect(drawer).not.toContain('d="m6 6 12 12M18 6 6 18"');
     expect(drawer).toContain("bg-[#17191c]");
-    expect(publicHeader).toContain("max-[899px]:gap-1");
+    expect(publicHeader).toContain("max-[1099px]:gap-1");
   });
 
   it("keeps public navigation ordered and account actions separate", () => {
@@ -129,12 +129,12 @@ describe("responsive navigation", () => {
     expect(compactCss).toContain("body{margin:0;min-width:320px;");
     expect(css).not.toContain(".store-product-card");
     expect(workspaceShell).toContain(
-      "min-[900px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]",
+      "min-[1100px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]",
     );
     expect(css).not.toContain(".workspace{");
     expect(css).not.toContain(".mobile-public-menu");
     expect(rootLayout).toContain('import "./tailwind.css"');
-    expect(rootLayout).toContain('import "./styles.css"');
+    expect(rootLayout).not.toContain('import "./styles.css"');
     expect(rootLayout).not.toContain("brand-system.css");
     expect(rootLayout).not.toContain("storefront-fixes.css");
     expect(publicHeader).not.toContain("brand-mark");

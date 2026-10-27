@@ -139,6 +139,14 @@ export function ReviewModerationActions({
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   async function moderate(status: "APPROVED" | "REJECTED") {
+    if (
+      status === "REJECTED" &&
+      !window.confirm(
+        currentStatus === "APPROVED"
+          ? "Hide this published review from the package page?"
+          : "Hide this review? It will not appear publicly.",
+      )
+    ) return;
     setBusy(status);
     setError("");
     try {
@@ -179,7 +187,7 @@ export function ReviewModerationActions({
         {currentStatus !== "REJECTED" ? (
           <button
             type="button"
-            className="inline-flex min-h-[2.45rem] cursor-pointer items-center justify-center rounded-prep-control border border-[#d9dadd] bg-white px-[0.9rem] py-[0.55rem] text-sm font-bold text-[#343a3f] disabled:cursor-not-allowed disabled:opacity-55"
+            className="inline-flex min-h-[2.45rem] cursor-pointer items-center justify-center rounded-prep-control border border-[#e6a9a4] bg-[#fff8f7] px-[0.9rem] py-[0.55rem] text-sm font-bold text-[#9c3029] hover:bg-[#fff0ef] disabled:cursor-not-allowed disabled:opacity-55"
             disabled={Boolean(busy)}
             onClick={() => moderate("REJECTED")}
           >

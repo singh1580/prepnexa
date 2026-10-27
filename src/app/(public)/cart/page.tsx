@@ -9,7 +9,7 @@ export default async function Page() {
     .filter((product) => !product.alreadyOwned)
     .slice(0, 6);
   return (
-    <main className="min-w-0 min-h-[calc(100vh-4.75rem)] overflow-x-hidden pt-5 [&_img]:max-w-full">
+    <main className="mx-auto min-h-[calc(100vh-4.75rem)] w-full max-w-[1500px] min-w-0 overflow-x-clip px-[clamp(1rem,4vw,4rem)] pt-5 pb-12 [&_img]:max-w-full">
       <CartPageClient suggestions={suggestions} />
     </main>
   );

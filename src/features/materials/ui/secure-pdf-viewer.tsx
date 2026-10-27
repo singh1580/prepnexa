@@ -12,7 +12,7 @@ const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
 const MAX_RENDER_PIXELS = 12_000_000;
 const controlButtonClass =
-  "inline-grid h-[2.35rem] min-w-[2.35rem] cursor-pointer place-items-center rounded-[.4rem] border border-[#505050] bg-[#252525] px-[.55rem] py-[.35rem] text-[.78rem] text-white hover:border-[#f07950] hover:bg-[#333] focus-visible:border-[#f07950] focus-visible:bg-[#333] disabled:cursor-not-allowed disabled:opacity-38 max-[700px]:h-9";
+  "inline-grid h-[2.35rem] min-w-[2.35rem] shrink-0 cursor-pointer place-items-center rounded-[.4rem] border border-[#505050] bg-[#252525] px-[.55rem] py-[.35rem] text-[.78rem] text-white hover:border-[#f07950] hover:bg-[#333] focus-visible:border-[#f07950] focus-visible:bg-[#333] disabled:cursor-not-allowed disabled:opacity-38 max-[700px]:h-9";
 
 export function SecurePdfViewer({
   src,
@@ -232,7 +232,7 @@ export function SecurePdfViewer({
     );
   return (
     <section
-      className="grid h-[calc(100dvh-9rem)] min-h-[42rem] min-w-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-b-[.6rem] border border-[#d8d4cf] bg-[#262626] text-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#f07950] fullscreen:h-dvh fullscreen:min-h-0 fullscreen:rounded-none fullscreen:border-0 max-[700px]:min-h-[32rem] max-[380px]:min-h-[26rem] [&:fullscreen_[data-pdf-stage]]:p-4"
+      className="grid h-[calc(100dvh-9rem)] min-h-[42rem] min-w-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-b-[.6rem] border border-[#d8d4cf] bg-[#262626] text-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#f07950] fullscreen:h-dvh fullscreen:min-h-0 fullscreen:rounded-none fullscreen:border-0 max-[700px]:h-[calc(100svh-5rem)] max-[700px]:min-h-[44rem] max-[380px]:min-h-[40rem] [&:fullscreen_[data-pdf-stage]]:p-4"
       ref={hostRef}
       aria-label={`Secure document reader: ${title}`}
       onKeyDown={(event) => {
@@ -265,7 +265,7 @@ export function SecurePdfViewer({
             →
           </button>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-[.35rem] max-[700px]:justify-center">
+        <div className="flex flex-nowrap items-center justify-end gap-[.35rem] max-[700px]:justify-start max-[700px]:overflow-x-auto max-[700px]:pb-0.5 max-[700px]:[scrollbar-width:none] max-[700px]:[&::-webkit-scrollbar]:hidden">
           <button
             className={controlButtonClass}
             type="button"
@@ -315,7 +315,7 @@ export function SecurePdfViewer({
             Fit width
           </button>
           <button
-            className={`${controlButtonClass} min-w-0 px-3 max-[700px]:flex-1 max-[380px]:text-[.72rem]`}
+            className={`${controlButtonClass} min-w-0 px-3 max-[380px]:text-[.72rem]`}
             type="button"
             onClick={toggleFullscreen}
           >
@@ -324,7 +324,7 @@ export function SecurePdfViewer({
         </div>
       </header>
       <div
-        className="relative min-h-0 overflow-auto bg-[#292929] p-6 [overscroll-behavior:contain] [scrollbar-color:#777_#292929] max-[700px]:px-2 max-[700px]:py-[.65rem]"
+        className="relative min-h-0 overflow-auto bg-[#292929] p-6 [overscroll-behavior:contain] [scrollbar-color:#777_#292929] [touch-action:pan-x_pan-y] max-[700px]:px-2 max-[700px]:py-[.65rem]"
         data-pdf-stage
         ref={stageRef}
         onContextMenu={(event) => event.preventDefault()}

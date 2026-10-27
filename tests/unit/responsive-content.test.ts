@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("responsive content integrity", () => {
-  const css = readFileSync("src/app/styles.css", "utf8");
+  const css = readFileSync("src/app/tailwind.css", "utf8");
   const heroCarousel = readFileSync("src/components/hero-carousel.tsx", "utf8");
   const workspaceShell = readFileSync(
     "src/components/workspace-shell.tsx",
@@ -125,6 +125,22 @@ describe("responsive content integrity", () => {
   );
   const testRunner = readFileSync(
     "src/features/student-tests/ui/test-runner.tsx",
+    "utf8",
+  );
+  const attemptPage = readFileSync(
+    "src/app/(workspace)/attempts/[id]/page.tsx",
+    "utf8",
+  );
+  const materialRepository = readFileSync(
+    "src/features/materials/repository.ts",
+    "utf8",
+  );
+  const courseRepository = readFileSync(
+    "src/features/student-courses/repository.ts",
+    "utf8",
+  );
+  const testRepository = readFileSync(
+    "src/features/student-tests/repository.ts",
     "utf8",
   );
 
@@ -280,7 +296,7 @@ describe("responsive content integrity", () => {
     expect(securePdfViewer).not.toContain("<iframe");
     expect(securePdfViewer).not.toContain("URL.createObjectURL");
     expect(securePdfViewer).toContain("h-[calc(100dvh-9rem)]");
-    expect(securePdfViewer).toContain("max-[700px]:min-h-[32rem]");
+    expect(securePdfViewer).toContain("max-[700px]:min-h-[44rem]");
     expect(securePdfViewer).toContain("data-pdf-stage");
     expect(css).not.toContain(".secure-pdf-reader");
     expect(reader).toContain("Personal study copy · access protected");
@@ -310,8 +326,9 @@ describe("responsive content integrity", () => {
     expect(css).not.toContain(".invoice-page");
   });
 
-  it("loads Tailwind plus the minimal global stylesheet without legacy layers", () => {
-    expect(rootLayout).toContain('import "./styles.css"');
+  it("loads one consolidated Tailwind stylesheet without legacy layers", () => {
+    expect(rootLayout).toContain('import "./tailwind.css"');
+    expect(rootLayout).not.toContain('import "./styles.css"');
     expect(rootLayout).not.toContain("storefront-fixes.css");
     expect(rootLayout).not.toContain("brand-system.css");
     expect(rootLayout).not.toContain("final-review-polish.css");
@@ -320,7 +337,11 @@ describe("responsive content integrity", () => {
     expect(adminStudents).toContain("adminFilterForm");
     expect(adminCoupons).toContain("adminFilterForm");
     expect(adminStyles).toContain("export const adminSideDetail");
-    expect(adminStyles).toContain("max-[800px]:inset-[0_0_0_auto]");
+    expect(adminStyles).toContain("-translate-x-1/2");
+    expect(adminOrders).toContain('role="dialog"');
+    expect(adminOrders).toContain('aria-labelledby="order-detail-title"');
+    expect(adminStudents).toContain('role="dialog"');
+    expect(adminStudents).toContain('aria-labelledby="student-detail-title"');
     expect(css).not.toContain(".admin-side-detail.reference-order-detail");
     expect(adminCatalogForms).toContain(
       "flex justify-end border-t border-prep-line pt-4",
@@ -330,13 +351,13 @@ describe("responsive content integrity", () => {
 
   it("keeps desktop workspace dividers continuous without stretching student navigation", () => {
     expect(workspaceShell).toContain(
-      "min-[900px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]",
+      "min-[1100px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]",
     );
     expect(workspaceShell).toContain("before:top-[63px]");
     expect(workspaceShell).toContain("[&>nav]:content-start");
     expect(workspaceShell).toContain("border-b border-[#e6e2de]");
     expect(workspaceShell).toContain("border-r border-[#e6e2de]");
-    expect(workspaceShell).toContain("min-[900px]:border-l");
+    expect(workspaceShell).toContain("min-[1100px]:border-l");
     expect(css).not.toContain(".student-workspace.workspace");
   });
 
@@ -375,6 +396,8 @@ describe("responsive content integrity", () => {
       "max-[560px]:auto-cols-[minmax(16.5rem,82vw)]",
     );
     expect(homePage).toContain("overflow-x-auto overflow-y-hidden");
+    expect(homePage).toContain("[scrollbar-width:none]");
+    expect(homePage).toContain("[&::-webkit-scrollbar]:hidden");
     expect(homePage).toContain("[scroll-snap-type:inline_mandatory]");
     expect(homePage).toContain("[&>*]:snap-start");
     expect(homePage.match(/data-home-shelf/g)).toHaveLength(3);
@@ -385,6 +408,36 @@ describe("responsive content integrity", () => {
       'variant === "compact" ? "hidden"',
     );
     expect(css).not.toContain(".store-home");
+  });
+
+  it("provides explicit package search without submitting every keystroke", () => {
+    const autoSubmitForm = readFileSync(
+      "src/components/auto-submit-form.tsx",
+      "utf8",
+    );
+    expect(packagesPage).toContain('name="q"');
+    expect(packagesPage).toContain('type="search"');
+    expect(packagesPage).toContain('type="submit"');
+    expect(packagesPage).toContain(".includes(q)");
+    expect(autoSubmitForm).toContain("HTMLSelectElement");
+    expect(autoSubmitForm).toContain('["checkbox", "radio"].includes(control.type)');
+    expect(autoSubmitForm).not.toContain('onInput=');
+  });
+
+  it("requires an active entitlement even for free package content", () => {
+    expect(materialRepository).not.toContain("p.price_paise = 0");
+    expect(courseRepository).not.toContain("or p.price_paise=0");
+    expect(testRepository).not.toContain("or p.price_paise=0");
+    expect(materialRepository).toContain("en.status = 'ACTIVE'");
+    expect(courseRepository).toContain("e.status='ACTIVE'");
+    expect(testRepository).toContain("en.status='ACTIVE'");
+  });
+
+  it("replaces submitted attempt history and redirects closed attempts to results", () => {
+    expect(testRunner).toContain("router.replace(");
+    expect(testRunner).toContain("`/results/${payload.data.resultId}");
+    expect(attemptPage).toContain("getStudentResultForAttempt");
+    expect(attemptPage).toContain("redirect(`/results/${resultId}");
   });
 
   it("uses a compact mobile catalogue disclosure and bounded product covers", () => {

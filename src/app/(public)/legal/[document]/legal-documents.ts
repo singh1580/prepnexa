@@ -1,7 +1,4 @@
 import {
-  BUSINESS_ADDRESS,
-  BUSINESS_GRIEVANCE_OFFICER,
-  BUSINESS_LEGAL_OWNER,
   BUSINESS_SUPPORT_EMAIL,
   BUSINESS_SUPPORT_PHONE,
   BUSINESS_SUPPORT_PHONE_E164,
@@ -9,10 +6,7 @@ import {
 export { LEGAL_EFFECTIVE_DATE } from "@/config/legal";
 
 export const LEGAL_CONTACT_EMAIL = BUSINESS_SUPPORT_EMAIL;
-export const LEGAL_OWNER_NAME = BUSINESS_LEGAL_OWNER;
-export const LEGAL_GRIEVANCE_OFFICER = BUSINESS_GRIEVANCE_OFFICER;
 export const LEGAL_CONTACT_PHONE = BUSINESS_SUPPORT_PHONE;
-export const LEGAL_BUSINESS_ADDRESS = BUSINESS_ADDRESS;
 
 type LegalSection = {
   title: string;
@@ -32,7 +26,7 @@ export const documents = {
     title: "Terms of service",
     intro: "These terms govern your use of Prepstore accounts, digital learning packages, tests, study materials and support services.",
     sections: [
-      { title: "1. Agreement and scope", paragraphs: ["By creating an account, purchasing a package or using the services, you agree to these Terms, the Privacy Policy, Cancellation and Refund Policy and Fair Use Policy. If you do not agree, do not use the services.", `Prepstore is operated by ${LEGAL_OWNER_NAME}, a sole proprietor in India. Prepstore provides digital educational and exam-preparation services. These terms form an electronic contract under applicable Indian law.`] },
+      { title: "1. Agreement and scope", paragraphs: ["By creating an account, purchasing a package or using the services, you agree to these Terms, the Privacy Policy, Cancellation and Refund Policy and Fair Use Policy. If you do not agree, do not use the services.", "Prepstore provides digital educational and exam-preparation services. These terms form an electronic contract under applicable Indian law."] },
       { title: "2. Eligibility and minors", paragraphs: ["You must be legally capable of entering into a binding agreement. A person under 18 may use Prepstore only with the knowledge, supervision and consent of a parent or legal guardian, who is responsible for the minor's use and purchases.", "Where applicable law requires verifiable parental consent, we may restrict or pause a minor's account until that consent is obtained."] },
       { title: "3. Services and package details", paragraphs: ["Packages may include mock tests, practice questions, PDF notes, study material, explanations, solutions, performance reports and learner support. The package page shown before purchase controls the exact content, price, access period and included features."] },
       { title: "4. Independent educational platform", paragraphs: ["Unless expressly stated on a package page, Prepstore is not affiliated with, endorsed by or officially connected to TCS, TCS iON, NQT, any university, examination board, recruiting company or government authority. Their names and marks belong to their respective owners and may be used only for identification and educational reference.", "We do not guarantee selection, employment, rank, score, exam success, or that an official syllabus, pattern, date or eligibility rule will remain unchanged. Verify current information with the relevant official authority."] },
@@ -45,18 +39,18 @@ export const documents = {
       { title: "11. Test integrity and acceptable use", paragraphs: ["Scores, reports and analytics are learning indicators, not official results or certification."], bullets: ["Do not manipulate tests, timers, submissions, scores or platform records", "Do not bypass payment, device, session or security controls", "Do not upload malicious code, probe systems without written authorisation, scrape content or interfere with the service", "Do not impersonate others, harass support personnel or submit fraudulent claims"] },
       { title: "12. Availability and third parties", paragraphs: ["Maintenance, internet failures, payment-provider issues, security events or events beyond our control may interrupt service. For a significant Prepstore-controlled failure, we may provide repair, replacement access, an extension or a refund as appropriate.", "Payments, hosting, storage and email may rely on independent providers. Their terms and privacy notices may apply to services outside Prepstore's control."] },
       { title: "13. Suspension and termination", paragraphs: ["We may restrict or terminate access where we reasonably believe an account is shared, resold, fraudulent, used to copy content, used to bypass security, materially breaches these terms, or must be restricted by law.", "Where appropriate, we will give notice and a reasonable opportunity to explain or appeal. Immediate action may be taken to prevent ongoing fraud, piracy, payment harm or security risk. Refund eligibility remains subject to applicable law and the Refund Policy."] },
-      { title: "14. Support and grievances", paragraphs: [`Grievance Officer: ${LEGAL_GRIEVANCE_OFFICER}. Designation: Grievance Officer. Use account support, email or phone with your registered email, order ID and a clear description. Consumer grievances will be acknowledged within 48 hours and resolved within one month where required by the Consumer Protection (E-Commerce) Rules, 2020.`, "You may also approach the National Consumer Helpline at consumerhelpline.gov.in or 1915. Our support process does not limit a statutory consumer remedy."], links: [emailLink, phoneLink, nchLink] },
+      { title: "14. Support and grievances", paragraphs: ["Use account support, email or phone with your registered email, order ID and a clear description. Consumer grievances will be acknowledged within 48 hours and resolved within one month where required by applicable law.", "You may also approach the National Consumer Helpline at consumerhelpline.gov.in or 1915. Our support process does not limit a statutory consumer remedy."], links: [emailLink, phoneLink, nchLink] },
       { title: "15. Disclaimers and liability", paragraphs: ["Services are provided for educational and informational use on an as-available basis. To the extent permitted by law, we do not guarantee exam outcomes, uninterrupted availability or suitability for a particular career objective.", "For a direct contractual claim, aggregate liability will ordinarily not exceed the amount paid for the affected package. Nothing excludes liability for fraud or wilful misconduct, or a warranty, remedy or consumer right that cannot lawfully be excluded or limited."] },
       { title: "16. Changes", paragraphs: ["We may update these terms for service, security or legal changes. Material changes will be communicated through the website, account or registered email where appropriate. Updates do not retrospectively remove accrued statutory rights."] },
       { title: "17. Governing law and disputes", paragraphs: ["These terms are governed by Indian law. Please first use the grievance process so we can try to resolve the issue. Any court, consumer commission or other forum having jurisdiction under applicable law may hear a dispute; no legally available consumer forum is restricted."] },
-      { title: "18. Business and contact details", paragraphs: [`Brand: Prepstore. Legal owner and sole proprietor: ${LEGAL_OWNER_NAME}. Business address: ${LEGAL_BUSINESS_ADDRESS}. Grievance Officer: ${LEGAL_GRIEVANCE_OFFICER}.`, "Support and grievance contact:"], links: [emailLink, phoneLink] },
+      { title: "18. Contact", paragraphs: ["For service, privacy or grievance matters, contact Prepstore through the verified channels below."], links: [emailLink, phoneLink] },
     ],
   },
   privacy: {
     title: "Privacy policy",
     intro: "This policy explains what personal data Prepstore processes, why it is used, when it is shared and how you can exercise your rights.",
     sections: [
-      { title: "1. Scope and role", paragraphs: [`This policy applies when you visit Prepstore, create an account, purchase a package, take a test, use study material or contact support. ${LEGAL_OWNER_NAME}, operating Prepstore as a sole proprietor, acts as the Data Fiduciary for personal data processed through Prepstore; independent providers may act under their own privacy notices.`] },
+      { title: "1. Scope and role", paragraphs: ["This policy applies when you visit Prepstore, create an account, purchase a package, take a test, use study material or contact support. Prepstore acts as the Data Fiduciary for personal data processed through the service; independent providers may act under their own privacy notices."] },
       { title: "2. Personal data we collect", paragraphs: ["Depending on the features you use, we may process the following categories."], bullets: ["Account and profile: name, email, mobile number, password hash, account role and status, class or qualification, board or university, target exam and date of birth when provided", "Orders and payments: order ID, package, amount, discount, applicable tax, payment status, gateway reference, billing mobile number, payment receipt and refund records", "Learning activity: packages, test attempts, submitted answers, scores, progress, time spent, result analytics and material access or downloads", "Technical and security: IP address, browser or device information, login and session records, timestamps, audit, error and security logs", "Communications: support tickets, messages, attachments, complaints, refund requests and notification delivery status"] },
       { title: "3. Payments", paragraphs: ["Razorpay processes payment and verification information under its own terms and privacy policy. Prepstore ordinarily receives transaction references, payment status and limited payer details needed to match and support an order. We do not ordinarily receive or store a full card number, CVV, UPI PIN or banking password."] },
       { title: "4. Why we use data", paragraphs: ["We process data to provide services you request, fulfil purchases, act on valid consent, comply with law, protect transactions and platform security, and for other uses permitted by applicable law."], bullets: ["Create, authenticate and manage accounts and sessions", "Process orders, activate access, issue payment receipts and handle eligible refunds", "Provide tests, answers, materials, scores, progress and learning history", "Detect fraud, account sharing, abuse and prohibited activity", "Respond to support, privacy requests and grievances", "Send essential account, order, support and security communications", "Maintain lawful tax, accounting, audit and dispute records"] },
@@ -71,7 +65,7 @@ export const documents = {
       { title: "13. Automated results", paragraphs: ["Prepstore automatically calculates test scores, progress and learning analytics. These are educational indicators and are not used by Prepstore to make legally binding employment, admission, insurance or credit decisions."] },
       { title: "14. Data breaches", paragraphs: ["If a personal-data breach occurs, we will investigate, contain and remediate it and notify affected users and competent authorities where required by applicable law and its commencement schedule."] },
       { title: "15. Policy changes", paragraphs: ["We may update this policy for service or legal changes. Material changes will be communicated through the website, account or registered email where appropriate. The latest dates remain on this page."] },
-      { title: "16. Privacy and grievance contact", paragraphs: [`Data Fiduciary: ${LEGAL_OWNER_NAME}, sole proprietor operating Prepstore. Business address: ${LEGAL_BUSINESS_ADDRESS}. Grievance Officer: ${LEGAL_GRIEVANCE_OFFICER}.`, "Privacy, support and grievance contact:"], links: [emailLink, phoneLink] },
+      { title: "16. Privacy and grievance contact", paragraphs: ["Send privacy, support and grievance requests through the verified channels below."], links: [emailLink, phoneLink] },
     ],
   },
   "cancellation-refund": {
@@ -92,7 +86,7 @@ export const documents = {
       { title: "12. Alternative remedies", paragraphs: ["With your agreement, we may offer repair, correct or replacement access, a validity extension or account credit. An alternative will not be imposed where applicable law requires a monetary refund."] },
       { title: "13. No automatic renewal", paragraphs: ["Packages do not automatically renew unless recurring billing is expressly shown at checkout and separately authorised by you."] },
       { title: "14. Chargebacks", paragraphs: ["Contacting support first may resolve an issue faster, but does not restrict your lawful right to contact your bank or payment provider. A knowingly false or fraudulent chargeback may lead to account restriction or recovery action as permitted by law."] },
-      { title: "15. Contact and grievance escalation", paragraphs: [`Business address: ${LEGAL_BUSINESS_ADDRESS}. Grievance Officer: ${LEGAL_GRIEVANCE_OFFICER}. Refund support and formal consumer grievances:`], links: [emailLink, phoneLink, nchLink] },
+      { title: "15. Contact and grievance escalation", paragraphs: ["For refund support or a formal consumer grievance, use the verified channels below."], links: [emailLink, phoneLink, nchLink] },
     ],
   },
   "fair-use": {
