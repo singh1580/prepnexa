@@ -25,6 +25,18 @@ for (const entry of publicPages) {
     });
     await page.goto(entry.path);
     await expect(page.getByRole("heading", { level: 1, name: entry.heading })).toBeVisible();
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              [...document.images].filter(
+                (image) => image.complete && image.naturalWidth === 0,
+              ).length,
+          ),
+        { timeout: 10_000 },
+      )
+      .toBe(0);
     const dimensions = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,

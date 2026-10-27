@@ -27,6 +27,7 @@ export function ProductCoverImage({
       sizes={sizes}
       className={className}
       onError={() => setFailed(true)}
+      unoptimized
     />
   );
 }
