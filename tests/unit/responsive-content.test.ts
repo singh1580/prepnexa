@@ -182,6 +182,10 @@ describe("responsive content integrity", () => {
   it("limits horizontal catalogue cards to the catalogue grid", () => {
     expect(packagesPage).toContain("max-[1050px]:grid-cols-2");
     expect(packagesPage).toContain("max-[560px]:grid-cols-1");
+    expect(packagesPage).toContain("max-[1100px]:grid-cols-1");
+    expect(catalogFilterDisclosure).toContain("max-[1100px]:flex");
+    expect(catalogFilterDisclosure).toContain("max-[1100px]:hidden");
+    expect(catalogFilterDisclosure).toContain("max-[1100px]:grid-cols-2");
     expect(css).not.toContain(".reference-catalog-grid");
     expect(css).not.toContain(".store-product-catalog");
   });
@@ -362,6 +366,10 @@ describe("responsive content integrity", () => {
     expect(rootLayout).not.toContain("final-review-polish.css");
     expect(css).not.toContain(".admin-list-controls");
     expect(adminOrders).toContain("adminFilterForm");
+    expect(adminOrders).toContain("adminPagination");
+    expect(adminOrders).toContain("const pageSize = 12");
+    expect(adminOrders).toContain('aria-label="Order pages"');
+    expect(adminOrders).toContain("filtered.slice(");
     expect(adminStudents).toContain("adminFilterForm");
     expect(adminCoupons).toContain("adminFilterForm");
     expect(adminStyles).toContain("export const adminSideDetail");
@@ -477,6 +485,7 @@ describe("responsive content integrity", () => {
     expect(catalogFilterDisclosure).toContain('type="button"');
     expect(catalogFilterDisclosure).toContain("max-[560px]:col-start-2");
     expect(catalogFilterDisclosure).toContain("max-[560px]:grid-cols-1");
+    expect(catalogFilterDisclosure).toContain("max-[1100px]:static");
     expect(storefrontProductCard).toContain("max-[560px]:h-[10.75rem]");
     expect(packagesPage).toContain("max-[560px]:col-span-full");
     expect(css).not.toContain(".catalog-filter-trigger");

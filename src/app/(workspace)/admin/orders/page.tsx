@@ -17,6 +17,7 @@ import {
   adminEmptyState,
   adminFilterForm,
   adminMiniRecord,
+  adminPagination,
   adminPrimaryButton,
   adminResponsiveTable,
   adminSecondaryButton,
@@ -65,6 +66,7 @@ export default async function Page({
     status?: string;
     from?: string;
     to?: string;
+    page?: string;
   }>;
 }) {
   const auth = await requireWorkspace(true);
@@ -74,7 +76,7 @@ export default async function Page({
   const status = query.status ?? "all";
   const from = query.from ? new Date(`${query.from}T00:00:00`) : null;
   const to = query.to ? new Date(`${query.to}T23:59:59.999`) : null;
-  const rows = orders.filter(
+  const filtered = orders.filter(
     (order) =>
       (!q ||
         `${order.studentName} ${order.email} ${order.products} ${order.id}`
@@ -84,6 +86,10 @@ export default async function Page({
       (!from || new Date(order.createdAt) >= from) &&
       (!to || new Date(order.createdAt) <= to),
   );
+  const pageSize = 12;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const page = Math.min(Math.max(1, Number(query.page) || 1), totalPages);
+  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
   const selected = query.order
     ? ((await getManagedOrder(query.order).catch(() => null)) as Detail | null)
     : null;
@@ -92,6 +98,14 @@ export default async function Page({
   if (status !== "all") keep.set("status", status);
   if (query.from) keep.set("from", query.from);
   if (query.to) keep.set("to", query.to);
+  if (page > 1) keep.set("page", String(page));
+  const pageHref = (pageValue: number) => {
+    const params = new URLSearchParams(keep);
+    if (pageValue > 1) params.set("page", String(pageValue));
+    else params.delete("page");
+    const suffix = params.toString();
+    return `/admin/orders${suffix ? `?${suffix}` : ""}`;
+  };
   return (
     <WorkspaceShell
       admin
@@ -230,6 +244,45 @@ export default async function Page({
             <span>Try another search or filter.</span>
           </div>
         )}
+        <footer className={adminPagination}>
+          <span>
+            Showing {filtered.length ? (page - 1) * pageSize + 1 : 0}–
+            {Math.min(page * pageSize, filtered.length)} of {filtered.length}{" "}
+            orders
+          </span>
+          {totalPages > 1 ? (
+            <nav aria-label="Order pages">
+              <Link
+                aria-disabled={page === 1}
+                href={pageHref(Math.max(1, page - 1))}
+              >
+                ‹
+              </Link>
+              {Array.from({ length: totalPages }, (_, index) => index + 1)
+                .filter(
+                  (value) =>
+                    value === 1 ||
+                    value === totalPages ||
+                    Math.abs(value - page) <= 1,
+                )
+                .map((value) => (
+                  <Link
+                    aria-current={value === page ? "page" : undefined}
+                    href={pageHref(value)}
+                    key={value}
+                  >
+                    {value}
+                  </Link>
+                ))}
+              <Link
+                aria-disabled={page === totalPages}
+                href={pageHref(Math.min(totalPages, page + 1))}
+              >
+                ›
+              </Link>
+            </nav>
+          ) : null}
+        </footer>
       </section>
       {selected && (
         <>

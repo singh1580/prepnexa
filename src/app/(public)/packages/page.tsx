@@ -148,7 +148,7 @@ export default async function Page({
             </label>
           </div>
         </header>
-        <div className="grid grid-cols-[13rem_minmax(0,1fr)] items-start gap-4 max-[800px]:grid-cols-1 max-[560px]:contents">
+        <div className="grid grid-cols-[13rem_minmax(0,1fr)] items-start gap-4 max-[1100px]:grid-cols-1 max-[560px]:contents">
           <CatalogFilterDisclosure
             activeCount={activeFilterCount}
             defaultOpen={filterActive}
@@ -243,7 +243,7 @@ export default async function Page({
             </FilterSection>
             {filterActive ? (
               <Link
-                className="block p-[0.9rem] text-[0.66rem] text-[#c33a0b] underline max-[800px]:col-span-full"
+                className="block p-[0.9rem] text-[0.66rem] text-[#c33a0b] underline max-[1100px]:col-span-full"
                 href={
                   q
                     ? `/packages?q=${encodeURIComponent(query.q ?? "")}`
@@ -299,7 +299,7 @@ function FilterSection({
   children: React.ReactNode;
 }) {
   return (
-    <fieldset className="m-0 grid gap-[0.48rem] border-0 border-b border-[#e8e5e1] p-[0.9rem] max-[800px]:odd:border-l max-[560px]:border-l-0 [&_label]:flex [&_label]:items-center [&_label]:gap-2 [&_label]:text-[0.74rem] [&_label]:leading-[1.3] [&_label]:text-[#565c61] [&_input]:m-0 [&_input]:h-[0.8rem] [&_input]:w-[0.8rem] [&_input]:accent-[#cf400d]">
+    <fieldset className="m-0 grid gap-[0.48rem] border-0 border-b border-[#e8e5e1] p-[0.9rem] max-[1100px]:odd:border-l max-[560px]:border-l-0 [&_label]:flex [&_label]:items-center [&_label]:gap-2 [&_label]:text-[0.74rem] [&_label]:leading-[1.3] [&_label]:text-[#565c61] [&_input]:m-0 [&_input]:h-[0.8rem] [&_input]:w-[0.8rem] [&_input]:accent-[#cf400d]">
       <legend className="mb-2 flex w-full justify-between text-[0.78rem] font-[760] text-[#1f2225]">
         {title}
       </legend>
