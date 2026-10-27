@@ -202,7 +202,7 @@ describe("responsive content integrity", () => {
     expect(heroCarousel).toContain(
       'sizes="(max-width: 899px) 100vw, calc(100vw - 240px)"',
     );
-    expect(homePage).toContain("min-[561px]:max-[899px]:grid-cols-2");
+    expect(homePage).not.toContain("[&>*:last-child]:hidden");
     expect(css).not.toContain(
       "@media(max-width:950px){.course-outline{position:static}.auth-shell",
     );
@@ -363,17 +363,26 @@ describe("responsive content integrity", () => {
     expect(css).not.toContain(".attempt-runner");
   });
 
-  it("uses swipeable two-card home shelves on phones", () => {
-    expect(homePage).toContain("max-[560px]:grid-flow-col");
+  it("keeps every home shelf in one scrollable row without squeezing cards", () => {
+    expect(homePage).toContain("grid grid-flow-col items-stretch");
     expect(homePage).toContain(
-      "max-[560px]:auto-cols-[minmax(0,calc((100%-0.65rem)/2))]",
+      "auto-cols-[minmax(17.5rem,calc((100%_-_2rem)/3))]",
     );
     expect(homePage).toContain(
-      "max-[560px]:[scroll-snap-type:inline_mandatory]",
+      "auto-cols-[minmax(16.5rem,calc((100%_-_2.4rem)/4))]",
     );
-    expect(homePage).toContain("max-[560px]:[&>*]:snap-start");
-    expect(storefrontProductCard).toContain(
-      'variant === "compact" ? "max-[560px]:block"',
+    expect(homePage).toContain(
+      "max-[560px]:auto-cols-[minmax(16.5rem,82vw)]",
+    );
+    expect(homePage).toContain("overflow-x-auto overflow-y-hidden");
+    expect(homePage).toContain("[scroll-snap-type:inline_mandatory]");
+    expect(homePage).toContain("[&>*]:snap-start");
+    expect(homePage.match(/data-home-shelf/g)).toHaveLength(3);
+    expect(homePage.match(/tabIndex=\{0\}/g)).toHaveLength(3);
+    expect(storefrontProductCard).toContain("<ProductCoverImage");
+    expect(storefrontProductCard).not.toContain("onError");
+    expect(storefrontProductCard).not.toContain(
+      'variant === "compact" ? "hidden"',
     );
     expect(css).not.toContain(".store-home");
   });
