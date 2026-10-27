@@ -36,8 +36,12 @@ export default async function Home() {
     .slice(0, 4);
   const shelfClass =
     "mx-auto max-w-[1440px] px-[clamp(1.25rem,4.5vw,4.5rem)] pt-[1.4rem] pb-2 max-[560px]:px-4 max-[560px]:pt-[1.05rem] max-[560px]:pb-[0.2rem] [&>header]:mb-[0.85rem] [&>header]:flex [&>header]:items-center [&>header]:justify-between [&>header]:gap-4 [&>header_h2]:m-0 [&>header_h2]:text-[1.45rem] [&>header_h2]:tracking-[-0.025em] [&>header_a]:text-[0.73rem] [&>header_a]:font-[680] [&>header_a]:text-[#0759a3] max-[560px]:[&>header]:gap-3 max-[560px]:[&>header_h2]:text-xl max-[560px]:[&>header_h2]:whitespace-nowrap max-[560px]:[&>header_a]:shrink-0 max-[560px]:[&>header_a]:text-[0.64rem]";
-  const mobileRail =
-    "max-[560px]:grid-cols-none max-[560px]:auto-cols-[minmax(0,calc((100%-0.65rem)/2))] max-[560px]:grid-flow-col max-[560px]:items-stretch max-[560px]:gap-[0.65rem] max-[560px]:overflow-x-auto max-[560px]:overflow-y-hidden max-[560px]:px-0 max-[560px]:pt-[0.1rem] max-[560px]:pb-[0.55rem] max-[560px]:[scroll-padding-inline:0.1rem] max-[560px]:[scroll-snap-type:inline_mandatory] max-[560px]:[overscroll-behavior-inline:contain] max-[560px]:[scrollbar-width:none] max-[560px]:[-webkit-overflow-scrolling:touch] max-[560px]:[&::-webkit-scrollbar]:hidden max-[560px]:[&>*]:flex max-[560px]:[&>*]:h-full max-[560px]:[&>*]:w-full max-[560px]:[&>*]:snap-start max-[560px]:[&>*]:flex-col";
+  const shelfRail =
+    "grid grid-flow-col items-stretch gap-4 overflow-x-auto overflow-y-hidden px-[0.1rem] pt-[0.1rem] pb-[0.65rem] [scroll-padding-inline:0.1rem] [scroll-snap-type:inline_mandatory] [overscroll-behavior-inline:contain] [scrollbar-width:thin] [-webkit-overflow-scrolling:touch] [&>*]:flex [&>*]:h-full [&>*]:w-full [&>*]:snap-start [&>*]:flex-col";
+  const featuredRail =
+    "auto-cols-[minmax(17.5rem,calc((100%_-_2rem)/3))] max-[560px]:auto-cols-[minmax(16.5rem,82vw)]";
+  const fourCardRail =
+    "auto-cols-[minmax(16.5rem,calc((100%_-_2.4rem)/4))] max-[560px]:auto-cols-[minmax(16.5rem,82vw)]";
   return (
     <main className="store-home bg-white text-prep-ink">
       <section className="relative isolate min-h-[25.5rem] overflow-hidden border-b border-[#eee8e2] bg-[#fbf7f1] max-[560px]:min-h-[18.5rem]">
@@ -88,7 +92,11 @@ export default async function Home() {
         </header>
         {featured.length ? (
           <div
-            className={`grid grid-cols-3 gap-4 min-[561px]:max-[899px]:grid-cols-2 min-[561px]:max-[899px]:[&>*:last-child]:hidden ${mobileRail}`}
+            aria-label="Featured packages carousel"
+            className={`${shelfRail} ${featuredRail}`}
+            data-home-shelf
+            role="region"
+            tabIndex={0}
           >
             {featured.map((product, index) => (
               <StorefrontProductCard
@@ -115,7 +123,11 @@ export default async function Home() {
             </Link>
           </header>
           <div
-            className={`grid grid-cols-4 gap-[0.8rem] max-[899px]:grid-cols-2 ${mobileRail}`}
+            aria-label="Best sellers carousel"
+            className={`${shelfRail} ${fourCardRail}`}
+            data-home-shelf
+            role="region"
+            tabIndex={0}
           >
             {best.map((product, index) => (
               <StorefrontProductCard
@@ -137,7 +149,11 @@ export default async function Home() {
             </Link>
           </header>
           <div
-            className={`grid grid-cols-4 gap-[0.8rem] max-[899px]:grid-cols-2 ${mobileRail}`}
+            aria-label="New arrivals carousel"
+            className={`${shelfRail} ${fourCardRail}`}
+            data-home-shelf
+            role="region"
+            tabIndex={0}
           >
             {arrivals.map((product, index) => (
               <StorefrontProductCard

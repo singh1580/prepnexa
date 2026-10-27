@@ -5,6 +5,7 @@ import {
   formatCount,
   normaliseProductName,
 } from "@/features/catalog/presentation";
+import { ProductCoverImage } from "./product-cover-image";
 import { UiIcon } from "./ui-icon";
 
 export type StorefrontProduct = {
@@ -86,6 +87,7 @@ export function StorefrontProductCard({
     "bg-[#ede3f3] bg-[linear-gradient(135deg,#fdfaff_0%,#ddcbea_52%,#8e69a6_100%)]",
     "bg-[#dcecef] bg-[linear-gradient(135deg,#f8feff_0%,#c3e0e5_52%,#4f9099_100%)]",
   ][index % 6];
+  const artworkClass = `${toneClass} before:absolute before:right-[-2.4rem] before:bottom-[-3.5rem] before:h-40 before:w-40 before:rounded-full before:border-[1.35rem] before:border-white/35 before:shadow-[0_0_0_1.4rem_rgba(255,255,255,0.12)] after:absolute after:inset-0 after:bg-[linear-gradient(90deg,#ffffff12,transparent_65%)]`;
   const coverClass = `relative block overflow-hidden bg-cover bg-center bg-no-repeat text-[#14202a] ${
     variant === "compact"
       ? "h-[6.45rem] p-3"
@@ -95,28 +97,54 @@ export function StorefrontProductCard({
   } ${homeCard ? "max-[560px]:h-auto max-[560px]:aspect-[3/2]" : ""} ${
     product.coverObjectKey
       ? "bg-[#f8f4ef] bg-none after:hidden"
-      : `${toneClass} before:absolute before:right-[-2.4rem] before:bottom-[-3.5rem] before:h-40 before:w-40 before:rounded-full before:border-[1.35rem] before:border-white/35 before:shadow-[0_0_0_1.4rem_rgba(255,255,255,0.12)] after:absolute after:inset-0 after:bg-[linear-gradient(90deg,#ffffff12,transparent_65%)]`
+      : artworkClass
   }`;
   const bodyClass = homeCard
     ? `${variant === "compact" ? "p-[0.55rem]" : "p-[0.72rem]"} max-[560px]:grid max-[560px]:flex-1 max-[560px]:content-start max-[560px]:grid-rows-[auto_auto_auto] max-[560px]:p-2`
     : "p-[0.7rem] max-[560px]:p-[0.85rem]";
   const titleClass = homeCard
-    ? `${variant === "compact" ? "hidden" : "block"} my-[0.68rem] mb-[0.35rem] text-[1rem] leading-[1.3] font-[760] text-[#16181a] max-[560px]:mb-[0.2rem] max-[560px]:line-clamp-2 max-[560px]:min-h-0 max-[560px]:text-[0.68rem] max-[560px]:leading-[1.24] ${variant === "compact" ? "max-[560px]:block" : ""}`
+    ? `${variant === "compact" ? "text-[0.84rem]" : "text-[1rem]"} my-[0.68rem] mb-[0.35rem] block line-clamp-2 leading-[1.3] font-[760] text-[#16181a] max-[560px]:mb-[0.25rem] max-[560px]:min-h-0 max-[560px]:text-[0.9rem] max-[560px]:leading-[1.3]`
     : "my-[0.68rem] mb-[0.35rem] block text-[0.82rem] leading-[1.3] font-[760] text-[#16181a] max-[560px]:mb-[0.28rem] max-[560px]:text-base";
+  const coverCopy = (
+    <span
+      className={`relative z-[2] grid w-[70%] gap-[0.22rem] text-[0.84rem] ${badge ? "mt-[1.3rem]" : ""}`}
+    >
+      <b
+        className={`${variant === "compact" ? "text-base" : "text-[1.35rem]"} leading-[1.05] tracking-[-0.035em] max-[560px]:text-base`}
+      >
+        {productName.replace(/\bpackage\b/gi, "").trim()}
+      </b>
+      <small className={variant === "compact" ? "text-[0.62rem]" : "text-[0.7rem]"}>
+        Complete Package
+      </small>
+    </span>
+  );
   return (
     <article className={cardClass} data-store-product>
       <Link
         className={coverClass}
         href={`/packages/${product.slug}`}
-        style={
-          product.coverObjectKey
-            ? {
-                backgroundImage: `url(/api/catalog/products/${product.id}/cover)`,
-              }
-            : undefined
-        }
       >
         <span className="sr-only">View {productName} package details</span>
+        {product.coverObjectKey ? (
+          <ProductCoverImage
+            productId={product.id}
+            alt={`${productName} cover`}
+            sizes={
+              homeCard
+                ? "(max-width: 560px) 82vw, (max-width: 1100px) 17.5rem, 25vw"
+                : "(max-width: 560px) 100vw, 33vw"
+            }
+            fallback={(
+              <span
+                aria-hidden="true"
+                className={`absolute inset-0 p-3 text-[#14202a] ${artworkClass}`}
+              >
+                {coverCopy}
+              </span>
+            )}
+          />
+        ) : null}
         {badge ? (
           <span
             className={
@@ -128,32 +156,7 @@ export function StorefrontProductCard({
             {badge}
           </span>
         ) : null}
-        <span
-          className={
-            homeCard
-              ? `${product.coverObjectKey ? "hidden" : "relative z-[2] grid w-[70%] gap-[0.22rem] text-[0.84rem]"} ${badge ? "mt-[1.3rem]" : ""}`
-              : `${product.coverObjectKey ? "hidden" : "relative z-[2] grid w-[70%] gap-[0.22rem] text-[0.84rem]"} ${badge ? "mt-[1.3rem]" : ""} max-[560px]:w-[min(72%,14rem)]`
-          }
-        >
-          <b
-            className={
-              homeCard
-                ? `${variant === "compact" ? "text-base" : "text-[1.35rem]"} leading-[1.05] tracking-[-0.035em] max-[560px]:text-base`
-                : "text-[1.35rem] leading-[1.05] tracking-[-0.035em] max-[560px]:text-xl"
-            }
-          >
-            {productName.replace(/\bpackage\b/gi, "").trim()}
-          </b>
-          <small
-            className={
-              homeCard
-                ? `${variant === "compact" ? "text-[0.62rem]" : "text-[0.7rem]"}`
-                : "text-[0.7rem]"
-            }
-          >
-            Complete Package
-          </small>
-        </span>
+        {product.coverObjectKey ? null : coverCopy}
       </Link>
       <div className={bodyClass}>
         {variant === "catalog" ? (
@@ -175,7 +178,7 @@ export function StorefrontProductCard({
           <div
             className={
               homeCard
-                ? "mt-[0.45rem] grid grid-cols-2 gap-[0.45rem] text-[0.72rem] text-[#4f555a] max-[560px]:my-[0.12rem] max-[560px]:mb-[0.2rem] max-[560px]:gap-[0.16rem] max-[560px]:text-[0.5rem] [&_span]:flex [&_span]:min-w-0 [&_span]:items-center [&_span]:gap-[0.38rem] [&_svg]:w-[0.85rem] [&_svg]:shrink-0 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.7]"
+                ? "mt-[0.45rem] grid grid-cols-2 gap-[0.45rem] text-[0.72rem] text-[#4f555a] max-[560px]:my-[0.2rem] max-[560px]:gap-[0.35rem] max-[560px]:text-[0.68rem] [&_span]:flex [&_span]:min-w-0 [&_span]:items-center [&_span]:gap-[0.38rem] [&_svg]:w-[0.85rem] [&_svg]:shrink-0 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.7]"
                 : "my-[0.55rem] grid grid-cols-2 gap-[0.45rem] text-[0.6rem] text-[#4f555a] max-[560px]:gap-[0.55rem] max-[560px]:text-[0.68rem] [&_span]:flex [&_span]:min-w-0 [&_span]:items-center [&_span]:gap-[0.38rem] [&_svg]:w-[0.85rem] [&_svg]:shrink-0 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.7]"
             }
           >
@@ -243,7 +246,7 @@ export function StorefrontProductCard({
             <Link
               className={
                 homeCard
-                  ? "grid min-h-[2.45rem] place-items-center rounded-[0.35rem] border border-[#d44a19] p-[0.55rem] text-center text-[0.78rem] font-[720] text-[#c33b0c] max-[560px]:min-h-8 max-[560px]:min-w-0 max-[560px]:px-[0.15rem] max-[560px]:py-[0.32rem] max-[560px]:text-[0.55rem] max-[560px]:leading-[1.15]"
+                  ? "grid min-h-[2.45rem] place-items-center rounded-[0.35rem] border border-[#d44a19] p-[0.55rem] text-center text-[0.78rem] font-[720] text-[#c33b0c] max-[560px]:min-w-0 max-[560px]:px-[0.45rem] max-[560px]:text-[0.7rem]"
                   : "grid min-h-9 place-items-center rounded-[0.35rem] border border-[#d44a19] p-[0.55rem] text-center text-[0.66rem] font-[720] text-[#c33b0c] max-[560px]:inline-flex max-[560px]:min-h-[2.65rem] max-[560px]:justify-center max-[560px]:p-[0.6rem] max-[560px]:text-[0.72rem] max-[560px]:leading-[1.2] max-[560px]:whitespace-nowrap"
               }
               href={`/packages/${product.slug}`}
@@ -254,7 +257,7 @@ export function StorefrontProductCard({
               <Link
                 className={
                   homeCard
-                    ? "grid min-h-[2.45rem] place-items-center rounded-[0.35rem] border border-[#c73c0b] bg-[#c73c0b] p-[0.55rem] text-center text-[0.78rem] font-[720] text-white max-[560px]:min-h-8 max-[560px]:min-w-0 max-[560px]:px-[0.15rem] max-[560px]:py-[0.32rem] max-[560px]:text-[0.55rem] max-[560px]:leading-[1.15]"
+                    ? "grid min-h-[2.45rem] place-items-center rounded-[0.35rem] border border-[#c73c0b] bg-[#c73c0b] p-[0.55rem] text-center text-[0.78rem] font-[720] text-white max-[560px]:min-w-0 max-[560px]:px-[0.45rem] max-[560px]:text-[0.7rem]"
                     : "grid min-h-9 place-items-center rounded-[0.35rem] border border-[#f2bca8] bg-[#fff7f2] p-[0.55rem] text-center text-[0.66rem] font-[720] text-[#d74312] max-[560px]:inline-flex max-[560px]:min-h-[2.65rem] max-[560px]:justify-center max-[560px]:p-[0.6rem] max-[560px]:text-[0.72rem] max-[560px]:leading-[1.2] max-[560px]:whitespace-nowrap"
                 }
                 href={`/dashboard/courses/${product.slug}`}
@@ -266,7 +269,7 @@ export function StorefrontProductCard({
                 productId={product.id}
                 className={
                   homeCard
-                    ? "grid min-h-[2.45rem] place-items-center rounded-[0.35rem] border border-[#c73c0b] bg-[#c73c0b] p-[0.55rem] text-center text-[0.78rem] font-[720] text-white hover:bg-[#a82f06] max-[560px]:min-h-8 max-[560px]:min-w-0 max-[560px]:px-[0.15rem] max-[560px]:py-[0.32rem] max-[560px]:text-[0.55rem] max-[560px]:leading-[1.15]"
+                    ? "grid min-h-[2.45rem] place-items-center rounded-[0.35rem] border border-[#c73c0b] bg-[#c73c0b] p-[0.55rem] text-center text-[0.78rem] font-[720] text-white hover:bg-[#a82f06] max-[560px]:min-w-0 max-[560px]:px-[0.45rem] max-[560px]:text-[0.7rem]"
                     : "grid min-h-9 place-items-center rounded-[0.35rem] border border-[#c73c0b] bg-[#c73c0b] p-[0.55rem] text-center text-[0.66rem] font-[720] text-white hover:bg-[#a82f06] max-[560px]:inline-flex max-[560px]:min-h-[2.65rem] max-[560px]:justify-center max-[560px]:p-[0.6rem] max-[560px]:text-[0.72rem] max-[560px]:leading-[1.2] max-[560px]:whitespace-nowrap"
                 }
               />

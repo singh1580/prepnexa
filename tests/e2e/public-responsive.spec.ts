@@ -19,6 +19,10 @@ const publicPages = [
 
 for (const entry of publicPages) {
   test(`${entry.path} has no horizontal page overflow or serious accessibility violations`, async ({ page }) => {
+    const serverErrors: string[] = [];
+    page.on("response", (response) => {
+      if (response.status() >= 500) serverErrors.push(`${response.status()} ${response.url()}`);
+    });
     await page.goto(entry.path);
     await expect(page.getByRole("heading", { level: 1, name: entry.heading })).toBeVisible();
     const dimensions = await page.evaluate(() => ({
@@ -28,10 +32,46 @@ for (const entry of publicPages) {
     }));
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
     expect(dimensions.brokenImages).toBe(0);
+    expect(serverErrors).toEqual([]);
     const report = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(report.violations.filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))).toEqual([]);
   });
 }
+
+test("home package shelves stay in one horizontal row without squeezed cards", async ({ page }) => {
+  const serverErrors: string[] = [];
+  page.on("response", (response) => {
+    if (response.status() >= 500) serverErrors.push(`${response.status()} ${response.url()}`);
+  });
+  await page.goto("/");
+  const shelves = page.locator("[data-home-shelf]");
+  await expect(shelves).toHaveCount(3);
+  const results = await shelves.evaluateAll((elements) =>
+    elements.map((element) => {
+      const cards = [...element.children] as HTMLElement[];
+      const tops = cards.map((card) => Math.round(card.getBoundingClientRect().top));
+      return {
+        cardCount: cards.length,
+        cardWidths: cards.map((card) => card.getBoundingClientRect().width),
+        clientWidth: element.clientWidth,
+        gridAutoFlow: getComputedStyle(element).gridAutoFlow,
+        overflowX: getComputedStyle(element).overflowX,
+        scrollWidth: element.scrollWidth,
+        tops,
+      };
+    }),
+  );
+  for (const result of results) {
+    expect(result.gridAutoFlow).toBe("column");
+    expect(result.overflowX).toBe("auto");
+    expect(new Set(result.tops).size).toBeLessThanOrEqual(1);
+    expect(result.cardWidths.every((width) => width >= 263)).toBe(true);
+    if (result.clientWidth <= 560 && result.cardCount > 1) {
+      expect(result.scrollWidth).toBeGreaterThan(result.clientWidth);
+    }
+  }
+  expect(serverErrors).toEqual([]);
+});
 
 test("keyboard users can skip repeated navigation", async ({ page }) => {
   await page.goto("/contact");
