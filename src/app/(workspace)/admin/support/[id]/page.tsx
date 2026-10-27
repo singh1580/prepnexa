@@ -101,7 +101,7 @@ export default async function Page({
                 ) : item.internal ? (
                   "N"
                 ) : (
-                  <PrepstoreIcon />
+                  <PrepstoreIcon className="block size-5 object-contain" />
                 )}
               </i>
               <div className="min-w-0">

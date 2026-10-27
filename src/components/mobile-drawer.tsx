@@ -15,12 +15,12 @@ const FOCUSABLE =
 function MenuIcon() {
   return (
     <span
-      className="absolute top-2.5 left-0 h-6 w-[25px] [perspective:140px] [transform-style:preserve-3d]"
+      className="absolute top-2.5 left-0 grid h-6 w-[25px] content-center gap-[5px]"
       aria-hidden="true"
     >
-      <i className="absolute top-0 left-0 block h-[5px] w-[25px] origin-center rounded-full bg-[#17191c] shadow-[0_2px_0_rgb(0_0_0_/_50%),0_5px_8px_rgb(23_25_28_/_14%)] transition-[left,width,transform] duration-[180ms] motion-safe:animate-[prepstore-menu-top-depth_2s_ease-in-out_infinite] group-open:left-0.5 group-open:w-[21px] group-open:animate-none group-open:[transform:translateZ(5px)] after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-[linear-gradient(180deg,rgb(255_255_255_/_22%),transparent_48%)]" />
-      <i className="absolute top-[9px] left-[3px] block h-[5px] w-[19px] origin-center rounded-full bg-[#e94b17] shadow-[0_2px_0_rgb(111_28_4_/_44%),0_5px_8px_rgb(233_75_23_/_18%)] transition-[left,width,transform] duration-[180ms] motion-safe:animate-[prepstore-menu-middle-depth_2s_ease-in-out_infinite] group-open:left-0 group-open:w-[25px] group-open:animate-none group-open:[transform:translateZ(11px)] after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-[linear-gradient(180deg,rgb(255_255_255_/_22%),transparent_48%)]" />
-      <i className="absolute top-[18px] left-px block h-[5px] w-[23px] origin-center rounded-full bg-[#17191c] shadow-[0_2px_0_rgb(0_0_0_/_50%),0_5px_8px_rgb(23_25_28_/_14%)] transition-[left,width,transform] duration-[180ms] motion-safe:animate-[prepstore-menu-bottom-depth_2s_ease-in-out_infinite] group-open:left-[3px] group-open:w-[19px] group-open:animate-none group-open:[transform:translateZ(5px)] after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-[linear-gradient(180deg,rgb(255_255_255_/_22%),transparent_48%)]" />
+      <i className="block h-0.5 w-full rounded-full bg-[#17191c]" />
+      <i className="block h-0.5 w-full rounded-full bg-prep-orange" />
+      <i className="block h-0.5 w-full rounded-full bg-[#17191c]" />
     </span>
   );
 }
@@ -95,7 +95,7 @@ export function MobileDrawer({
 
   return (
     <details
-      className={`group relative hidden h-11 w-[25px] shrink-0 max-[899px]:block ${className}`}
+      className={`group relative hidden h-11 w-[25px] shrink-0 max-[1099px]:block ${className}`}
       ref={detailsRef}
       onKeyDown={handleKeyDown}
       onToggle={(event) => setOpen(event.currentTarget.open)}
@@ -109,7 +109,7 @@ export function MobileDrawer({
       <button
         className={
           variant === "workspace"
-            ? "fixed inset-0 z-[208] hidden size-full cursor-pointer border-0 bg-[rgb(21_23_25_/_38%)] p-0 group-open:max-[899px]:block"
+            ? "fixed inset-0 z-[208] hidden size-full cursor-pointer border-0 bg-[rgb(21_23_25_/_38%)] p-0 group-open:max-[1099px]:block"
             : "hidden"
         }
         type="button"

@@ -122,7 +122,7 @@ export async function findStudentTestAccess(
       left join entitlements en on en.product_id=p.id and en.user_id=${userId}::uuid
         and en.status='ACTIVE' and en.starts_at<=now() and en.expires_at>now()
       where pt.test_id=t.id and (${productSlug ?? null}::text is null or p.slug=${productSlug ?? null})
-        and ((p.is_live=true and p.price_paise=0) or en.id is not null)
+        and en.id is not null
       order by case when p.slug=${productSlug ?? null} then 0 else 1 end,p.name limit 1
     ) selected on true
     where t.id = ${testId} limit 1

@@ -3,9 +3,6 @@ import { getCurrentAuth } from "@/features/auth/authorization";
 import { ADMIN_ROLE_KEYS } from "@/features/auth/constants";
 import {
   BUSINESS_ADDRESS,
-  BUSINESS_ENTITY_TYPE,
-  BUSINESS_GRIEVANCE_OFFICER,
-  BUSINESS_LEGAL_OWNER,
   BUSINESS_SUPPORT_EMAIL,
   BUSINESS_SUPPORT_PHONE,
   BUSINESS_SUPPORT_PHONE_E164,
@@ -86,7 +83,7 @@ export default async function Page() {
     : "/login?next=%2Fdashboard%2Fsupport";
 
   return (
-    <main className="mx-auto w-[min(76rem,calc(100%-3rem))] py-8 pb-20 text-[#202327] max-[560px]:w-[min(calc(100%-2rem),76rem)] max-[560px]:pt-4">
+    <main className="mx-auto w-[min(76rem,calc(100%-3rem))] pt-8 pb-10 text-[#202327] max-[560px]:w-[min(calc(100%-2rem),76rem)] max-[560px]:pt-4 max-[560px]:pb-8">
       <nav
         className="my-[0.2rem] mb-4 flex items-center gap-[0.55rem] text-[0.78rem] text-[#667078] [&_b]:text-[#202326]"
         aria-label="Breadcrumb"
@@ -310,32 +307,6 @@ export default async function Page() {
         </ul>
       </section>
 
-      <section className="mt-4 grid grid-cols-[1fr_1fr_.8fr] gap-8 rounded-[.9rem] border border-[#e1ded9] bg-white p-8 max-[850px]:grid-cols-2 max-[560px]:grid-cols-1 max-[560px]:p-[1.4rem] [&>div>span]:block [&>div>span]:text-[.72rem] [&>div>span]:font-extrabold [&>div>span]:tracking-[.12em] [&>div>span]:text-prep-orange [&_h2]:my-[.45rem] [&_h2]:text-[1.1rem] [&_p]:m-0 [&_p]:text-[.76rem] [&_p]:leading-[1.6] [&_p]:text-[#687076]">
-        <div>
-          <span>LEGAL OPERATOR</span>
-          <h2>{BUSINESS_LEGAL_OWNER}</h2>
-          <p>
-            {BUSINESS_ENTITY_TYPE} operating under the brand name Prepstore.
-          </p>
-        </div>
-        <div>
-          <span>GRIEVANCE OFFICER</span>
-          <h2>{BUSINESS_GRIEVANCE_OFFICER}</h2>
-          <p>
-            Formal consumer, privacy and grievance matters may be sent through
-            the verified email or phone details above.
-          </p>
-        </div>
-        <div className="grid content-start gap-[.45rem] max-[850px]:col-span-full max-[560px]:col-span-1 [&>a]:text-[.76rem] [&>a]:font-bold [&>a]:text-[#4f575d] [&>a:hover]:text-[#d84311]">
-          <span>POLICIES</span>
-          <Link href="/legal/terms">Terms of service</Link>
-          <Link href="/legal/privacy">Privacy policy</Link>
-          <Link href="/legal/cancellation-refund">
-            Cancellation &amp; refund
-          </Link>
-          <Link href="/legal/fair-use">Fair use policy</Link>
-        </div>
-      </section>
     </main>
   );
 }

@@ -54,3 +54,10 @@ Passing source checks alone is not evidence of all-device correctness. Record vi
 - Inbound-email automation.
 
 These items are not blockers for the approved on-demand mock-test product.
+
+## 27 October 2026 regression delta
+
+- The release candidate now uses one Tailwind stylesheet; the former plain-CSS reset/compatibility file was consolidated and deleted.
+- Responsive regressions reported in cart, home rails, PDF reading, result metrics, workspace navigation and Admin details have targeted source checks and production-build coverage.
+- The local production HTTP smoke passed the public/auth/legal route set and brand assets without a 500 response.
+- The existing 176-case Playwright matrix is discoverable, but this changed delta must be rerun after EC2 deployment because the current work container cannot obtain a compatible Chromium binary.

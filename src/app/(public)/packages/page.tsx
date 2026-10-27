@@ -104,7 +104,20 @@ export default async function Page({
         <b>All packages</b>
       </nav>
       <AutoSubmitForm className="max-[560px]:grid max-[560px]:grid-cols-2 max-[560px]:gap-3">
-        {q ? <input type="hidden" name="q" value={query.q} /> : null}
+        <div className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] overflow-hidden rounded-[.55rem] border border-[#d9dadd] bg-white shadow-[0_.35rem_1rem_rgba(32,24,18,.04)] focus-within:border-prep-orange focus-within:ring-2 focus-within:ring-[#ffdfd2] max-[560px]:col-span-full">
+          <label className="sr-only" htmlFor="package-search">Search packages</label>
+          <input
+            className="min-h-12 min-w-0 border-0 bg-transparent px-4 text-[.82rem] outline-none"
+            id="package-search"
+            name="q"
+            type="search"
+            defaultValue={query.q}
+            placeholder="Search by package, subject or exam…"
+          />
+          <button className="min-w-24 border-0 bg-prep-orange px-5 text-[.78rem] font-bold text-white hover:bg-prep-orange-dark" type="submit">
+            Search
+          </button>
+        </div>
         <header className="mb-5 flex items-end justify-between gap-8 max-[800px]:flex-col max-[800px]:items-start max-[560px]:contents">
           <div className="max-[560px]:col-span-full max-[560px]:mb-[-0.15rem]">
             <h1 className="m-0 text-[2.2rem] tracking-[-0.04em] max-[560px]:text-[1.75rem]">

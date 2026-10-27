@@ -102,7 +102,7 @@ export default async function Page({
                 {item.mine ? (
                   auth.user.name.slice(0, 2).toUpperCase()
                 ) : (
-                  <PrepstoreIcon />
+                  <PrepstoreIcon className="block size-5 object-contain" />
                 )}
               </i>
               <div className="min-w-0">

@@ -23,7 +23,7 @@ export function MockPayment({ attemptId }: { attemptId: string }) {
   }
   return (
     <section className="mx-auto mt-12 max-w-[35rem] rounded-[.85rem] border border-[var(--line)] bg-white p-8 shadow-[0_.6rem_2rem_#3a2b2108] max-[600px]:mt-4 max-[600px]:p-5">
-      <span className="text-[.68rem] font-extrabold tracking-[.18em] text-[var(--teal)]">
+      <span className="text-[.68rem] font-extrabold tracking-[.18em] text-prep-orange">
         TEST PAYMENT PROVIDER
       </span>
       <h1 className="my-3 text-[clamp(1.8rem,5vw,2.5rem)]">

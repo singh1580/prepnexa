@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./tailwind.css";
-import "./styles.css";
 import { AuthHistorySync } from "@/components/auth-history-sync";
 export const metadata: Metadata = {
   title: { default: "Prepstore", template: "%s | Prepstore" },

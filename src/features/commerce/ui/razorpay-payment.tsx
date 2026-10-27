@@ -220,7 +220,7 @@ export function RazorpayPayment({ checkout }: { checkout: Checkout }) {
         className="mx-auto my-[clamp(1.25rem,5vw,4rem)] w-[min(100%,34rem)] rounded-xl border border-[#e3e0dc] bg-white p-[clamp(1.25rem,4vw,2rem)] shadow-[0_1.25rem_3.5rem_rgba(45,35,29,.08)] max-[560px]:my-4"
         aria-labelledby="razorpay-heading"
       >
-        <span className="text-[.68rem] font-extrabold tracking-[.18em] text-[var(--teal)]">
+        <span className="text-[.68rem] font-extrabold tracking-[.18em] text-prep-orange">
           SECURE CHECKOUT
         </span>
         <div

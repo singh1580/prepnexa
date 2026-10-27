@@ -567,12 +567,12 @@ export async function WorkspaceShell({
     activeMaterialId,
   };
   const dashboardMain = mainClassName === "student-dashboard-main";
-  const rootClass = `workspace ${admin ? "admin-workspace" : "student-workspace"} grid min-h-screen min-w-0 grid-cols-1 bg-white print:block min-[900px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]`;
+  const rootClass = `workspace ${admin ? "admin-workspace" : "student-workspace"} grid min-h-screen min-w-0 grid-cols-1 bg-white print:block min-[1100px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]`;
   const sidebarClass =
-    "relative sticky top-0 hidden h-screen min-w-60 flex-col overflow-hidden border-r border-[#e6e2de] bg-white px-[.8rem] pb-5 pt-0 text-[#25292d] isolate before:pointer-events-none before:absolute before:top-[63px] before:right-0 before:left-0 before:z-[2] before:h-px before:bg-[#e6e2de] min-[900px]:flex print:hidden";
+    "relative sticky top-0 hidden h-screen min-w-60 flex-col overflow-hidden border-r border-[#e6e2de] bg-white px-[.8rem] pb-5 pt-0 text-[#25292d] isolate before:pointer-events-none before:absolute before:top-[63px] before:right-0 before:left-0 before:z-[2] before:h-px before:bg-[#e6e2de] min-[1100px]:flex print:hidden";
   const mainClass = dashboardMain
     ? "workspace-main student-dashboard-main min-w-0 w-full max-w-none scroll-mt-[4.75rem] overflow-x-hidden p-0 print:max-w-none print:p-0"
-    : `workspace-main min-w-0 w-full scroll-mt-[4.75rem] overflow-x-hidden bg-white px-[clamp(1.25rem,3vw,2.5rem)] pt-4 pb-16 min-[701px]:pt-5 print:max-w-none print:p-0 ${admin ? "max-w-[1440px]" : "max-w-[1240px]"}`;
+    : `workspace-main mx-auto min-w-0 w-full scroll-mt-[4.75rem] overflow-x-clip bg-white px-[clamp(1rem,3vw,2.5rem)] pt-4 pb-16 min-[701px]:pt-5 print:max-w-none print:p-0 ${admin ? "max-w-[1440px]" : "max-w-[1240px]"}`;
   return (
     <div className={rootClass}>
       <a
@@ -612,7 +612,7 @@ export async function WorkspaceShell({
       <div className="min-w-0">
         <WorkspaceRouteEffects />
         <header
-          className={`sticky top-0 z-20 flex h-16 min-h-16 min-w-0 items-center justify-start gap-3 border-b border-[#e6e2de] bg-white px-[clamp(12px,2vw,16px)] text-sm print:hidden min-[900px]:px-8 ${admin ? "" : "min-[900px]:justify-end min-[900px]:border-l"}`}
+          className={`sticky top-0 z-20 flex h-16 min-h-16 min-w-0 items-center justify-start gap-3 border-b border-[#e6e2de] bg-white px-[clamp(12px,2vw,16px)] text-sm print:hidden min-[1100px]:px-8 ${admin ? "" : "min-[1100px]:justify-end min-[1100px]:border-l"}`}
         >
           <MobileDrawer
             className="workspace-mobile-menu"
@@ -647,21 +647,21 @@ export async function WorkspaceShell({
               <LogoutButton />
             </div>
           </MobileDrawer>
-          <div className="order-2 block min-w-[188px] basis-[188px] min-[900px]:hidden max-[340px]:min-w-[177px] max-[340px]:basis-[177px] [&_.brand-logo]:max-[340px]:h-8 [&_.brand-logo]:max-[340px]:w-[177px] [&_.brand-logo-link]:max-[340px]:min-w-[177px] [&_.brand-logo-link]:max-[340px]:w-[177px]">
+          <div className="order-2 block min-w-[188px] basis-[188px] min-[1100px]:hidden max-[340px]:min-w-[177px] max-[340px]:basis-[177px] [&_.brand-logo]:max-[340px]:h-8 [&_.brand-logo]:max-[340px]:w-[177px] [&_.brand-logo-link]:max-[340px]:min-w-[177px] [&_.brand-logo-link]:max-[340px]:w-[177px]">
             <Brand />
           </div>
           {admin ? (
             <>
               <PublicSearch variant="admin" />
               <Link
-                className="relative hidden size-[2.35rem] shrink-0 place-items-center rounded-full border border-[#e1dfdc] text-[#62686e] min-[900px]:grid"
+                className="relative hidden size-[2.35rem] shrink-0 place-items-center rounded-full border border-[#e1dfdc] text-[#62686e] min-[1100px]:grid"
                 href="/admin/notifications"
                 aria-label="Admin notifications"
               >
                 <NavIcon name="notifications" />
               </Link>
               <Link
-                className="hidden min-w-0 shrink-0 items-center gap-[.55rem] border-l border-[#e7e5e2] pl-[.9rem] text-[#34383c] min-[900px]:flex"
+                className="hidden min-w-0 shrink-0 items-center gap-[.55rem] border-l border-[#e7e5e2] pl-[.9rem] text-[#34383c] min-[1100px]:flex"
                 href="/account/profile"
               >
                 <span className="grid size-8 place-items-center rounded-full bg-[#fff0e9] font-extrabold text-[#a83712]">
@@ -676,7 +676,7 @@ export async function WorkspaceShell({
             <>
               <PublicSearch variant="student" />
               <Link
-                className="relative hidden size-[2.35rem] shrink-0 place-items-center rounded-full border border-[#e1dfdc] text-[#62686e] min-[900px]:grid"
+                className="relative hidden size-[2.35rem] shrink-0 place-items-center rounded-full border border-[#e1dfdc] text-[#62686e] min-[1100px]:grid"
                 href="/dashboard/notifications"
                 aria-label={`${unreadNotifications} unread notifications`}
               >
@@ -688,7 +688,7 @@ export async function WorkspaceShell({
                 ) : null}
               </Link>
               <Link
-                className="hidden min-w-0 shrink-0 items-center gap-[.55rem] border-l border-[#e7e5e2] pl-[.9rem] text-[#34383c] min-[900px]:flex"
+                className="hidden min-w-0 shrink-0 items-center gap-[.55rem] border-l border-[#e7e5e2] pl-[.9rem] text-[#34383c] min-[1100px]:flex"
                 href="/account/profile"
               >
                 <span className="grid size-8 place-items-center rounded-full bg-[#fff0e9] font-extrabold text-[#a83712]">
@@ -700,7 +700,7 @@ export async function WorkspaceShell({
               </Link>
             </>
           )}
-          <div className="hidden shrink-0 min-[900px]:block [&>button]:min-h-8 [&>button]:border-[#e1dfdc] [&>button]:bg-white [&>button]:px-[.65rem] [&>button]:py-[.35rem] [&>button]:text-[.65rem] [&>button]:text-[#5d646a]">
+          <div className="hidden shrink-0 min-[1100px]:block [&>button]:min-h-8 [&>button]:border-[#e1dfdc] [&>button]:bg-white [&>button]:px-[.65rem] [&>button]:py-[.35rem] [&>button]:text-[.65rem] [&>button]:text-[#5d646a]">
             <LogoutButton />
           </div>
         </header>

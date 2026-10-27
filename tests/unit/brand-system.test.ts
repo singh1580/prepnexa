@@ -62,7 +62,7 @@ describe("Prepstore shared brand asset", () => {
   });
 
   it("keeps the two-colour support icon visible on a neutral avatar", () => {
-    const polish = readFileSync("src/app/styles.css", "utf8");
+    const polish = readFileSync("src/app/tailwind.css", "utf8");
     const compactPolish = polish.replace(/\s+/g, "");
     const studentSupport = readFileSync(
       "src/app/(workspace)/dashboard/support/[id]/page.tsx",

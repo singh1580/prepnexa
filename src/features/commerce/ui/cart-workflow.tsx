@@ -597,7 +597,7 @@ export function CartPageClient({
               View all <span>→</span>
             </Link>
           </header>
-          <div className="grid grid-cols-3 gap-[.8rem] max-[800px]:grid-cols-2 max-[560px]:grid-flow-col max-[560px]:auto-cols-[minmax(0,calc((100%-0.65rem)/2))] max-[560px]:grid-cols-none max-[560px]:overflow-x-auto max-[560px]:pb-2">
+          <div className="grid grid-cols-3 gap-[.8rem] max-[800px]:grid-cols-2 max-[560px]:grid-flow-col max-[560px]:auto-cols-[minmax(16.5rem,82vw)] max-[560px]:grid-cols-none max-[560px]:overflow-x-auto max-[560px]:pb-2 max-[560px]:[scrollbar-width:none] max-[560px]:[&::-webkit-scrollbar]:hidden">
             {recommended.map((item, index) => (
               <StorefrontProductCard
                 key={item.id}

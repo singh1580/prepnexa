@@ -42,7 +42,7 @@ describe("support workflow ownership", () => {
 
   it("uses one support identity and keeps both conversations current", () => {
     expect(adminDetail).toContain("Prepstore Support");
-    expect(adminDetail).toContain("<PrepstoreIcon />");
+    expect(adminDetail).toContain("<PrepstoreIcon className=");
     expect(adminDetail).not.toContain(' : "Admin"');
     expect(adminDetail).toContain("<SupportLiveRefresh revision=");
     expect(studentDetail).toContain("<SupportLiveRefresh revision=");
@@ -64,8 +64,8 @@ describe("support workflow ownership", () => {
     expect(adminDetail).toContain('item.internal ? "bg-[#fff0bd]');
     expect(adminDetail).toContain('item.student ? "bg-[#f1dfd1]');
     expect(studentDetail).toMatch(/item\.mine\s*\?\s*"bg-\[#f1dfd1\]/);
-    expect(adminDetail).toContain("<PrepstoreIcon />");
-    expect(studentDetail).toContain("<PrepstoreIcon />");
+    expect(adminDetail).toContain("<PrepstoreIcon className=");
+    expect(studentDetail).toContain("<PrepstoreIcon className=");
     expect(adminDetail).not.toContain("student-message");
     expect(adminDetail).not.toContain("admin-message");
   });

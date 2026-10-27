@@ -54,7 +54,7 @@ export default async function Page() {
         ) : null}
       </AdminPageHeader>
       {products.length ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(15.5rem,1fr))] gap-[0.9rem]">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15.5rem),1fr))] gap-[0.9rem]">
           {products.map((product) => (
             <article
               className="overflow-visible rounded-[0.55rem] border border-prep-line bg-white shadow-[0_0.5rem_1.8rem_#3a2b2107]"
@@ -101,7 +101,7 @@ export default async function Page() {
                   <span>▣ {product.testCount} tests</span>
                   <span>◷ {product.accessDays} days access</span>
                 </div>
-                <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-[0.45rem] pt-[0.85rem]">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-[0.45rem] pt-[0.85rem] max-[420px]:grid-cols-2 max-[420px]:[&>div:first-child]:col-span-full max-[420px]:[&>div:first-child]:justify-items-start">
                   <ProductVisibilityToggle
                     id={product.id}
                     isLive={product.isLive}
