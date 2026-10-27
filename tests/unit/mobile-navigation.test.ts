@@ -103,7 +103,8 @@ describe("responsive navigation", () => {
     );
     expect(drawer).toContain("rounded-[14px]");
     expect(drawer).toContain("fixed inset-0 z-[208]");
-    expect(drawer).toContain("fixed z-[209]");
+    expect(drawer).toContain("left-4 z-[100]");
+    expect(drawer).toContain("left-0 z-[209]");
     expect(drawer).toContain("group-open:z-[210]");
     expect(tailwindCss).toContain("--mobile-header-height: 60px");
     expect(tailwindCss).toContain("--mobile-header-height: 58px");
@@ -122,6 +123,9 @@ describe("responsive navigation", () => {
     );
     expect(drawer).toContain("min-h-dvh");
     expect(drawer).toContain("prepstore-workspace-drawer-enter");
+    expect(drawer.indexOf("left-4 z-[100]")).toBeGreaterThan(
+      drawer.indexOf('variant === "public"'),
+    );
     expect(workspaceShell).toContain("z-[4] mt-auto border-t");
     expect(drawer).not.toContain(
       "group-open:top-[calc(var(--mobile-header-height)+18px)]",

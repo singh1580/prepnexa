@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 describe("Prepstore shared brand asset", () => {
   const logo = readFileSync("public/brand/prepstore-logo.svg", "utf8");
   const component = readFileSync("src/components/brand.tsx", "utf8");
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
 
   it("keeps the supplied final vector asset unchanged", () => {
     expect(createHash("sha256").update(logo).digest("hex")).toBe(
@@ -22,6 +23,7 @@ describe("Prepstore shared brand asset", () => {
     [
       "public/brand/prepstore-logo@4x.png",
       "public/favicon.ico",
+      "public/favicon-96.png",
       "public/prepstore-icon.svg",
       "public/prepstore-icon-32.png",
       "public/prepstore-icon-48.png",
@@ -29,6 +31,16 @@ describe("Prepstore shared brand asset", () => {
       "public/prepstore-icon-192.png",
       "public/prepstore-icon-512.png",
     ].forEach((path) => expect(existsSync(path), path).toBe(true));
+  });
+
+  it("advertises a padded high-resolution favicon for search surfaces", () => {
+    expect(layout).toContain('{ url: "/favicon.ico", sizes: "any" }');
+    expect(layout).toContain(
+      '{ url: "/favicon-96.png", sizes: "96x96", type: "image/png" }',
+    );
+    expect(layout).not.toContain(
+      '{ url: "/prepstore-icon.svg", type: "image/svg+xml" }',
+    );
   });
 
   it("is rendered through the shared image-backed component", () => {

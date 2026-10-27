@@ -9,9 +9,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/prepstore-icon.svg", type: "image/svg+xml" },
-      { url: "/prepstore-icon-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/prepstore-icon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon-96.png", sizes: "96x96", type: "image/png" },
     ],
     apple: [{ url: "/prepstore-icon-180.png", sizes: "180x180", type: "image/png" }],
   },
