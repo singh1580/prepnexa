@@ -13,7 +13,7 @@ export type UiIconName =
   | "send"
   | "trash";
 
-export function UiIcon({ name, className }: { name: UiIconName; className?: string }) {
+export function UiIcon({ name, className = "" }: { name: UiIconName; className?: string }) {
   const paths: Record<UiIconName, React.ReactNode> = {
     chevron: <path d="m8 10 4 4 4-4" />,
     clear: <><path d="m4 15 8-8 6 6-6 6H8z" /><path d="m13.5 8.5 6 6M12 19h8" /></>,
@@ -29,5 +29,5 @@ export function UiIcon({ name, className }: { name: UiIconName; className?: stri
     send: <><path d="m3 11 18-8-8 18-2.5-7.5z" /><path d="M10.5 13.5 21 3" /></>,
     trash: <><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></>,
   };
-  return <svg className={className} viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
+  return <svg className={`size-4 shrink-0 ${className}`} viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 }

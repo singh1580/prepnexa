@@ -38,6 +38,8 @@ describe("Prepstore shared brand asset", () => {
     expect(component).toContain("height={160}");
     expect(component).not.toContain('className="brand-mark"');
     expect(component).not.toContain('className="brand-word"');
+    expect(component).toContain('footer: {');
+    expect(component).toContain('w-[164px] min-w-[164px]');
   });
 
   it("does not recreate the supplied brand mark in commerce and support surfaces", () => {

@@ -30,9 +30,9 @@ export default async function Layout({
       >
         {children}
       </div>
-      <footer className="public-footer grid grid-cols-[minmax(14rem,1.1fr)_minmax(0,3fr)] gap-12 border-t border-[#e6e3df] bg-white px-[clamp(1.25rem,4.5vw,4.5rem)] pt-[2.2rem] pb-4 text-[0.78rem] text-[#555d64] max-[800px]:grid-cols-1 max-[460px]:gap-8 [&_.brand-logo]:h-auto [&_.brand-logo]:w-[199px]">
+      <footer className="public-footer grid grid-cols-[minmax(14rem,1.1fr)_minmax(0,3fr)] gap-12 border-t border-[#e6e3df] bg-white px-[clamp(1.25rem,4.5vw,4.5rem)] pt-[2.2rem] pb-4 text-[0.78rem] text-[#555d64] max-[800px]:grid-cols-1 max-[460px]:gap-8">
         <div>
-          <Brand />
+          <Brand variant="footer" />
           <p className="mt-[0.55rem] max-w-[22rem] leading-[1.6]">
             Quality study material for India&apos;s competitive exams.
           </p>

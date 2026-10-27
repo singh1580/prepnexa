@@ -94,14 +94,14 @@ export default async function Page({
               key={item.id}
             >
               <i
-                className={`grid size-8 place-items-center rounded-full text-[0.62rem] font-extrabold not-italic ${item.internal ? "bg-[#fff0bd] text-[#795b00]" : item.student ? "bg-[#f1dfd1] text-[#675246]" : "bg-prep-orange text-white [&_svg]:size-5"}`}
+                className={`grid size-8 place-items-center rounded-full text-[0.62rem] font-extrabold not-italic ${item.internal ? "bg-[#fff0bd] text-[#795b00]" : item.student ? "bg-[#f1dfd1] text-[#675246]" : "border border-[#eadfd8] bg-white p-[0.35rem]"}`}
               >
                 {item.student ? (
                   ticket.studentName.slice(0, 2).toUpperCase()
                 ) : item.internal ? (
                   "N"
                 ) : (
-                  <PrepstoreIcon className="block size-5 object-contain" />
+                  <PrepstoreIcon className="block size-full object-contain" />
                 )}
               </i>
               <div className="min-w-0">
