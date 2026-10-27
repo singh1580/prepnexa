@@ -4,21 +4,77 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ApiFailure, ApiSuccess } from "@/lib/http/api-response";
 
-export function StartAttemptButton({ testId, activeAttemptId, courseSlug, disabled = false }: { testId: string; activeAttemptId: string | null; courseSlug?: string; disabled?: boolean }) {
+export function StartAttemptButton({
+  testId,
+  activeAttemptId,
+  courseSlug,
+  disabled = false,
+}: {
+  testId: string;
+  activeAttemptId: string | null;
+  courseSlug?: string;
+  disabled?: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function start() {
-    const courseQuery = courseSlug ? `?course=${encodeURIComponent(courseSlug)}` : "";
-    if (activeAttemptId) { router.push(`/attempts/${activeAttemptId}${courseQuery}`); return; }
-    setBusy(true); setError("");
+    const courseQuery = courseSlug
+      ? `?course=${encodeURIComponent(courseSlug)}`
+      : "";
+    if (activeAttemptId) {
+      router.push(`/attempts/${activeAttemptId}${courseQuery}`);
+      return;
+    }
+    setBusy(true);
+    setError("");
     try {
-      const response = await fetch(`/api/tests/${testId}/attempts`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ courseSlug }) });
-      const payload = await response.json() as ApiSuccess<{ id: string }> | ApiFailure;
-      if (!response.ok || "error" in payload) throw new Error("error" in payload ? payload.error.message : "Couldn't start this test.");
-      router.push(`/attempts/${payload.data.id}${courseQuery}`); router.refresh();
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Couldn't start this test."); }
-    finally { setBusy(false); }
+      const response = await fetch(`/api/tests/${testId}/attempts`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseSlug }),
+      });
+      const payload = (await response.json()) as
+        ApiSuccess<{ id: string }> | ApiFailure;
+      if (!response.ok || "error" in payload)
+        throw new Error(
+          "error" in payload
+            ? payload.error.message
+            : "Couldn't start this test.",
+        );
+      router.push(`/attempts/${payload.data.id}${courseQuery}`);
+      router.refresh();
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : "Couldn't start this test.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
-  return <div className="start-attempt-action"><button className="button full" type="button" disabled={disabled || busy} onClick={start}>{busy ? "Preparing your paper…" : activeAttemptId ? "Resume attempt" : "Start test"}</button>{error && <p className="notice danger" role="alert">{error}</p>}</div>;
+  return (
+    <div className="grid gap-2">
+      <button
+        className="min-h-[2.55rem] min-w-[9.5rem] cursor-pointer rounded-[.38rem] border border-prep-orange bg-prep-orange px-4 py-[.6rem] text-[.78rem] font-bold text-white hover:bg-prep-orange-dark disabled:cursor-not-allowed disabled:opacity-55 max-[700px]:w-full"
+        type="button"
+        disabled={disabled || busy}
+        onClick={start}
+      >
+        {busy
+          ? "Preparing your paper…"
+          : activeAttemptId
+            ? "Resume attempt"
+            : "Start test"}
+      </button>
+      {error && (
+        <p
+          className="m-0 rounded-[.5rem] border border-[#f4aaa4] bg-[#fff1f0] px-4 py-3 text-[.78rem] text-[#a62a24]"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+    </div>
+  );
 }

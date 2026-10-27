@@ -11,6 +11,8 @@ import { catalogIdSchema } from "@/features/admin-catalog/validation";
 import { requireWorkspacePermission } from "@/features/auth/page-access";
 import { AppError } from "@/lib/errors/app-error";
 import { AdminDeleteButton } from "@/components/admin-delete-button";
+import { AdminPageHeader } from "@/components/admin-page-header";
+import { adminBackLink, adminDangerZone } from "@/components/admin-styles";
 
 export const metadata = { title: "Package bundle" };
 export default async function Page({
@@ -34,35 +36,50 @@ export default async function Page({
   return (
     <WorkspaceShell
       admin
-      name={auth.user.name} email={auth.user.email}
+      name={auth.user.name}
+      email={auth.user.email}
       permissions={auth.permissions}
       section="packages"
     >
-      <Link className="back-link" href="/admin/packages">
+      <Link className={adminBackLink} href="/admin/packages">
         ← Packages & materials
       </Link>
-      <header className="admin-page-header reference-admin-heading">
-        <div>
-          <span className="eyebrow">{product.slug}</span>
-          <h1>{product.name}</h1>
-          <p>
-            ₹{(product.pricePaise / 100).toLocaleString("en-IN")} ·{" "}
-            {product.accessDays} days access
-          </p>
-        </div>
-      </header>
-      <div className="package-editor-grid"><section className="admin-card package-editor-details">
-          <h2>Package details</h2>
+      <AdminPageHeader
+        kicker={product.slug}
+        title={product.name}
+        description={`₹${(product.pricePaise / 100).toLocaleString("en-IN")} · ${product.accessDays} days access`}
+      />
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(22rem,0.62fr)] items-start gap-4 max-[1180px]:grid-cols-1">
+        <section className="min-w-0 rounded-[0.65rem] border border-prep-line bg-white p-5 shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
+          <h2 className="mb-4 text-lg font-bold">Package details</h2>
           <ProductCreateForm product={product} />
-      </section><section className="package-editor-contents"><ProductBundleControls
-        id={product.id}
-        isLive={product.isLive}
-        linkedTests={product.linkedTests}
-        linkedMaterials={product.linkedMaterials}
-        availableTests={product.availableTests}
-        availableMaterials={product.availableMaterials}
-      /></section></div>
-      <div className="danger-zone-row"><div><strong>Delete product package</strong><span>Only offline packages without orders or student access can be deleted.</span></div><AdminDeleteButton endpoint={`/api/admin/catalog/products/${product.id}`} redirectTo="/admin/packages" label="Delete product" confirmation="Delete this offline product permanently? Products used in orders or student access cannot be deleted." /></div>
+        </section>
+        <section className="min-w-0">
+          <ProductBundleControls
+            id={product.id}
+            isLive={product.isLive}
+            linkedTests={product.linkedTests}
+            linkedMaterials={product.linkedMaterials}
+            availableTests={product.availableTests}
+            availableMaterials={product.availableMaterials}
+          />
+        </section>
+      </div>
+      <div className={adminDangerZone}>
+        <div>
+          <strong>Delete product package</strong>
+          <span>
+            Only offline packages without orders or student access can be
+            deleted.
+          </span>
+        </div>
+        <AdminDeleteButton
+          endpoint={`/api/admin/catalog/products/${product.id}`}
+          redirectTo="/admin/packages"
+          label="Delete product"
+          confirmation="Delete this offline product permanently? Products used in orders or student access cannot be deleted."
+        />
+      </div>
     </WorkspaceShell>
   );
 }

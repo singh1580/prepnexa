@@ -17,11 +17,10 @@ describe("responsive navigation", () => {
     "utf8",
   );
   const css = readFileSync("src/app/styles.css", "utf8");
+  const tailwindCss = readFileSync("src/app/tailwind.css", "utf8");
+  const compactCss = css.replace(/\s+/g, "");
   const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
-  const authShell = readFileSync(
-    "src/features/auth/ui/auth-shell.tsx",
-    "utf8",
-  );
+  const authShell = readFileSync("src/features/auth/ui/auth-shell.tsx", "utf8");
 
   it("keeps the hamburger before the official header logo without duplicating branding", () => {
     expect(publicHeader.indexOf('className="mobile-public-menu"')).toBeLessThan(
@@ -29,19 +28,18 @@ describe("responsive navigation", () => {
     );
     expect(drawer).not.toContain("<Brand />");
     expect(publicHeader).not.toContain(">Menu<");
-    expect(drawer).toContain('className="menu-icon-3d"');
-    expect(drawer).toContain('className="menu-icon-bar menu-icon-bar-middle"');
+    expect(drawer).toContain("[perspective:140px]");
+    expect(drawer).toContain("bg-[#e94b17]");
     expect(drawer).not.toContain('d="m6 6 12 12M18 6 6 18"');
-    expect(css).toContain("background: #17191c");
-    expect(css).toContain("background: #e94b17");
-    expect(css).toContain("gap: 4px !important");
+    expect(drawer).toContain("bg-[#17191c]");
+    expect(publicHeader).toContain("max-[899px]:gap-1");
   });
 
   it("keeps public navigation ordered and account actions separate", () => {
     const home = publicHeader.indexOf('href="/">Home<');
     const packages = publicHeader.indexOf(">All packages<");
-    const cart = publicHeader.indexOf("mobile-drawer-cart");
-    const actions = publicHeader.indexOf('className="mobile-drawer-actions"');
+    const cart = publicHeader.indexOf('href="/cart"', home);
+    const actions = publicHeader.indexOf('className="mt-2.5 grid');
     expect(home).toBeGreaterThan(-1);
     expect(packages).toBeGreaterThan(-1);
     expect(home).toBeLessThan(cart);
@@ -54,19 +52,25 @@ describe("responsive navigation", () => {
   });
 
   it("uses the centred account profile and avoids repeated student cart navigation", () => {
-    expect(workspaceShell).toContain('className="mobile-drawer-profile"');
-    expect(workspaceShell).toContain("<small>{email}</small>");
+    expect(workspaceShell).toContain("flex flex-col items-center");
+    expect(workspaceShell).toContain("{email}");
     expect(workspaceShell).not.toContain("StudentBottomNavigation");
     expect(workspaceShell).not.toContain('label: "Cart"');
     expect(workspaceShell).not.toContain('label: "Profile & security"');
-    expect(workspaceShell).toContain('className="workspace-drawer-brand"');
+    expect(workspaceShell).toContain(
+      "mb-2 flex min-h-12 items-center border-b",
+    );
   });
 
   it("keeps package navigation separate from accessible collapse controls", () => {
     expect(workspaceShell).toContain("<SidebarDisclosure");
-    expect(workspaceShell).not.toContain('<details\n      className="package-sidebar-menu"');
-    expect(packageDisclosure).toContain('aria-expanded={open}');
-    expect(packageDisclosure).toContain('aria-label={`${open ? "Collapse" : "Expand"} ${label}`}');
+    expect(workspaceShell).not.toContain(
+      '<details\n      className="package-sidebar-menu"',
+    );
+    expect(packageDisclosure).toContain("aria-expanded={open}");
+    expect(packageDisclosure).toContain(
+      'aria-label={`${open ? "Collapse" : "Expand"} ${label}`}',
+    );
     expect(packageDisclosure).toContain("setOpen((value) => !value)");
   });
 
@@ -75,8 +79,9 @@ describe("responsive navigation", () => {
     expect(routeEffects).toContain("const pathname = usePathname()");
     expect(routeEffects).toContain('searchParams.get("view")');
     expect(routeEffects).toContain("window.scrollTo(0, 0)");
-    expect(routeEffects).toContain(".admin-table-wrap, .table-scroll, .orders-table-wrap, .review-table-wrap");
-    expect(routeEffects).toContain("scrollTo({ left: 0, top: 0 })");
+    expect(routeEffects).not.toContain(".admin-table-wrap, .table-scroll");
+    expect(routeEffects).not.toContain(".orders-table-wrap");
+    expect(routeEffects).not.toContain(".review-table-wrap");
     expect(routeEffects).toContain("[pathname, packageView]");
   });
 
@@ -86,53 +91,49 @@ describe("responsive navigation", () => {
     expect(drawer).toContain('document.body.style.overflow = "hidden"');
     expect(drawer).toContain('aria-label="Close navigation"');
     expect(drawer).toContain('aria-modal="true"');
-    expect(css).toContain(
-      "--mobile-drawer-width: min(380px, calc(100vw - 32px))",
+    expect(drawer).toContain("w-[min(380px,calc(100vw-32px))]");
+    expect(drawer).toContain("top-[calc(var(--mobile-header-height)+8px)]");
+    expect(drawer).toContain(
+      "max-h-[calc(100dvh-var(--mobile-header-height)-24px)]",
     );
-    expect(css).toContain("top: calc(var(--mobile-header-height) + 8px)");
-    expect(css).toContain("max-height: calc(100dvh - var(--mobile-header-height) - 24px)");
-    expect(css).toContain("border-radius: 14px");
-    expect(css).toContain("justify-items: stretch !important");
-    expect(css).toContain("position: fixed !important");
-    expect(css).toContain("z-index: 208");
-    expect(css).toContain("z-index: 209");
-    expect(css).toContain("z-index: 210");
-    expect(css).toContain("--mobile-header-height: 60px");
-    expect(css).toContain("--mobile-header-height: 58px");
+    expect(drawer).toContain("rounded-[14px]");
+    expect(drawer).toContain("fixed inset-0 z-[208]");
+    expect(drawer).toContain("fixed z-[209]");
+    expect(drawer).toContain("group-open:z-[210]");
+    expect(tailwindCss).toContain("--mobile-header-height: 60px");
+    expect(tailwindCss).toContain("--mobile-header-height: 58px");
   });
 
   it("separates the compact public menu from full-height workspace drawers", () => {
-    expect(css).toContain(
-      ".workspace-mobile-menu[open] > .mobile-drawer-backdrop",
+    expect(drawer).toContain('variant === "workspace"');
+    expect(drawer).toContain(
+      "[--workspace-drawer-width:min(360px,calc(100vw-32px))]",
     );
-    expect(css).toContain(
-      "--workspace-drawer-width: min(360px, calc(100vw - 32px))",
+    expect(drawer).toContain("min-h-dvh");
+    expect(drawer).toContain("prepstore-workspace-drawer-enter");
+    expect(workspaceShell).toContain("z-[4] mt-auto border-t");
+    expect(drawer).toContain(
+      "group-open:top-[calc(var(--mobile-header-height)+18px)]",
     );
-    expect(css).toContain("min-height: 100dvh");
-    expect(css).toContain("transform: translateX(-100%)");
-    expect(css).toContain(".workspace-drawer-logout {");
-    expect(css).toContain("margin-top: auto");
-    expect(css).toContain(
-      ".mobile-public-menu[open] > summary {",
-    );
-    expect(css).toContain(
-      "top: calc(var(--mobile-header-height) + 18px)",
-    );
-    expect(css).toContain(".workspace-drawer-brand {");
-    expect(css).toContain("border-bottom: 1px solid #ebe7e2");
+    expect(workspaceShell).toContain("border-b border-[#ebe7e2]");
   });
 
   it("provides a consistent back-to-home action across auth pages", () => {
-    expect(authShell).toContain('className="auth-back-home"');
     expect(authShell).toContain('href="/"');
     expect(authShell).toContain("Back to home");
+    expect(authShell).toContain("min-h-11");
+    expect(css).not.toContain(".auth-back-home");
   });
 
-  it("keeps base and responsive navigation rules in one global stylesheet", () => {
-    expect(css).toContain("body{margin:0;min-width:320px}");
-    expect(css).toContain(".store-product-card");
-    expect(css).toContain(".workspace{");
-    expect(css).toContain(".mobile-public-menu");
+  it("keeps migrated navigation in Tailwind and the remaining legacy layer consolidated", () => {
+    expect(compactCss).toContain("body{margin:0;min-width:320px;");
+    expect(css).not.toContain(".store-product-card");
+    expect(workspaceShell).toContain(
+      "min-[900px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]",
+    );
+    expect(css).not.toContain(".workspace{");
+    expect(css).not.toContain(".mobile-public-menu");
+    expect(rootLayout).toContain('import "./tailwind.css"');
     expect(rootLayout).toContain('import "./styles.css"');
     expect(rootLayout).not.toContain("brand-system.css");
     expect(rootLayout).not.toContain("storefront-fixes.css");

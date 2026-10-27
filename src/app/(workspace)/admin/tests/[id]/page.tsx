@@ -9,6 +9,8 @@ import { testIdSchema } from "@/features/admin-tests/validation";
 import { requireAnyWorkspacePermission } from "@/features/auth/page-access";
 import { AppError } from "@/lib/errors/app-error";
 import { AdminDeleteButton } from "@/components/admin-delete-button";
+import { AdminPageHeader } from "@/components/admin-page-header";
+import { adminBackLink, adminDangerZone } from "@/components/admin-styles";
 
 const access = [
   CONTENT_PERMISSIONS.manageTests,
@@ -40,22 +42,19 @@ export default async function Page({
   return (
     <WorkspaceShell
       admin
-      name={auth.user.name} email={auth.user.email}
+      name={auth.user.name}
+      email={auth.user.email}
       permissions={auth.permissions}
       section="tests"
     >
-      <Link className="back-link" href="/admin/tests">
+      <Link className={adminBackLink} href="/admin/tests">
         ← All tests
       </Link>
-      <header className="admin-page-header">
-        <div>
-          <span className="eyebrow">
-            {test.mode === "PRACTICE" ? "Practice set" : "Mock test"} · {testCategoryLabel(test.category)}
-          </span>
-          <h1>{test.title}</h1>
-          <p>Manage settings, sections and questions in one assessment workspace.</p>
-        </div>
-      </header>
+      <AdminPageHeader
+        kicker={`${test.mode === "PRACTICE" ? "Practice set" : "Mock test"} · ${testCategoryLabel(test.category)}`}
+        title={test.title}
+        description="Manage settings, sections and questions in one assessment workspace."
+      />
       <TestBuilder
         test={{
           category: test.category,
@@ -93,7 +92,23 @@ export default async function Page({
           CONTENT_PERMISSIONS.createQuestions,
         )}
       />
-      {canManage && <div className="danger-zone-row"><div><strong>Delete test</strong><span>Only possible after it is removed from packages and has no student attempts.</span></div><AdminDeleteButton endpoint={`/api/admin/tests/${test.id}`} redirectTo="/admin/tests" label="Delete test" confirmation="Delete this test permanently? This only works after it is removed from packages and has no student attempts." /></div>}
+      {canManage && (
+        <div className={adminDangerZone}>
+          <div>
+            <strong>Delete test</strong>
+            <span>
+              Only possible after it is removed from packages and has no student
+              attempts.
+            </span>
+          </div>
+          <AdminDeleteButton
+            endpoint={`/api/admin/tests/${test.id}`}
+            redirectTo="/admin/tests"
+            label="Delete test"
+            confirmation="Delete this test permanently? This only works after it is removed from packages and has no student attempts."
+          />
+        </div>
+      )}
     </WorkspaceShell>
   );
 }

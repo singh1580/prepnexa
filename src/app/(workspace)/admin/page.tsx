@@ -54,9 +54,13 @@ function change(current: number, previous: number) {
 }
 function Trend({ value }: { value: number }) {
   return (
-    <small className={value < 0 ? "metric-down" : "metric-up"}>
+    <small
+      className={`col-span-full text-[0.65rem] font-bold ${value < 0 ? "text-[#c83b31]" : "text-[#0b7144]"}`}
+    >
       {value < 0 ? "↓" : "↑"} {Math.abs(value)}%{" "}
-      <span>vs. previous period</span>
+      <span className="ml-1 font-normal text-prep-muted">
+        vs. previous period
+      </span>
     </small>
   );
 }
@@ -100,8 +104,13 @@ function RevenueChart({
     .join(" ");
   const area = `${left},${height - bottom} ${points} ${width - right},${height - bottom}`;
   return (
-    <div className="admin-revenue-chart">
+    <div
+      className="min-w-0 overflow-x-auto px-[0.2rem] pt-[0.2rem]"
+      tabIndex={0}
+      aria-label="Scrollable revenue chart"
+    >
       <svg
+        className="block h-auto min-w-[42rem] overflow-visible [aspect-ratio:760/220] [&_text]:font-sans"
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label="Revenue in rupees over selected period"
@@ -164,8 +173,8 @@ function RevenueChart({
           );
         })}
       </svg>
-      <div className="chart-date-axis">
-        <span>Date</span>
+      <div className="flex min-w-[42rem] justify-between gap-[0.35rem] pl-[3.8rem] text-[0.62rem] text-prep-muted">
+        <span className="ml-[-3.6rem] font-[750] text-[#62686d]">Date</span>
         {items
           .filter(
             (_, index) =>
@@ -204,21 +213,28 @@ export default async function Page({
   return (
     <WorkspaceShell
       admin
-      name={auth.user.name} email={auth.user.email}
+      name={auth.user.name}
+      email={auth.user.email}
       permissions={auth.permissions}
       section="overview"
     >
-      <header className="admin-page-header reference-admin-heading">
+      <header className="mb-[1.1rem] flex items-center justify-between gap-5 max-[700px]:items-stretch max-[700px]:flex-col">
         <div>
-          <h1>Dashboard</h1>
-          <p>
+          <h1 className="m-0 mb-[0.3rem] text-[clamp(1.65rem,2.4vw,2.25rem)] leading-[1.08] tracking-[-0.04em] text-[#101828]">
+            Dashboard
+          </h1>
+          <p className="m-0 max-w-3xl text-[0.88rem] leading-[1.55] text-prep-muted">
             Welcome back! Here&apos;s what&apos;s happening with your store.
           </p>
         </div>
-        <form className="period-selector">
-          <label>
+        <form className="flex items-center gap-2 max-[700px]:w-full">
+          <label className="min-w-48 max-[700px]:min-w-0 max-[700px]:flex-1">
             <span className="sr-only">Reporting period</span>
-            <select name="days" defaultValue={data.days}>
+            <select
+              className="h-[2.6rem] w-full rounded-[0.4rem] border border-[#dcdedf] bg-white px-[0.8rem] py-[0.55rem]"
+              name="days"
+              defaultValue={data.days}
+            >
               {[7, 14, 30, 90].map((days) => (
                 <option key={days} value={days}>
                   Last {days} days
@@ -226,50 +242,66 @@ export default async function Page({
               ))}
             </select>
           </label>
-          <button className="button secondary small" type="submit">
+          <button
+            className="inline-flex min-h-[2.6rem] cursor-pointer items-center justify-center rounded-prep-control border border-prep-orange bg-white px-[0.9rem] py-[0.55rem] text-sm font-bold text-prep-orange-dark hover:bg-prep-orange-wash"
+            type="submit"
+          >
             Update
           </button>
         </form>
       </header>
-      <section className="dashboard-metrics reference-admin-metrics">
+      <section className="mb-4 grid grid-cols-4 gap-4 max-[700px]:grid-cols-2 max-[480px]:grid-cols-1 [&>article]:relative [&>article]:grid [&>article]:grid-cols-[2.4rem_1fr] [&>article]:gap-x-[0.7rem] [&>article]:gap-y-[0.2rem] [&>article]:rounded-lg [&>article]:border [&>article]:border-prep-line [&>article]:bg-white [&>article]:p-4">
         <article>
-          <i>
+          <i className="row-span-2 grid size-9 place-items-center rounded-[0.42rem] bg-[#fff0e8] text-[#e84a17] [&_svg]:size-[1.2rem]">
             <MetricIcon name="revenue" />
           </i>
-          <span>Revenue</span>
-          <strong>{formatMoney(data.summary.revenuePaise, "INR")}</strong>
+          <span className="text-[0.72rem] text-[#50575d]">Revenue</span>
+          <strong className="col-span-full mt-[0.45rem] text-[1.65rem] tracking-[-0.04em]">
+            {formatMoney(data.summary.revenuePaise, "INR")}
+          </strong>
           <Trend value={revenueChange} />
         </article>
         <article>
-          <i>
+          <i className="row-span-2 grid size-9 place-items-center rounded-[0.42rem] bg-[#fff0e8] text-[#e84a17] [&_svg]:size-[1.2rem]">
             <MetricIcon name="orders" />
           </i>
-          <span>Paid Orders</span>
-          <strong>{data.summary.orders}</strong>
+          <span className="text-[0.72rem] text-[#50575d]">Paid Orders</span>
+          <strong className="col-span-full mt-[0.45rem] text-[1.65rem] tracking-[-0.04em]">
+            {data.summary.orders}
+          </strong>
           <Trend value={orderChange} />
         </article>
         <article>
-          <i>
+          <i className="row-span-2 grid size-9 place-items-center rounded-[0.42rem] bg-[#fff0e8] text-[#e84a17] [&_svg]:size-[1.2rem]">
             <MetricIcon name="students" />
           </i>
-          <span>Students</span>
-          <strong>{data.summary.users}</strong>
+          <span className="text-[0.72rem] text-[#50575d]">Students</span>
+          <strong className="col-span-full mt-[0.45rem] text-[1.65rem] tracking-[-0.04em]">
+            {data.summary.users}
+          </strong>
           <Trend value={studentChange} />
         </article>
         <article>
-          <i>
+          <i className="row-span-2 grid size-9 place-items-center rounded-[0.42rem] bg-[#fff0e8] text-[#e84a17] [&_svg]:size-[1.2rem]">
             <MetricIcon name="packages" />
           </i>
-          <span>Live Packages</span>
-          <strong>{data.summary.liveProducts}</strong>
+          <span className="text-[0.72rem] text-[#50575d]">Live Packages</span>
+          <strong className="col-span-full mt-[0.45rem] text-[1.65rem] tracking-[-0.04em]">
+            {data.summary.liveProducts}
+          </strong>
           <Trend value={packageChange} />
         </article>
       </section>
-      <section className="admin-card reference-revenue-card">
-        <div className="card-heading">
-          <h2>Revenue</h2>
-          <form className="period-selector">
-            <select name="days" defaultValue={data.days}>
+      <section className="mb-[0.8rem] overflow-hidden rounded-[0.65rem] border border-prep-line bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.025)]">
+        <div className="mb-[0.3rem] flex items-start justify-between gap-4">
+          <h2 className="m-0 text-base">Revenue</h2>
+          <form>
+            <select
+              className="h-9 rounded-[0.35rem] border border-[#dcdedf] bg-white px-[0.7rem] py-[0.4rem]"
+              name="days"
+              aria-label="Revenue reporting period"
+              defaultValue={data.days}
+            >
               {[7, 14, 30, 90].map((days) => (
                 <option key={days} value={days}>
                   {days === 7 ? "Daily" : `Last ${days} days`}
@@ -281,35 +313,49 @@ export default async function Page({
         </div>
         <RevenueChart items={data.revenue} />
       </section>
-      <div className="reference-admin-bottom">
-        <section className="admin-card">
-          <div className="card-heading">
-            <h2>Best-selling packages</h2>
-            <Link href="/admin/packages">View all</Link>
+      <div className="grid grid-cols-[minmax(18rem,0.75fr)_minmax(0,1.25fr)] gap-[0.8rem] max-[1000px]:grid-cols-1">
+        <section className="min-w-0 rounded-[0.65rem] border border-prep-line bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.025)]">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <h2 className="my-1 text-base">Best-selling packages</h2>
+            <Link className="text-[0.78rem] font-bold" href="/admin/packages">
+              View all
+            </Link>
           </div>
           {data.topProducts.length ? (
-            <ol className="top-products">
-              {data.topProducts.map((product) => (
-                <li key={product.id}>
-                  <span>
+            <ol className="m-0 list-none p-0">
+              {data.topProducts.map((product, index) => (
+                <li
+                  className="grid min-h-12 grid-cols-[1.5rem_1fr_auto] items-center gap-[0.65rem] border-t border-[#eef1f5] py-[0.7rem]"
+                  key={product.id}
+                >
+                  <i className="not-italic text-[#94a3b8]">{index + 1}</i>
+                  <span className="grid text-[0.82rem] font-[650]">
                     {product.name}
-                    <small>{product.sold} orders</small>
+                    <small className="text-prep-muted">
+                      {product.sold} orders
+                    </small>
                   </span>
                   <strong>{formatMoney(product.revenuePaise, "INR")}</strong>
                 </li>
               ))}
             </ol>
           ) : (
-            <p className="muted">Sales will appear here.</p>
+            <p className="leading-[1.65]">Sales will appear here.</p>
           )}
         </section>
-        <section className="admin-card flush-card">
-          <div className="card-heading">
-            <h2>Recent orders</h2>
-            <Link href="/admin/orders">View all</Link>
+        <section className="min-w-0 overflow-hidden rounded-[0.65rem] border border-prep-line bg-white shadow-[0_1px_2px_rgba(15,23,42,0.025)]">
+          <div className="flex items-start justify-between gap-4 p-5">
+            <h2 className="my-1 text-base">Recent orders</h2>
+            <Link className="text-[0.78rem] font-bold" href="/admin/orders">
+              View all
+            </Link>
           </div>
-          <div className="admin-table-wrap">
-            <table className="admin-table">
+          <div
+            className="overflow-auto"
+            tabIndex={0}
+            aria-label="Scrollable recent orders table"
+          >
+            <table className="w-full min-w-[36rem] border-collapse text-[0.78rem] [&_td]:border-b [&_td]:border-[#edf0f4] [&_td]:px-[0.8rem] [&_td]:py-[0.78rem] [&_td]:text-[0.82rem] [&_td]:text-[#344054] [&_td]:align-middle [&_td>small]:block [&_td>small]:text-[0.72rem] [&_td>small]:text-prep-muted [&_td>strong]:block [&_th]:border-y [&_th]:border-prep-line [&_th]:px-[0.8rem] [&_th]:py-[0.72rem] [&_th]:text-left [&_th]:text-[0.72rem] [&_th]:font-medium [&_th]:whitespace-nowrap [&_th]:text-[#60676d]">
               <thead>
                 <tr>
                   <th>Order ID</th>
@@ -336,7 +382,7 @@ export default async function Page({
             </table>
           </div>
           {!data.recentOrders.length ? (
-            <div className="clean-empty">
+            <div className="flex min-h-32 flex-col items-center justify-center p-6 text-center text-prep-muted">
               <strong>No orders yet</strong>
             </div>
           ) : null}

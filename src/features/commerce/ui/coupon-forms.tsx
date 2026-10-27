@@ -3,10 +3,14 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { commerceRequest } from "./api";
+import { indiaDateTimeLocalToIso, toIndiaDateTimeLocal } from "@/lib/date-time";
 import {
-  indiaDateTimeLocalToIso,
-  toIndiaDateTimeLocal,
-} from "@/lib/date-time";
+  adminControl,
+  adminPrimaryButton,
+  adminSecondaryButton,
+} from "@/components/admin-styles";
+
+const fieldClass = "grid gap-[0.38rem] text-[0.76rem] font-bold text-[#596168]";
 
 type ProductOption = {
   id: string;
@@ -92,12 +96,13 @@ export function CouponForm({
   }
 
   return (
-    <form className="admin-form" onSubmit={submit}>
-      <fieldset disabled={busy}>
-        <div className="question-grid">
-          <label className="field">
+    <form onSubmit={submit}>
+      <fieldset className="grid gap-4 border-0 p-0" disabled={busy}>
+        <div className="grid grid-cols-2 gap-4 max-[650px]:grid-cols-1">
+          <label className={fieldClass}>
             <span>Coupon code</span>
             <input
+              className={adminControl}
               name="code"
               required
               minLength={2}
@@ -106,16 +111,28 @@ export function CouponForm({
               defaultValue={initial?.code}
             />
           </label>
-          <label className="field">
+          <label className={fieldClass}>
             <span>Discount type</span>
-            <select name="type" value={discountType} onChange={(event) => setDiscountType(event.target.value as "FIXED" | "PERCENT")}>
+            <select
+              className={adminControl}
+              name="type"
+              value={discountType}
+              onChange={(event) =>
+                setDiscountType(event.target.value as "FIXED" | "PERCENT")
+              }
+            >
               <option value="PERCENT">Percentage</option>
               <option value="FIXED">Fixed amount</option>
             </select>
           </label>
-          <label className="field">
-            <span>{discountType === "PERCENT" ? "Discount percentage" : "Discount amount (₹)"}</span>
+          <label className={fieldClass}>
+            <span>
+              {discountType === "PERCENT"
+                ? "Discount percentage"
+                : "Discount amount (₹)"}
+            </span>
             <input
+              className={adminControl}
               name="value"
               type="number"
               min="0.01"
@@ -125,9 +142,10 @@ export function CouponForm({
               defaultValue={initial ? initial.value / 100 : undefined}
             />
           </label>
-          <label className="field">
+          <label className={fieldClass}>
             <span>Minimum order ₹</span>
             <input
+              className={adminControl}
               name="minOrderRupees"
               type="number"
               min="0"
@@ -135,45 +153,58 @@ export function CouponForm({
               defaultValue={(initial?.minOrderPaise ?? 0) / 100}
             />
           </label>
-          <label className="field">
+          <label className={fieldClass}>
             <span>Total uses</span>
             <input
+              className={adminControl}
               name="totalLimit"
               type="number"
               min="1"
               defaultValue={initial?.totalLimit ?? undefined}
             />
           </label>
-          <label className="field">
+          <label className={fieldClass}>
             <span>Ends at</span>
             <input
+              className={adminControl}
               name="endsAt"
               type="datetime-local"
               defaultValue={toIndiaDateTimeLocal(initial?.endsAt ?? null)}
             />
           </label>
         </div>
-        <label className="coupon-active-control">
+        <label className="grid cursor-pointer grid-cols-[auto_auto_1fr] items-center gap-x-[0.55rem] gap-y-[0.35rem] text-[0.74rem]">
           <input
+            className="peer sr-only"
             name="active"
             type="checkbox"
             defaultChecked={initial?.active ?? true}
           />
-          <span aria-hidden="true">
-            <i />
+          <span
+            className="relative row-span-2 h-[1.15rem] w-[2.2rem] rounded-full bg-[#aaa] peer-checked:bg-prep-orange peer-checked:[&_i]:translate-x-[1.05rem] peer-focus-visible:ring-2 peer-focus-visible:ring-[#ffdfd2]"
+            aria-hidden="true"
+          >
+            <i className="absolute top-[0.15rem] left-[0.15rem] size-[0.85rem] rounded-full bg-white transition-transform" />
           </span>
           <b>Active</b>
-          <small>Coupon can be used by eligible students</small>
+          <small className="text-[0.65rem] text-prep-muted">
+            Coupon can be used by eligible students
+          </small>
         </label>
-        <details className="coupon-scope">
-          <summary>Limit to selected live products (optional)</summary>
-          <p className="muted">
+        <details className="rounded-prep-control border border-prep-line p-3">
+          <summary className="cursor-pointer font-bold text-prep-ink">
+            Limit to selected live products (optional)
+          </summary>
+          <p className="my-3 text-sm text-prep-muted">
             Leave every package unchecked to allow this coupon on all live
             products.
           </p>
-          <div className="content-choice-list">
+          <div className="grid max-h-60 gap-1 overflow-auto">
             {products.map((product) => (
-              <label className="content-choice" key={product.id}>
+              <label
+                className="flex cursor-pointer items-start gap-3 rounded-prep-control p-2 hover:bg-[#fff5ef] [&_input]:mt-1 [&_input]:accent-prep-orange [&_span]:grid [&_small]:text-[0.68rem] [&_small]:text-prep-muted [&_strong]:text-[0.76rem]"
+                key={product.id}
+              >
                 <input
                   name="productIds"
                   value={product.id}
@@ -191,25 +222,30 @@ export function CouponForm({
               </label>
             ))}
             {!products.length && (
-              <p className="muted">No live products available.</p>
+              <p className="text-sm text-prep-muted">
+                No live products available.
+              </p>
             )}
           </div>
         </details>
-        <div className="dialog-form-footer">
+        <div className="flex justify-end gap-[0.65rem] border-t border-prep-line pt-4">
           <button
-            className="button secondary"
+            className={adminSecondaryButton}
             type="button"
             onClick={(event) => event.currentTarget.closest("dialog")?.close()}
           >
             Cancel
           </button>
-          <button className="button" type="submit">
+          <button className={adminPrimaryButton} type="submit">
             {busy ? "Saving…" : initial ? "Save coupon" : "Save coupon"}
           </button>
         </div>
       </fieldset>
       {error ? (
-        <p className="notice danger" role="alert">
+        <p
+          className="mt-3 rounded-prep-control border border-[#efc1bd] bg-[#fdebea] p-3 text-sm text-[#ad3028]"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
@@ -246,22 +282,25 @@ export function CouponStatusButton({
     }
   }
   return (
-    <div className="visibility-control">
+    <div className="grid justify-items-center gap-1">
       <button
         type="button"
         role="switch"
         aria-checked={active}
-        className={active ? "availability-toggle on" : "availability-toggle"}
+        className={`relative h-[1.2rem] w-[2.25rem] rounded-full border-0 transition-colors disabled:opacity-50 ${active ? "bg-[#22a861]" : "bg-[#a8adb1]"}`}
         disabled={busy}
         onClick={toggle}
       >
-        <i aria-hidden="true" />
+        <i
+          className={`absolute top-[0.15rem] left-[0.15rem] size-[0.9rem] rounded-full bg-white transition-transform ${active ? "translate-x-[1.05rem]" : ""}`}
+          aria-hidden="true"
+        />
         <span className="sr-only">
           {busy ? "Saving" : active ? "Disable coupon" : "Enable coupon"}
         </span>
       </button>
       {error ? (
-        <small className="danger-text" role="alert">
+        <small className="text-[0.65rem] text-[#ad3028]" role="alert">
           {error}
         </small>
       ) : null}

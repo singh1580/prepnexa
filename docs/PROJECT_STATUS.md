@@ -1,4 +1,4 @@
-# Prepstore implementation status — 23 October 2026
+# Prepstore implementation status — 26 October 2026
 
 This document records the current repository state. Historical phase documents explain how the product evolved; they do not override this checkpoint.
 
@@ -26,16 +26,19 @@ This document records the current repository state. Historical phase documents e
 ## Verification checkpoint
 
 - ESLint, TypeScript, Vitest and the production build are repository gates.
-- On 22 October 2026, all four opt-in database integration suites passed against the isolated Neon `phase-11-browser-qa` branch: authentication, commerce, protected-material access and the complete Student attempt/autosave/submit/result flow. The integration runner now preserves an explicitly supplied QA database URL instead of replacing it with the local placeholder.
+- On 26 October 2026, the Tailwind migration branch passed ESLint, TypeScript, all 160 default Vitest checks and the final Next.js 16.4.1 production build, including all 73 generated static pages.
+- On 26 October 2026, all four opt-in database integration suites passed individually against the isolated Neon `phase-11-browser-qa` branch: authentication, commerce, protected-material access and the complete Student attempt/autosave/submit/result flow. The integration runner preserves an explicitly supplied QA database URL instead of replacing it with the local placeholder.
 - Student-attempt integration fixtures use unpublished paid products plus explicit test entitlements, so a running suite cannot expose synthetic packages in the public catalogue. Its successful run removed its own fixtures; the older incident-linked synthetic product remains unpublished because deleting its referenced QA attempt would be unsafe.
-- Playwright and axe checks cover public pages at 390 px mobile, tablet, laptop and wide-desktop viewports.
-- Authenticated Student/Admin Playwright checks use supplied storage-state files so credentials are never committed.
+- Playwright and axe passed all 60 public route/viewport cases and all eight authentication route/viewport cases at 390×844, 768×1024, 1366×768 and 1920×1080.
+- Authenticated Student/Admin responsive coverage passed all 80 route/viewport cases. Mobile and tablet coverage was completed through the full matrix plus targeted reruns after fixes; the final laptop and wide-desktop matrix passed 40/40. Storage-state files were temporary and credentials were not committed.
+- Workflow automation passed payment-receipt responsiveness, protected two-page A4 PDF rendering on mobile and desktop, page navigation, absence of browser print/download controls, test answer autosave across refresh, Admin dialog focus/Escape behaviour, missing-cover fallback and post-logout Back-button protection.
 - Production dependencies currently report no known npm audit vulnerabilities.
+- The full development audit reports four moderate findings in Drizzle Kit's deprecated internal `@esbuild-kit` chain. The project is already on the latest stable Drizzle Kit (`0.31.11`); npm's proposed remediation is an unsafe downgrade to `0.18.1`, so no forced downgrade or unsupported cross-major override is applied.
 - On 22 October 2026, live production desktop checks covered the public route set, the Student workspace and all nine primary Admin sections plus representative test, package, order and support details. No page-level horizontal overflow or broken images were observed on those checked pages.
-- The live Student check proved test answer/review autosave across refresh, invoice layout, logout dialog focus/Escape handling and post-logout Back-button protection. The production material reader failure was traced to an internal `localhost` redirect and is fixed in this release candidate; it must be rechecked after deployment.
+- The live Student check proved test answer/review autosave across refresh, invoice layout, logout dialog focus/Escape handling and post-logout Back-button protection. The earlier production material-reader failure was traced to an internal `localhost` redirect; the release candidate now uses a same-origin relative redirect and the isolated QA browser workflow proves the protected reader. EC2 post-deploy verification is still required.
 - The live Admin check used password plus authenticator MFA through the secure browser handoff. The material dialog initially focused its Close control and closed with Escape without saving.
 
-Browser automation still requires a machine on which Playwright Chromium can be installed. The current container could not download that browser binary, so the test definitions are committed but an all-device browser pass must be recorded from CI or the release host before claiming final acceptance.
+The normal Playwright browser download was unavailable in the work container, so the completed browser runs used an ephemeral compatible Chromium binary. That environment limitation is no longer an unexecuted-test blocker; EC2 post-deploy smoke remains a separate release check.
 
 ## Compatibility decisions
 
@@ -45,17 +48,17 @@ Browser automation still requires a machine on which Playwright Chromium can be 
 
 ## CSS consolidation
 
-- The application loads one global stylesheet: `src/app/styles.css`.
-- The former `storefront-fixes.css`, `brand-system.css` and `final-review-polish.css` layers were merged and removed rather than retained as later overrides.
-- Exact selector declarations already superseded in the same media/support context were removed during consolidation.
-- The remaining stylesheet still contains legacy `!important` declarations. They are now in one auditable source, but reducing them further is maintenance work and must be done component-by-component with viewport regression evidence.
+- Tailwind CSS 4 is the active component/layout styling system. Responsive behaviour now lives with the affected JSX through direct utilities instead of accumulating selector overrides.
+- `src/app/tailwind.css` contains the Tailwind import, shared theme tokens, the reusable eyebrow utility and the drawer keyframes. `src/app/styles.css` is limited to global tokens, reset, focus/selection, reduced-motion and print rules.
+- The former `storefront-fixes.css`, `brand-system.css`, `final-review-polish.css` and contact CSS module are removed rather than retained as later override layers.
+- No `!important` declaration remains in either application stylesheet. The two stylesheet sources total 200 lines; no historical component/layout selector layer remains.
+- Source-level responsive regression checks and rendered Playwright checks cover the migrated public, authentication, Student, Admin, checkout, test-runner, invoice and protected-reader surfaces.
 
 ## Release evidence still required
 
-1. Run the Playwright matrix with QA Student/Admin storage states and record the authenticated workflow result.
-2. Verify production S3-compatible storage, signed delivery and entitlement revocation against the configured provider.
-3. Record monitoring, database backup and restore evidence.
-4. Complete Razorpay production-key, webhook, failed-payment, retry and reconciliation acceptance.
-5. Promote `develop` to `main` and deploy only after explicit release approval.
+1. Verify production S3-compatible storage, signed delivery and entitlement revocation against the configured provider.
+2. Record monitoring, database backup and restore evidence.
+3. Complete Razorpay production-key, webhook, failed-payment, retry and reconciliation acceptance.
+4. After explicit release approval, promote `develop` to `main`, deploy to EC2 and run the post-deploy public, authenticated and protected-material smoke checks.
 
 An inbound contact-form inbox inside Admin is intentionally deferred. The present form stores every genuine enquiry with a reference and sends it through Resend to `contactprepstore@gmail.com`; the authenticated support centre remains the in-app ticket workflow.

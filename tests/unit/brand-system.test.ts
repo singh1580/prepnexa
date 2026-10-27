@@ -50,11 +50,12 @@ describe("Prepstore shared brand asset", () => {
     ]
       .map((path) => readFileSync(path, "utf8"))
       .join("\n");
+    const compactSources = sources.replace(/\s+/g, "");
 
     expect(sources).not.toContain("prepstore-checkout-mark.svg");
     expect(sources).not.toMatch(/>PS<|Prep<span>store<\/span>/);
-    expect(sources).toContain(
-      'new URL("/brand/prepstore-logo.svg", window.location.origin)',
+    expect(compactSources).toMatch(
+      /newURL\("\/brand\/prepstore-logo\.svg",window\.location\.origin,?\)/,
     );
     expect(sources).toContain("PrepstoreIcon");
     expect(sources).toContain("PrepstoreLogo");
@@ -62,13 +63,16 @@ describe("Prepstore shared brand asset", () => {
 
   it("keeps the two-colour support icon visible on a neutral avatar", () => {
     const polish = readFileSync("src/app/styles.css", "utf8");
-
-    expect(polish).toContain(
-      ".support-message .thread-avatar.support-brand-avatar",
+    const compactPolish = polish.replace(/\s+/g, "");
+    const studentSupport = readFileSync(
+      "src/app/(workspace)/dashboard/support/[id]/page.tsx",
+      "utf8",
     );
-    expect(polish).toContain("background: #fff !important;");
-    expect(polish).toContain(
-      ".support-message.support .thread-avatar:not(.support-brand-avatar)",
+
+    expect(studentSupport).toContain("border border-[#eadfd8] bg-white");
+    expect(studentSupport).toContain("[&_img]:object-contain");
+    expect(compactPolish).not.toContain(
+      ".support-message.support.thread-avatar",
     );
   });
 });

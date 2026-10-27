@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 
 describe("responsive content integrity", () => {
   const css = readFileSync("src/app/styles.css", "utf8");
-  const heroCarousel = readFileSync(
-    "src/components/hero-carousel.tsx",
+  const heroCarousel = readFileSync("src/components/hero-carousel.tsx", "utf8");
+  const workspaceShell = readFileSync(
+    "src/components/workspace-shell.tsx",
     "utf8",
   );
-  const workspaceShell = readFileSync("src/components/workspace-shell.tsx", "utf8");
   const studentDashboard = readFileSync(
     "src/app/(workspace)/dashboard/page.tsx",
     "utf8",
@@ -69,6 +69,15 @@ describe("responsive content integrity", () => {
     "src/app/(workspace)/admin/notifications/page.tsx",
     "utf8",
   );
+  const adminSupportDetail = readFileSync(
+    "src/app/(workspace)/admin/support/[id]/page.tsx",
+    "utf8",
+  );
+  const adminStyles = readFileSync("src/components/admin-styles.ts", "utf8");
+  const adminCatalogForms = readFileSync(
+    "src/features/admin-catalog/ui/forms.tsx",
+    "utf8",
+  );
   const adminModal = readFileSync("src/components/admin-modal.tsx", "utf8");
   const accountActions = readFileSync(
     "src/features/account/account-actions.tsx",
@@ -78,29 +87,57 @@ describe("responsive content integrity", () => {
     "src/app/(public)/packages/page.tsx",
     "utf8",
   );
+  const packageDetail = readFileSync(
+    "src/app/(public)/packages/[slug]/page.tsx",
+    "utf8",
+  );
+  const productDetailTabs = readFileSync(
+    "src/features/catalog/ui/product-detail-tabs.tsx",
+    "utf8",
+  );
   const catalogFilterDisclosure = readFileSync(
     "src/features/catalog/ui/catalog-filter-disclosure.tsx",
     "utf8",
   );
-  const publicLayout = readFileSync(
-    "src/app/(public)/layout.tsx",
-    "utf8",
-  );
-  const authForm = readFileSync(
-    "src/features/auth/ui/auth-form.tsx",
-    "utf8",
-  );
+  const publicLayout = readFileSync("src/app/(public)/layout.tsx", "utf8");
+  const authForm = readFileSync("src/features/auth/ui/auth-form.tsx", "utf8");
   const storefrontProductCard = readFileSync(
     "src/components/storefront-product-card.tsx",
     "utf8",
   );
+  const publicSearch = readFileSync("src/components/public-search.tsx", "utf8");
+  const homePage = readFileSync("src/app/(public)/page.tsx", "utf8");
+  const cartWorkflow = readFileSync(
+    "src/features/commerce/ui/cart-workflow.tsx",
+    "utf8",
+  );
+  const supportDetail = readFileSync(
+    "src/app/(workspace)/dashboard/support/[id]/page.tsx",
+    "utf8",
+  );
+  const resultPage = readFileSync(
+    "src/app/(workspace)/results/[id]/page.tsx",
+    "utf8",
+  );
+  const resultReview = readFileSync(
+    "src/features/student-results/result-review-table.tsx",
+    "utf8",
+  );
+  const testRunner = readFileSync(
+    "src/features/student-tests/ui/test-runner.tsx",
+    "utf8",
+  );
 
-  it("keeps account password changes in-session and package content destinations explicit",()=>{
-    expect(profilePage).toContain("<ChangePasswordForm/>");
-    expect(profilePage).not.toContain('href="/forgot-password">Change password');
-    expect(coursePage).toContain('?view=materials`');
-    expect(coursePage).toContain('?view=tests`');
-    expect(coursePage).not.toContain('Package content</h2><p>Everything included');
+  it("keeps account password changes in-session and package content destinations explicit", () => {
+    expect(profilePage).toContain("<ChangePasswordForm />");
+    expect(profilePage).not.toContain(
+      'href="/forgot-password">Change password',
+    );
+    expect(coursePage).toContain("?view=materials`");
+    expect(coursePage).toContain("?view=tests`");
+    expect(coursePage).not.toContain(
+      "Package content</h2><p>Everything included",
+    );
   });
 
   it("keeps refund navigation canonical and password guidance neutral", () => {
@@ -109,139 +146,125 @@ describe("responsive content integrity", () => {
       publicLayout.match(/href="\/legal\/cancellation-refund"/g),
     ).toHaveLength(1);
     expect(authForm).toContain('aria-label="Password guidance"');
-    expect(css).toContain(
-      ".auth-card .password-requirements li::before",
-    );
-    expect(css).toContain('content: "" !important');
+    expect(authForm).toContain("before:bg-prep-orange");
+    expect(authForm).not.toContain('content: "✓"');
+    expect(css).not.toContain(".password-requirements");
   });
 
   it("keeps product tabs inside their mobile container", () => {
-    expect(css).not.toContain(
-      ".reference-product-tabs{margin-inline:-1.25rem;padding-inline:1.25rem}",
-    );
-    expect(css).toContain(".reference-product-tabs{position:static;display:flex;width:100%");
+    expect(productDetailTabs).toContain("max-[700px]:static");
+    expect(productDetailTabs).toContain("overflow-x-auto");
+    expect(productDetailTabs).toContain("max-w-full");
+    expect(css).not.toContain(".reference-product-tabs");
   });
 
   it("limits horizontal catalogue cards to the catalogue grid", () => {
-    expect(css).toContain(
-      ".reference-catalog-grid .store-product-catalog",
-    );
-    expect(css).not.toContain(
-      ".store-product-card{border-radius:.55rem}.store-product-catalog{",
-    );
+    expect(packagesPage).toContain("max-[1050px]:grid-cols-2");
+    expect(packagesPage).toContain("max-[560px]:grid-cols-1");
+    expect(css).not.toContain(".reference-catalog-grid");
+    expect(css).not.toContain(".store-product-catalog");
   });
 
   it("keeps storefront cards compact and related packages swipeable on phones", () => {
     expect(storefrontProductCard).not.toContain("product.description||");
+    expect(storefrontProductCard).toContain('variant === "catalog"');
+    expect(storefrontProductCard).toContain("max-[560px]:gap-[0.28rem]");
+    expect(cartWorkflow).toContain("max-[560px]:grid-flow-col");
+    expect(cartWorkflow).toContain("max-[560px]:overflow-x-auto");
+    expect(storefrontProductCard).toContain("max-[560px]:aspect-[3/2]");
     expect(storefrontProductCard).toContain(
-      'variant==="catalog"?<div className="store-content-counts">',
-    );
-    expect(css).toContain(
-      ".store-home .store-card-actions {\n    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;",
-    );
-    expect(css).toContain(
-      ".reference-related > div,\n  .cart-recommendations > div {",
-    );
-    expect(css).toContain("grid-auto-flow: column;");
-    expect(css).toContain("scroll-snap-type: inline mandatory;");
-    expect(css).toContain("aspect-ratio: 3 / 2;");
-    expect(css).toContain(
-      "grid-template-columns: auto auto minmax(0, 1fr);",
+      "max-[560px]:grid-cols-[auto_auto_minmax(0,1fr)]",
     );
   });
 
   it("sizes package details from content without duplicate divider bands", () => {
-    expect(css).toContain(
-      ".reference-product-panel {\n  min-height: 0;",
-    );
-    expect(css).toContain("border-bottom: 0;");
-    expect(css).toContain(
-      ".reference-related {\n  margin-top: .35rem;",
-    );
+    expect(productDetailTabs).toContain("min-h-0 bg-white py-5");
+    expect(packageDetail).toContain("mt-[0.35rem] border-t");
+    expect(css).not.toContain(".reference-product-panel");
+    expect(css).not.toContain(".reference-related");
   });
 
   it("anchors mobile hero search and uses the shared responsive carousel", () => {
-    expect(css).toContain(
-      ".public-site .store-hero-content {\n    position: absolute !important;\n    inset: 0;",
-    );
-    expect(css).toContain(
-      "bottom: .7rem !important;",
-    );
-    expect(css).toContain("touch-action: pan-y;");
-    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(homePage).toContain("max-[560px]:absolute max-[560px]:inset-0");
+    expect(homePage).toContain("max-[560px]:bottom-[0.7rem]");
+    expect(heroCarousel).toContain("[touch-action:pan-y]");
+    expect(heroCarousel).toContain("motion-reduce:transition-none");
     expect(heroCarousel.match(/home-[a-z-]+\.webp/g)).toHaveLength(8);
     expect(heroCarousel.match(/student-[a-z-]+\.webp/g)).toHaveLength(8);
-    expect(heroCarousel.match(/student-[a-z-]+-desktop\.webp/g)).toHaveLength(4);
-    expect(heroCarousel.match(/home-[a-z-]+-responsive\.webp/g)).toHaveLength(4);
+    expect(heroCarousel.match(/student-[a-z-]+-desktop\.webp/g)).toHaveLength(
+      4,
+    );
+    expect(heroCarousel.match(/home-[a-z-]+-responsive\.webp/g)).toHaveLength(
+      4,
+    );
     expect(heroCarousel).toContain('<source media="(min-width: 900px)"');
-    expect(heroCarousel).toContain('<source media="(max-width: 899px)"');
-    expect(heroCarousel).toContain('sizes="(max-width: 899px) 100vw, calc(100vw - 240px)"');
-    expect(css).toContain("@media (max-width: 899px)");
-    expect(css).toContain("@media (min-width: 900px) and (max-width: 1279px)");
-    expect(css).not.toContain("@media(max-width:950px){.course-outline{position:static}.auth-shell");
-    expect(css).toContain("@media(max-width:899px){.featured-store-grid{grid-template-columns:repeat(2,1fr)}");
-    expect(css).not.toContain(".hero-search{max-width:32rem}.featured-store-grid{grid-template-columns:1fr}");
-    expect(heroCarousel).toContain('fetchPriority={index === 0 ? "high" : "auto"}');
+    expect(heroCarousel).toContain('media="(max-width: 899px)"');
+    expect(heroCarousel).toContain(
+      'sizes="(max-width: 899px) 100vw, calc(100vw - 240px)"',
+    );
+    expect(homePage).toContain("min-[561px]:max-[899px]:grid-cols-2");
+    expect(css).not.toContain(
+      "@media(max-width:950px){.course-outline{position:static}.auth-shell",
+    );
+    expect(css).not.toContain(".featured-store-grid");
+    expect(heroCarousel).toContain(
+      'fetchPriority={index === 0 ? "high" : "auto"}',
+    );
     expect(heroCarousel).toContain("document.visibilityState");
     expect(heroCarousel).not.toContain("controls=");
     expect(heroCarousel).toContain("onPointerUp={handlePointerUp}");
-    expect(heroCarousel).toContain("if (distance > 0) showPrevious(); else showNext();");
+    expect(heroCarousel).toContain("if (distance > 0) showPrevious();");
+    expect(heroCarousel).toContain("else showNext();");
     expect(heroCarousel).not.toContain("ArrowIcon");
     expect(heroCarousel).not.toContain("PauseIcon");
-    expect(heroCarousel).toContain("hero-carousel-label");
-    expect(heroCarousel.indexOf("hero-carousel-dots")).toBeLessThan(
-      heroCarousel.indexOf("hero-carousel-label"),
+    expect(heroCarousel).toContain('aria-live="polite"');
+    expect(heroCarousel.indexOf('aria-label="Choose an image"')).toBeLessThan(
+      heroCarousel.indexOf('aria-live="polite"'),
     );
     expect(heroCarousel).toContain("unoptimized");
-    expect(css).toContain(".home-hero-carousel .hero-carousel-slide img {\n  object-fit: cover;");
-    expect(css).toContain(".student-hero-carousel .hero-carousel-slide img {\n  object-fit: cover;");
-    expect(css).toContain(".hero-carousel-picture {\n  position: absolute;");
-    expect(css).toContain("left: clamp(1rem, 7vw, 7.2rem)");
-    expect(css).toContain(".public-site .hero-search {\n    position: absolute;");
-    expect(css).toContain("bottom: 2rem;");
-    expect(css).toContain("left: clamp(2rem, 7vw, 7.2rem);");
-    expect(css).toContain(".home-hero-carousel .hero-carousel-controls {\n    bottom: 6.25rem;");
-    expect(css).toContain("bottom: 3.75rem");
-    expect(css).not.toContain(".hero-carousel-controls.has-full-controls");
-    expect(css).not.toContain(".hero-carousel-arrow");
-    expect(css).not.toContain(".hero-carousel-toggle");
-    const homeControls = css.match(
-      /\.hero-carousel-controls\.has-dot-controls \{([^}]*)\}/,
-    )?.[1];
-    expect(homeControls).toBeDefined();
-    expect(homeControls).not.toMatch(/right:|padding:|border:|background:|box-shadow:|backdrop-filter:/);
+    expect(heroCarousel).toContain("object-cover object-right");
+    expect(heroCarousel).toContain(
+      "bottom-[6.25rem] left-[clamp(1rem,7vw,7.2rem)]",
+    );
+    expect(heroCarousel).toContain("max-[560px]:bottom-[3.75rem]");
+    expect(homePage).toContain("min-[561px]:bottom-8");
+    expect(homePage).toContain("min-[561px]:left-[clamp(2rem,7vw,7.2rem)]");
+    expect(css).not.toContain(".hero-carousel");
     expect(css).not.toContain(".student-reference-banner:after");
     expect(css).not.toContain(".student-reference-banner:after");
     expect(css).not.toContain(".student-reference-banner::after");
     expect(css).not.toContain(".store-hero:after");
     expect(css).not.toContain(".store-hero::after");
-    expect(css).toContain(
-      ".student-dashboard-main > .student-reference-banner {\n    min-height: 18.5rem;",
+    expect(studentDashboard).toContain("min-[801px]:min-h-[18.5rem]");
+    expect(studentDashboard).toContain("max-[600px]:min-h-72");
+    expect(studentDashboard).toContain("max-[560px]:w-[62%]");
+    expect(css).not.toContain(".student-reference-banner");
+    expect(studentDashboard).toContain(
+      'mainClassName="student-dashboard-main"',
     );
-    expect(css).toContain(
-      ".student-reference-banner {\n    min-height: 18rem;",
-    );
-    expect(css).not.toContain(
-      "@media (max-width: 800px) {\n  .student-dashboard-main > .student-reference-banner",
-    );
-    expect(studentDashboard).toContain('mainClassName="student-dashboard-main"');
-    expect(studentDashboard).toContain('className="student-dashboard-content"');
+    expect(studentDashboard).toContain("mx-auto w-full max-w-[1240px]");
+    expect(css).not.toContain(".student-dashboard-content");
     expect(workspaceShell).toContain("mainClassName?: string");
-    expect(css).toContain(".student-workspace .workspace-main.student-dashboard-main {\n  max-width: none;\n  padding: 0 !important;");
+    expect(workspaceShell).toContain(
+      '"workspace-main student-dashboard-main min-w-0 w-full max-w-none',
+    );
     expect(heroCarousel).not.toContain("hero-handwriting");
   });
 
   it("renders order rows as labelled mobile cards", () => {
     expect(orders).toContain('data-label="Order ID"');
     expect(orders).toContain('data-label="Payment status"');
-    expect(css).toContain("content:attr(data-label)");
-    expect(css).toContain(".orders-table-wrap thead{display:none}");
+    expect(orders).toContain("content-[attr(data-label)]");
+    expect(orders).toContain("max-[700px]:hidden");
+    expect(css).not.toContain(".orders-table-wrap");
   });
 
   it("allows long protected-material filenames to wrap", () => {
-    expect(reader).toContain('className="lesson-content reference-reader-content"');
-    expect(css).toContain(".reader-heading h1{overflow-wrap:anywhere;word-break:break-word}");
-    expect(css).toContain(".reference-reader-content,.material-reader{width:100%;overflow:hidden}");
+    expect(reader).toContain("[overflow-wrap:anywhere]");
+    expect(reader).toContain("min-w-0 max-w-full");
+    expect(reader).toContain("break-words");
+    expect(css).not.toContain(".reference-reader-content");
+    expect(css).not.toContain(".reader-heading");
   });
 
   it("allows protected PDFs to render only inside the same-origin reader", () => {
@@ -251,18 +274,22 @@ describe("responsive content integrity", () => {
     expect(reader).toContain("<SecurePdfViewer");
     expect(securePdfViewer).toContain('await import("pdfjs-dist")');
     expect(securePdfViewer).toContain('credentials: "same-origin"');
-    expect(securePdfViewer).toContain("page.render({ canvas, viewport");
+    expect(securePdfViewer).toContain("const task = page.render({");
+    expect(securePdfViewer).toContain("canvas,");
+    expect(securePdfViewer).toContain("viewport,");
     expect(securePdfViewer).not.toContain("<iframe");
     expect(securePdfViewer).not.toContain("URL.createObjectURL");
-    expect(css).toContain(".secure-pdf-reader{");
-    expect(css).toContain(".secure-pdf-stage{");
+    expect(securePdfViewer).toContain("h-[calc(100dvh-9rem)]");
+    expect(securePdfViewer).toContain("max-[700px]:min-h-[32rem]");
+    expect(securePdfViewer).toContain("data-pdf-stage");
+    expect(css).not.toContain(".secure-pdf-reader");
     expect(reader).toContain("Personal study copy · access protected");
     expect(securePdfViewer).toContain('fitMode === "page"');
     expect(securePdfViewer).toContain("availableHeight / base.height");
     expect(securePdfViewer).toContain("MAX_RENDER_PIXELS");
     expect(securePdfViewer).toContain("pixelBudgetScale");
-    expect(securePdfViewer).toContain(">Fit page</button>");
-    expect(securePdfViewer).toContain(">Fit width</button>");
+    expect(securePdfViewer).toContain("Fit page");
+    expect(securePdfViewer).toContain("Fit width");
     expect(materialAccessRoute).toContain("Location: location");
     expect(materialAccessRoute).not.toContain("Response.redirect");
     expect(materialAccessRoute).not.toContain("new URL(`/api/materials/");
@@ -273,85 +300,82 @@ describe("responsive content integrity", () => {
     expect(invoicePage).toContain('data-label="Description"');
     expect(invoicePage).toContain('data-label="Access period"');
     expect(invoicePage).toContain('data-label="Amount"');
-    expect(css).toContain(".invoice-page .invoice thead{display:none}");
+    expect(invoicePage).toContain('<thead className="max-[700px]:hidden">');
+    expect(invoicePage).toContain("before:content-[attr(data-label)]");
     expect(invoicePage).not.toContain("<PublicHeader");
     expect(invoicePage).toContain("<PrepstoreLogo");
-    expect(css).toContain(".invoice-page-header");
     expect(css).toContain("@media print");
-    expect(css).toContain(".invoice-page-header,");
+    expect(css).toContain("@page");
+    expect(css).not.toContain(".invoice-page-header");
+    expect(css).not.toContain(".invoice-page");
   });
 
-  it("loads one consolidated global stylesheet", () => {
+  it("loads Tailwind plus the minimal global stylesheet without legacy layers", () => {
     expect(rootLayout).toContain('import "./styles.css"');
     expect(rootLayout).not.toContain("storefront-fixes.css");
     expect(rootLayout).not.toContain("brand-system.css");
     expect(rootLayout).not.toContain("final-review-polish.css");
-    expect(css).toContain(".admin-workspace .admin-list-controls");
-    expect(css).toContain(".admin-side-detail.reference-order-detail");
-    expect(css).toContain(".product-create-form .dialog-form-footer");
+    expect(css).not.toContain(".admin-list-controls");
+    expect(adminOrders).toContain("adminFilterForm");
+    expect(adminStudents).toContain("adminFilterForm");
+    expect(adminCoupons).toContain("adminFilterForm");
+    expect(adminStyles).toContain("export const adminSideDetail");
+    expect(adminStyles).toContain("max-[800px]:inset-[0_0_0_auto]");
+    expect(css).not.toContain(".admin-side-detail.reference-order-detail");
+    expect(adminCatalogForms).toContain(
+      "flex justify-end border-t border-prep-line pt-4",
+    );
+    expect(css).not.toContain(".product-create-form .dialog-form-footer");
   });
 
   it("keeps desktop workspace dividers continuous without stretching student navigation", () => {
-    expect(css).toContain(
-      ".student-workspace.workspace {",
+    expect(workspaceShell).toContain(
+      "min-[900px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]",
     );
-    expect(css).toContain(
-      "grid-template-columns: minmax(240px, 256px) minmax(0, 1fr) !important",
-    );
-    expect(css).toContain(".admin-workspace > .sidebar::before");
-    expect(css).toContain(".student-workspace > .sidebar::before");
-    expect(css).toContain("top: 63px");
-    expect(css).toContain("grid-auto-rows: max-content");
-    expect(css).toContain("align-content: start");
-    expect(css).toContain(
-      ".student-workspace .workspace-header {",
-    );
-    expect(css).toContain(
-      "border-bottom: 1px solid var(--review-line) !important",
-    );
-    expect(css).toContain(
-      "border-right: 1px solid var(--review-line) !important",
-    );
-    expect(css).toContain(
-      "border-left: 1px solid var(--review-line) !important",
-    );
+    expect(workspaceShell).toContain("before:top-[63px]");
+    expect(workspaceShell).toContain("[&>nav]:content-start");
+    expect(workspaceShell).toContain("border-b border-[#e6e2de]");
+    expect(workspaceShell).toContain("border-r border-[#e6e2de]");
+    expect(workspaceShell).toContain("min-[900px]:border-l");
+    expect(css).not.toContain(".student-workspace.workspace");
   });
 
   it("asks for confirmation before ending a signed-in session", () => {
-    expect(accountActions).toContain('<dialog ref={dialogRef} className="logout-confirm-backdrop"');
+    expect(accountActions).toContain(
+      'ref={dialogRef}\n        className="m-auto max-h-none max-w-none border-0 bg-transparent p-0',
+    );
     expect(accountActions).toContain("dialog.showModal()");
     expect(accountActions).toContain("aria-labelledby={titleId}");
     expect(accountActions).toContain("Sign out of Prepstore?");
     expect(accountActions).toContain("setConfirming(true)");
-    expect(css).toContain(".logout-confirm-dialog");
+    expect(accountActions).toContain("backdrop:backdrop-blur-[2px]");
+    expect(accountActions).toContain("max-[420px]:grid-cols-2");
+    expect(css).not.toContain(".logout-confirm-dialog");
   });
 
   it("keeps the test title, timer and section selector compact", () => {
-    expect(css).toContain(
-      ".student-workspace .attempt-runner",
-    );
-    expect(css).toContain(
-      ".student-workspace .attempt-section-tabs",
-    );
-    expect(css).toContain("margin: 0 !important");
-    expect(css).toContain("min-width: 8.5rem !important");
-    expect(css).toContain(
-      ".student-workspace .attempt-timer strong",
-    );
+    expect(testRunner).toContain("max-w-[1060px]");
+    expect(testRunner).toContain("min-h-[3.75rem]");
+    expect(testRunner).toContain("min-w-[7.25rem]");
+    expect(testRunner).toContain("min-w-[8.5rem]");
+    expect(testRunner).toContain("[font-variant-numeric:tabular-nums]");
+    expect(testRunner).toContain("max-[420px]:text-[1.15rem]");
+    expect(css).not.toContain(".attempt-runner");
   });
 
   it("uses swipeable two-card home shelves on phones", () => {
-    expect(css).toContain(
-      ".store-home .featured-store-grid",
+    expect(homePage).toContain("max-[560px]:grid-flow-col");
+    expect(homePage).toContain(
+      "max-[560px]:auto-cols-[minmax(0,calc((100%-0.65rem)/2))]",
     );
-    expect(css).toContain("grid-auto-flow: column");
-    expect(css).toContain(
-      "grid-auto-columns: minmax(0, calc((100% - .65rem) / 2))",
+    expect(homePage).toContain(
+      "max-[560px]:[scroll-snap-type:inline_mandatory]",
     );
-    expect(css).toContain("scroll-snap-type: inline mandatory");
-    expect(css).toContain(
-      ".store-home .store-product-compact .store-product-title",
+    expect(homePage).toContain("max-[560px]:[&>*]:snap-start");
+    expect(storefrontProductCard).toContain(
+      'variant === "compact" ? "max-[560px]:block"',
     );
+    expect(css).not.toContain(".store-home");
   });
 
   it("uses a compact mobile catalogue disclosure and bounded product covers", () => {
@@ -359,106 +383,128 @@ describe("responsive content integrity", () => {
     expect(packagesPage).toContain("activeFilterCount");
     expect(packagesPage).not.toContain("<details");
     expect(packagesPage).not.toContain("<span>⌃</span>");
-    expect(catalogFilterDisclosure).toContain('aria-expanded={open}');
+    expect(catalogFilterDisclosure).toContain("aria-expanded={open}");
     expect(catalogFilterDisclosure).toContain('type="button"');
-    expect(css).toContain(
-      ".catalog-filter-trigger",
-    );
-    expect(css).toContain(
-      "grid-template-columns: repeat(2, minmax(0, 1fr))",
-    );
-    expect(css).toContain("height: 10.75rem !important");
-    expect(css).toContain("grid-column: 1 / -1");
-    expect(css).toContain("white-space: nowrap");
+    expect(catalogFilterDisclosure).toContain("max-[560px]:col-start-2");
+    expect(catalogFilterDisclosure).toContain("max-[560px]:grid-cols-1");
+    expect(storefrontProductCard).toContain("max-[560px]:h-[10.75rem]");
+    expect(packagesPage).toContain("max-[560px]:col-span-full");
+    expect(css).not.toContain(".catalog-filter-trigger");
   });
 
   it("keeps mobile hero copy clear of the subject and strengthens owned actions", () => {
-    expect(css).toContain("object-position: right center");
-    expect(css).toContain("max-width: 52%");
-    expect(css).toContain(
-      ".public-site .hero-search:focus-within",
+    expect(heroCarousel).toContain("object-cover object-right");
+    expect(homePage).toContain("max-[560px]:max-w-[52%]");
+    expect(homePage).toContain(
+      "focus-within:shadow-[0_0_0_2px_rgba(232,71,20,.22)]",
     );
-    expect(css).toContain(
-      ".public-site .hero-search input:focus-visible",
+    expect(storefrontProductCard).toContain("max-[560px]:aspect-[3/2]");
+    expect(storefrontProductCard).toContain(
+      "bg-[#e7edf8] bg-[linear-gradient(135deg,#f9fbff_0%,#d7e1f3_52%,#7289bb_100%)]",
     );
-    expect(css).toContain("aspect-ratio: 3 / 2");
-    expect(css).toContain(".cover-tone-1{background-color:#e7edf8");
-    expect(css).toContain(".store-home .store-owned-action");
-    expect(css).toContain("background: #c73c0b");
+    expect(storefrontProductCard).toContain("bg-[#c73c0b]");
   });
 
   it("removes reserved card-title space and keeps both support conversations compact", () => {
-    expect(css).toContain("min-height: 0;");
-    expect(css).toContain(".reference-ticket .support-message {");
-    expect(css).toContain("border-radius: 0;");
-    expect(css).toContain(
-      ".admin-ticket-panel .admin-conversation .support-message",
+    expect(supportDetail).toContain(
+      "max-[700px]:grid-cols-[2.2rem_minmax(0,1fr)]",
     );
-    expect(css).toContain("max-height: none;");
-    expect(css).toContain("overflow: visible;");
-    expect(css).toContain(
-      "grid-template-columns: 2.35rem minmax(0, 1fr)",
-    );
+    expect(supportDetail).toContain("max-[700px]:rounded-none");
+    expect(css).not.toContain(".reference-ticket");
+    expect(adminSupportDetail).toContain("grid-cols-[2.35rem_minmax(0,1fr)]");
+    expect(adminSupportDetail).toContain("max-[700px]:max-w-full");
+    expect(css).not.toContain(".admin-ticket-panel");
     expect(css).not.toContain(".support-split-detail");
   });
 
   it("keeps admin header account actions in a compact right-side group", () => {
-    expect(css).toContain(".admin-workspace .workspace-header {");
-    expect(css).toContain("justify-content: flex-start !important");
-    expect(css).toContain(
-      ".admin-workspace .workspace-header > .public-live-search",
-    );
-    expect(css).toContain("margin: 0 auto 0 0 !important");
-    expect(css).toContain(
-      ".admin-workspace .workspace-header > .student-header-account",
-    );
+    expect(workspaceShell).toContain("items-center justify-start gap-3");
+    expect(workspaceShell).toContain('<PublicSearch variant="admin" />');
+    expect(publicSearch).toContain('variant === "student"');
+    expect(publicSearch).toContain('variant?: "public" | "student" | "admin"');
+    expect(workspaceShell).toContain("hidden min-w-0 shrink-0 items-center");
+    expect(css).not.toContain(".admin-workspace .workspace-header");
   });
 
   it("uses a compact course heading and includes the active view in breadcrumbs", () => {
     expect(coursePage).not.toContain('"MY PACKAGE"');
     expect(coursePage).toContain("<b>{viewLabel}</b>");
-    expect(coursePage).toContain('view==="overview"?"Overview"');
+    expect(coursePage).toContain('view === "overview"');
+    expect(coursePage).toContain('? "Overview"');
   });
 
   it("turns question review rows into mobile cards instead of a wide table", () => {
-    expect(css).not.toContain(".review-table-wrap table{min-width:700px}");
-    expect(css).toContain(".review-row-summary>span:before{content:attr(data-label)");
-    expect(css).toContain(".section-performance-head{display:none}");
-    expect(css).toContain(".reference-performance>div{grid-template-columns:repeat(6,minmax(0,1fr))}");
+    expect(css).not.toContain(".review-table-wrap");
+    expect(resultReview).toContain("max-[700px]:grid-cols-2");
+    expect(resultReview).toContain("max-[700px]:hidden");
+    expect(resultReview).toContain("Correct answer");
+    expect(resultPage).toContain("max-[700px]:hidden");
+    expect(resultPage).toContain("max-[500px]:grid-cols-2");
   });
 
   it("uses semantic status colours instead of falling back to grey", () => {
-    expect(css).toContain(".status-active,.status-paid,.status-enabled");
-    expect(css).toContain(".status-pending,.status-created,.status-required");
-    expect(css).toContain(".status-failed,.status-suspended,.status-blocked");
-    expect(css).toContain(".status-cancelled,.status-expired,.status-closed");
-    expect(css).toContain(".status-refunded,.status-partially_refunded");
-    expect(profilePage).toContain("status-enabled");
-    expect(profilePage).toContain("status-required");
+    expect(adminStyles).toContain(
+      '["ACTIVE", "PAID", "ENABLED", "RESOLVED", "CAPTURED", "COMPLETED"]',
+    );
+    expect(adminStyles).toContain('"PENDING_VERIFICATION"');
+    expect(adminStyles).toContain(
+      '["FAILED", "SUSPENDED", "BLOCKED", "REJECTED"]',
+    );
+    expect(adminStyles).toContain('["REFUNDED", "PARTIALLY_REFUNDED"]');
+    expect(profilePage).toContain(
+      "border-[#bfe2cc] bg-[#e7f4ec] text-[#276448]",
+    );
+    expect(profilePage).toContain(
+      "border-[#f1d79b] bg-[#fff4d9] text-[#8a5b13]",
+    );
   });
 
   it("keeps workspace forms and dialogs bounded at desktop and mobile sizes", () => {
-    expect(css).toContain(".change-password-form fieldset{margin:0;padding:0;border:0}");
-    expect(css).toContain(".admin-workspace .admin-dialog.dialog-large {");
-    expect(css).toContain("width: min(60rem, calc(100vw - 2rem)) !important");
-    expect(css).toContain("max-height: calc(100dvh - 2rem) !important");
-    expect(css).toContain(".dialog-body{min-height:0;max-height:none;overflow-y:auto}");
-    expect(css).toContain(".support-ticket-create-form fieldset{display:grid;grid-template-columns:1fr 1fr");
-    expect(studentActions).toContain('className="admin-form support-ticket-create-form"');
-    expect(css).toContain('.cover-upload-field input[type="file"]::file-selector-button');
+    expect(accountActions).toContain(
+      'className="m-0 grid grid-cols-2 gap-[.7rem] border-0 p-0 max-[700px]:grid-cols-1',
+    );
+    expect(css).not.toContain(".change-password-form");
+    expect(adminModal).toContain("w-[min(64rem,calc(100vw-2rem))]");
+    expect(adminModal).toContain("max-h-[calc(100dvh-2rem)]");
+    expect(adminModal).toContain("min-h-0 overflow-y-auto overscroll-contain");
+    expect(css).not.toContain(".admin-dialog");
+    expect(css).not.toContain(".dialog-body");
+    expect(studentActions).toContain(
+      'className="m-0 grid grid-cols-2 gap-[.85rem] border-0 p-0 max-[700px]:grid-cols-1"',
+    );
+    expect(studentActions).toContain("max-[700px]:w-full");
+    expect(css).not.toContain(".support-ticket-create-form");
+    expect(adminCatalogForms).toContain(
+      "file:cursor-pointer file:rounded-[0.35rem]",
+    );
+    expect(css).not.toContain('.cover-upload-field input[type="file"]');
   });
 
   it("keeps test editing compact and uses the primary save action", () => {
-    expect(css).toContain('.test-create-workspace input:not([type="checkbox"])');
-    expect(css).toContain(".test-settings-card .check-row{min-height:2.25rem");
-    expect(testForms).toContain('{busy === "settings" ? "Saving…" : "Save settings"}');
-    expect(testForms).not.toContain('<button className="button secondary" type="submit">\n                {busy === "settings"');
+    expect(testForms).toContain("min-h-28 w-full resize-y");
+    expect(testForms).toContain("grid grid-cols-2 gap-x-4");
+    expect(testForms).toContain("adminPrimaryButton");
+    expect(css).not.toContain(".test-create-workspace");
+    expect(css).not.toContain(".test-settings-card");
+    expect(testForms).toContain(
+      '{busy === "settings" ? "Saving…" : "Save settings"}',
+    );
+    expect(testForms).not.toContain(
+      '<button className="button secondary" type="submit">\n                {busy === "settings"',
+    );
   });
 
-  it("keeps the identifier column visible while wide admin tables scroll", () => {
-    expect(css).toContain(".reference-order-card .admin-table th:first-child");
-    expect(css).toContain(".reference-student-card .admin-table th:first-child");
-    expect(css).toContain("position:sticky;left:0");
+  it("keeps wide admin tables scrollable and switches to labelled cards", () => {
+    expect(adminOrders).toContain(
+      "overflow-x-auto max-[800px]:overflow-visible",
+    );
+    expect(adminStudents).toContain(
+      "overflow-x-auto max-[800px]:overflow-visible",
+    );
+    expect(adminStyles).toContain("max-[800px]:[&_thead]:hidden");
+    expect(adminStyles).toContain(
+      "max-[800px]:[&_td]:before:content-[attr(data-label)]",
+    );
   });
 
   it("turns dense admin lists into labelled cards on phones", () => {
@@ -466,10 +512,11 @@ describe("responsive content integrity", () => {
     expect(adminStudents).toContain('data-label="Account status"');
     expect(adminCoupons).toContain('data-label="Discount"');
     expect(adminNotifications).toContain('data-label="Recipients"');
-    expect(css).toContain(
-      ".reference-order-card .admin-table td::before",
-    );
-    expect(css).toContain("content: attr(data-label)");
+    expect(adminOrders).toContain("adminResponsiveTable");
+    expect(adminStudents).toContain("adminResponsiveTable");
+    expect(adminNotifications).toContain("adminResponsiveTable");
+    expect(adminStyles).toContain("before:content-[attr(data-label)]");
+    expect(css).not.toContain(".reference-order-card .admin-table td::before");
   });
 
   it("protects changed modal forms from accidental dismissal", () => {

@@ -18,7 +18,15 @@ import { WorkspaceRouteEffects } from "./workspace-route-effects";
 
 type NavItem = { key: string; href: string; label: string; icon: string };
 
-function NavIcon({ name }: { name: string }) {
+function NavIcon({
+  name,
+  className = "",
+  size = "default",
+}: {
+  name: string;
+  className?: string;
+  size?: "default" | "small";
+}) {
   const paths: Record<string, React.ReactNode> = {
     dashboard: (
       <>
@@ -103,7 +111,7 @@ function NavIcon({ name }: { name: string }) {
   };
   return (
     <svg
-      className="nav-icon"
+      className={`${size === "small" ? "size-4" : "size-[1.15rem]"} shrink-0 ${className}`}
       viewBox="0 0 24 24"
       aria-hidden="true"
       fill="none"
@@ -254,6 +262,7 @@ function StudentPackageMenu({
   activePackageView = "overview",
   activeMaterialId,
   expanded,
+  inDrawer = false,
 }: {
   packages: PackageSummary[];
   activeCourse: ActiveCourse;
@@ -261,6 +270,7 @@ function StudentPackageMenu({
   activePackageView?: PackageView;
   activeMaterialId?: string;
   expanded: boolean;
+  inDrawer?: boolean;
 }) {
   const groups = activeCourse
     ? Array.from(
@@ -280,13 +290,18 @@ function StudentPackageMenu({
   ];
   return (
     <SidebarDisclosure
-      className="package-sidebar-menu"
+      className="min-w-0"
+      toggleClassName="mr-1"
       defaultOpen={expanded || Boolean(activePackageSlug)}
       openKey={activePackageSlug ?? (expanded ? "all-packages" : undefined)}
       label="My packages"
       trigger={
         <Link
-          className={expanded || activePackageSlug ? "nav-item active" : "nav-item"}
+          className={navItemClass(
+            Boolean(expanded || activePackageSlug),
+            false,
+            inDrawer,
+          )}
           href="/dashboard/courses"
         >
           <NavIcon name="library" />
@@ -294,31 +309,38 @@ function StudentPackageMenu({
         </Link>
       }
     >
-      <div className="package-sidebar-list">
-        <Link className="package-view-all" href="/dashboard/courses">
+      <div className="my-1 mb-2 ml-0 grid gap-0.5 border-l border-[#e8e5e1] pl-4">
+        <Link
+          className="px-[.55rem] py-[.45rem] text-[.82rem] font-bold text-prep-orange"
+          href="/dashboard/courses"
+        >
           View all packages
         </Link>
         {packages.map((course) => (
           <SidebarDisclosure
-            className="sidebar-course"
+            className="min-w-0 rounded-[.4rem]"
+            summaryClassName="rounded-[.4rem] hover:bg-[#faf7f4]"
+            primaryClassName={`p-[.55rem] text-[.84rem] font-bold ${course.slug === activePackageSlug ? "text-prep-orange" : "text-[#4d5459]"}`}
             defaultOpen={course.slug === activePackageSlug}
-            openKey={course.slug === activePackageSlug ? course.slug : undefined}
+            openKey={
+              course.slug === activePackageSlug ? course.slug : undefined
+            }
             label={normaliseProductName(course.name)}
             trigger={<span>{normaliseProductName(course.name)}</span>}
             triggerToggles
             key={course.id}
           >
-            <div className="sidebar-course-links">
+            <div className="mb-[.4rem] ml-[.35rem] grid border-l border-[#ece9e5] pl-[.55rem]">
               {sections.map(([key, label]) =>
                 key === "materials" ? (
-                  <div className="sidebar-materials-group" key={key}>
+                  <div className="grid" key={key}>
                     <Link
-                      className={
+                      className={`rounded-[.34rem] px-[.55rem] py-[.48rem] text-[.8rem] font-medium hover:bg-[#fff0e8] hover:text-prep-orange ${
                         course.slug === activePackageSlug &&
                         key === activePackageView
-                          ? "active"
-                          : ""
-                      }
+                          ? "bg-[#fff0e8] font-bold text-prep-orange"
+                          : "text-[#656c72]"
+                      }`}
                       aria-current={
                         course.slug === activePackageSlug &&
                         key === activePackageView
@@ -332,20 +354,30 @@ function StudentPackageMenu({
                     {course.slug === activePackageSlug &&
                     activePackageView === "materials" &&
                     groups.length ? (
-                      <details className="sidebar-course-outline" open>
-                        <summary>
-                          Course outline <i><UiIcon name="chevron" /></i>
+                      <details
+                        className="group/outline my-[.2rem] mr-0 mb-[.3rem] ml-[.45rem] min-w-0 border-l border-[#e6e3df] pl-[.45rem]"
+                        open
+                      >
+                        <summary className="flex cursor-pointer list-none items-center justify-between rounded-[.32rem] bg-[#faf8f5] px-2 py-[.42rem] text-[.78rem] font-bold text-[#4f565b] [&::-webkit-details-marker]:hidden">
+                          Course outline{" "}
+                          <i className="grid place-items-center not-italic">
+                            <UiIcon
+                              className="size-4 transition-transform group-open/outline:rotate-180"
+                              name="chevron"
+                            />
+                          </i>
                         </summary>
                         {groups.map((group) => (
                           <details
+                            className="ml-[.35rem] min-w-0"
                             open={group.items.some(
                               (item) => item.id === activeMaterialId,
                             )}
                             key={group.subject}
                           >
-                            <summary>
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-[.42rem] text-[.76rem] font-bold text-[#697075] [&::-webkit-details-marker]:hidden">
                               {group.subject}
-                              <small>
+                              <small className="text-[.68rem]">
                                 {
                                   group.items.filter((item) => item.viewed)
                                     .length
@@ -355,15 +387,17 @@ function StudentPackageMenu({
                             </summary>
                             {group.items.map((item) => (
                               <Link
-                                className={
+                                className={`grid grid-cols-[1rem_minmax(0,1fr)] gap-[.35rem] px-[.45rem] py-[.4rem] text-[.73rem] leading-[1.35] ${
                                   item.id === activeMaterialId
-                                    ? "active material-active"
-                                    : ""
-                                }
+                                    ? "bg-[#fff4ed] font-bold text-prep-orange"
+                                    : "text-[#777d82]"
+                                }`}
                                 href={`/library/${item.id}?course=${encodeURIComponent(course.slug)}`}
                                 key={item.id}
                               >
-                                <span>{item.viewed ? "✓" : "○"}</span>
+                                <span className="text-[#2b8a5b]">
+                                  {item.viewed ? "✓" : "○"}
+                                </span>
                                 {item.title}
                               </Link>
                             ))}
@@ -374,12 +408,12 @@ function StudentPackageMenu({
                   </div>
                 ) : (
                   <Link
-                    className={
+                    className={`rounded-[.34rem] px-[.55rem] py-[.48rem] text-[.8rem] font-medium hover:bg-[#fff0e8] hover:text-prep-orange ${
                       course.slug === activePackageSlug &&
                       key === activePackageView
-                        ? "active"
-                        : ""
-                    }
+                        ? "bg-[#fff0e8] font-bold text-prep-orange"
+                        : "text-[#656c72]"
+                    }`}
                     aria-current={
                       course.slug === activePackageSlug &&
                       key === activePackageView
@@ -410,6 +444,7 @@ function Navigation({
   activePackageSlug,
   activePackageView,
   activeMaterialId,
+  inDrawer = false,
 }: {
   items: NavItem[];
   section: string;
@@ -419,6 +454,7 @@ function Navigation({
   activePackageSlug?: string;
   activePackageView?: PackageView;
   activeMaterialId?: string;
+  inDrawer?: boolean;
 }) {
   const student = !items.some(
     (item) => item.key === "overview" && item.href === "/admin",
@@ -430,13 +466,15 @@ function Navigation({
           <div className="nav-group">
             <Link
               href={item.href}
-              className={section === item.key ? "nav-item active" : "nav-item"}
+              className={navItemClass(section === item.key, !student, inDrawer)}
               aria-current={section === item.key ? "page" : undefined}
             >
               <NavIcon name={item.icon} />
               <span>{item.label}</span>
               {item.key === "notifications" && unread > 0 ? (
-                <b className="nav-count">{unread}</b>
+                <b className="ml-auto grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded-full bg-[#ee4a17] px-[.22rem] text-[.56rem] text-white">
+                  {unread}
+                </b>
               ) : null}
             </Link>
           </div>
@@ -448,12 +486,33 @@ function Navigation({
               activePackageView={activePackageView}
               activeMaterialId={activeMaterialId}
               expanded={section === "courses"}
+              inDrawer={inDrawer}
             />
           ) : null}
         </div>
       ))}
     </nav>
   );
+}
+
+function navItemClass(active: boolean, admin: boolean, inDrawer = false) {
+  const base =
+    "relative flex min-h-[2.6rem] min-w-0 items-center gap-[.72rem] rounded-[.35rem] border-0 px-[.7rem] py-[.65rem] font-bold transition-colors";
+  if (inDrawer) {
+    return `${base} min-h-12 px-3 py-2.5 text-sm text-[#4f565c] hover:bg-[#fff6f1] hover:text-prep-orange ${
+      active ? "bg-[#fff0e8] text-prep-orange" : "bg-transparent"
+    }`;
+  }
+  if (admin) {
+    return `${base} text-[.82rem] text-[#4f565c] hover:bg-[#faf4ef] hover:text-prep-orange ${
+      active ? "bg-[#fff0e8] text-prep-orange" : "bg-transparent"
+    }`;
+  }
+  return `${base} text-[.9rem] text-[#6b7177] hover:bg-[#fff6f1] hover:text-[#df4615] ${
+    active
+      ? "bg-[#fff1e9] text-prep-orange before:absolute before:top-[.42rem] before:bottom-[.42rem] before:left-[-.8rem] before:w-[3px] before:rounded-r-[3px] before:bg-[#eb4a16]"
+      : "bg-transparent"
+  }`;
 }
 
 export async function WorkspaceShell({
@@ -507,92 +566,148 @@ export async function WorkspaceShell({
     activePackageView,
     activeMaterialId,
   };
+  const dashboardMain = mainClassName === "student-dashboard-main";
+  const rootClass = `workspace ${admin ? "admin-workspace" : "student-workspace"} grid min-h-screen min-w-0 grid-cols-1 bg-white print:block min-[900px]:grid-cols-[minmax(240px,256px)_minmax(0,1fr)]`;
+  const sidebarClass =
+    "relative sticky top-0 hidden h-screen min-w-60 flex-col overflow-hidden border-r border-[#e6e2de] bg-white px-[.8rem] pb-5 pt-0 text-[#25292d] isolate before:pointer-events-none before:absolute before:top-[63px] before:right-0 before:left-0 before:z-[2] before:h-px before:bg-[#e6e2de] min-[900px]:flex print:hidden";
+  const mainClass = dashboardMain
+    ? "workspace-main student-dashboard-main min-w-0 w-full max-w-none scroll-mt-[4.75rem] overflow-x-hidden p-0 print:max-w-none print:p-0"
+    : `workspace-main min-w-0 w-full scroll-mt-[4.75rem] overflow-x-hidden bg-white px-[clamp(1.25rem,3vw,2.5rem)] pt-4 pb-16 min-[701px]:pt-5 print:max-w-none print:p-0 ${admin ? "max-w-[1440px]" : "max-w-[1240px]"}`;
   return (
-    <div
-      className={
-        admin ? "workspace admin-workspace" : "workspace student-workspace"
-      }
-    >
-      <a className="skip-link" href="#main-content">
+    <div className={rootClass}>
+      <a
+        className="fixed top-3 left-3 z-[1000] -translate-y-[180%] rounded-lg bg-[#172554] px-4 py-3 font-extrabold text-white focus:translate-y-0"
+        href="#main-content"
+      >
         Skip to main content
       </a>
-      <aside className="sidebar">
-        <Brand />
-        <div className="sidebar-label">
+      <aside className={sidebarClass}>
+        <div className="mb-4 ml-1.5 flex h-16 min-h-16 w-[188px] items-center [&_.brand-logo]:h-[34px] [&_.brand-logo]:w-[188px] [&_.brand-logo-link]:min-h-0 [&_.brand-logo-link]:min-w-[188px] [&_.brand-logo-link]:w-[188px]">
+          <Brand />
+        </div>
+        <div className="mx-[.7rem] mt-1 mb-[.7rem] font-mono text-[.7rem] tracking-[.17em] text-prep-muted">
           {admin ? "ADMIN WORKSPACE" : "LEARNING WORKSPACE"}
         </div>
-        <Navigation {...navigationProps} />
-        <Link className="sidebar-bottom" href="/account/profile">
-          <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
-          <div>
-            <strong>{name}</strong>
-            <small>{admin ? "Profile & security" : "My account"}</small>
+        <div className="min-h-0 flex-1 overflow-y-auto pr-[.2rem] [overscroll-behavior:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>nav]:grid [&>nav]:content-start [&>nav]:gap-[.28rem]">
+          <Navigation {...navigationProps} />
+        </div>
+        <Link
+          className="mt-[.65rem] grid shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[.7rem] border-t border-[#eceae6] bg-white px-[.65rem] py-[.9rem] text-[#24282c]"
+          href="/account/profile"
+        >
+          <span className="grid size-[2.2rem] place-items-center rounded-full bg-[#ecece8] font-extrabold text-[#111]">
+            {name.slice(0, 1).toUpperCase()}
+          </span>
+          <div className="grid min-w-0">
+            <strong className="overflow-hidden text-[.9rem] font-bold text-ellipsis whitespace-nowrap">
+              {name}
+            </strong>
+            <small className="text-[.76rem] text-prep-muted">
+              {admin ? "Profile & security" : "My account"}
+            </small>
           </div>
-          <NavIcon name="profile" />
+          <NavIcon name="profile" size="small" className="text-prep-muted" />
         </Link>
       </aside>
-      <div className="workspace-body">
+      <div className="min-w-0">
         <WorkspaceRouteEffects />
-        <header className="workspace-header">
+        <header
+          className={`sticky top-0 z-20 flex h-16 min-h-16 min-w-0 items-center justify-start gap-3 border-b border-[#e6e2de] bg-white px-[clamp(12px,2vw,16px)] text-sm print:hidden min-[900px]:px-8 ${admin ? "" : "min-[900px]:justify-end min-[900px]:border-l"}`}
+        >
           <MobileDrawer
             className="workspace-mobile-menu"
             drawerClassName="workspace-mobile-drawer"
             label={admin ? "Open admin navigation" : "Open student navigation"}
+            variant="workspace"
           >
-            <div className="workspace-drawer-brand">
+            <div className="mb-2 flex min-h-12 items-center border-b border-[#ebe7e2] pr-[52px] pb-2 [&_.brand-logo]:h-[34px] [&_.brand-logo]:w-[188px] [&_.brand-logo-link]:min-w-[188px] [&_.brand-logo-link]:w-[188px]">
               <Brand />
             </div>
-            <Link className="mobile-drawer-profile" href="/account/profile">
-              <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
-              <strong>{name}</strong>
-              <small>{email}</small>
-              <em>{admin ? "Administrator" : "Student"}</em>
+            <Link
+              className="mb-1.5 flex flex-col items-center border-b border-[#ebe7e2] px-2 pb-[9px] text-center text-[#17191c]"
+              href="/account/profile"
+            >
+              <span className="mb-1 grid size-10 place-items-center rounded-full bg-[#fff0e8] text-base font-extrabold text-[#bd3d13]">
+                {name.slice(0, 1).toUpperCase()}
+              </span>
+              <strong className="w-full overflow-hidden text-[15px] leading-[1.3] font-bold text-ellipsis whitespace-nowrap text-[#24272a]">
+                {name}
+              </strong>
+              <small className="mt-1 w-full overflow-hidden text-xs leading-[1.35] text-ellipsis whitespace-nowrap text-[#777d82]">
+                {email}
+              </small>
+              <em className="mt-1 rounded-full bg-[#fff2eb] px-2 py-[3px] text-[11px] font-bold not-italic tracking-[.03em] text-[#b83c14]">
+                {admin ? "Administrator" : "Student"}
+              </em>
             </Link>
-            <Navigation {...navigationProps} />
-            <div className="mobile-drawer-actions workspace-drawer-logout">
+            <div className="grid w-full min-w-0 justify-stretch gap-0.5 [&>nav]:grid [&>nav]:gap-0.5">
+              <Navigation {...navigationProps} inDrawer />
+            </div>
+            <div className="sticky bottom-[max(-18px,calc(-1*env(safe-area-inset-bottom)))] z-[4] mt-auto border-t border-[#ebe7e2] bg-white pt-3 pb-[max(2px,env(safe-area-inset-bottom))] [&>button]:flex [&>button]:min-h-[46px] [&>button]:w-full">
               <LogoutButton />
             </div>
           </MobileDrawer>
-          <div className="workspace-mobile-brand">
+          <div className="order-2 block min-w-[188px] basis-[188px] min-[900px]:hidden max-[340px]:min-w-[177px] max-[340px]:basis-[177px] [&_.brand-logo]:max-[340px]:h-8 [&_.brand-logo]:max-[340px]:w-[177px] [&_.brand-logo-link]:max-[340px]:min-w-[177px] [&_.brand-logo-link]:max-[340px]:w-[177px]">
             <Brand />
           </div>
           {admin ? (
             <>
-              <PublicSearch />
+              <PublicSearch variant="admin" />
               <Link
-                className="student-header-bell"
+                className="relative hidden size-[2.35rem] shrink-0 place-items-center rounded-full border border-[#e1dfdc] text-[#62686e] min-[900px]:grid"
                 href="/admin/notifications"
                 aria-label="Admin notifications"
               >
                 <NavIcon name="notifications" />
               </Link>
-              <Link className="student-header-account" href="/account/profile">
-                <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
-                <b>{name}</b>
+              <Link
+                className="hidden min-w-0 shrink-0 items-center gap-[.55rem] border-l border-[#e7e5e2] pl-[.9rem] text-[#34383c] min-[900px]:flex"
+                href="/account/profile"
+              >
+                <span className="grid size-8 place-items-center rounded-full bg-[#fff0e9] font-extrabold text-[#a83712]">
+                  {name.slice(0, 1).toUpperCase()}
+                </span>
+                <b className="max-w-32 overflow-hidden text-ellipsis whitespace-nowrap">
+                  {name}
+                </b>
               </Link>
             </>
           ) : (
             <>
-              <PublicSearch />
+              <PublicSearch variant="student" />
               <Link
-                className="student-header-bell"
+                className="relative hidden size-[2.35rem] shrink-0 place-items-center rounded-full border border-[#e1dfdc] text-[#62686e] min-[900px]:grid"
                 href="/dashboard/notifications"
                 aria-label={`${unreadNotifications} unread notifications`}
               >
                 <NavIcon name="notifications" />
                 {unreadNotifications > 0 ? (
-                  <span>{unreadNotifications}</span>
+                  <span className="absolute -top-1 -right-[.15rem] grid h-4 min-w-4 place-items-center rounded-full border-2 border-white bg-[#eb4814] px-[.15rem] text-[.52rem] text-white">
+                    {unreadNotifications}
+                  </span>
                 ) : null}
               </Link>
-              <Link className="student-header-account" href="/account/profile">
-                <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
-                <b>{name}</b>
+              <Link
+                className="hidden min-w-0 shrink-0 items-center gap-[.55rem] border-l border-[#e7e5e2] pl-[.9rem] text-[#34383c] min-[900px]:flex"
+                href="/account/profile"
+              >
+                <span className="grid size-8 place-items-center rounded-full bg-[#fff0e9] font-extrabold text-[#a83712]">
+                  {name.slice(0, 1).toUpperCase()}
+                </span>
+                <b className="max-w-32 overflow-hidden text-ellipsis whitespace-nowrap">
+                  {name}
+                </b>
               </Link>
             </>
           )}
-          <LogoutButton />
+          <div className="hidden shrink-0 min-[900px]:block [&>button]:min-h-8 [&>button]:border-[#e1dfdc] [&>button]:bg-white [&>button]:px-[.65rem] [&>button]:py-[.35rem] [&>button]:text-[.65rem] [&>button]:text-[#5d646a]">
+            <LogoutButton />
+          </div>
         </header>
-        <main id="main-content" className={`workspace-main${mainClassName ? ` ${mainClassName}` : ""}`}>
+        <main
+          id="main-content"
+          className={`${mainClass}${mainClassName ? ` ${mainClassName}` : ""}`}
+        >
           {children}
         </main>
       </div>
