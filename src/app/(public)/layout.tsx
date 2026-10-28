@@ -50,6 +50,7 @@ export default async function Layout({
           </div>
           <div>
             <b>Support</b>
+            <Link href="/about">About Prepstore</Link>
             <Link href={supportHref}>Help centre</Link>
             <Link href="/contact">Contact us</Link>
             <Link href={ordersHref}>Order tracking</Link>

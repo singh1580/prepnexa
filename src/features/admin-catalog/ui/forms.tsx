@@ -107,6 +107,11 @@ export function ProductCreateForm({
     slug: string;
     description: string | null;
     syllabus: string | null;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    examName: string | null;
+    category: string | null;
+    targetAudience: string | null;
     language: string;
     coverObjectKey: string | null;
     mrpPaise: number | null;
@@ -154,6 +159,11 @@ export function ProductCreateForm({
           slug: product?.slug ?? "",
           description: String(data.get("description") ?? ""),
           syllabus: String(data.get("syllabus") ?? ""),
+          seoTitle: String(data.get("seoTitle") ?? ""),
+          seoDescription: String(data.get("seoDescription") ?? ""),
+          examName: String(data.get("examName") ?? ""),
+          category: String(data.get("category") ?? ""),
+          targetAudience: String(data.get("targetAudience") ?? ""),
           language: String(data.get("language") ?? "BILINGUAL"),
           mrpPaise: Math.round(Number(data.get("mrpRupees")) * 100),
           pricePaise: Math.round(Number(data.get("priceRupees")) * 100),
@@ -191,13 +201,15 @@ export function ProductCreateForm({
               required
             />
             <label className={adminField}>
-              <span>Short description</span>
+              <span>Detailed public description</span>
               <textarea
                 className={adminTextarea}
                 name="description"
                 defaultValue={product?.description ?? ""}
+                minLength={120}
                 maxLength={4000}
-                rows={4}
+                rows={6}
+                placeholder="Explain the exam, package contents, learning value and who this package is for. Use original copy."
                 required
               />
             </label>
@@ -301,16 +313,82 @@ export function ProductCreateForm({
             required
           />
         </div>
+        <section className="grid gap-4 rounded-[0.55rem] border border-[#e5e0da] bg-[#fcfbf9] p-4">
+          <div>
+            <h3 className="m-0 text-base">Search and discovery</h3>
+            <p className="mt-1 mb-0 text-[0.76rem] leading-[1.5] text-prep-muted">
+              These details create the package search title, snippet and structured product information.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 max-[650px]:grid-cols-1">
+            <Field
+              id="product-exam-name"
+              label="Exam name"
+              name="examName"
+              defaultValue={product?.examName ?? ""}
+              maxLength={160}
+              placeholder="Example: SSC CGL 2027"
+              required
+            />
+            <Field
+              id="product-category"
+              label="Category"
+              name="category"
+              defaultValue={product?.category ?? ""}
+              maxLength={160}
+              placeholder="Example: Government exams"
+              required
+            />
+          </div>
+          <Field
+            id="product-target-audience"
+            label="Target audience"
+            name="targetAudience"
+            defaultValue={product?.targetAudience ?? ""}
+            minLength={10}
+            maxLength={240}
+            placeholder="Example: Graduates preparing for SSC CGL Tier I and Tier II"
+            required
+          />
+          <Field
+            id="product-seo-title"
+            label="SEO title"
+            hint="Use a clear package and exam title. Maximum 70 characters."
+            name="seoTitle"
+            defaultValue={product?.seoTitle ?? ""}
+            minLength={20}
+            maxLength={70}
+            required
+          />
+          <label className={adminField}>
+            <span>SEO description</span>
+            <textarea
+              className={adminTextarea}
+              name="seoDescription"
+              defaultValue={product?.seoDescription ?? ""}
+              minLength={80}
+              maxLength={180}
+              rows={3}
+              placeholder="Summarise the exam, key study material, practice tests and learner benefit."
+              required
+            />
+            <small className="font-normal text-prep-muted">
+              Use 80–180 original characters. Avoid keyword repetition.
+            </small>
+          </label>
+        </section>
         {!product && items && <ContentPicker items={items} />}
         <label className={adminField}>
-          <span>Syllabus (optional)</span>
+          <span>Syllabus and package outline</span>
           <textarea
             className={adminTextarea}
             name="syllabus"
             defaultValue={product?.syllabus ?? ""}
+            minLength={40}
             maxLength={12000}
-            rows={4}
+            rows={6}
             placeholder="Add topics or sections included in this package"
+            required
           />
         </label>
         <div className="flex justify-end border-t border-prep-line pt-4">

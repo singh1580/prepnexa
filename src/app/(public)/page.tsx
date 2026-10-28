@@ -3,6 +3,21 @@ import { HomeHeroCarousel } from "@/components/hero-carousel";
 import { StorefrontProductCard } from "@/components/storefront-product-card";
 import { getCurrentAuth } from "@/features/auth/authorization";
 import { listAvailableProducts } from "@/features/catalog/repository";
+import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
+import { BUSINESS_SUPPORT_EMAIL, BUSINESS_SUPPORT_PHONE_E164 } from "@/config/business";
+import { SITE_DESCRIPTION, SITE_ORIGIN } from "@/config/site";
+
+export const metadata: Metadata = {
+  title: "Exam preparation packages, practice tests and study material",
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Prepstore exam preparation packages",
+    description: SITE_DESCRIPTION,
+    url: "/",
+  },
+};
 
 function SearchIcon() {
   return (
@@ -44,6 +59,30 @@ export default async function Home() {
     "auto-cols-[minmax(16.5rem,calc((100%_-_2.4rem)/4))] max-[560px]:auto-cols-[minmax(16.5rem,82vw)]";
   return (
     <main className="store-home bg-white text-prep-ink">
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": `${SITE_ORIGIN}/#organization`,
+            name: "Prepstore",
+            url: SITE_ORIGIN,
+            logo: `${SITE_ORIGIN}/prepstore-icon-512.png`,
+            email: BUSINESS_SUPPORT_EMAIL,
+            telephone: BUSINESS_SUPPORT_PHONE_E164,
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "@id": `${SITE_ORIGIN}/#website`,
+            name: "Prepstore",
+            url: SITE_ORIGIN,
+            description: SITE_DESCRIPTION,
+            publisher: { "@id": `${SITE_ORIGIN}/#organization` },
+            inLanguage: ["en-IN", "hi-IN"],
+          },
+        ]}
+      />
       <section className="relative isolate min-h-[25.5rem] overflow-hidden border-b border-[#eee8e2] bg-[#fbf7f1] max-[560px]:min-h-[18.5rem]">
         <div className="absolute inset-0 z-0 w-full overflow-hidden bg-[#f8eee7]">
           <HomeHeroCarousel />

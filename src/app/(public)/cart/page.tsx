@@ -1,7 +1,10 @@
 import { CartPageClient } from "@/features/commerce/ui/cart-workflow";
 import { listAvailableProducts } from "@/features/catalog/repository";
 import { getCurrentAuth } from "@/features/auth/authorization";
-export const metadata = { title: "Your cart" };
+export const metadata = {
+  title: "Your cart",
+  robots: { index: false, follow: false, nocache: true },
+};
 export const dynamic = "force-dynamic";
 export default async function Page() {
   const auth = await getCurrentAuth();

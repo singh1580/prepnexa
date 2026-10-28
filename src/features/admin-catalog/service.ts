@@ -145,6 +145,20 @@ export async function setProductLive(id: string, isLive: boolean, actor: Actor) 
       "Add at least one test, practice set or study material before making this package live.",
     );
   if (isLive) {
+    const missingSeo = [
+      [before.coverObjectKey, "cover image"],
+      [before.examName, "exam name"],
+      [before.category, "category"],
+      [before.targetAudience, "target audience"],
+      [before.seoTitle && before.seoTitle.length >= 20, "SEO title (at least 20 characters)"],
+      [before.seoDescription && before.seoDescription.length >= 80, "SEO description (at least 80 characters)"],
+      [before.description && before.description.length >= 120, "public description (at least 120 characters)"],
+      [before.syllabus && before.syllabus.length >= 40, "syllabus (at least 40 characters)"],
+    ].filter(([value]) => !value).map(([, label]) => label);
+    if (missingSeo.length)
+      throw invalidContentState(
+        `Complete these publishing details before going live: ${missingSeo.join(", ")}.`,
+      );
     const incomplete = await findIncompleteProductItems(id);
     if (incomplete.tests.length)
       throw invalidContentState(`Add at least one question to every section in these tests before going live: ${incomplete.tests.join(", ")}.`);

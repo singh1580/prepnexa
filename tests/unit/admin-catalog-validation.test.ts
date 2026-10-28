@@ -6,6 +6,34 @@ describe("admin catalog validation", () => {
     expect(productInputSchema.safeParse({ name: "Complete Prep", slug: "complete-prep", description: "", pricePaise: 99900, accessDays: 365 }).success).toBe(true);
     expect(productInputSchema.safeParse({ name: "Complete Prep", slug: "../prep", description: "", pricePaise: -1, accessDays: 0 }).success).toBe(false);
   });
+  it("accepts complete search metadata while keeping drafts backwards compatible", () => {
+    const draft = productInputSchema.parse({
+      name: "Complete Prep",
+      slug: "complete-prep",
+      pricePaise: 99900,
+      accessDays: 365,
+    });
+    expect(draft.seoTitle).toBe("");
+    expect(draft.seoDescription).toBe("");
+    expect(
+      productInputSchema.safeParse({
+        ...draft,
+        seoTitle: "Complete competitive exam preparation",
+        seoDescription:
+          "Practice with structured tests, detailed study material and focused preparation resources for your exam.",
+        examName: "Sample competitive exam",
+        category: "Competitive exams",
+        targetAudience: "Students preparing for the upcoming examination",
+      }).success,
+    ).toBe(true);
+    expect(
+      productInputSchema.safeParse({
+        ...draft,
+        seoTitle: "x".repeat(71),
+        seoDescription: "x".repeat(181),
+      }).success,
+    ).toBe(false);
+  });
   it("accepts independent standalone and mixed bundles without duplicate selections", () => {
     const base = { name: "Quant pack", slug: "quant-pack", pricePaise: 19900, accessDays: 90 };
     const id = crypto.randomUUID();
