@@ -48,7 +48,7 @@ export default async function Home() {
         <div className="absolute inset-0 z-0 w-full overflow-hidden bg-[#f8eee7]">
           <HomeHeroCarousel />
         </div>
-        <div className="relative z-2 w-[min(50rem,52vw)] py-[3rem] pr-0 pb-[2.6rem] pl-[clamp(2rem,7vw,7.2rem)] min-[561px]:absolute min-[561px]:inset-y-0 min-[561px]:left-0 max-[1050px]:w-[62vw] max-[800px]:w-full max-[800px]:px-5 max-[800px]:py-8 max-[560px]:absolute max-[560px]:inset-0 max-[560px]:w-auto max-[560px]:min-h-0 max-[560px]:px-4 max-[560px]:pt-[0.95rem] max-[560px]:pb-[3.55rem] max-[380px]:px-[0.8rem]">
+        <div className="relative z-2 w-[min(50rem,52vw)] py-[3rem] pr-0 pb-[2.6rem] pl-[clamp(2rem,7vw,7.2rem)] min-[561px]:absolute min-[561px]:inset-y-0 min-[561px]:left-0 max-[1050px]:w-[62vw] max-[800px]:w-full max-[800px]:px-5 max-[800px]:py-8 max-[560px]:absolute max-[560px]:inset-0 max-[560px]:w-auto max-[560px]:min-h-0 max-[560px]:px-4 max-[560px]:pt-[1.5rem] max-[560px]:pb-[3.55rem] max-[380px]:px-[0.8rem] max-[380px]:pt-[1.35rem]">
           <span className="text-[0.7rem] font-semibold tracking-[0.02em] text-[#687079] max-[560px]:hidden">
             YOUR EXAM PREPARATION PARTNER
           </span>

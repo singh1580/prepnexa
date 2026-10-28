@@ -40,6 +40,14 @@ describe("responsive navigation", () => {
     expect(publicHeader).toContain("max-[1099px]:gap-1");
   });
 
+  it("uses balanced mobile header columns so the menu cannot merge into the centred logo", () => {
+    expect(publicHeader).toContain(
+      "max-[1099px]:grid-cols-[44px_minmax(0,1fr)_44px]",
+    );
+    expect(publicHeader).toContain("max-[1099px]:justify-self-center");
+    expect(drawer).toContain("hidden size-11 shrink-0");
+  });
+
   it("keeps public navigation ordered and account actions separate", () => {
     const home = publicHeader.indexOf('href="/">Home<');
     const packages = publicHeader.indexOf(">All packages<");
