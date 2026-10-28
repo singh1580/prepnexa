@@ -4,6 +4,7 @@ import { hashIdentifier } from "@/features/auth/crypto";
 import { deliverStudentMaterial } from "@/features/materials/service";
 import { invalidMaterialLink } from "@/features/materials/errors";
 import { executeRoute } from "@/lib/http/route-handler";
+import { clientIp } from "@/lib/http/client-ip";
 
 const idSchema = z.uuid();
 const tokenSchema = z.string().min(40).max(2_000);
@@ -17,8 +18,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const auth = await requireStudent();
     const id = idSchema.parse((await params).id);
     const token = tokenSchema.parse(new URL(request.url).searchParams.get("token"));
-    const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-    const result = await deliverStudentMaterial(token, auth.user, { requestId, ipHash: forwarded ? hashIdentifier(forwarded) : undefined });
+    const ip = clientIp(request);
+    const result = await deliverStudentMaterial(token, auth.user, { requestId, ipHash: ip ? hashIdentifier(ip) : undefined });
     if (result.material.id !== id) throw invalidMaterialLink();
     const download = new URL(request.url).searchParams.get("download") === "1";
     const disposition = result.material.allowDownload && download ? "attachment" : "inline";

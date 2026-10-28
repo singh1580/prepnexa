@@ -25,7 +25,7 @@ it("returns the specific validation message to the form", async () => {
 it("returns a client error for malformed JSON instead of an internal error", async () => {
   const request = new Request("http://localhost/api/test", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", origin: "http://localhost" },
     body: "{broken",
   });
   const response = await executeRoute(request, async () => {

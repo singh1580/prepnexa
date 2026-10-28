@@ -7,11 +7,13 @@ import { consumeEmailVerificationOtp, consumePasswordReset, countRecentFailedAtt
 import type { EmailInput, LoginInput, RegisterInput, ResetPasswordInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
 import { LEGAL_POLICY_VERSION } from "@/config/legal";
+import { enforceRateLimit } from "./rate-limit";
 
 const genericCredentialsError = () => new AppError("INVALID_CREDENTIALS", "Email, phone number or password is incorrect.", 401);
 
-export async function register(input: RegisterInput) {
+export async function register(input: RegisterInput, context: { ip?: string } = {}) {
   const email = normalizeEmail(input.email);
+  if (context.ip) await enforceRateLimit({ action: "auth.register.ip", identifier: context.ip, maximum: env.REGISTER_IP_MAX_ATTEMPTS, windowSeconds: 60 * 60 });
   if (await findUserByEmail(email)) throw new AppError("EMAIL_ALREADY_REGISTERED", "An account with this email already exists.", 409);
   const { code, tokenHash } = createEmailVerificationOtp(email);
   const user = await createUserWithVerification({ name: input.name.trim(), email, passwordHash: await hashPassword(input.password), tokenHash, expiresAt: new Date(Date.now() + env.EMAIL_VERIFICATION_OTP_TTL_MINUTES * 60_000), legalAcceptedAt: new Date(), legalAcceptedVersion: LEGAL_POLICY_VERSION });
@@ -72,7 +74,8 @@ export async function logout(token: string | undefined) {
   if (token) await revokeSession(hashIdentifier(token));
 }
 
-export async function resendEmailVerification(input: EmailInput) {
+export async function resendEmailVerification(input: EmailInput, context: { ip?: string } = {}) {
+  if (context.ip) await enforceRateLimit({ action: "auth.verification-resend.ip", identifier: context.ip, maximum: env.PASSWORD_RESET_IP_MAX_ATTEMPTS, windowSeconds: 60 * 60 });
   const user = await findUserByEmail(normalizeEmail(input.email));
   if (!user || user.status !== "PENDING_VERIFICATION") return { accepted: true, retryAfterSeconds: env.EMAIL_VERIFICATION_RESEND_SECONDS };
   const state = await getEmailVerificationSendState(user.id);
@@ -85,14 +88,18 @@ export async function resendEmailVerification(input: EmailInput) {
   return { accepted: true, retryAfterSeconds: env.EMAIL_VERIFICATION_RESEND_SECONDS };
 }
 
-export async function verifyEmail(input: { email: string; code: string }) {
+export async function verifyEmail(input: { email: string; code: string }, context: { ip?: string } = {}) {
   const email = normalizeEmail(input.email);
+  if (context.ip) await enforceRateLimit({ action: "auth.email-verify.ip", identifier: context.ip, maximum: env.MFA_IP_MAX_ATTEMPTS, windowSeconds: env.LOGIN_WINDOW_MINUTES * 60 });
   if (!await consumeEmailVerificationOtp(email, hashEmailVerificationOtp(email, input.code), env.EMAIL_VERIFICATION_MAX_ATTEMPTS)) throw new AppError("INVALID_OR_EXPIRED_OTP", "That code is incorrect, expired or has reached its attempt limit. Request a new code if needed.", 400);
   return { verified: true };
 }
 
-export async function requestPasswordReset(input: EmailInput) {
-  const user = await findUserByEmail(normalizeEmail(input.email));
+export async function requestPasswordReset(input: EmailInput, context: { ip?: string } = {}) {
+  const email = normalizeEmail(input.email);
+  await enforceRateLimit({ action: "auth.password-reset.email", identifier: email, maximum: env.PASSWORD_RESET_EMAIL_MAX_ATTEMPTS, windowSeconds: 60 * 60 });
+  if (context.ip) await enforceRateLimit({ action: "auth.password-reset.ip", identifier: context.ip, maximum: env.PASSWORD_RESET_IP_MAX_ATTEMPTS, windowSeconds: 60 * 60 });
+  const user = await findUserByEmail(email);
   if (!user || user.status === "DELETED") return { accepted: true };
   const { token, tokenHash } = createOpaqueToken();
   await replaceVerificationToken({ userId: user.id, purpose: TOKEN_PURPOSE.PASSWORD_RESET, tokenHash, expiresAt: new Date(Date.now() + env.PASSWORD_RESET_TTL_MINUTES * 60_000) });

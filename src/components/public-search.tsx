@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type Result = { id: string; slug: string; name: string; pricePaise: number };
 function SearchIcon() {
@@ -16,6 +17,7 @@ export function PublicSearch({
 }: {
   variant?: "public" | "student" | "admin";
 }) {
+  const pathname = usePathname();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [focused, setFocused] = useState(false);
@@ -39,6 +41,9 @@ export function PublicSearch({
   function updateQuery(value: string) {
     setQ(value);
     if (value.trim().length < 2) setResults([]);
+  }
+  if (variant === "public" && pathname === "/") {
+    return <div className="w-full max-w-[31rem]" aria-hidden="true" />;
   }
   return (
     <div

@@ -17,6 +17,7 @@ Set the environment without sharing or committing secrets:
 - `DATABASE_URL`: pooled URL for the isolated QA database.
 - `DATABASE_URL_UNPOOLED`: direct URL for the same isolated QA database.
 - `AUTH_SECRET`, `PASSWORD_PEPPER`, `MFA_ENCRYPTION_KEY`: three different random values.
+- `ADMIN_SESSION_TTL_HOURS=12`; auth abuse limits may keep the documented defaults unless a measured production policy requires stricter values.
 - `RESEND_API_KEY` and `EMAIL_FROM="Prepstore <no-reply@prepstore.in>"` for real email acceptance.
 - `PAYMENT_PROVIDER=mock` only for local application-flow checks. Use Razorpay test credentials for gateway acceptance.
 - `STORAGE_PROVIDER=local` only for local file-flow checks. Use the configured private provider for release acceptance.
@@ -128,7 +129,24 @@ npm run build
 
 Production storage, monitoring/restore, Razorpay production reconciliation, `main` promotion and EC2 deployment remain explicit release actions. This project has no Vercel deployment step.
 
-## 7. EC2 post-deploy material check
+## 7. EC2 release order
+
+Take a database backup/restore point before applying a production migration. Then deploy in this order from `/var/www/prepstore`:
+
+```bash
+git pull --ff-only origin develop
+npm ci
+NODE_ENV=production npm run db:migrate
+NODE_ENV=production npm run qa:preflight
+NODE_OPTIONS=--max-old-space-size=1024 npm run build
+pm2 restart prepstore --update-env
+pm2 save
+QA_BASE_URL=https://prepstore.in npm run qa:smoke
+```
+
+Do not restart PM2 when migration, preflight or build fails. Migration `0031_fair_toro.sql` must be present before this release starts because the authentication limiter uses `api_rate_limits` on every protected auth flow.
+
+## 8. EC2 post-deploy material check
 
 Keep the public app URL set to `https://prepstore.in`. The material access endpoint now returns a relative same-origin redirect, but the reverse proxy should still forward the original request context:
 
@@ -137,6 +155,7 @@ proxy_set_header Host $host;
 proxy_set_header X-Forwarded-Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Real-IP $remote_addr;
 ```
 
 After deployment, sign in with an entitled QA Student and open one PDF/material from its course. In browser network tools confirm that the 303 `Location` starts with `/api/materials/` and that no request targets `localhost`. Also verify inline reading, authorised download when enabled, and denial for a non-entitled Student.

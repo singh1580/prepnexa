@@ -14,17 +14,23 @@ async function loadLocalEnvironment() {
     report("PASS", "Environment source", "runtime environment loaded");
     return true;
   }
-  const path = resolve(process.cwd(), ".env.local");
-  try {
-    await access(path);
-    process.loadEnvFile(path);
-    report("PASS", "Environment file", ".env.local loaded");
-  } catch {
-    report("FAIL", "Environment file", "Create .env.local from .env.example first");
-    process.exitCode = 1;
-    return false;
+  const candidates = process.env.NODE_ENV === "production"
+    ? [".env.production", ".env.local", ".env"]
+    : [".env.local", ".env"];
+  for (const name of candidates) {
+    const path = resolve(process.cwd(), name);
+    try {
+      await access(path);
+      process.loadEnvFile(path);
+      report("PASS", "Environment file", `${name} loaded`);
+      return true;
+    } catch {
+      // Try the next supported environment file.
+    }
   }
-  return true;
+  report("FAIL", "Environment file", `Create ${candidates[0]} from .env.example first`);
+  process.exitCode = 1;
+  return false;
 }
 
 async function main() {
@@ -55,11 +61,11 @@ async function main() {
     report(env.NODE_ENV === "production" ? "FAIL" : "PASS", "Payment", "mock provider selected");
     if (env.NODE_ENV === "production") process.exitCode = 1;
   }
-  report(env.STORAGE_PROVIDER === "local" ? "PASS" : "WARN", "Storage", `${env.STORAGE_PROVIDER} provider selected`);
+  report(env.STORAGE_PROVIDER === "s3" ? "PASS" : env.NODE_ENV === "production" ? "FAIL" : "PASS", "Storage", `${env.STORAGE_PROVIDER} provider selected`);
 
   try {
     const sql = neon(env.DATABASE_URL);
-    const requiredTables = ["attempts", "materials", "orders", "products", "roles", "support_tickets", "tests", "users"];
+    const requiredTables = ["api_rate_limits", "attempts", "materials", "orders", "products", "roles", "support_tickets", "tests", "users"];
     const [databaseState] = await sql`
       select
         (select array_agg(key order by key) from roles) as role_keys,
@@ -87,6 +93,10 @@ async function main() {
           )
         ) as incomplete_live_products,
         (
+          select count(*)::int from products
+          where is_live = true and name ~* '(^|[^a-z])(demo|sample|testing[0-9]*)([^a-z]|$)'
+        ) as placeholder_live_products,
+        (
           select count(*)::int from sessions
           where revoked_at is null and expires_at <= now()
         ) as expired_open_sessions,
@@ -95,7 +105,7 @@ async function main() {
           from information_schema.tables
           where table_schema = 'public' and table_name = any(${requiredTables})
         ) as critical_table_count
-    ` as Array<{ role_keys: string[] | null; admin_count: number; users_without_roles: number; incomplete_live_products: number; expired_open_sessions: number; critical_table_count: number }>;
+    ` as Array<{ role_keys: string[] | null; admin_count: number; users_without_roles: number; incomplete_live_products: number; placeholder_live_products: number; expired_open_sessions: number; critical_table_count: number }>;
     const roleKeys = databaseState?.role_keys ?? [];
     const expectedRoles = ["ADMIN", "STUDENT"];
     if (JSON.stringify(roleKeys) !== JSON.stringify(expectedRoles)) {
@@ -124,6 +134,13 @@ async function main() {
       process.exitCode = 1;
     } else {
       report("PASS", "Live packages", "all live packages have consumable content");
+    }
+
+    if (databaseState?.placeholder_live_products) {
+      report("FAIL", "Production catalogue", `${databaseState.placeholder_live_products} live packages still use demo, sample or testing names`);
+      process.exitCode = 1;
+    } else {
+      report("PASS", "Production catalogue", "no placeholder package names are live");
     }
 
     if (databaseState?.expired_open_sessions) {
