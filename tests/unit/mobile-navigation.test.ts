@@ -103,6 +103,8 @@ describe("responsive navigation", () => {
     );
     expect(drawer).toContain("rounded-[14px]");
     expect(drawer).toContain("fixed inset-0 z-[208]");
+    expect(drawer).toContain("fixed inset-0 z-[99]");
+    expect(drawer.match(/onClick=\{\(\) => close\(\)\}/g)).toHaveLength(1);
     expect(drawer).toContain("left-4 z-[100]");
     expect(drawer).toContain("left-0 z-[209]");
     expect(drawer).toContain("group-open:z-[210]");
