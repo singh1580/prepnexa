@@ -17,9 +17,15 @@ export const envSchema = z.object({
   LOGIN_MAX_ATTEMPTS: z.coerce.number().int().min(3).max(20).default(5),
   LOGIN_IP_MAX_ATTEMPTS: z.coerce.number().int().min(10).max(100).default(25),
   LOGIN_WINDOW_MINUTES: z.coerce.number().int().min(1).max(60).default(15),
+  REGISTER_IP_MAX_ATTEMPTS: z.coerce.number().int().min(2).max(50).default(5),
+  PASSWORD_RESET_EMAIL_MAX_ATTEMPTS: z.coerce.number().int().min(2).max(20).default(3),
+  PASSWORD_RESET_IP_MAX_ATTEMPTS: z.coerce.number().int().min(3).max(100).default(10),
+  MFA_MAX_ATTEMPTS: z.coerce.number().int().min(3).max(10).default(5),
+  MFA_IP_MAX_ATTEMPTS: z.coerce.number().int().min(5).max(100).default(20),
   MFA_ENCRYPTION_KEY: z.string().min(32).optional(),
   MFA_CHALLENGE_TTL_MINUTES: z.coerce.number().int().min(2).max(15).default(5),
-  PAYMENT_PROVIDER: z.enum(["mock","razorpay"]).default("mock"), PAYMENT_API_KEY: z.string().optional(), PAYMENT_WEBHOOK_SECRET: z.string().optional(),
+  ADMIN_SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(24).default(12),
+  PAYMENT_PROVIDER: z.enum(["mock","razorpay"]).default("mock"), PAYMENT_WEBHOOK_SECRET: z.string().optional(),
   RAZORPAY_KEY_ID: optionalSecret, RAZORPAY_KEY_SECRET: optionalSecret, RAZORPAY_WEBHOOK_SECRET: optionalSecret,
   RESEND_API_KEY: z.string().trim().min(1).optional(), EMAIL_FROM: z.string().trim().min(1).optional(),
   STORAGE_PROVIDER: z.enum(["local","s3"]).default("local"), STORAGE_BUCKET: z.string().optional(), STORAGE_REGION: z.string().optional(),
@@ -43,10 +49,35 @@ export const envSchema = z.object({
     });
   }
 
+  if (value.NODE_ENV === "production" && (!value.RESEND_API_KEY || !value.EMAIL_FROM)) {
+    context.addIssue({ code: "custom", path: ["RESEND_API_KEY"], message: "Transactional email is required in production." });
+  }
+
+  if (value.NODE_ENV === "production" && !value.MFA_ENCRYPTION_KEY) {
+    context.addIssue({ code: "custom", path: ["MFA_ENCRYPTION_KEY"], message: "MFA_ENCRYPTION_KEY is required in production." });
+  }
+
+  if (value.NODE_ENV === "production" && new URL(value.NEXT_PUBLIC_APP_URL).protocol !== "https:") {
+    context.addIssue({ code: "custom", path: ["NEXT_PUBLIC_APP_URL"], message: "NEXT_PUBLIC_APP_URL must use HTTPS in production." });
+  }
+
+  if (value.NODE_ENV === "production" && value.STORAGE_PROVIDER !== "s3") {
+    context.addIssue({ code: "custom", path: ["STORAGE_PROVIDER"], message: "Private S3-compatible storage is required in production." });
+  }
+
+  if (value.STORAGE_PROVIDER === "s3") {
+    for (const field of ["STORAGE_BUCKET", "STORAGE_REGION", "STORAGE_ACCESS_KEY_ID", "STORAGE_SECRET_ACCESS_KEY"] as const) {
+      if (!value[field]) context.addIssue({ code: "custom", path: [field], message: `${field} is required when STORAGE_PROVIDER=s3.` });
+    }
+  }
+
   if (value.PAYMENT_PROVIDER === "razorpay") {
     if (!value.RAZORPAY_KEY_ID) context.addIssue({ code: "custom", path: ["RAZORPAY_KEY_ID"], message: "RAZORPAY_KEY_ID is required when Razorpay is selected." });
     if (!value.RAZORPAY_KEY_SECRET) context.addIssue({ code: "custom", path: ["RAZORPAY_KEY_SECRET"], message: "RAZORPAY_KEY_SECRET is required when Razorpay is selected." });
     if (value.NODE_ENV === "production" && !value.RAZORPAY_WEBHOOK_SECRET) context.addIssue({ code: "custom", path: ["RAZORPAY_WEBHOOK_SECRET"], message: "RAZORPAY_WEBHOOK_SECRET is required in production." });
+  }
+  if (value.NODE_ENV === "production" && value.PAYMENT_PROVIDER !== "razorpay") {
+    context.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER"], message: "Razorpay is required in production." });
   }
 });
 

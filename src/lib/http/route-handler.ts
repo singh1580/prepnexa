@@ -2,12 +2,14 @@ import { ZodError } from "zod";
 import { AppError } from "@/lib/errors/app-error";
 import { logger } from "@/lib/logger";
 import { errorResponse } from "./api-response";
+import { enforceSameOriginRequest } from "./request-security";
 
 type Handler = (requestId: string) => Promise<Response>;
 
 export async function executeRoute(request: Request, handler: Handler) {
   const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID();
   try {
+    enforceSameOriginRequest(request);
     return await handler(requestId);
   } catch (error) {
     if (error instanceof ZodError) {

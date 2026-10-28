@@ -18,7 +18,6 @@ export const logger = pino({
       "DATABASE_URL",
       "DATABASE_URL_UNPOOLED",
       "RESEND_API_KEY",
-      "PAYMENT_API_KEY",
       "PAYMENT_WEBHOOK_SECRET",
       "RAZORPAY_KEY_SECRET",
       "RAZORPAY_WEBHOOK_SECRET",

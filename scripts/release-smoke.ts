@@ -41,7 +41,10 @@ async function request(path: string, expected: number | number[]) {
     const statuses = Array.isArray(expected) ? expected : [expected];
     const statusOk = statuses.includes(response.status);
     const latencyOk = elapsed <= maximumLatencyMs;
-    const securityOk = response.headers.get("x-content-type-options") === "nosniff" && response.headers.get("x-frame-options") === "DENY";
+    const securityOk = response.headers.get("x-content-type-options") === "nosniff"
+      && response.headers.get("x-frame-options") === "DENY"
+      && Boolean(response.headers.get("content-security-policy"))
+      && Boolean(response.headers.get("strict-transport-security"));
     const location = response.headers.get("location");
     const redirectOk = response.status < 300 || response.status >= 400 || Boolean(location?.startsWith("/login"));
     const passed = statusOk && latencyOk && securityOk && redirectOk;
@@ -53,10 +56,23 @@ async function request(path: string, expected: number | number[]) {
   }
 }
 
+async function verifyReadiness() {
+  const response = await fetch(`${baseUrl}/api/ready`, { signal: AbortSignal.timeout(30_000) });
+  const body = await response.json() as { data?: { status?: string; checks?: Record<string, string> } };
+  const checks = body.data?.checks;
+  const passed = response.ok
+    && body.data?.status === "ready"
+    && checks?.database === "ok"
+    && checks?.configuration === "ok"
+    && checks?.privateStorage === "configured";
+  console.log(`${passed ? "✓" : "✗"} ${"readiness details".padEnd(22)} ${JSON.stringify(checks ?? {})}`);
+  if (!passed) process.exitCode = 1;
+}
+
 async function main() {
   console.log(`\nPrepstore HTTP smoke check: ${baseUrl}\n`);
   try {
-    await fetch(`${baseUrl}/api/ready`, { signal: AbortSignal.timeout(30_000) });
+    await verifyReadiness();
     for (const route of publicRoutes) await request(route, 200);
     for (const route of protectedRoutes) await request(route, [302, 303, 307, 308]);
   } catch (error) {

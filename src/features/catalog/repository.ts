@@ -2,12 +2,49 @@ import { and, asc, countDistinct, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { materials, productMaterials, products, productTests, tests } from "@/db/schema";
 import { productReadySql } from "./readiness";
+import { unstable_cache } from "next/cache";
 
 export async function listAvailableProducts(userId?:string) {
   return db.select({ id: products.id, slug: products.slug, name: products.name, description: products.description, syllabus: products.syllabus, language: products.language, coverObjectKey: products.coverObjectKey, mrpPaise: products.mrpPaise, pricePaise: products.pricePaise, accessDays: products.accessDays, createdAt:products.createdAt, testCount: countDistinct(productTests.testId), materialCount: countDistinct(productMaterials.materialId),subjects:sql<string[]>`coalesce((select array_agg(distinct m.subject order by m.subject) from product_materials pm join materials m on m.id=pm.material_id where pm.product_id=${products.id}),array[]::varchar[])`,materialTypes:sql<string[]>`coalesce((select array_agg(distinct m.type::text order by m.type::text) from product_materials pm join materials m on m.id=pm.material_id where pm.product_id=${products.id}),array[]::text[])`,alreadyOwned:userId?sql<boolean>`exists(select 1 from entitlements e where e.user_id=${userId}::uuid and e.product_id=${products.id} and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())`:sql<boolean>`false`,rating:sql<number>`coalesce((select round(avg(rating)::numeric,1) from product_reviews r where r.product_id=${products.id} and r.status='APPROVED'),0)::double precision`,reviewCount:sql<number>`(select count(*)::int from product_reviews r where r.product_id=${products.id} and r.status='APPROVED')` })
     .from(products).leftJoin(productTests, eq(productTests.productId, products.id)).leftJoin(productMaterials, eq(productMaterials.productId, products.id)).where(and(eq(products.isLive, true), productReadySql(products.id)))
     .groupBy(products.id).orderBy(asc(products.pricePaise), asc(products.name));
 }
+
+export async function searchAvailableProducts(rawQuery: string, limit = 6) {
+  const query = rawQuery.trim().toLocaleLowerCase("en-IN");
+  if (query.length < 2) return [];
+  const contains = `%${query}%`;
+  const freeQuery = ["free", "zero cost", "₹0"].includes(query);
+  const result = await db.execute(sql`
+    select p.id, p.slug, p.name, p.price_paise as "pricePaise"
+    from products p
+    where p.is_live = true
+      and ${productReadySql(sql.raw("p.id"))}
+      and (
+        lower(p.name) like ${contains}
+        or lower(coalesce(p.description, '')) like ${contains}
+        or lower(coalesce(p.syllabus, '')) like ${contains}
+        or exists (
+          select 1 from product_materials pm
+          join materials m on m.id = pm.material_id
+          where pm.product_id = p.id
+            and (lower(m.subject) like ${contains} or lower(m.topic) like ${contains})
+        )
+        or (${freeQuery} and p.price_paise = 0)
+      )
+    order by
+      case when lower(p.name) = ${query} then 0 when lower(p.name) like ${`${query}%`} then 1 else 2 end,
+      p.name
+    limit ${Math.min(Math.max(limit, 1), 20)}
+  `);
+  return result.rows as { id: string; slug: string; name: string; pricePaise: number }[];
+}
+
+export const cachedSearchAvailableProducts = unstable_cache(
+  searchAvailableProducts,
+  ["catalog-search-v1"],
+  { revalidate: 30, tags: ["catalog-search"] },
+);
 
 export async function findAvailableProduct(slug: string) {
   const product = await db.query.products.findFirst({ where: and(eq(products.slug, slug), eq(products.isLive, true), productReadySql(products.id)) });

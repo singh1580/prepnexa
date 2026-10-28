@@ -1,4 +1,23 @@
 export const SECURITY_HEADERS = [
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://api.razorpay.com https://*.razorpay.com",
+      "frame-src https://api.razorpay.com https://*.razorpay.com",
+      "worker-src 'self' blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self' https://api.razorpay.com",
+      "frame-ancestors 'none'",
+      "upgrade-insecure-requests",
+    ].join("; "),
+  },
+  { key: "Strict-Transport-Security", value: "max-age=86400" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
