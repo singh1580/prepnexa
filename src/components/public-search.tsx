@@ -43,7 +43,12 @@ export function PublicSearch({
     if (value.trim().length < 2) setResults([]);
   }
   if (variant === "public" && pathname === "/") {
-    return <div className="w-full max-w-[31rem]" aria-hidden="true" />;
+    return (
+      <div
+        className="public-live-search w-full max-w-[31rem]"
+        aria-hidden="true"
+      />
+    );
   }
   return (
     <div
