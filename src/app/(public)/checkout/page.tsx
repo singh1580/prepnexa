@@ -1,6 +1,9 @@
 import { CheckoutPageClient } from "@/features/commerce/ui/cart-workflow";
 import { getCurrentAuth } from "@/features/auth/authorization";
-export const metadata = { title: "Checkout" };
+export const metadata = {
+  title: "Checkout",
+  robots: { index: false, follow: false, nocache: true },
+};
 export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,

@@ -13,6 +13,13 @@ export const metadata = {
   title: "Contact us",
   description:
     "Contact Prepstore for account support, payment help, business enquiries, privacy requests and formal grievances.",
+  alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Contact Prepstore",
+    description:
+      "Contact Prepstore for account support, payment help and business enquiries.",
+    url: "/contact",
+  },
 };
 
 const eyebrow =

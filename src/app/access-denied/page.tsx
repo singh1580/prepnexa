@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Brand } from "@/components/brand";
-export const metadata = { title: "Access denied" };
+export const metadata = {
+  title: "Access denied",
+  robots: { index: false, follow: false, nocache: true },
+};
 export default function Page() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-8 py-24 text-center">

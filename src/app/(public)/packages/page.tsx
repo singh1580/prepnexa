@@ -5,9 +5,9 @@ import { getCurrentAuth } from "@/features/auth/authorization";
 import { listAvailableProducts } from "@/features/catalog/repository";
 import { matchesCatalogQuery } from "@/features/catalog/search";
 import { CatalogFilterDisclosure } from "@/features/catalog/ui/catalog-filter-disclosure";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "All packages" };
 type Query = {
   q?: string;
   sort?: string;
@@ -16,6 +16,31 @@ type Query = {
   language?: string | string[];
   format?: string | string[];
 };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Query>;
+}): Promise<Metadata> {
+  const query = await searchParams;
+  const filtered = Object.values(query).some((value) =>
+    Array.isArray(value)
+      ? value.some((item) => item.trim().length > 0)
+      : Boolean(value?.trim()),
+  );
+  return {
+    title: "Competitive exam preparation packages",
+    description:
+      "Explore Prepstore practice tests, study material and complete preparation packages for competitive exams.",
+    alternates: { canonical: "/packages" },
+    robots: filtered ? { index: false, follow: true } : undefined,
+    openGraph: {
+      title: "Competitive exam preparation packages | Prepstore",
+      description:
+        "Explore practice tests, study material and complete preparation packages.",
+      url: "/packages",
+    },
+  };
+}
 const many = (value: string | string[] | undefined) =>
   value === undefined ? [] : Array.isArray(value) ? value : [value];
 const checked = (values: string[], value: string) => values.includes(value);

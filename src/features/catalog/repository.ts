@@ -10,6 +10,14 @@ export async function listAvailableProducts(userId?:string) {
     .groupBy(products.id).orderBy(asc(products.pricePaise), asc(products.name));
 }
 
+export function listSitemapProducts() {
+  return db
+    .select({ slug: products.slug, updatedAt: products.updatedAt })
+    .from(products)
+    .where(and(eq(products.isLive, true), productReadySql(products.id)))
+    .orderBy(asc(products.slug));
+}
+
 export async function searchAvailableProducts(rawQuery: string, limit = 6) {
   const query = rawQuery.trim().toLocaleLowerCase("en-IN");
   if (query.length < 2) return [];

@@ -17,8 +17,13 @@ export async function generateMetadata({
 }: {
   params: Promise<{ document: string }>;
 }) {
-  const value = documents[(await params).document as DocumentKey];
-  return { title: value?.title ?? "Legal", description: value?.intro };
+  const { document } = await params;
+  const value = documents[document as DocumentKey];
+  return {
+    title: value?.title ?? "Legal",
+    description: value?.intro,
+    alternates: { canonical: `/legal/${document}` },
+  };
 }
 
 export default async function Page({

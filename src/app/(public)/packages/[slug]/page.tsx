@@ -20,6 +20,8 @@ import {
 import { ProductDetailTabs } from "@/features/catalog/ui/product-detail-tabs";
 import { SyllabusAccordion } from "@/features/catalog/ui/syllabus-accordion";
 import { CheckoutCard } from "@/features/commerce/ui/checkout-card";
+import { JsonLd } from "@/components/json-ld";
+import { absoluteUrl, SITE_ORIGIN } from "@/config/site";
 
 export const dynamic = "force-dynamic";
 const getAvailableProduct = cache(findAvailableProduct);
@@ -32,14 +34,35 @@ export async function generateMetadata({
   const product = await getAvailableProduct((await params).slug);
   if (!product) return { title: "Package not found" };
   const name = normaliseProductName(product.name);
-  return {
-    title: name,
-    description: meaningfulProductDescription(
+  const description =
+    product.seoDescription ||
+    meaningfulProductDescription(
       product.description,
       product.name,
       product.slug,
       `Explore ${name} study materials and practice tests on Prepstore.`,
-    ),
+    );
+  const canonical = `/packages/${product.slug}`;
+  const image = `/api/catalog/products/${product.id}/cover`;
+  return {
+    title: product.seoTitle || name,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: "website",
+      title: product.seoTitle || name,
+      description,
+      url: canonical,
+      images: product.coverObjectKey
+        ? [{ url: image, alt: `${name} cover` }]
+        : undefined,
+    },
+    twitter: {
+      card: product.coverObjectKey ? "summary_large_image" : "summary",
+      title: product.seoTitle || name,
+      description,
+      images: product.coverObjectKey ? [image] : undefined,
+    },
   };
 }
 
@@ -133,8 +156,71 @@ export default async function Page({
     product.slug,
     "Your complete exam preparation package with structured learning and practice.",
   );
+  const productUrl = absoluteUrl(`/packages/${product.slug}`);
+  const productSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "@id": `${productUrl}#product`,
+    name: productName,
+    description: productDescription,
+    url: productUrl,
+    image: product.coverObjectKey
+      ? [absoluteUrl(`/api/catalog/products/${product.id}/cover`)]
+      : [absoluteUrl("/prepstore-icon-512.png")],
+    sku: product.id,
+    brand: { "@type": "Brand", name: "Prepstore" },
+    category: product.category || product.examName || "Exam preparation",
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: product.currency,
+      price: (product.pricePaise / 100).toFixed(2),
+      availability: "https://schema.org/OnlineOnly",
+      itemCondition: "https://schema.org/NewCondition",
+      seller: {
+        "@type": "Organization",
+        "@id": `${SITE_ORIGIN}/#organization`,
+        name: "Prepstore",
+        url: SITE_ORIGIN,
+      },
+    },
+  };
+  if (product.reviewCount > 0) {
+    productSchema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: Number(product.rating.toFixed(1)),
+      reviewCount: product.reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_ORIGIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Packages",
+        item: absoluteUrl("/packages"),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: productName,
+        item: productUrl,
+      },
+    ],
+  };
   return (
     <main className="mx-auto max-w-[1440px] bg-white px-[clamp(1.25rem,4.5vw,4.5rem)] pt-4 pb-6 text-[#14171b]">
+      <JsonLd data={[productSchema, breadcrumbSchema]} />
       <nav
         className="my-[0.2rem] mb-5 flex max-w-full items-center gap-[0.55rem] overflow-x-auto text-[0.78rem] whitespace-nowrap text-[#667078] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_b]:overflow-hidden [&_b]:text-ellipsis [&_b]:text-[#202326]"
         aria-label="Breadcrumb"
@@ -158,6 +244,26 @@ export default async function Page({
           <p className="my-[0.35rem] text-[0.88rem] text-[#61666c]">
             {productDescription}
           </p>
+          <dl className="my-4 grid grid-cols-3 gap-2 text-[0.72rem] max-[700px]:grid-cols-1 [&>div]:rounded-[0.45rem] [&>div]:border [&>div]:border-[#e7e2dc] [&>div]:bg-[#fcfaf8] [&>div]:p-3 [&_dd]:m-0 [&_dd]:mt-1 [&_dd]:font-bold [&_dd]:text-[#24272a] [&_dt]:text-[#73797e]">
+            {product.examName ? (
+              <div>
+                <dt>Exam</dt>
+                <dd>{product.examName}</dd>
+              </div>
+            ) : null}
+            {product.category ? (
+              <div>
+                <dt>Category</dt>
+                <dd>{product.category}</dd>
+              </div>
+            ) : null}
+            {product.targetAudience ? (
+              <div>
+                <dt>Best suited for</dt>
+                <dd>{product.targetAudience}</dd>
+              </div>
+            ) : null}
+          </dl>
           <div className="my-4 flex items-center gap-[0.45rem] text-xs max-[560px]:flex-wrap max-[560px]:items-start [&>b]:tracking-[0.08em]">
             <b
               className={
