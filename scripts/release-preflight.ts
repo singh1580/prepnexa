@@ -97,6 +97,11 @@ async function main() {
           where is_live = true and name ~* '(^|[^a-z])(demo|sample|testing[0-9]*)([^a-z]|$)'
         ) as placeholder_live_products,
         (
+          select coalesce(array_agg(name || ' [' || slug || ']' order by name), array[]::text[])
+          from products
+          where is_live = true and name ~* '(^|[^a-z])(demo|sample|testing[0-9]*)([^a-z]|$)'
+        ) as placeholder_live_product_names,
+        (
           select count(*)::int from sessions
           where revoked_at is null and expires_at <= now()
         ) as expired_open_sessions,
@@ -105,7 +110,7 @@ async function main() {
           from information_schema.tables
           where table_schema = 'public' and table_name = any(${requiredTables})
         ) as critical_table_count
-    ` as Array<{ role_keys: string[] | null; admin_count: number; users_without_roles: number; incomplete_live_products: number; placeholder_live_products: number; expired_open_sessions: number; critical_table_count: number }>;
+    ` as Array<{ role_keys: string[] | null; admin_count: number; users_without_roles: number; incomplete_live_products: number; placeholder_live_products: number; placeholder_live_product_names: string[]; expired_open_sessions: number; critical_table_count: number }>;
     const roleKeys = databaseState?.role_keys ?? [];
     const expectedRoles = ["ADMIN", "STUDENT"];
     if (JSON.stringify(roleKeys) !== JSON.stringify(expectedRoles)) {
@@ -123,7 +128,7 @@ async function main() {
     }
 
     if (databaseState?.users_without_roles) {
-      report("FAIL", "User roles", `${databaseState.users_without_roles} users have no assigned role; run pending migrations`);
+      report("FAIL", "User roles", `${databaseState.users_without_roles} users have no assigned role; apply pending data-repair migrations`);
       process.exitCode = 1;
     } else {
       report("PASS", "User roles", "every user has an assigned role");
@@ -137,7 +142,7 @@ async function main() {
     }
 
     if (databaseState?.placeholder_live_products) {
-      report("FAIL", "Production catalogue", `${databaseState.placeholder_live_products} live packages still use demo, sample or testing names`);
+      report("FAIL", "Production catalogue", `${databaseState.placeholder_live_products} live packages still use demo, sample or testing names: ${databaseState.placeholder_live_product_names.join(", ")}`);
       process.exitCode = 1;
     } else {
       report("PASS", "Production catalogue", "no placeholder package names are live");

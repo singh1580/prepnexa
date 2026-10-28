@@ -225,6 +225,13 @@
       "when": 1793167541432,
       "tag": "0031_fair_toro",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793186376939,
+      "tag": "0032_assign_missing_student_roles",
+      "breakpoints": true
     }
   ]
 }
