@@ -103,9 +103,27 @@ function HeroCarousel({
 
   useEffect(() => {
     if (reducedMotion || !pageVisible) return;
-    const timer = window.setInterval(showNext, intervalMs);
-    return () => window.clearInterval(timer);
-  }, [intervalMs, pageVisible, reducedMotion, showNext]);
+    const timer = window.setTimeout(showNext, intervalMs);
+    return () => window.clearTimeout(timer);
+  }, [activeIndex, intervalMs, pageVisible, reducedMotion, showNext]);
+
+  useEffect(() => {
+    const nextSlide = slides[(activeIndex + 1) % slides.length];
+    const source =
+      variant === "home" && "responsiveSrc" in nextSlide
+        ? window.matchMedia("(max-width: 899px)").matches
+          ? nextSlide.responsiveSrc
+          : nextSlide.src
+        : variant === "student" && "desktopSrc" in nextSlide
+          ? window.matchMedia("(min-width: 900px)").matches
+            ? nextSlide.desktopSrc
+            : nextSlide.src
+          : nextSlide.src;
+    if (!source) return;
+    const image = new window.Image();
+    image.decoding = "async";
+    image.src = source;
+  }, [activeIndex, slides, variant]);
 
   function slidePosition(index: number) {
     const distance = (index - activeIndex + slides.length) % slides.length;
@@ -118,12 +136,12 @@ function HeroCarousel({
   function slideClass(index: number) {
     const position = slidePosition(index);
     const base =
-      "absolute inset-0 opacity-0 invisible will-change-[opacity,transform] transition-[opacity,transform,visibility] duration-[720ms] ease-[cubic-bezier(.22,.61,.36,1)] motion-reduce:transition-none";
+      "absolute inset-0 opacity-0 invisible will-change-[opacity,transform] transition-[opacity,transform,visibility] duration-[420ms] ease-[cubic-bezier(.22,.61,.36,1)] motion-reduce:transition-none";
     if (position === "is-active")
       return `${base} visible translate-x-0 scale-100 opacity-100 [transition-delay:0s]`;
     if (position === "is-previous")
-      return `${base} -translate-x-[4%] scale-[1.015] [transition-delay:0s,0s,.9s]`;
-    return `${base} translate-x-[4%] scale-[1.015] [transition-delay:0s,0s,.9s]`;
+      return `${base} -translate-x-[2%] scale-[1.008] [transition-delay:0s,0s,.45s]`;
+    return `${base} translate-x-[2%] scale-[1.008] [transition-delay:0s,0s,.45s]`;
   }
 
   function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
@@ -172,7 +190,7 @@ function HeroCarousel({
                 alt=""
                 fill
                 fetchPriority={index === 0 ? "high" : "auto"}
-                loading={index === 0 ? "eager" : "lazy"}
+                loading={index < 2 ? "eager" : "lazy"}
                 sizes={sizes}
                 unoptimized
               />
@@ -182,7 +200,7 @@ function HeroCarousel({
       </div>
 
       <div
-        className={`absolute z-[4] flex items-center gap-[0.72rem] ${variant === "home" ? "bottom-[6.25rem] left-[clamp(1rem,7vw,7.2rem)] max-[560px]:bottom-[3.75rem] max-[560px]:left-4" : "bottom-[0.9rem] left-[2.2rem] max-[560px]:bottom-3 max-[560px]:left-[0.85rem]"}`}
+        className={`absolute z-[4] flex items-center ${variant === "home" ? "bottom-[6.35rem] left-[clamp(1rem,7vw,7.2rem)] max-[560px]:bottom-[3.72rem] max-[560px]:left-4" : "bottom-[0.9rem] left-[2.2rem] max-[560px]:bottom-3 max-[560px]:left-[0.85rem]"}`}
       >
         <div
           className="flex items-center gap-[0.32rem] px-[0.12rem]"
@@ -200,14 +218,8 @@ function HeroCarousel({
             />
           ))}
         </div>
-        <span
-          className="max-w-48 overflow-hidden text-[0.7rem] leading-none font-[780] text-ellipsis whitespace-nowrap text-[#3b3f43]"
-          aria-live="polite"
-        >
-          {slides[activeIndex].label}
-        </span>
       </div>
-      <span className="sr-only">
+      <span className="sr-only" aria-live="polite">
         Image {activeIndex + 1} of {slides.length}: {slides[activeIndex].label}
       </span>
     </div>
@@ -218,7 +230,7 @@ export function HomeHeroCarousel() {
   return (
     <HeroCarousel
       ariaLabel="Prepstore learning highlights"
-      intervalMs={7000}
+      intervalMs={4500}
       sizes="100vw"
       slides={HOME_SLIDES}
       variant="home"

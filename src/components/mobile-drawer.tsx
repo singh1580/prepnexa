@@ -110,7 +110,7 @@ export function MobileDrawer({
         className={
           variant === "workspace"
             ? "fixed inset-0 z-[208] hidden size-full cursor-pointer border-0 bg-[rgb(21_23_25_/_38%)] p-0 group-open:max-[1099px]:block"
-            : "hidden"
+            : "fixed inset-0 z-[99] hidden size-full cursor-pointer border-0 bg-[rgb(21_23_25_/_16%)] p-0 group-open:max-[1099px]:block"
         }
         type="button"
         tabIndex={-1}
