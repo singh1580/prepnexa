@@ -262,9 +262,12 @@ describe("responsive content integrity", () => {
     expect(heroCarousel).toContain("unoptimized");
     expect(heroCarousel).toContain("object-cover object-right");
     expect(heroCarousel).toContain(
-      "bottom-[6.25rem] left-[clamp(1rem,7vw,7.2rem)]",
+      "bottom-[6.35rem] left-[clamp(1rem,7vw,7.2rem)]",
     );
-    expect(heroCarousel).toContain("max-[560px]:bottom-[3.75rem]");
+    expect(heroCarousel).toContain("max-[560px]:bottom-[3.72rem]");
+    expect(heroCarousel).toContain("window.setTimeout(showNext, intervalMs)");
+    expect(heroCarousel).toContain("duration-[420ms]");
+    expect(heroCarousel).toContain('loading={index < 2 ? "eager" : "lazy"}');
     expect(homePage).toContain("min-[561px]:bottom-8");
     expect(homePage).toContain("min-[561px]:left-[clamp(2rem,7vw,7.2rem)]");
     expect(css).not.toContain(".hero-carousel");
@@ -454,7 +457,7 @@ describe("responsive content integrity", () => {
     expect(packagesPage).toContain('name="q"');
     expect(packagesPage).toContain('type="search"');
     expect(packagesPage).toContain('type="submit"');
-    expect(packagesPage).toContain(".includes(q)");
+    expect(packagesPage).toContain("matchesCatalogQuery(product, q)");
     expect(autoSubmitForm).toContain("HTMLSelectElement");
     expect(autoSubmitForm).toContain('["checkbox", "radio"].includes(control.type)');
     expect(autoSubmitForm).not.toContain('onInput=');
@@ -493,7 +496,7 @@ describe("responsive content integrity", () => {
 
   it("keeps mobile hero copy clear of the subject and strengthens owned actions", () => {
     expect(heroCarousel).toContain("object-cover object-right");
-    expect(homePage).toContain("max-[560px]:max-w-[52%]");
+    expect(homePage).toContain("max-[560px]:max-w-[48%]");
     expect(homePage).toContain(
       "focus-within:shadow-[0_0_0_2px_rgba(232,71,20,.22)]",
     );
