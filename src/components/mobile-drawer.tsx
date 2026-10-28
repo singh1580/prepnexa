@@ -95,7 +95,7 @@ export function MobileDrawer({
 
   return (
     <details
-      className={`group relative hidden size-11 shrink-0 max-[1099px]:block ${variant === "workspace" ? "[--workspace-drawer-width:min(360px,calc(100vw-32px))]" : ""} ${className}`}
+      className={`group relative hidden h-11 shrink-0 max-[1099px]:block ${variant === "workspace" ? "w-[25px] [--workspace-drawer-width:min(360px,calc(100vw-32px))]" : "w-11"} ${className}`}
       ref={detailsRef}
       onKeyDown={handleKeyDown}
       onToggle={(event) => setOpen(event.currentTarget.open)}
