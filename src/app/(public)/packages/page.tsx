@@ -3,6 +3,7 @@ import { AutoSubmitForm } from "@/components/auto-submit-form";
 import { StorefrontProductCard } from "@/components/storefront-product-card";
 import { getCurrentAuth } from "@/features/auth/authorization";
 import { listAvailableProducts } from "@/features/catalog/repository";
+import { matchesCatalogQuery } from "@/features/catalog/search";
 import { CatalogFilterDisclosure } from "@/features/catalog/ui/catalog-filter-disclosure";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,7 @@ export default async function Page({
   searchParams: Promise<Query>;
 }) {
   const query = await searchParams;
-  const q = query.q?.trim().toLowerCase() ?? "";
+  const q = query.q?.trim() ?? "";
   const subjects = many(query.subject);
   const prices = many(query.price);
   const languages = many(query.language);
@@ -68,14 +69,11 @@ export default async function Page({
     );
   const rows = all.filter(
     (product) =>
-      (!q ||
-        `${product.name} ${product.description ?? ""} ${product.syllabus ?? ""} ${product.subjects.join(" ")}`
-          .toLowerCase()
-          .includes(q)) &&
-      (!subjects.length ||
-        subjects.some((subject) => product.subjects.includes(subject))) &&
-      matchesPrice(product.pricePaise) &&
-      (!languages.length || languages.includes(product.language)) &&
+      matchesCatalogQuery(product, q) &&
+        (!subjects.length ||
+          subjects.some((subject) => product.subjects.includes(subject))) &&
+        matchesPrice(product.pricePaise) &&
+        (!languages.length || languages.includes(product.language)) &&
       matchesFormat(product),
   );
   rows.sort((a, b) =>
