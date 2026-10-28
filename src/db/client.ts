@@ -19,9 +19,13 @@ function createLocalTestDatabase(): AppDatabase {
 
   // Neon HTTP exposes an efficient batch API that the repositories use in
   // production. node-postgres does not expose that helper, so the disposable
-  // CI database executes the already-built Drizzle queries together here.
-  compatible.batch = async (queries) =>
-    Promise.all(queries) as ReturnType<AppDatabase["batch"]>;
+  // CI database executes the already-built Drizzle queries in their declared
+  // order. Preserving order is required for foreign-key-dependent batches.
+  compatible.batch = async (queries) => {
+    const results: unknown[] = [];
+    for (const query of queries) results.push(await query);
+    return results as ReturnType<AppDatabase["batch"]>;
+  };
 
   return compatible;
 }
