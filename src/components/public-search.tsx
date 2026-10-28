@@ -47,7 +47,7 @@ export function PublicSearch({
   }
   return (
     <div
-      className={`public-live-search relative w-full ${variant === "public" ? "max-w-[31rem]" : variant === "student" ? "ml-auto w-[min(28rem,42vw)] max-w-[28rem] max-[1050px]:hidden" : "min-w-0 max-w-none"}`}
+      className={`public-live-search relative w-full ${variant === "public" ? "max-w-[31rem]" : variant === "student" ? "ml-auto w-[min(28rem,42vw)] max-w-[28rem] max-[1099px]:hidden" : "min-w-0 max-w-none max-[1099px]:hidden"}`}
     >
       <form
         className="header-search relative w-full"

@@ -37,20 +37,24 @@ describe("responsive navigation", () => {
     expect(drawer).not.toContain("group-open:-rotate-45");
     expect(drawer).toContain("bg-[#17191c]");
     expect(css).toContain("@keyframes prepstore-menu-top-depth");
-    expect(publicHeader).toContain("max-[1099px]:gap-1");
+    expect(publicHeader).toContain("max-[1099px]:gap-3");
   });
 
-  it("uses balanced mobile header columns so the menu cannot merge into the centred logo", () => {
-    expect(publicHeader).toContain(
-      "max-[1099px]:grid-cols-[44px_minmax(0,1fr)_44px]",
+  it("keeps the mobile menu and logo adjacent without squeezing either header", () => {
+    expect(publicHeader).toContain("max-[1099px]:flex");
+    expect(publicHeader).toContain("max-[1099px]:gap-3");
+    expect(publicHeader).toContain("[&>.brand]:max-[1099px]:order-2");
+    expect(publicHeader).toContain('className="mobile-public-menu order-1"');
+    expect(drawer).toContain("hidden h-11 w-[25px] shrink-0");
+  });
+
+  it("keeps workspace search out of the compact mobile header", () => {
+    expect(readFileSync("src/components/public-search.tsx", "utf8")).toContain(
+      'max-w-none max-[1099px]:hidden',
     );
-    expect(publicHeader).toContain(
-      "mobile-public-menu max-[1099px]:col-start-1 max-[1099px]:row-start-1",
+    expect(readFileSync("src/components/public-search.tsx", "utf8")).toContain(
+      'max-w-[28rem] max-[1099px]:hidden',
     );
-    expect(publicHeader).toContain("[&>.brand]:max-[1099px]:col-start-2");
-    expect(publicHeader).toContain("max-[1099px]:justify-self-center");
-    expect(drawer).toContain('variant === "workspace" ? "w-[25px]');
-    expect(drawer).toContain(': "w-11"');
   });
 
   it("keeps public navigation ordered and account actions separate", () => {
