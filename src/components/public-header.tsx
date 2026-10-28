@@ -62,7 +62,7 @@ export async function PublicHeader({
     </>
   );
   return (
-    <header className="public-header sticky top-0 z-[60] grid h-[72px] min-h-[72px] grid-cols-[auto_minmax(15rem,32rem)_auto] items-center justify-between gap-[clamp(1rem,3vw,3rem)] border-b border-prep-line bg-white px-[clamp(24px,2.2vw,32px)] text-prep-ink shadow-[0_0.2rem_0.75rem_#3f2b1d09] max-[1099px]:h-16 max-[1099px]:min-h-16 max-[1099px]:grid-cols-[44px_minmax(0,1fr)_44px] max-[1099px]:justify-normal max-[1099px]:gap-1 max-[1099px]:overflow-visible max-[1099px]:px-[clamp(12px,2vw,16px)] max-[640px]:h-[60px] max-[640px]:min-h-[60px] max-[340px]:h-[58px] max-[340px]:min-h-[58px] max-[340px]:px-[clamp(10px,3vw,12px)] [&>.brand]:shrink-0 [&>.brand]:max-[1099px]:col-start-2 [&>.brand]:max-[1099px]:row-start-1 [&>.brand]:max-[1099px]:justify-self-center [&>.brand-logo-link]:w-[199px] [&>.brand-logo-link]:min-w-[199px] [&>.brand-logo-link]:max-[1099px]:w-[188px] [&>.brand-logo-link]:max-[1099px]:min-w-[188px] [&>.brand-logo-link]:max-[340px]:w-[177px] [&>.brand-logo-link]:max-[340px]:min-w-[177px] [&>.brand-logo-link_.brand-logo]:h-9 [&>.brand-logo-link_.brand-logo]:w-[199px] [&>.brand-logo-link_.brand-logo]:max-[1099px]:h-[34px] [&>.brand-logo-link_.brand-logo]:max-[1099px]:w-[188px] [&>.brand-logo-link_.brand-logo]:max-[340px]:h-8 [&>.brand-logo-link_.brand-logo]:max-[340px]:w-[177px] [&>.public-live-search]:max-[1100px]:hidden">
+    <header className="public-header sticky top-0 z-[60] grid h-[72px] min-h-[72px] grid-cols-[auto_minmax(15rem,32rem)_auto] items-center justify-between gap-[clamp(1rem,3vw,3rem)] border-b border-prep-line bg-white px-[clamp(24px,2.2vw,32px)] text-prep-ink shadow-[0_0.2rem_0.75rem_#3f2b1d09] max-[1099px]:flex max-[1099px]:h-16 max-[1099px]:min-h-16 max-[1099px]:justify-start max-[1099px]:gap-3 max-[1099px]:overflow-visible max-[1099px]:px-[clamp(12px,2vw,16px)] max-[640px]:h-[60px] max-[640px]:min-h-[60px] max-[340px]:h-[58px] max-[340px]:min-h-[58px] max-[340px]:gap-2 max-[340px]:px-[clamp(10px,3vw,12px)] [&>.brand]:shrink-0 [&>.brand]:max-[1099px]:order-2 [&>.brand-logo-link]:w-[199px] [&>.brand-logo-link]:min-w-[199px] [&>.brand-logo-link]:max-[1099px]:w-[188px] [&>.brand-logo-link]:max-[1099px]:min-w-[188px] [&>.brand-logo-link]:max-[340px]:w-[177px] [&>.brand-logo-link]:max-[340px]:min-w-[177px] [&>.brand-logo-link_.brand-logo]:h-9 [&>.brand-logo-link_.brand-logo]:w-[199px] [&>.brand-logo-link_.brand-logo]:max-[1099px]:h-[34px] [&>.brand-logo-link_.brand-logo]:max-[1099px]:w-[188px] [&>.brand-logo-link_.brand-logo]:max-[340px]:h-8 [&>.brand-logo-link_.brand-logo]:max-[340px]:w-[177px] [&>.public-live-search]:max-[1100px]:hidden">
       <a
         className="fixed top-3 left-3 z-[1000] -translate-y-[180%] rounded-lg bg-prep-ink px-4 py-3 font-extrabold text-white focus:translate-y-0"
         href="#main-content"
@@ -70,7 +70,7 @@ export async function PublicHeader({
         Skip to main content
       </a>
       <MobileDrawer
-        className="mobile-public-menu max-[1099px]:col-start-1 max-[1099px]:row-start-1"
+        className="mobile-public-menu order-1"
         drawerClassName="mobile-public-drawer"
         label="Open navigation"
         variant="public"
