@@ -49,11 +49,18 @@ describe("responsive navigation", () => {
   });
 
   it("keeps workspace search out of the compact mobile header", () => {
-    expect(readFileSync("src/components/public-search.tsx", "utf8")).toContain(
+    const publicSearch = readFileSync(
+      "src/components/public-search.tsx",
+      "utf8",
+    );
+    expect(publicSearch).toContain(
       'max-w-none max-[1099px]:hidden',
     );
-    expect(readFileSync("src/components/public-search.tsx", "utf8")).toContain(
+    expect(publicSearch).toContain(
       'max-w-[28rem] max-[1099px]:hidden',
+    );
+    expect(publicSearch).toContain(
+      'className="public-live-search w-full max-w-[31rem]"',
     );
   });
 
