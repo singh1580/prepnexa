@@ -44,8 +44,13 @@ describe("responsive navigation", () => {
     expect(publicHeader).toContain(
       "max-[1099px]:grid-cols-[44px_minmax(0,1fr)_44px]",
     );
+    expect(publicHeader).toContain(
+      "mobile-public-menu max-[1099px]:col-start-1 max-[1099px]:row-start-1",
+    );
+    expect(publicHeader).toContain("[&>.brand]:max-[1099px]:col-start-2");
     expect(publicHeader).toContain("max-[1099px]:justify-self-center");
-    expect(drawer).toContain("hidden size-11 shrink-0");
+    expect(drawer).toContain('variant === "workspace" ? "w-[25px]');
+    expect(drawer).toContain(': "w-11"');
   });
 
   it("keeps public navigation ordered and account actions separate", () => {
