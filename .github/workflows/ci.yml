@@ -40,9 +40,12 @@ jobs:
       - run: npm test
       - run: npm run db:migrate
       - run: npm run db:seed
+        env:
+          NODE_ENV: test
       - name: Run database integration tests
         run: npm run test:integration
         env:
+          NODE_ENV: test
           RUN_INTEGRATION_TESTS: "true"
           RUN_COMMERCE_INTEGRATION: "true"
           RUN_MATERIALS_INTEGRATION: "true"
