@@ -1,8 +1,11 @@
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { neon } from "@neondatabase/serverless";
 
 type CheckLevel = "PASS" | "WARN" | "FAIL";
+type MigrationJournal = {
+  entries?: Array<{ idx?: number; tag?: string; when?: number }>;
+};
 
 function report(level: CheckLevel, label: string, detail: string) {
   const marker = level === "PASS" ? "✓" : level === "WARN" ? "!" : "✗";
@@ -31,6 +34,16 @@ async function loadLocalEnvironment() {
   report("FAIL", "Environment file", `Create ${candidates[0]} from .env.example first`);
   process.exitCode = 1;
   return false;
+}
+
+async function latestRepositoryMigration() {
+  const journalPath = resolve(process.cwd(), "drizzle/meta/_journal.json");
+  const journal = JSON.parse(await readFile(journalPath, "utf8")) as MigrationJournal;
+  const latest = journal.entries?.at(-1);
+  if (!latest?.tag || !Number.isSafeInteger(latest.when)) {
+    throw new Error("Drizzle migration journal has no valid latest migration");
+  }
+  return { tag: latest.tag, createdAt: String(latest.when) };
 }
 
 async function main() {
@@ -66,6 +79,8 @@ async function main() {
   try {
     const sql = neon(env.DATABASE_URL);
     const requiredTables = ["api_rate_limits", "attempts", "materials", "orders", "products", "roles", "support_tickets", "tests", "users"];
+    const requiredProductSeoColumns = ["category", "exam_name", "seo_description", "seo_title", "target_audience"];
+    const expectedMigration = await latestRepositoryMigration();
     const [databaseState] = await sql`
       select
         (select array_agg(key order by key) from roles) as role_keys,
@@ -109,8 +124,18 @@ async function main() {
           select count(*)::int
           from information_schema.tables
           where table_schema = 'public' and table_name = any(${requiredTables})
-        ) as critical_table_count
-    ` as Array<{ role_keys: string[] | null; admin_count: number; users_without_roles: number; incomplete_live_products: number; placeholder_live_products: number; placeholder_live_product_names: string[]; expired_open_sessions: number; critical_table_count: number }>;
+        ) as critical_table_count,
+        (
+          select count(*)::int
+          from information_schema.columns
+          where table_schema = 'public'
+            and table_name = 'products'
+            and column_name = any(${requiredProductSeoColumns})
+        ) as product_seo_column_count,
+        (
+          select max(created_at)::text from drizzle.__drizzle_migrations
+        ) as latest_migration_created_at
+    ` as Array<{ role_keys: string[] | null; admin_count: number; users_without_roles: number; incomplete_live_products: number; placeholder_live_products: number; placeholder_live_product_names: string[]; expired_open_sessions: number; critical_table_count: number; product_seo_column_count: number; latest_migration_created_at: string | null }>;
     const roleKeys = databaseState?.role_keys ?? [];
     const expectedRoles = ["ADMIN", "STUDENT"];
     if (JSON.stringify(roleKeys) !== JSON.stringify(expectedRoles)) {
@@ -160,6 +185,20 @@ async function main() {
       process.exitCode = 1;
     } else {
       report("PASS", "Database schema", `${requiredTables.length} critical tables are present`);
+    }
+
+    if (databaseState?.product_seo_column_count !== requiredProductSeoColumns.length) {
+      report("FAIL", "Product SEO schema", `expected ${requiredProductSeoColumns.length} launch columns; found ${databaseState?.product_seo_column_count ?? 0}; run pending migrations`);
+      process.exitCode = 1;
+    } else {
+      report("PASS", "Product SEO schema", `${requiredProductSeoColumns.length} launch columns are present`);
+    }
+
+    if (databaseState?.latest_migration_created_at !== expectedMigration.createdAt) {
+      report("FAIL", "Database migrations", `expected ${expectedMigration.tag}; database ledger is behind or differs; run pending migrations`);
+      process.exitCode = 1;
+    } else {
+      report("PASS", "Database migrations", `${expectedMigration.tag} is applied`);
     }
   } catch (error) {
     report("FAIL", "Database", error instanceof Error ? error.message : "connection failed");
