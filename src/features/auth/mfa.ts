@@ -51,7 +51,7 @@ export async function verifyMfaLogin(input: MfaLoginInput, context: { ip?: strin
   if (totpStep !== undefined && !await consumeTotpStep(factor.id, totpStep)) throw new AppError("MFA_CODE_REPLAYED", "This authenticator code has already been used.", 401);
 
   const { token, tokenHash } = createOpaqueToken();
-  const expiresAt = new Date(Date.now() + env.ADMIN_SESSION_TTL_HOURS * 3_600_000);
+  const expiresAt = new Date(Date.now() + env.ADMIN_SESSION_TTL_DAYS * 86_400_000);
   const ipHash = context.ip ? hashIdentifier(context.ip) : undefined;
   await createSession({ userId: challenge.userId, tokenHash, ipHash, userAgent: context.userAgent?.slice(0, 1000), expiresAt }, env.MAX_ACTIVE_SESSIONS);
   await Promise.all([touchLastLogin(challenge.userId), recordLoginAttempt({ emailHash: hashIdentifier(challenge.email), ipHash, succeeded: true })]);
