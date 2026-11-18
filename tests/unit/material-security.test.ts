@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PDFDocument } from "pdf-lib";
+import { PDFArray, PDFDocument, PDFName, PDFString } from "pdf-lib";
 import { validateMaterialFile } from "../../src/features/materials/files";
 import { createMaterialToken, verifyMaterialToken } from "../../src/features/materials/tokens";
 import { watermarkPdf } from "../../src/features/materials/watermark";
@@ -31,6 +31,43 @@ describe("protected material primitives", () => {
     const loaded = await PDFDocument.load(result);
     expect(loaded.getPageCount()).toBe(2);
     expect(result.byteLength).toBeGreaterThan(original.byteLength);
+  });
+
+  it("preserves reference-link annotations while adding the watermark", async () => {
+    const document = await PDFDocument.create();
+    const page = document.addPage([600, 800]);
+    const annotation = document.context.register(document.context.obj({
+      Type: "Annot",
+      Subtype: "Link",
+      Rect: [50, 700, 260, 725],
+      Border: [0, 0, 0],
+      A: {
+        Type: "Action",
+        S: "URI",
+        URI: PDFString.of("https://example.com/reference"),
+      },
+    }));
+    page.node.set(PDFName.of("Annots"), document.context.obj([annotation]));
+
+    const result = await watermarkPdf(await document.save(), "Licensed learner");
+    const loaded = await PDFDocument.load(result);
+    const annotations = loaded
+      .getPage(0)
+      .node.lookup(PDFName.of("Annots"), PDFArray);
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(result) });
+    const renderedDocument = await loadingTask.promise;
+    const renderedAnnotations = await (
+      await renderedDocument.getPage(1)
+    ).getAnnotations({ intent: "display" });
+
+    expect(annotations.size()).toBe(1);
+    expect(renderedAnnotations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ url: "https://example.com/reference" }),
+      ]),
+    );
+    await loadingTask.destroy();
   });
 
   it("labels delivered copies for personal study without exposing a full email address", () => {
