@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const contactPage = readFileSync("src/app/(public)/contact/page.tsx", "utf8");
+const aboutPage = readFileSync("src/app/(public)/about/page.tsx", "utf8");
 const publicLayout = readFileSync("src/app/(public)/layout.tsx", "utf8");
 const publicHeader = readFileSync("src/components/public-header.tsx", "utf8");
 const legalDocuments = readFileSync("src/app/(public)/legal/[document]/legal-documents.ts", "utf8");
@@ -30,6 +31,17 @@ describe("contact and support routing", () => {
     expect(contactPage).not.toContain("LEGAL OPERATOR");
     expect(contactPage).not.toContain("BUSINESS_ENTITY_TYPE");
     expect(publicLayout).toContain('href="/legal/fair-use"');
+  });
+
+  it("keeps public trust copy professional and links only the approved social profile", () => {
+    expect(aboutPage).toContain("Verified learner feedback");
+    expect(aboutPage).not.toContain("Moderated public feedback");
+    expect(aboutPage).not.toContain("checked before publication");
+    expect(publicLayout).toContain(
+      'href="https://www.instagram.com/prepstore.in/?hl=en"',
+    );
+    expect(publicLayout).toContain('aria-label="Follow Prepstore on Instagram"');
+    expect(publicLayout).toContain('rel="noopener noreferrer"');
   });
 
   it("requires all four policies during account registration", () => {

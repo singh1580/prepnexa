@@ -27,8 +27,8 @@ const principles = [
     body: "Purchased packages are organised in the student dashboard so tests and study material remain easy to find.",
   },
   {
-    title: "Moderated public feedback",
-    body: "Only eligible learners can submit package reviews, and public reviews are checked before publication.",
+    title: "Verified learner feedback",
+    body: "Reviews reflect experiences shared by learners with access to the relevant package, helping students make informed decisions.",
   },
 ] as const;
 
