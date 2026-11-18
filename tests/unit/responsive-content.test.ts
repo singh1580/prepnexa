@@ -341,6 +341,10 @@ describe("responsive content integrity", () => {
     expect(securePdfViewer).toContain("pixelBudgetScale");
     expect(securePdfViewer).toContain("Fit page");
     expect(securePdfViewer).toContain("Fit width");
+    expect(securePdfViewer).toContain("page.getAnnotations");
+    expect(securePdfViewer).toContain("convertToViewportPoint");
+    expect(securePdfViewer).toContain('target={link.newTab ? "_blank" : undefined}');
+    expect(securePdfViewer).toContain('rel={link.newTab ? "noopener noreferrer" : undefined}');
     expect(materialAccessRoute).toContain("Location: location");
     expect(materialAccessRoute).not.toContain("Response.redirect");
     expect(materialAccessRoute).not.toContain("new URL(`/api/materials/");
