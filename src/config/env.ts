@@ -24,7 +24,7 @@ export const envSchema = z.object({
   MFA_IP_MAX_ATTEMPTS: z.coerce.number().int().min(5).max(100).default(20),
   MFA_ENCRYPTION_KEY: z.string().min(32).optional(),
   MFA_CHALLENGE_TTL_MINUTES: z.coerce.number().int().min(2).max(15).default(5),
-  ADMIN_SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(24).default(12),
+  ADMIN_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
   PAYMENT_PROVIDER: z.enum(["mock","razorpay"]).default("mock"), PAYMENT_WEBHOOK_SECRET: z.string().optional(),
   RAZORPAY_KEY_ID: optionalSecret, RAZORPAY_KEY_SECRET: optionalSecret, RAZORPAY_WEBHOOK_SECRET: optionalSecret,
   RESEND_API_KEY: z.string().trim().min(1).optional(), EMAIL_FROM: z.string().trim().min(1).optional(),
