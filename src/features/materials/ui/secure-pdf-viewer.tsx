@@ -11,6 +11,29 @@ import { useEffect, useId, useRef, useState } from "react";
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
 const MAX_RENDER_PIXELS = 12_000_000;
+type PdfLinkHotspot = {
+  id: string;
+  href: string;
+  label: string;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  newTab: boolean;
+};
+
+function safeLinkHref(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const url = new URL(value, window.location.href);
+    return ["http:", "https:", "mailto:"].includes(url.protocol)
+      ? url.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 const controlButtonClass =
   "inline-grid h-[2.35rem] min-w-[2.35rem] shrink-0 cursor-pointer place-items-center rounded-[.4rem] border border-[#505050] bg-[#252525] px-[.55rem] py-[.35rem] text-[.78rem] text-white hover:border-[#f07950] hover:bg-[#333] focus-visible:border-[#f07950] focus-visible:bg-[#333] disabled:cursor-not-allowed disabled:opacity-38 max-[700px]:h-9";
 
@@ -33,6 +56,8 @@ export function SecurePdfViewer({
   const [zoom, setZoom] = useState(1);
   const [fitMode, setFitMode] = useState<"page" | "width">("page");
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [pageSize, setPageSize] = useState({ width: 0, height: 0 });
+  const [pageLinks, setPageLinks] = useState<PdfLinkHotspot[]>([]);
   const [progress, setProgress] = useState(0);
   const [rendering, setRendering] = useState(true);
   const [pageText, setPageText] = useState("");
@@ -141,6 +166,7 @@ export function SecurePdfViewer({
       return;
     let cancelled = false;
     renderTaskRef.current?.cancel();
+    setPageLinks([]);
     void (async () => {
       try {
         const page = await document.getPage(pageNumber);
@@ -161,6 +187,10 @@ export function SecurePdfViewer({
         const viewport = page.getViewport({
           scale: Math.max(0.1, fittedScale * zoom),
         });
+        setPageSize({
+          width: Math.floor(viewport.width),
+          height: Math.floor(viewport.height),
+        });
         const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
         const pixelBudgetScale = Math.sqrt(
           MAX_RENDER_PIXELS / Math.max(1, viewport.width * viewport.height),
@@ -180,7 +210,50 @@ export function SecurePdfViewer({
         });
         renderTaskRef.current = task;
         await task.promise;
-        if (!cancelled) setRendering(false);
+        if (!cancelled) {
+          try {
+            const annotations = (await page.getAnnotations({
+              intent: "display",
+            })) as Array<{
+              id?: string;
+              rect?: number[];
+              url?: string;
+              newWindow?: boolean;
+              titleObj?: { str?: string };
+              contentsObj?: { str?: string };
+            }>;
+            const links = annotations.flatMap((annotation, index) => {
+              const href = safeLinkHref(annotation.url);
+              if (!href || !annotation.rect || annotation.rect.length !== 4)
+                return [];
+              const [pdfX1, pdfY1, pdfX2, pdfY2] = annotation.rect;
+              const [x1, y1] = viewport.convertToViewportPoint(pdfX1, pdfY1);
+              const [x2, y2] = viewport.convertToViewportPoint(pdfX2, pdfY2);
+              const protocol = new URL(href).protocol;
+              return [
+                {
+                  id: annotation.id ?? `${pageNumber}-${index}`,
+                  href,
+                  label:
+                    annotation.titleObj?.str ||
+                    annotation.contentsObj?.str ||
+                    "Open reference link",
+                  left: Math.min(x1, x2),
+                  top: Math.min(y1, y2),
+                  width: Math.abs(x2 - x1),
+                  height: Math.abs(y2 - y1),
+                  newTab:
+                    annotation.newWindow !== false &&
+                    (protocol === "http:" || protocol === "https:"),
+                },
+              ];
+            });
+            setPageLinks(links);
+          } catch {
+            setPageLinks([]);
+          }
+          setRendering(false);
+        }
       } catch (value) {
         if (
           !cancelled &&
@@ -345,14 +418,36 @@ export function SecurePdfViewer({
           className="relative grid min-h-full min-w-max place-items-center"
           aria-busy={rendering}
         >
-          <canvas
-            className="block max-w-none bg-white shadow-[0_.5rem_2rem_rgba(0,0,0,.32)] select-none"
-            ref={canvasRef}
-            role="img"
-            aria-label={`${title}, page ${pageNumber} of ${pageCount}`}
-            aria-describedby={pageDescriptionId}
-            draggable={false}
-          />
+          <div
+            className="relative shrink-0 shadow-[0_.5rem_2rem_rgba(0,0,0,.32)]"
+            style={{ width: pageSize.width, height: pageSize.height }}
+          >
+            <canvas
+              className="block max-w-none bg-white select-none"
+              ref={canvasRef}
+              role="img"
+              aria-label={`${title}, page ${pageNumber} of ${pageCount}`}
+              aria-describedby={pageDescriptionId}
+              draggable={false}
+            />
+            {pageLinks.map((link) => (
+              <a
+                className="absolute z-[1] block cursor-pointer rounded-[2px] bg-transparent outline-none hover:bg-[rgba(232,73,22,.12)] focus-visible:bg-[rgba(232,73,22,.16)] focus-visible:ring-2 focus-visible:ring-[#e84916] focus-visible:ring-offset-1"
+                href={link.href}
+                key={link.id}
+                rel={link.newTab ? "noopener noreferrer" : undefined}
+                target={link.newTab ? "_blank" : undefined}
+                title={link.label}
+                aria-label={link.label}
+                style={{
+                  left: link.left,
+                  top: link.top,
+                  width: link.width,
+                  height: link.height,
+                }}
+              />
+            ))}
+          </div>
           <div className="sr-only" id={pageDescriptionId}>
             {pageText || `Page ${pageNumber} has no extractable text.`}
           </div>
