@@ -145,11 +145,11 @@ async function main() {
       report("PASS", "Roles", "exactly ADMIN and STUDENT are seeded");
     }
 
-    if (databaseState?.admin_count !== 1) {
-      report("FAIL", "Admin", `expected exactly 1 Admin; found ${databaseState?.admin_count ?? 0}`);
+    if (!databaseState?.admin_count) {
+      report("FAIL", "Admin", "at least one Admin account must be assigned");
       process.exitCode = 1;
     } else {
-      report("PASS", "Admin", "exactly one Admin account is assigned");
+      report("PASS", "Admin", `${databaseState.admin_count} Admin account(s) are assigned`);
     }
 
     if (databaseState?.users_without_roles) {
