@@ -18,7 +18,7 @@ describe("RBAC seed data", () => {
     expect(SYSTEM_ROLES.map((role) => role.key)).toEqual(["STUDENT", "ADMIN"]);
   });
 
-  it("gives the single Admin every platform-management capability", () => {
+  it("gives every Admin the platform-management capabilities", () => {
     expect(ROLE_PERMISSION_KEYS.ADMIN).toEqual(expect.arrayContaining(["question.create", "test.manage", "material.manage", "product.manage", "user.read.support", "support.manage.all", "notification.manage", "order.read.all", "refund.manage", "coupon.manage", "audit.read", "system.manage"]));
     expect(PERMISSIONS).not.toEqual(expect.arrayContaining(["exam.manage", "question.review", "question.publish"]));
     expect(ROLE_PERMISSION_KEYS.STUDENT).not.toContain("system.manage");
