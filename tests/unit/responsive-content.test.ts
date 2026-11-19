@@ -451,11 +451,9 @@ describe("responsive content integrity", () => {
       "max-[560px]:auto-cols-[minmax(16.5rem,82vw)]",
     );
     expect(homePage).toContain("overflow-x-auto overflow-y-hidden");
-    expect(homePage).toContain("[scrollbar-width:thin]");
-    expect(homePage).toContain("max-[560px]:[scrollbar-width:none]");
-    expect(homePage).toContain(
-      "max-[560px]:[&::-webkit-scrollbar]:hidden",
-    );
+    expect(homePage).toContain("[scrollbar-width:none]");
+    expect(homePage).toContain("[&::-webkit-scrollbar]:hidden");
+    expect(homePage).not.toContain("[scrollbar-width:thin]");
     expect(homePage).toContain("[scroll-snap-type:inline_mandatory]");
     expect(homePage).toContain("[&>*]:snap-start");
     expect(homePage).toContain("const featured = popular;");
@@ -480,7 +478,7 @@ describe("responsive content integrity", () => {
     expect(packagesPage).toContain('name="q"');
     expect(packagesPage).toContain('type="search"');
     expect(packagesPage).toContain('type="submit"');
-    expect(packagesPage).toContain("matchesCatalogQuery(product, q)");
+    expect(packagesPage).toContain("filterAndSortCatalog(all, filters)");
     expect(autoSubmitForm).toContain("HTMLSelectElement");
     expect(autoSubmitForm).toContain('["checkbox", "radio"].includes(control.type)');
     expect(autoSubmitForm).not.toContain('onInput=');
