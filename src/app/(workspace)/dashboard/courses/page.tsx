@@ -7,7 +7,6 @@ import { getStudentNotifications } from "@/features/operations/service";
 import { getOwnedStudentCourses } from "@/features/student-courses/service";
 import { courseProgress } from "@/features/student-courses/progress";
 import {
-  meaningfulProductDescription,
   normaliseProductName,
 } from "@/features/catalog/presentation";
 
@@ -118,21 +117,16 @@ export default async function Page({
           {courses.map((course) => {
             const completion = courseProgress(course);
             const courseName = normaliseProductName(course.name);
-            const description = meaningfulProductDescription(
-              course.description,
-              course.name,
-              course.slug,
-              "Structured study materials, tests and detailed results in one package.",
-            );
             return (
               <article
                 className="overflow-hidden rounded-[.55rem] border border-[#e1dfdc] bg-white shadow-[0_.5rem_1.5rem_#3c302709]"
                 key={course.id}
               >
-                <div className="relative flex min-h-40 items-end overflow-hidden bg-[linear-gradient(135deg,#164b5e,#ef7340)] p-4 text-white max-[560px]:min-h-36 [&>img]:object-cover">
+                <div className="relative flex aspect-[36/25] items-end overflow-hidden bg-[linear-gradient(135deg,#164b5e,#ef7340)] p-4 text-white">
                   {course.coverObjectKey ? (
                     <ProductCoverImage
                       productId={course.id}
+                      coverVersion={course.coverObjectKey}
                       alt={`${courseName} cover`}
                       sizes="(max-width: 700px) 100vw, 360px"
                       fallback={
@@ -159,10 +153,7 @@ export default async function Page({
                 </div>
                 <div className="p-4 max-[700px]:p-3">
                   <h2 className="m-0 text-[.9rem]">{courseName}</h2>
-                  <p className="my-[.45rem] min-h-0 text-[.75rem] leading-[1.55] text-[#777d82] min-[701px]:min-h-[2.4rem]">
-                    {description}
-                  </p>
-                  <div className="flex gap-4 border-y border-[#eceae7] py-[.7rem] text-[.75rem] text-[#63696e]">
+                  <div className="mt-[.7rem] flex gap-4 border-y border-[#eceae7] py-[.7rem] text-[.75rem] text-[#63696e]">
                     <span>{course.materialCount} resources</span>
                     <span>{course.testCount} tests</span>
                   </div>

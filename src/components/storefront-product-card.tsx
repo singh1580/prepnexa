@@ -88,13 +88,9 @@ export function StorefrontProductCard({
     "bg-[#dcecef] bg-[linear-gradient(135deg,#f8feff_0%,#c3e0e5_52%,#4f9099_100%)]",
   ][index % 6];
   const artworkClass = `${toneClass} before:absolute before:right-[-2.4rem] before:bottom-[-3.5rem] before:h-40 before:w-40 before:rounded-full before:border-[1.35rem] before:border-white/35 before:shadow-[0_0_0_1.4rem_rgba(255,255,255,0.12)] after:absolute after:inset-0 after:bg-[linear-gradient(90deg,#ffffff12,transparent_65%)]`;
-  const coverClass = `relative block overflow-hidden bg-cover bg-center bg-no-repeat text-[#14202a] ${
-    variant === "compact"
-      ? "h-[6.45rem] p-3"
-      : variant === "catalog"
-        ? "h-[9.2rem] p-4 max-[560px]:h-[10.75rem] max-[340px]:h-[9.75rem]"
-        : "h-[10.7rem] p-4"
-  } ${homeCard ? "max-[560px]:h-auto max-[560px]:aspect-[3/2]" : ""} ${
+  const coverClass = `relative block aspect-[36/25] overflow-hidden bg-cover bg-center bg-no-repeat text-[#14202a] ${
+    variant === "compact" ? "p-3" : "p-4"
+  } ${
     product.coverObjectKey
       ? "bg-[#f8f4ef] bg-none after:hidden"
       : artworkClass
@@ -129,6 +125,7 @@ export function StorefrontProductCard({
         {product.coverObjectKey ? (
           <ProductCoverImage
             productId={product.id}
+            coverVersion={product.coverObjectKey}
             alt={`${productName} cover`}
             sizes={
               homeCard

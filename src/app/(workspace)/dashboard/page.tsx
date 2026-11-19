@@ -198,6 +198,7 @@ export default async function Page() {
                 {continueCourse.coverObjectKey ? (
                   <ProductCoverImage
                     productId={continueCourse.id}
+                    coverVersion={continueCourse.coverObjectKey}
                     alt=""
                     sizes="88px"
                     fallback={
@@ -321,6 +322,7 @@ export default async function Page() {
                       {course.coverObjectKey ? (
                         <ProductCoverImage
                           productId={course.id}
+                          coverVersion={course.coverObjectKey}
                           alt=""
                           sizes="64px"
                           fallback={courseName.slice(0, 2).toUpperCase()}

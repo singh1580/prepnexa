@@ -106,6 +106,18 @@ describe("responsive content integrity", () => {
     "src/components/storefront-product-card.tsx",
     "utf8",
   );
+  const productCoverImage = readFileSync(
+    "src/components/product-cover-image.tsx",
+    "utf8",
+  );
+  const productDetailCover = readFileSync(
+    "src/components/product-detail-cover.tsx",
+    "utf8",
+  );
+  const studentCourses = readFileSync(
+    "src/app/(workspace)/dashboard/courses/page.tsx",
+    "utf8",
+  );
   const publicSearch = readFileSync("src/components/public-search.tsx", "utf8");
   const homePage = readFileSync("src/app/(public)/page.tsx", "utf8");
   const cartWorkflow = readFileSync(
@@ -196,7 +208,7 @@ describe("responsive content integrity", () => {
     expect(storefrontProductCard).toContain("max-[560px]:gap-[0.28rem]");
     expect(cartWorkflow).toContain("max-[560px]:grid-flow-col");
     expect(cartWorkflow).toContain("max-[560px]:overflow-x-auto");
-    expect(storefrontProductCard).toContain("max-[560px]:aspect-[3/2]");
+    expect(storefrontProductCard).toContain("aspect-[36/25]");
     expect(storefrontProductCard).toContain(
       "max-[560px]:grid-cols-[auto_auto_minmax(0,1fr)]",
     );
@@ -493,7 +505,7 @@ describe("responsive content integrity", () => {
     expect(catalogFilterDisclosure).toContain("max-[560px]:col-start-2");
     expect(catalogFilterDisclosure).toContain("max-[560px]:grid-cols-1");
     expect(catalogFilterDisclosure).toContain("max-[1100px]:static");
-    expect(storefrontProductCard).toContain("max-[560px]:h-[10.75rem]");
+    expect(storefrontProductCard).toContain("aspect-[36/25]");
     expect(packagesPage).toContain("max-[560px]:col-span-full");
     expect(css).not.toContain(".catalog-filter-trigger");
   });
@@ -504,11 +516,24 @@ describe("responsive content integrity", () => {
     expect(homePage).toContain(
       "focus-within:shadow-[0_0_0_2px_rgba(232,71,20,.22)]",
     );
-    expect(storefrontProductCard).toContain("max-[560px]:aspect-[3/2]");
+    expect(storefrontProductCard).toContain("aspect-[36/25]");
     expect(storefrontProductCard).toContain(
       "bg-[#e7edf8] bg-[linear-gradient(135deg,#f9fbff_0%,#d7e1f3_52%,#7289bb_100%)]",
     );
     expect(storefrontProductCard).toContain("bg-[#c73c0b]");
+  });
+
+  it("preserves package-cover proportions and keeps owned cards concise", () => {
+    expect(productCoverImage).toContain('className = "object-contain"');
+    expect(productCoverImage).toContain("coverVersion");
+    expect(productDetailCover).toContain("aspect-[36/25]");
+    expect(productDetailCover).toContain('className="object-contain"');
+    expect(packageDetail).toContain("items-start");
+    expect(studentCourses).toContain("aspect-[36/25]");
+    expect(studentCourses).not.toContain("{description}");
+    expect(studentCourses).not.toContain("meaningfulProductDescription");
+    expect(adminCatalogForms).toContain("Remove current cover");
+    expect(adminCatalogForms).toContain('"cover-remove"');
   });
 
   it("removes reserved card-title space and keeps both support conversations compact", () => {

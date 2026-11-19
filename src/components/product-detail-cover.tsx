@@ -3,22 +3,25 @@
 import Image from "next/image";
 import { useState } from "react";
 import { normaliseProductName } from "@/features/catalog/presentation";
+import { productCoverUrl } from "@/features/catalog/cover";
 
 export function ProductDetailCover({
   productId,
   name,
   hasCover,
+  coverVersion,
 }: {
   productId: string;
   name: string;
   hasCover: boolean;
+  coverVersion?: string | null;
 }) {
   const [failed, setFailed] = useState(false);
   const showImage = hasCover && !failed;
   const productName = normaliseProductName(name);
   return (
     <div
-      className={`relative min-h-[25.5rem] overflow-hidden rounded-[0.55rem] text-white shadow-[inset_0_0_0_1px_#ffffff20] max-[800px]:min-h-[22rem] ${
+      className={`relative aspect-[36/25] self-start overflow-hidden rounded-[0.55rem] text-white shadow-[inset_0_0_0_1px_#ffffff20] ${
         showImage
           ? "bg-[#eee]"
           : "bg-[linear-gradient(135deg,#003653_0%,#083d5a_32%,#f17846_100%)] p-8 after:absolute after:right-[-5rem] after:bottom-[-4rem] after:h-[17rem] after:w-[17rem] after:rotate-[18deg] after:border-[3.5rem] after:border-[#ffffff18]"
@@ -26,10 +29,10 @@ export function ProductDetailCover({
     >
       {showImage ? (
         <Image
-          src={`/api/catalog/products/${productId}/cover`}
+          src={productCoverUrl(productId, coverVersion)}
           alt={`${productName} cover`}
           fill
-          className="object-cover"
+          className="object-contain"
           sizes="(max-width: 800px) 100vw, 35vw"
           onError={() => setFailed(true)}
         />

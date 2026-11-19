@@ -377,6 +377,28 @@ export async function setProductCoverRecord(
   return updated;
 }
 
+export async function clearProductCoverRecord(id: string, audit: Audit) {
+  const [updated] = await db
+    .update(products)
+    .set({
+      coverObjectKey: null,
+      coverFileName: null,
+      coverContentType: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(products.id, id))
+    .returning({ id: products.id });
+  if (!updated) return undefined;
+  await db.insert(auditLogs).values({
+    actorUserId: audit.actorUserId,
+    action: "product.cover_removed",
+    entityType: "product",
+    entityId: id,
+    requestId: audit.requestId,
+  });
+  return updated;
+}
+
 export async function patchMaterial(
   before: NonNullable<Awaited<ReturnType<typeof findMaterial>>>,
   input: MaterialInput,

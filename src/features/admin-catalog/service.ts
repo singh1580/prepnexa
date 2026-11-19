@@ -33,6 +33,7 @@ import {
   type ProductCreationInput,
   type StoredFileMetadata,
   setProductCoverRecord,
+  clearProductCoverRecord,
 } from "./repository";
 type Actor = { userId: string; requestId: string };
 async function write<T>(
@@ -227,6 +228,24 @@ export async function getProductCover(id: string) {
     throw error;
   }
   return { bytes: stored.bytes, contentType: product.coverContentType ?? stored.contentType ?? "image/jpeg" };
+}
+export async function removeProductCover(id: string, actor: Actor) {
+  const product = await findProduct(id);
+  if (!product) throw contentNotFound("Product");
+  if (!product.coverObjectKey) return { id };
+  if (product.isLive)
+    throw invalidContentState(
+      "Make this package offline before removing its current cover.",
+    );
+  const removed = await write("product_cover_remove", actor, () =>
+    clearProductCoverRecord(id, {
+      actorUserId: actor.userId,
+      requestId: actor.requestId,
+    }),
+  );
+  if (!removed) throw contentNotFound("Product");
+  await privateStorage().delete(product.coverObjectKey).catch(() => undefined);
+  return removed;
 }
 export async function deleteProduct(id: string, actor: Actor) {
   const before = await findProduct(id);
