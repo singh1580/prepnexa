@@ -1,11 +1,11 @@
 import { and, asc, countDistinct, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { materials, productMaterials, products, productTests, tests } from "@/db/schema";
+import { materials, productMaterials, products, productSlugRedirects, productTests, tests } from "@/db/schema";
 import { productReadySql } from "./readiness";
 import { unstable_cache } from "next/cache";
 
 export async function listAvailableProducts(userId?:string) {
-  return db.select({ id: products.id, slug: products.slug, name: products.name, description: products.description, syllabus: products.syllabus, language: products.language, coverObjectKey: products.coverObjectKey, mrpPaise: products.mrpPaise, pricePaise: products.pricePaise, accessDays: products.accessDays, createdAt:products.createdAt, testCount: countDistinct(productTests.testId), materialCount: countDistinct(productMaterials.materialId),subjects:sql<string[]>`coalesce((select array_agg(distinct m.subject order by m.subject) from product_materials pm join materials m on m.id=pm.material_id where pm.product_id=${products.id}),array[]::varchar[])`,materialTypes:sql<string[]>`coalesce((select array_agg(distinct m.type::text order by m.type::text) from product_materials pm join materials m on m.id=pm.material_id where pm.product_id=${products.id}),array[]::text[])`,alreadyOwned:userId?sql<boolean>`exists(select 1 from entitlements e where e.user_id=${userId}::uuid and e.product_id=${products.id} and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())`:sql<boolean>`false`,rating:sql<number>`coalesce((select round(avg(rating)::numeric,1) from product_reviews r where r.product_id=${products.id} and r.status='APPROVED'),0)::double precision`,reviewCount:sql<number>`(select count(*)::int from product_reviews r where r.product_id=${products.id} and r.status='APPROVED')` })
+  return db.select({ id: products.id, slug: products.slug, name: products.name, shortDescription: products.shortDescription, description: products.description, syllabus: products.syllabus, primarySubject: products.primarySubject, language: products.language, coverObjectKey: products.coverObjectKey, mrpPaise: products.mrpPaise, pricePaise: products.pricePaise, accessDays: products.accessDays, createdAt:products.createdAt, testCount: countDistinct(productTests.testId), materialCount: countDistinct(productMaterials.materialId),subjects:sql<string[]>`coalesce((select array_agg(distinct m.subject order by m.subject) from product_materials pm join materials m on m.id=pm.material_id where pm.product_id=${products.id}),array[]::varchar[])`,materialTypes:sql<string[]>`coalesce((select array_agg(distinct m.type::text order by m.type::text) from product_materials pm join materials m on m.id=pm.material_id where pm.product_id=${products.id}),array[]::text[])`,alreadyOwned:userId?sql<boolean>`exists(select 1 from entitlements e where e.user_id=${userId}::uuid and e.product_id=${products.id} and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())`:sql<boolean>`false`,rating:sql<number>`coalesce((select round(avg(rating)::numeric,1) from product_reviews r where r.product_id=${products.id} and r.status='APPROVED'),0)::double precision`,reviewCount:sql<number>`(select count(*)::int from product_reviews r where r.product_id=${products.id} and r.status='APPROVED')` })
     .from(products).leftJoin(productTests, eq(productTests.productId, products.id)).leftJoin(productMaterials, eq(productMaterials.productId, products.id)).where(and(eq(products.isLive, true), productReadySql(products.id)))
     .groupBy(products.id).orderBy(asc(products.pricePaise), asc(products.name));
 }
@@ -31,6 +31,9 @@ export async function searchAvailableProducts(rawQuery: string, limit = 6) {
       and (
         lower(p.name) like ${contains}
         or lower(coalesce(p.description, '')) like ${contains}
+        or lower(coalesce(p.short_description, '')) like ${contains}
+        or lower(coalesce(p.search_keywords, '')) like ${contains}
+        or lower(coalesce(p.primary_subject, '')) like ${contains}
         or lower(coalesce(p.syllabus, '')) like ${contains}
         or exists (
           select 1 from product_materials pm
@@ -64,6 +67,16 @@ export async function findAvailableProduct(slug: string) {
   ]);
   const reviews=reviewRows.rows as {id:string;rating:number;comment:string;createdAt:Date;name:string}[];const rating=reviews.length?reviews.reduce((sum,item)=>sum+item.rating,0)/reviews.length:0;
   return { ...product, tests: testRows, materials: materialRows,reviews,rating,reviewCount:reviews.length };
+}
+
+export async function findCurrentProductSlug(oldSlug: string) {
+  const [row] = await db
+    .select({ slug: products.slug })
+    .from(productSlugRedirects)
+    .innerJoin(products, eq(products.id, productSlugRedirects.productId))
+    .where(and(eq(productSlugRedirects.oldSlug, oldSlug), eq(products.isLive, true), productReadySql(products.id)))
+    .limit(1);
+  return row?.slug ?? null;
 }
 
 export async function findCartProducts(ids:string[],userId?:string){if(!ids.length)return[];const availableToBuy=userId?sql`not exists(select 1 from entitlements e where e.user_id=${userId}::uuid and e.product_id=${products.id} and e.status='ACTIVE' and e.starts_at<=now() and e.expires_at>now())`:sql`true`;return db.select({id:products.id,slug:products.slug,name:products.name,description:products.description,coverObjectKey:products.coverObjectKey,mrpPaise:products.mrpPaise,pricePaise:products.pricePaise,currency:products.currency,accessDays:products.accessDays}).from(products).where(and(eq(products.isLive,true),productReadySql(products.id),inArray(products.id,ids),availableToBuy)).orderBy(asc(products.name));}

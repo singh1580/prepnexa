@@ -5,6 +5,8 @@ const optionalSecret = z.preprocess(value => typeof value === "string" && value.
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development","test","production"]).default("development"),
   NEXT_PUBLIC_APP_NAME: z.string().default("Prepstore"), NEXT_PUBLIC_APP_URL: z.url(),
+  NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: z.string().trim().optional(), NEXT_PUBLIC_BING_SITE_VERIFICATION: z.string().trim().optional(),
+  INDEXNOW_KEY: z.string().trim().min(8).optional(),
   DATABASE_URL: z.string().startsWith("postgresql://"), DATABASE_URL_UNPOOLED: z.string().startsWith("postgresql://"),
   AUTH_SECRET: z.string().min(32), PASSWORD_PEPPER: z.string().min(16),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),

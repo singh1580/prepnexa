@@ -2,6 +2,7 @@ import { logger } from "@/lib/logger";
 import { createHash, randomUUID } from "node:crypto";
 import { AppError } from "@/lib/errors/app-error";
 import { privateStorage } from "@/features/materials/storage";
+import { notifyIndexNow } from "@/features/seo/index-now";
 import {
   contentConflict,
   contentNotFound,
@@ -20,6 +21,7 @@ import {
   findIncompleteProductItems,
   findMaterial,
   findProduct,
+  findProductSlugRedirectRecord,
   findProductBundle,
   insertMaterial,
   insertProduct,
@@ -69,7 +71,8 @@ export async function getProduct(id: string) {
   return product;
 }
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 150);
-const withSlug = <T extends ProductInput>(input: T): T => ({ ...input, slug: input.slug || slugify(input.name) });
+const withoutBrandSuffix = (value: string) => value.replace(/(?:\s*[|–—-]\s*Prepstore\s*)+$/i, "").trim();
+const withSlug = <T extends ProductInput>(input: T): T => ({ ...input, slug: input.slug || slugify(input.name), seoTitle: withoutBrandSuffix(input.seoTitle) });
 export const createProduct = (input: ProductCreationInput, actor: Actor) =>
   write("product_create", actor, () =>
     insertProduct(withSlug(input), {
@@ -150,9 +153,13 @@ export async function setProductLive(id: string, isLive: boolean, actor: Actor) 
       [before.coverObjectKey, "cover image"],
       [before.examName, "exam name"],
       [before.category, "category"],
+      [before.primarySubject, "primary subject"],
       [before.targetAudience, "target audience"],
-      [before.seoTitle && before.seoTitle.length >= 20, "SEO title (at least 20 characters)"],
-      [before.seoDescription && before.seoDescription.length >= 80, "SEO description (at least 80 characters)"],
+      [before.shortDescription && before.shortDescription.length >= 40, "short card description (at least 40 characters)"],
+      [before.searchKeywords, "internal search keywords"],
+      [before.highlights && before.highlights.length >= 40, "package highlights (at least 40 characters)"],
+      [before.seoTitle && before.seoTitle.length >= 30 && before.seoTitle.length <= 65, "SEO title (30–65 characters, without the Prepstore suffix)"],
+      [before.seoDescription && before.seoDescription.length >= 120 && before.seoDescription.length <= 165, "SEO description (120–165 characters)"],
       [before.description && before.description.length >= 120, "public description (at least 120 characters)"],
       [before.syllabus && before.syllabus.length >= 40, "syllabus (at least 40 characters)"],
     ].filter(([value]) => !value).map(([, label]) => label);
@@ -166,12 +173,14 @@ export async function setProductLive(id: string, isLive: boolean, actor: Actor) 
     if (incomplete.materials.length)
       throw invalidContentState(`Complete these materials before going live: ${incomplete.materials.join(", ")}.`);
   }
-  return write(isLive ? "product_enable" : "product_disable", actor, () =>
+  const result = await write(isLive ? "product_enable" : "product_disable", actor, () =>
     setProductLiveRecord(before, isLive, {
       actorUserId: actor.userId,
       requestId: actor.requestId,
     }),
   );
+  await notifyIndexNow([`/packages/${before.slug}`, "/packages", "/sitemap.xml"]);
+  return result;
 }
 
 export async function updateProduct(
@@ -181,12 +190,21 @@ export async function updateProduct(
 ) {
   const before = await findProduct(id);
   if (!before) throw contentNotFound("Product");
-  return write("product_update", actor, () =>
-    patchProduct(before, withSlug(input), {
+  const next = withSlug(input);
+  if (next.slug !== before.slug) {
+    const redirect = await findProductSlugRedirectRecord(next.slug);
+    if (redirect && redirect.productId !== id)
+      throw contentConflict("This slug belongs to another package's redirect history.");
+  }
+  const result = await write("product_update", actor, () =>
+    patchProduct(before, next, {
       actorUserId: actor.userId,
       requestId: actor.requestId,
     }),
   );
+  if (before.isLive)
+    await notifyIndexNow([`/packages/${before.slug}`, `/packages/${next.slug}`, "/packages", "/sitemap.xml"]);
+  return result;
 }
 
 export async function uploadProductCover(
@@ -253,6 +271,7 @@ export async function deleteProduct(id: string, actor: Actor) {
   if (before.isLive) throw invalidContentState("Make this product offline before deleting it.");
   const removed = await write("product_delete", actor, () => deleteProductRecord(id, { actorUserId: actor.userId, requestId: actor.requestId }));
   if (!removed) throw invalidContentState("Products used by an order, student entitlement, test attempt or material access history must be retained.");
+  await notifyIndexNow([`/packages/${before.slug}`, "/packages", "/sitemap.xml"]);
   return removed;
 }
 export async function getMaterial(id: string) {

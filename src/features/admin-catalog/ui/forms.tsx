@@ -24,6 +24,10 @@ const adminTextarea =
   "w-full min-w-0 resize-y rounded-[0.45rem] border border-[#cacac5] bg-white p-[0.8rem] font-normal outline-none focus:border-prep-orange focus:ring-2 focus:ring-[#ffdfd2]";
 const adminError =
   "mt-3 rounded-prep-control border border-[#efc1bd] bg-[#fdebea] p-3 text-sm text-[#ad3028]";
+const parseFaqs = (value: string) => value.split(/\r?\n/).map((line) => {
+  const [question, ...answer] = line.split("||");
+  return { question: question?.trim() ?? "", answer: answer.join("||").trim() };
+}).filter((faq) => faq.question || faq.answer);
 const materialStepClass = (active: boolean) =>
   active
     ? "text-prep-orange-dark [&>b]:bg-prep-orange [&>b]:text-white [&_strong]:text-prep-ink"
@@ -105,13 +109,18 @@ export function ProductCreateForm({
     id: string;
     name: string;
     slug: string;
+    shortDescription: string | null;
     description: string | null;
     syllabus: string | null;
     seoTitle: string | null;
     seoDescription: string | null;
     examName: string | null;
     category: string | null;
+    primarySubject: string | null;
     targetAudience: string | null;
+    searchKeywords: string | null;
+    highlights: string | null;
+    faqs: { question: string; answer: string }[] | null;
     language: string;
     coverObjectKey: string | null;
     mrpPaise: number | null;
@@ -159,14 +168,19 @@ export function ProductCreateForm({
         product ? `products/${product.id}` : "products",
         {
           name: String(data.get("name")),
-          slug: product?.slug ?? "",
+          slug: String(data.get("slug") ?? ""),
+          shortDescription: String(data.get("shortDescription") ?? ""),
           description: String(data.get("description") ?? ""),
           syllabus: String(data.get("syllabus") ?? ""),
           seoTitle: String(data.get("seoTitle") ?? ""),
           seoDescription: String(data.get("seoDescription") ?? ""),
           examName: String(data.get("examName") ?? ""),
           category: String(data.get("category") ?? ""),
+          primarySubject: String(data.get("primarySubject") ?? ""),
           targetAudience: String(data.get("targetAudience") ?? ""),
+          searchKeywords: String(data.get("searchKeywords") ?? ""),
+          highlights: String(data.get("highlights") ?? ""),
+          faqs: parseFaqs(String(data.get("faqs") ?? "")),
           language: String(data.get("language") ?? "BILINGUAL"),
           mrpPaise: Math.round(Number(data.get("mrpRupees")) * 100),
           pricePaise: Math.round(Number(data.get("priceRupees")) * 100),
@@ -203,6 +217,29 @@ export function ProductCreateForm({
               defaultValue={product?.name}
               required
             />
+            <Field
+              id="product-slug"
+              label="URL slug"
+              name="slug"
+              defaultValue={product?.slug ?? ""}
+              maxLength={160}
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              placeholder="Auto-generated from title when left blank"
+              hint={product ? "Changing this URL creates a permanent redirect from the old package URL." : "Lowercase words separated with hyphens."}
+            />
+            <label className={adminField}>
+              <span>Short card description</span>
+              <textarea
+                className={adminTextarea}
+                name="shortDescription"
+                defaultValue={product?.shortDescription ?? ""}
+                minLength={40}
+                maxLength={280}
+                rows={3}
+                placeholder="A concise, unique package summary for cards and internal discovery."
+                required
+              />
+            </label>
             <label className={adminField}>
               <span>Detailed public description</span>
               <textarea
@@ -356,6 +393,15 @@ export function ProductCreateForm({
               required
             />
             <Field
+              id="product-primary-subject"
+              label="Primary subject"
+              name="primarySubject"
+              defaultValue={product?.primarySubject ?? ""}
+              maxLength={160}
+              placeholder="Example: Quantitative Aptitude"
+              required
+            />
+            <Field
               id="product-category"
               label="Category"
               name="category"
@@ -378,11 +424,11 @@ export function ProductCreateForm({
           <Field
             id="product-seo-title"
             label="SEO title"
-            hint="Use a clear package and exam title. Maximum 70 characters."
+            hint="Use a clear package and exam title without adding “| Prepstore”. Aim for 50–65 characters."
             name="seoTitle"
             defaultValue={product?.seoTitle ?? ""}
             minLength={20}
-            maxLength={70}
+            maxLength={65}
             required
           />
           <label className={adminField}>
@@ -391,16 +437,26 @@ export function ProductCreateForm({
               className={adminTextarea}
               name="seoDescription"
               defaultValue={product?.seoDescription ?? ""}
-              minLength={80}
-              maxLength={180}
+              minLength={120}
+              maxLength={165}
               rows={3}
               placeholder="Summarise the exam, key study material, practice tests and learner benefit."
               required
             />
             <small className="font-normal text-prep-muted">
-              Use 80–180 original characters. Avoid keyword repetition.
+              Aim for 140–165 original characters. Avoid keyword repetition.
             </small>
           </label>
+          <Field
+            id="product-search-keywords"
+            label="Internal search keywords"
+            hint="Comma-separated learner search phrases. These are not emitted as a meta-keywords tag."
+            name="searchKeywords"
+            defaultValue={product?.searchKeywords ?? ""}
+            maxLength={1000}
+            placeholder="tcs nqt, placement aptitude, coding interview"
+            required
+          />
         </section>
         {!product && items && <ContentPicker items={items} />}
         <label className={adminField}>
@@ -415,6 +471,31 @@ export function ProductCreateForm({
             placeholder="Add topics or sections included in this package"
             required
           />
+        </label>
+        <label className={adminField}>
+          <span>Package highlights / learning outcomes</span>
+          <textarea
+            className={adminTextarea}
+            name="highlights"
+            defaultValue={product?.highlights ?? ""}
+            minLength={40}
+            maxLength={4000}
+            rows={5}
+            placeholder="Add one genuine benefit or outcome per line."
+            required
+          />
+        </label>
+        <label className={adminField}>
+          <span>Package FAQs</span>
+          <textarea
+            className={adminTextarea}
+            name="faqs"
+            defaultValue={product?.faqs?.map((faq) => `${faq.question} || ${faq.answer}`).join("\n") ?? ""}
+            maxLength={12000}
+            rows={6}
+            placeholder="Question? || Answer (one FAQ per line)"
+          />
+          <small className="font-normal text-prep-muted">Use one FAQ per line in the format: Question || Answer. Only visible FAQs receive FAQ structured data.</small>
         </label>
         <div className="flex justify-end border-t border-prep-line pt-4">
           <button className={adminPrimaryButton} type="submit">

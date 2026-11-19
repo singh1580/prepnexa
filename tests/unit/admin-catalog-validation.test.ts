@@ -29,8 +29,8 @@ describe("admin catalog validation", () => {
     expect(
       productInputSchema.safeParse({
         ...draft,
-        seoTitle: "x".repeat(71),
-        seoDescription: "x".repeat(181),
+        seoTitle: "x".repeat(66),
+        seoDescription: "x".repeat(166),
       }).success,
     ).toBe(false);
   });

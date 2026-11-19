@@ -13,6 +13,8 @@ describe("SEO foundation", () => {
   const packageDetail = read("src/app/(public)/packages/[slug]/page.tsx");
   const publishingService = read("src/features/admin-catalog/service.ts");
   const migration = read("drizzle/0033_messy_morlun.sql");
+  const seoExpansionMigration = read("drizzle/0036_mysterious_vertigo.sql");
+  const coverUrl = read("src/features/catalog/cover.ts");
 
   it("publishes canonical crawl controls and a database-backed sitemap", () => {
     expect(rootLayout).toContain("metadataBase: SITE_URL");
@@ -41,6 +43,9 @@ describe("SEO foundation", () => {
     expect(packageDetail).toContain('"@type": "BreadcrumbList"');
     expect(packageDetail).toContain("if (product.reviewCount > 0)");
     expect(packageDetail).toContain("productSchema.aggregateRating");
+    expect(packageDetail).toContain('"@type": "FAQPage"');
+    expect(coverUrl).toContain("/media/product-covers/");
+    expect(coverUrl).not.toContain("/api/");
   });
 
   it("blocks incomplete packages from publishing without breaking drafts", () => {
@@ -48,7 +53,11 @@ describe("SEO foundation", () => {
       "cover image",
       "exam name",
       "category",
+      "primary subject",
       "target audience",
+      "short card description",
+      "internal search keywords",
+      "package highlights",
       "SEO title",
       "SEO description",
       "public description",
@@ -58,5 +67,8 @@ describe("SEO foundation", () => {
     }
     expect(migration.match(/ADD COLUMN/g)).toHaveLength(5);
     expect(migration).not.toMatch(/DROP|DELETE|NOT NULL/i);
+    expect(seoExpansionMigration).toContain('CREATE TABLE "product_slug_redirects"');
+    expect(seoExpansionMigration).toContain('ADD COLUMN "short_description"');
+    expect(seoExpansionMigration).not.toMatch(/DROP\s+(?:TABLE|COLUMN)|DELETE\s+FROM/i);
   });
 });
