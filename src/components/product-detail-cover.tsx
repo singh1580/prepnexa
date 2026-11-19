@@ -35,6 +35,7 @@ export function ProductDetailCover({
           className="object-contain"
           sizes="(max-width: 800px) 100vw, 35vw"
           onError={() => setFailed(true)}
+          unoptimized
         />
       ) : (
         <>
