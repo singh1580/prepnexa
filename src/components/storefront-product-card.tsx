@@ -127,6 +127,7 @@ export function StorefrontProductCard({
             productId={product.id}
             coverVersion={product.coverObjectKey}
             alt={`${productName} cover`}
+            className={homeCard ? "object-cover" : "object-contain"}
             sizes={
               homeCard
                 ? "(max-width: 560px) 82vw, (max-width: 1100px) 17.5rem, 25vw"
