@@ -3,7 +3,10 @@ import { AutoSubmitForm } from "@/components/auto-submit-form";
 import { StorefrontProductCard } from "@/components/storefront-product-card";
 import { getCurrentAuth } from "@/features/auth/authorization";
 import { listAvailableProducts } from "@/features/catalog/repository";
-import { matchesCatalogQuery } from "@/features/catalog/search";
+import {
+  filterAndSortCatalog,
+  normalizeCatalogFilters,
+} from "@/features/catalog/filters";
 import { CatalogFilterDisclosure } from "@/features/catalog/ui/catalog-filter-disclosure";
 import type { Metadata } from "next";
 
@@ -50,12 +53,15 @@ export default async function Page({
   searchParams: Promise<Query>;
 }) {
   const query = await searchParams;
-  const q = query.q?.trim() ?? "";
-  const subjects = many(query.subject);
-  const prices = many(query.price);
-  const languages = many(query.language);
-  const formats = many(query.format);
-  const sort = query.sort ?? "popularity";
+  const filters = normalizeCatalogFilters({
+    q: query.q,
+    sort: query.sort,
+    subjects: many(query.subject),
+    prices: many(query.price),
+    languages: many(query.language),
+    formats: many(query.format),
+  });
+  const { q, subjects, prices, languages, formats, sort } = filters;
   const auth = await getCurrentAuth();
   const all = await listAvailableProducts(auth?.user.id);
   const subjectCounts = new Map<string, number>();
@@ -64,55 +70,7 @@ export default async function Page({
       subjectCounts.set(subject, (subjectCounts.get(subject) ?? 0) + 1);
     }
   }
-  const matchesPrice = (value: number) =>
-    !prices.length ||
-    prices.some((range) =>
-      range === "under2000"
-        ? value < 200000
-        : range === "2000-5000"
-          ? value >= 200000 && value < 500000
-          : range === "5000-10000"
-            ? value >= 500000 && value <= 1000000
-            : range === "above10000"
-              ? value > 1000000
-              : false,
-    );
-  const matchesFormat = (product: (typeof all)[number]) =>
-    !formats.length ||
-    formats.some((format) =>
-      format === "pdf"
-        ? product.materialTypes.includes("PDF")
-        : format === "video"
-          ? product.materialTypes.includes("VIDEO")
-          : format === "notes"
-            ? product.materialTypes.includes("FILE")
-            : format === "tests"
-              ? product.testCount > 0
-              : format === "bundle"
-                ? product.materialCount > 0 && product.testCount > 0
-                : false,
-    );
-  const rows = all.filter(
-    (product) =>
-      matchesCatalogQuery(product, q) &&
-        (!subjects.length ||
-          subjects.some((subject) => product.subjects.includes(subject))) &&
-        matchesPrice(product.pricePaise) &&
-        (!languages.length || languages.includes(product.language)) &&
-      matchesFormat(product),
-  );
-  rows.sort((a, b) =>
-    sort === "latest"
-      ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      : sort === "price-low"
-        ? a.pricePaise - b.pricePaise
-        : sort === "price-high"
-          ? b.pricePaise - a.pricePaise
-          : b.reviewCount * 10 +
-            b.rating +
-            b.testCount -
-            (a.reviewCount * 10 + a.rating + a.testCount),
-  );
+  const rows = filterAndSortCatalog(all, filters);
   const activeFilterCount =
     subjects.length + prices.length + languages.length + formats.length;
   const filterActive = activeFilterCount > 0;
