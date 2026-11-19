@@ -244,9 +244,6 @@ export default async function Page({
           <h1 className="m-0 mb-[0.35rem] max-w-[58rem] text-[clamp(2rem,3vw,3.3rem)] leading-[1.03] tracking-[-0.045em]">
             {productName}
           </h1>
-          <p className="my-[0.35rem] text-[0.88rem] text-[#61666c]">
-            {productDescription}
-          </p>
           <dl className="my-4 grid grid-cols-3 gap-2 text-[0.72rem] max-[700px]:grid-cols-1 [&>div]:rounded-[0.45rem] [&>div]:border [&>div]:border-[#e7e2dc] [&>div]:bg-[#fcfaf8] [&>div]:p-3 [&_dd]:m-0 [&_dd]:mt-1 [&_dd]:font-bold [&_dd]:text-[#24272a] [&_dt]:text-[#73797e]">
             {product.examName ? (
               <div>
