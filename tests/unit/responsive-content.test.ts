@@ -539,6 +539,12 @@ describe("responsive content integrity", () => {
       'className={homeCard ? "object-cover" : "object-contain"}',
     );
     expect(packageDetail).toContain("items-start");
+    expect(packageDetail).toContain("</h1>\n          <dl");
+    expect(packageDetail).not.toContain(
+      '<p className="my-[0.35rem] text-[0.88rem] text-[#61666c]">',
+    );
+    expect(packageDetail).toContain("description: (");
+    expect(packageDetail).toContain("product.description");
     expect(studentCourses).toContain("aspect-[36/25]");
     expect(studentCourses).not.toContain("{description}");
     expect(studentCourses).not.toContain("meaningfulProductDescription");
