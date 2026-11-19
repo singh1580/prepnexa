@@ -34,6 +34,9 @@ describe("auth validation", () => {
     expect(profileInputSchema.parse({ name: "  Learner Name  " }).name).toBe("Learner Name");
     const profile=profileInputSchema.parse({name:"Learner Name",classLevel:" B.Tech ",board:"MAKAUT",targetExam:"TCS NQT",dateOfBirth:"2003-06-15",emailNotifications:false,inAppNotifications:true});
     expect(profile).toMatchObject({classLevel:"B.Tech",board:"MAKAUT",targetExam:"TCS NQT",dateOfBirth:"2003-06-15",emailNotifications:false,inAppNotifications:true});
+    expect(profileInputSchema.parse({name:"Learner Name",phone:"98765 43210"}).phone).toBe("+919876543210");
+    expect(profileInputSchema.parse({name:"Learner Name",phone:null}).phone).toBeNull();
+    expect(()=>profileInputSchema.parse({name:"Learner Name",phone:"1234567"})).toThrow();
     expect(()=>profileInputSchema.parse({name:"Learner Name",dateOfBirth:"15-06-2003"})).toThrow();
     expect(() => profileInputSchema.parse({ name: "x" })).toThrow();
   });

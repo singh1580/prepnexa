@@ -10,6 +10,8 @@ describe("checkout mobile validation",()=>{
   });
   it("rejects a malformed mobile number while allowing free checkout to omit it",()=>{
     expect(checkoutInputSchema.parse({...base,phone:""}).phone).toBeNull();
+    expect(checkoutInputSchema.parse({...base,phone:null}).phone).toBeNull();
+    expect(checkoutInputSchema.parse(base).phone).toBeNull();
     expect(()=>checkoutInputSchema.parse({...base,phone:"12345"})).toThrow();
     expect(()=>checkoutInputSchema.parse({...base,phone:"call 9876543210"})).toThrow();
   });

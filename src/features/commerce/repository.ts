@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { auditLogs, couponProducts, coupons, orders, paymentAttempts, products } from "@/db/schema";
+import { auditLogs, couponProducts, coupons, orders, paymentAttempts, products, users } from "@/db/schema";
 import { productReadySql } from "@/features/catalog/readiness";
 import type { CouponInput } from "./validation";
 import type { ProviderCheckout, VerifiedPaymentEvent } from "./providers";
@@ -151,6 +151,11 @@ export type CheckoutOrder = { id:string;status:string;subtotalPaise:number;disco
 export async function updateCheckoutBillingPhone(orderId:string,userId:string,billingPhone:string) {
   const [updated] = await db.update(orders).set({ billingPhone, updatedAt:new Date() }).where(and(eq(orders.id,orderId),eq(orders.userId,userId))).returning({id:orders.id});
   return updated;
+}
+
+export async function saveCheckoutPhoneToEmptyProfile(userId:string,phone:string) {
+  const [updated] = await db.update(users).set({ phone, updatedAt:new Date() }).where(and(eq(users.id,userId),isNull(users.phone))).returning({phone:users.phone});
+  return updated?.phone ?? null;
 }
 
 export async function insertCartCheckoutOrder(input:{userId:string;productIds:string[];idempotencyKey:string;couponId:string|null;couponCode:string|null;billingPhone:string|null;requestId:string}){

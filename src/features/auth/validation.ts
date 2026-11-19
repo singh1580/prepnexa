@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeIndianMobile } from "@/lib/phone";
 
 const email = z.string().trim().toLowerCase().email().max(320);
 const password = z.string().min(10).max(128);
@@ -25,7 +26,12 @@ export const mfaEnrollmentConfirmSchema = mfaEnrollmentInputSchema.extend({ code
 const optionalProfileText = (maximum: number) => z.string().trim().max(maximum).optional().transform(value => value || null);
 export const profileInputSchema = z.object({
   name: z.string().trim().min(2).max(120),
-  phone:z.union([z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/),z.literal("")]).optional().transform(value=>value||null),
+  phone:z.union([z.string().trim(),z.null()]).optional().transform((value,context)=>{
+    if(!value)return null;
+    const normalized=normalizeIndianMobile(value);
+    if(!normalized){context.addIssue({code:"custom",message:"Enter a valid 10-digit Indian mobile number."});return z.NEVER;}
+    return normalized;
+  }),
   classLevel: optionalProfileText(120),
   board: optionalProfileText(120),
   targetExam: optionalProfileText(160),
