@@ -22,6 +22,7 @@ import { SyllabusAccordion } from "@/features/catalog/ui/syllabus-accordion";
 import { CheckoutCard } from "@/features/commerce/ui/checkout-card";
 import { JsonLd } from "@/components/json-ld";
 import { absoluteUrl, SITE_ORIGIN } from "@/config/site";
+import { productCoverUrl } from "@/features/catalog/cover";
 
 export const dynamic = "force-dynamic";
 const getAvailableProduct = cache(findAvailableProduct);
@@ -43,7 +44,7 @@ export async function generateMetadata({
       `Explore ${name} study materials and practice tests on Prepstore.`,
     );
   const canonical = `/packages/${product.slug}`;
-  const image = `/api/catalog/products/${product.id}/cover`;
+  const image = productCoverUrl(product.id, product.coverObjectKey);
   return {
     title: product.seoTitle || name,
     description,
@@ -165,7 +166,7 @@ export default async function Page({
     description: productDescription,
     url: productUrl,
     image: product.coverObjectKey
-      ? [absoluteUrl(`/api/catalog/products/${product.id}/cover`)]
+      ? [absoluteUrl(productCoverUrl(product.id, product.coverObjectKey))]
       : [absoluteUrl("/prepstore-icon-512.png")],
     sku: product.id,
     brand: { "@type": "Brand", name: "Prepstore" },
@@ -231,11 +232,12 @@ export default async function Page({
         <span>›</span>
         <b>{productName}</b>
       </nav>
-      <section className="grid grid-cols-[minmax(17rem,34%)_minmax(0,1fr)] items-stretch gap-8 max-[1000px]:grid-cols-[minmax(16rem,38%)_minmax(0,1fr)] max-[800px]:grid-cols-1">
+      <section className="grid grid-cols-[minmax(17rem,34%)_minmax(0,1fr)] items-start gap-8 max-[1000px]:grid-cols-[minmax(16rem,38%)_minmax(0,1fr)] max-[800px]:grid-cols-1">
         <ProductDetailCover
           productId={product.id}
           name={productName}
           hasCover={Boolean(product.coverObjectKey)}
+          coverVersion={product.coverObjectKey}
         />
         <div className="min-w-0 py-[0.45rem]">
           <h1 className="m-0 mb-[0.35rem] max-w-[58rem] text-[clamp(2rem,3vw,3.3rem)] leading-[1.03] tracking-[-0.045em]">

@@ -123,6 +123,9 @@ export function ProductCreateForm({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverName, setCoverName] = useState("");
+  const [hasStoredCover, setHasStoredCover] = useState(
+    Boolean(product?.coverObjectKey),
+  );
   useEffect(
     () => () => {
       if (coverPreview) URL.revokeObjectURL(coverPreview);
@@ -216,7 +219,7 @@ export function ProductCreateForm({
           </div>
           <label className="grid content-start gap-[0.45rem] text-[0.85rem] font-bold max-[650px]:order-first">
             <span>Cover image</span>
-            <span className="relative grid h-[9.5rem] place-items-center overflow-hidden rounded-[0.65rem] border border-dashed border-[#c9c1b8] bg-[#f4eee8] text-center text-[#9f3c1c] max-[650px]:h-44 [&_img]:object-cover">
+            <span className="relative grid aspect-[36/25] place-items-center overflow-hidden rounded-[0.65rem] border border-dashed border-[#c9c1b8] bg-[#f4eee8] text-center text-[#9f3c1c] [&_img]:object-contain">
               {coverPreview ? (
                 <Image
                   src={coverPreview}
@@ -225,9 +228,10 @@ export function ProductCreateForm({
                   sizes="224px"
                   unoptimized
                 />
-              ) : product?.coverObjectKey ? (
+              ) : product?.coverObjectKey && hasStoredCover ? (
                 <ProductCoverImage
                   productId={product.id}
+                  coverVersion={product.coverObjectKey}
                   alt={`${product.name} cover`}
                   sizes="224px"
                   fallback={<b>Upload package cover</b>}
@@ -261,6 +265,27 @@ export function ProductCreateForm({
                 }}
               >
                 <UiIcon name="trash" /> Remove selected image
+              </button>
+            ) : null}
+            {!coverPreview && product?.coverObjectKey && hasStoredCover ? (
+              <button
+                className="mt-[0.15rem] inline-flex items-center justify-center gap-[0.4rem] border-0 bg-transparent text-[0.75rem] font-bold text-[#b42318] [&_svg]:size-4"
+                type="button"
+                onClick={async (event) => {
+                  event.preventDefault();
+                  const removed = await mutate<{ id: string }>(
+                    "cover-remove",
+                    () =>
+                      request(
+                        `products/${product.id}/cover`,
+                        {},
+                        "DELETE",
+                      ),
+                  );
+                  if (removed) setHasStoredCover(false);
+                }}
+              >
+                <UiIcon name="trash" /> Remove current cover
               </button>
             ) : null}
           </label>

@@ -61,12 +61,13 @@ export default async function Page() {
               key={product.id}
             >
               <Link
-                className="relative block h-[9.5rem] overflow-hidden bg-[linear-gradient(135deg,#28292d,#65301f_58%,#ef4d18)] text-white [&>img]:object-cover"
+                className="relative block aspect-[36/25] overflow-hidden bg-[linear-gradient(135deg,#28292d,#65301f_58%,#ef4d18)] text-white"
                 href={`/admin/packages/${product.id}`}
               >
                 {product.coverObjectKey ? (
                   <ProductCoverImage
                     productId={product.id}
+                    coverVersion={product.coverObjectKey}
                     alt={`${product.name} cover`}
                     sizes="(max-width: 700px) 100vw, 320px"
                     fallback={

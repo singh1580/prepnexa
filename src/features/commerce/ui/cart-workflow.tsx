@@ -255,6 +255,7 @@ function ProductRows({
               {product.coverObjectKey ? (
                 <ProductCoverImage
                   productId={product.id}
+                  coverVersion={product.coverObjectKey}
                   alt={`${product.name} cover`}
                   sizes={compact ? "56px" : "112px"}
                   fallback={
