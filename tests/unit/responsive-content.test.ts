@@ -533,7 +533,7 @@ describe("responsive content integrity", () => {
     expect(productCoverImage).toContain("coverVersion");
     expect(productDetailCover).toContain("aspect-[36/25]");
     expect(productDetailCover).toContain('className="object-contain"');
-    expect(productDetailCover).toContain("unoptimized");
+    expect(productDetailCover).not.toContain("unoptimized");
     expect(packageDetail).toContain("key={product.id}");
     expect(storefrontProductCard).toContain(
       'className={homeCard ? "object-cover" : "object-contain"}',

@@ -4,5 +4,5 @@ export function productCoverUrl(
 ) {
   const fileName = coverObjectKey?.split("/").at(-1);
   const version = fileName ? `?v=${encodeURIComponent(fileName)}` : "";
-  return `/api/catalog/products/${productId}/cover${version}`;
+  return `/media/product-covers/${productId}${version}`;
 }

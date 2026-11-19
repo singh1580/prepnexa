@@ -16,13 +16,18 @@ type Audit = { actorUserId: string; requestId: string };
 export type ProductInput = {
   name: string;
   slug: string;
+  shortDescription: string;
   description: string;
   syllabus: string;
   seoTitle: string;
   seoDescription: string;
   examName: string;
   category: string;
+  primarySubject: string;
   targetAudience: string;
+  searchKeywords: string;
+  highlights: string;
+  faqs: { question: string; answer: string }[];
   language: "ENGLISH" | "HINDI" | "BILINGUAL";
   mrpPaise?: number | null;
   pricePaise: number;
@@ -50,12 +55,17 @@ export function listProducts() {
       id: products.id,
       name: products.name,
       slug: products.slug,
+      shortDescription: products.shortDescription,
       description: products.description,
       seoTitle: products.seoTitle,
       seoDescription: products.seoDescription,
       examName: products.examName,
       category: products.category,
+      primarySubject: products.primarySubject,
       targetAudience: products.targetAudience,
+      searchKeywords: products.searchKeywords,
+      highlights: products.highlights,
+      faqs: products.faqs,
       pricePaise: products.pricePaise,
       mrpPaise: products.mrpPaise,
       accessDays: products.accessDays,
@@ -87,6 +97,10 @@ export function listMaterials() {
 }
 export const findProduct = (id: string) =>
   db.query.products.findFirst({ where: eq(products.id, id) });
+export async function findProductSlugRedirectRecord(oldSlug: string) {
+  const result = await db.execute(sql`select product_id as "productId" from product_slug_redirects where old_slug=${oldSlug} limit 1`);
+  return result.rows[0] as { productId: string } | undefined;
+}
 export const findMaterial = (id: string) =>
   db.query.materials.findFirst({ where: eq(materials.id, id) });
 export async function findCatalogTest(id: string) {
@@ -189,8 +203,8 @@ export async function insertProduct(input: ProductCreationInput, audit: Audit) {
     with selected_tests as (select jsonb_array_elements_text(${JSON.stringify(testIds)}::jsonb)::uuid as id),
     selected_materials as (select jsonb_array_elements_text(${JSON.stringify(materialIds)}::jsonb)::uuid as id),
     created as (
-      insert into products (id, name, slug, description, syllabus, seo_title, seo_description, exam_name, category, target_audience, language, mrp_paise, price_paise, access_days, is_live)
-      select ${id}::uuid, ${input.name}, ${input.slug}, ${input.description || null}, ${input.syllabus || null}, ${input.seoTitle || null}, ${input.seoDescription || null}, ${input.examName || null}, ${input.category || null}, ${input.targetAudience || null}, ${input.language}, ${input.mrpPaise ?? null}, ${input.pricePaise}, ${input.accessDays}, false
+      insert into products (id, name, slug, short_description, description, syllabus, seo_title, seo_description, exam_name, category, primary_subject, target_audience, search_keywords, highlights, faqs, language, mrp_paise, price_paise, access_days, is_live)
+      select ${id}::uuid, ${input.name}, ${input.slug}, ${input.shortDescription || null}, ${input.description || null}, ${input.syllabus || null}, ${input.seoTitle || null}, ${input.seoDescription || null}, ${input.examName || null}, ${input.category || null}, ${input.primarySubject || null}, ${input.targetAudience || null}, ${input.searchKeywords || null}, ${input.highlights || null}, ${JSON.stringify(input.faqs)}::jsonb, ${input.language}, ${input.mrpPaise ?? null}, ${input.pricePaise}, ${input.accessDays}, false
       where not exists (select 1 from selected_tests s where not exists (
         select 1 from tests t where t.id = s.id
       )) and not exists (select 1 from selected_materials s where not exists (
@@ -333,6 +347,15 @@ export async function patchProduct(
   audit: Audit,
 ) {
   await db.batch([
+    db.execute(sql`
+      delete from product_slug_redirects
+      where old_slug=${input.slug} and product_id=${before.id}::uuid
+    `),
+    db.execute(sql`
+      insert into product_slug_redirects (product_id, old_slug)
+      select ${before.id}::uuid, ${before.slug}
+      where ${before.slug} <> ${input.slug}
+    `),
     db
       .update(products)
       .set({ ...input, updatedAt: new Date() })

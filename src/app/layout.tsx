@@ -20,18 +20,18 @@ export const metadata: Metadata = {
     locale: "en_IN",
     images: [
       {
-        url: "/prepstore-icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "Prepstore",
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Prepstore exam preparation packages and practice tests",
       },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Prepstore | Exam preparation packages and practice tests",
     description: SITE_DESCRIPTION,
-    images: ["/prepstore-icon-512.png"],
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
@@ -43,6 +43,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
       "max-video-preview": -1,
     },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
   },
   icons: {
     icon: [

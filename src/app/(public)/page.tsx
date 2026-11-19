@@ -16,7 +16,9 @@ export const metadata: Metadata = {
     title: "Prepstore exam preparation packages",
     description: SITE_DESCRIPTION,
     url: "/",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Prepstore exam preparation packages" }],
   },
+  twitter: { card: "summary_large_image", images: ["/opengraph-image"] },
 };
 
 function SearchIcon() {

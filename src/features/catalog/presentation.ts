@@ -12,6 +12,13 @@ export function normaliseProductName(name: string) {
   return name.replaceAll("_", " ").replace(/\s+/g, " ").trim();
 }
 
+export function normaliseSeoTitle(title: string | null | undefined, fallback: string) {
+  const value = (title?.trim() || fallback)
+    .replace(/(?:\s*[|–—-]\s*Prepstore\s*)+$/i, "")
+    .trim();
+  return value || fallback;
+}
+
 function comparableCopy(value: string) {
   return value.toLocaleLowerCase("en-IN").replace(/[^a-z0-9]+/g, "");
 }

@@ -4,6 +4,7 @@ import {
   formatCount,
   meaningfulProductDescription,
   normaliseProductName,
+  normaliseSeoTitle,
 } from "@/features/catalog/presentation";
 
 describe("catalog presentation", () => {
@@ -42,5 +43,11 @@ describe("catalog presentation", () => {
         fallback,
       ),
     ).toBe("Focused quantitative practice.");
+  });
+
+  it("removes stored brand suffixes before the root title template runs", () => {
+    expect(normaliseSeoTitle("Master Reasoning | Prepstore | Prepstore", "Fallback")).toBe("Master Reasoning");
+    expect(normaliseSeoTitle("Master Reasoning - Prepstore", "Fallback")).toBe("Master Reasoning");
+    expect(normaliseSeoTitle("", "Master Reasoning Ability")).toBe("Master Reasoning Ability");
   });
 });

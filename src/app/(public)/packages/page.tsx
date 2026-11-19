@@ -41,7 +41,9 @@ export async function generateMetadata({
       description:
         "Explore practice tests, study material and complete preparation packages.",
       url: "/packages",
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Prepstore exam preparation packages" }],
     },
+    twitter: { card: "summary_large_image", images: ["/opengraph-image"] },
   };
 }
 const many = (value: string | string[] | undefined) =>

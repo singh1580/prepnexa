@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { ProductDetailCover } from "@/components/product-detail-cover";
 import { StorefrontProductCard } from "@/components/storefront-product-card";
@@ -8,6 +8,7 @@ import { getCurrentAuth } from "@/features/auth/authorization";
 import { ADMIN_ROLE_KEYS } from "@/features/auth/constants";
 import {
   findAvailableProduct,
+  findCurrentProductSlug,
   hasActiveProductAccess,
   listAvailableProducts,
 } from "@/features/catalog/repository";
@@ -16,6 +17,7 @@ import {
   formatCount,
   meaningfulProductDescription,
   normaliseProductName,
+  normaliseSeoTitle,
 } from "@/features/catalog/presentation";
 import { ProductDetailTabs } from "@/features/catalog/ui/product-detail-tabs";
 import { SyllabusAccordion } from "@/features/catalog/ui/syllabus-accordion";
@@ -35,6 +37,7 @@ export async function generateMetadata({
   const product = await getAvailableProduct((await params).slug);
   if (!product) return { title: "Package not found" };
   const name = normaliseProductName(product.name);
+  const seoTitle = normaliseSeoTitle(product.seoTitle, name);
   const description =
     product.seoDescription ||
     meaningfulProductDescription(
@@ -44,25 +47,23 @@ export async function generateMetadata({
       `Explore ${name} study materials and practice tests on Prepstore.`,
     );
   const canonical = `/packages/${product.slug}`;
-  const image = productCoverUrl(product.id, product.coverObjectKey);
+  const socialImage = `/social/package/${product.slug}`;
   return {
-    title: product.seoTitle || name,
+    title: seoTitle,
     description,
     alternates: { canonical },
     openGraph: {
       type: "website",
-      title: product.seoTitle || name,
+      title: seoTitle,
       description,
       url: canonical,
-      images: product.coverObjectKey
-        ? [{ url: image, alt: `${name} cover` }]
-        : undefined,
+      images: [{ url: socialImage, width: 1200, height: 630, alt: `${name} package` }],
     },
     twitter: {
       card: product.coverObjectKey ? "summary_large_image" : "summary",
-      title: product.seoTitle || name,
+      title: seoTitle,
       description,
-      images: product.coverObjectKey ? [image] : undefined,
+      images: [socialImage],
     },
   };
 }
@@ -124,8 +125,13 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const auth = await getCurrentAuth();
-  const product = await getAvailableProduct((await params).slug);
-  if (!product) notFound();
+  const requestedSlug = (await params).slug;
+  const product = await getAvailableProduct(requestedSlug);
+  if (!product) {
+    const currentSlug = await findCurrentProductSlug(requestedSlug);
+    if (currentSlug) permanentRedirect(`/packages/${currentSlug}`);
+    notFound();
+  }
   const [owned, available] = await Promise.all([
     hasActiveProductAccess(product.id, auth?.user.id),
     listAvailableProducts(auth?.user.id),
@@ -195,6 +201,17 @@ export default async function Page({
       worstRating: 1,
     };
   }
+  const faqSchema = product.faqs?.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: product.faqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: { "@type": "Answer", text: faq.answer },
+        })),
+      }
+    : null;
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -221,7 +238,7 @@ export default async function Page({
   };
   return (
     <main className="mx-auto max-w-[1440px] bg-white px-[clamp(1.25rem,4.5vw,4.5rem)] pt-4 pb-6 text-[#14171b]">
-      <JsonLd data={[productSchema, breadcrumbSchema]} />
+      <JsonLd data={[productSchema, breadcrumbSchema, ...(faqSchema ? [faqSchema] : [])]} />
       <nav
         className="my-[0.2rem] mb-5 flex max-w-full items-center gap-[0.55rem] overflow-x-auto text-[0.78rem] whitespace-nowrap text-[#667078] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_b]:overflow-hidden [&_b]:text-ellipsis [&_b]:text-[#202326]"
         aria-label="Breadcrumb"
@@ -369,6 +386,13 @@ export default async function Page({
           included: (
             <section>
               <h2>What&apos;s included</h2>
+              {product.highlights ? (
+                <ul className="mb-5 grid gap-2 pl-5 text-[0.82rem] leading-[1.55]">
+                  {product.highlights.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ) : null}
               <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1 [&_article]:flex [&_article]:items-center [&_article]:gap-[0.8rem] [&_article]:rounded-lg [&_article]:border [&_article]:border-[#e2e0dd] [&_article]:p-4 [&_h3]:my-[0.15rem] [&_p]:my-[0.15rem] [&_p]:text-[0.72rem] [&_p]:text-[#73787d] [&_svg]:w-[1.35rem] [&_svg]:shrink-0 [&_svg]:fill-none [&_svg]:stroke-[#555c63] [&_svg]:stroke-[1.6]">
                 <article>
                   <FactIcon kind="test" />
@@ -466,24 +490,16 @@ export default async function Page({
           faqs: (
             <section>
               <h2>FAQs</h2>
-              <details>
-                <summary>Where will I find this package?</summary>
-                <p>
-                  After confirmed payment it appears inside My Packages in your
-                  student dashboard.
-                </p>
-              </details>
-              <details>
-                <summary>Is this a physical product?</summary>
-                <p>No. Prepstore sells digital preparation packages only.</p>
-              </details>
-              <details>
-                <summary>Can I access materials and tests together?</summary>
-                <p>
-                  Yes. Materials, tests and results stay organised inside this
-                  package.
-                </p>
-              </details>
+              {(product.faqs?.length ? product.faqs : [
+                { question: "Where will I find this package?", answer: "After confirmed payment it appears inside My Packages in your student dashboard." },
+                { question: "Is this a physical product?", answer: "No. Prepstore sells digital preparation packages only." },
+                { question: "Can I access materials and tests together?", answer: "Yes. Materials, tests and results stay organised inside this package." },
+              ]).map((faq) => (
+                <details key={faq.question}>
+                  <summary>{faq.question}</summary>
+                  <p>{faq.answer}</p>
+                </details>
+              ))}
             </section>
           ),
         }}
