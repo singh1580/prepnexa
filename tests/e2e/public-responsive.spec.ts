@@ -78,7 +78,10 @@ test("home package shelves stay in one horizontal row without squeezed cards", a
     expect(result.overflowX).toBe("auto");
     expect(new Set(result.tops).size).toBeLessThanOrEqual(1);
     expect(result.cardWidths.every((width) => width >= 263)).toBe(true);
-    if (result.clientWidth <= 560 && result.cardCount > 1) {
+    if (
+      (result.clientWidth <= 560 && result.cardCount > 1) ||
+      (result.clientWidth > 560 && result.cardCount > 4)
+    ) {
       expect(result.scrollWidth).toBeGreaterThan(result.clientWidth);
     }
   }
