@@ -2,12 +2,13 @@ import { createHash } from "node:crypto";
 import { logger } from "@/lib/logger";
 import { calculateDiscount, calculateOrderTotals, normalizeCouponCode } from "./pricing";
 import { checkoutConflict, commerceNotFound, couponUnavailable, invalidCommerceState, paymentUnavailable, paymentVerificationFailed } from "./errors";
-import { claimPaymentAttemptForProviderCreation, createRetryPaymentAttempt, evaluateCartCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProducts, findLatestStudentPaymentAttempt, findManagedCoupon, findManagedOrder, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findReusableCheckoutOrder, findStudentOrder, findStudentPaymentAttempt, insertCartCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCheckoutBillingPhone, updateCouponRecord } from "./repository";
+import { claimPaymentAttemptForProviderCreation, createRetryPaymentAttempt, evaluateCartCoupon, failPaymentAttempt, finalizeFreeOrder, findCheckoutProducts, findLatestStudentPaymentAttempt, findManagedCoupon, findManagedOrder, findOrderByIdempotency, findProviderAttempt, findRefundByIdempotency, findRefundTarget, findReusableCheckoutOrder, findStudentOrder, findStudentPaymentAttempt, insertCartCheckoutOrder, insertCoupon, insertPaymentAttempt, listCouponProducts, listManagedCoupons, listManagedOrders, listStudentOrders, processPaymentEvent, releaseExpiredCommerce, saveCheckoutPhoneToEmptyProfile, saveProviderCheckout, saveRefund, setCouponActiveRecord, updateCheckoutBillingPhone, updateCouponRecord } from "./repository";
 import { getPaymentProvider, type VerifiedPaymentEvent } from "./providers";
 import type { CheckoutInput, CouponInput, RefundInput } from "./validation";
 import type { RazorpayConfirmationInput } from "./validation";
 import { queueStudentNotification } from "@/features/operations/service";
 import { env } from "@/config/env";
+import { normalizeIndianMobile } from "@/lib/phone";
 
 type Actor = { userId: string; requestId: string };
 type StudentActor = Actor & { email: string; name: string; phone?: string | null };
@@ -109,26 +110,32 @@ export async function createCheckout(input: CheckoutInput, student: StudentActor
   const scopedKey = `${student.userId}:${input.idempotencyKey}:tax-free-v1`.slice(0, 100);
   const existing = await findOrderByIdempotency(student.userId, scopedKey);
   if (existing) {
-    if(existing.totalPaise>0&&!input.phone)throw invalidCommerceState("A mobile number is required for paid checkout.");
-    if(input.phone)await updateCheckoutBillingPhone(existing.id,student.userId,input.phone);
-    return startProviderCheckout({...existing,billingPhone:input.phone??existing.billingPhone}, student);
+    const billingPhone=input.phone??normalizeIndianMobile(student.phone??"")??normalizeIndianMobile(existing.billingPhone??"");
+    if(existing.totalPaise>0&&!billingPhone)throw invalidCommerceState("Add a valid mobile number in Billing details to continue.");
+    if(billingPhone&&billingPhone!==existing.billingPhone)await updateCheckoutBillingPhone(existing.id,student.userId,billingPhone);
+    if(billingPhone&&!student.phone)await saveCheckoutPhoneToEmptyProfile(student.userId,billingPhone);
+    return startProviderCheckout({...existing,billingPhone}, {...student,phone:billingPhone});
   }
   const reusable = await findReusableCheckoutOrder(student.userId, productIds, input.couponCode ? normalizeCouponCode(input.couponCode) : null);
   if (reusable) {
-    if(reusable.totalPaise>0&&!input.phone)throw invalidCommerceState("A mobile number is required for paid checkout.");
-    if(input.phone)await updateCheckoutBillingPhone(reusable.id,student.userId,input.phone);
-    return startProviderCheckout({...reusable,billingPhone:input.phone??reusable.billingPhone}, student);
+    const billingPhone=input.phone??normalizeIndianMobile(student.phone??"")??normalizeIndianMobile(reusable.billingPhone??"");
+    if(reusable.totalPaise>0&&!billingPhone)throw invalidCommerceState("Add a valid mobile number in Billing details to continue.");
+    if(billingPhone&&billingPhone!==reusable.billingPhone)await updateCheckoutBillingPhone(reusable.id,student.userId,billingPhone);
+    if(billingPhone&&!student.phone)await saveCheckoutPhoneToEmptyProfile(student.userId,billingPhone);
+    return startProviderCheckout({...reusable,billingPhone}, {...student,phone:billingPhone});
   }
   const priced = await priceCheckout(productIds, input.couponCode, student.userId);
-  if(priced.totalPaise>0&&!input.phone)throw invalidCommerceState("A mobile number is required for paid checkout.");
-  const created = await insertCartCheckoutOrder({ userId: student.userId, productIds, idempotencyKey: scopedKey, couponId: priced.coupon?.id ?? null, couponCode: priced.coupon?.code ?? null, billingPhone:input.phone, requestId: student.requestId });
+  const billingPhone=input.phone??normalizeIndianMobile(student.phone??"");
+  if(priced.totalPaise>0&&!billingPhone)throw invalidCommerceState("Add a valid mobile number in Billing details to continue.");
+  const created = await insertCartCheckoutOrder({ userId: student.userId, productIds, idempotencyKey: scopedKey, couponId: priced.coupon?.id ?? null, couponCode: priced.coupon?.code ?? null, billingPhone, requestId: student.requestId });
   if (!created) {
     const raced = await findOrderByIdempotency(student.userId, scopedKey);
     if (raced) return startProviderCheckout(raced, student);
     throw priced.coupon ? couponUnavailable("This coupon became unavailable. Review the price and try again.") : checkoutConflict("This product is no longer available for checkout.");
   }
+  if(billingPhone&&!student.phone)await saveCheckoutPhoneToEmptyProfile(student.userId,billingPhone);
   logger.info({ requestId: student.requestId, module: "commerce", action: "order_create", actorUserId: student.userId, orderId: created.id }, "Checkout order created");
-  return startProviderCheckout(created, student);
+  return startProviderCheckout(created, {...student,phone:billingPhone});
 }
 
 export async function handlePaymentWebhook(providerKey: string, rawBody: string, headers: Headers, requestId: string) {

@@ -624,12 +624,14 @@ export function CheckoutPageClient({
   const hydrated = useCartHydrated();
   const router = useRouter();
   const key = useRef("");
+  const phoneInputRef = useRef<HTMLInputElement>(null);
   const initialCouponRef = useRef(normalizeCoupon(initialCoupon));
   const accountRef = useRef(account);
+  const savedPhone = normalizeIndianMobile(account?.phone ?? "");
   const [products, setProducts] = useState<CartProduct[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [coupon, setCoupon] = useState(normalizeCoupon(initialCoupon));
-  const [phone, setPhone] = useState(account?.phone ?? "");
+  const [phone, setPhone] = useState(savedPhone ?? "");
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
@@ -755,7 +757,11 @@ export function CheckoutPageClient({
     const normalizedPhone = normalizeIndianMobile(phone);
     const phoneRequired = Boolean(preview && preview.totalPaise > 0);
     setPhoneTouched(phoneRequired);
-    if (phoneRequired && !normalizedPhone) return;
+    if (phoneRequired && !normalizedPhone) {
+      setError("Add a valid mobile number in Billing details to continue.");
+      phoneInputRef.current?.focus();
+      return;
+    }
     setBusy("order");
     setError("");
     try {
@@ -776,7 +782,9 @@ export function CheckoutPageClient({
       else router.push(`/dashboard/orders/${result.id}`);
     } catch (value) {
       const issue = value as CommerceApiError;
-      setError(issue.message);
+      if (issue.code === "UNAUTHENTICATED")
+        router.push("/login?next=%2Fcheckout&reason=session");
+      else setError(issue.message);
     } finally {
       setBusy("");
     }
@@ -890,25 +898,32 @@ export function CheckoutPageClient({
                 />
               </label>
               <label className="grid gap-[.4rem] text-[.72rem] font-bold">
-                Phone number
+                Phone number{phoneRequired ? " *" : ""}
                 <input
-                  className={checkoutInput}
+                  ref={phoneInputRef}
+                  className={`${checkoutInput} ${phoneTouched && !phoneValid ? "border-[#b83a2e] bg-[#fff8f7] focus:border-[#b83a2e]" : ""}`}
                   type="tel"
                   inputMode="numeric"
                   autoComplete="tel"
-                  required
+                  required={phoneRequired}
+                  readOnly={Boolean(savedPhone)}
                   value={phone}
                   onBlur={() => setPhoneTouched(true)}
                   onChange={(event) => setPhone(event.target.value)}
                   placeholder="10-digit mobile number"
                   aria-invalid={phoneTouched && !phoneValid}
+                  aria-describedby="checkout-phone-help checkout-phone-error"
                 />
-                <small className="text-[.65rem] font-normal text-prep-muted">
-                  This number is required for this paid order and will be sent
-                  to Razorpay.
+                <small id="checkout-phone-help" className="text-[.65rem] font-normal text-prep-muted">
+                  {savedPhone ? (
+                    <>Saved to your profile and reused for checkout. <Link className="font-bold text-prep-orange" href="/account/profile">Edit in profile</Link>.</>
+                  ) : (
+                    "Enter it once for payment. We’ll save it to your profile for future purchases."
+                  )}
                 </small>
                 {phoneTouched && !phoneValid ? (
                   <em
+                    id="checkout-phone-error"
                     className="text-[.65rem] not-italic text-[#a12618]"
                     role="alert"
                   >
@@ -999,21 +1014,21 @@ export function CheckoutPageClient({
               </small>
             </span>
           </div>
-          <button
-            className={`${primaryButton} w-full`}
-            disabled={
-              !account ||
-              !phoneValid ||
-              !preview ||
-              products.length === 0 ||
-              Boolean(busy)
-            }
-            onClick={placeOrder}
-          >
-            {busy === "order"
-              ? "Creating order…"
-              : `Place order & pay${preview ? ` ${formatMoney(preview.totalPaise, preview.currency)}` : ""} →`}
-          </button>
+          {account ? (
+            <button
+              className={`${primaryButton} w-full`}
+              disabled={!preview || products.length === 0 || Boolean(busy)}
+              onClick={placeOrder}
+            >
+              {busy === "order"
+                ? "Creating order…"
+                : `Place order & pay${preview ? ` ${formatMoney(preview.totalPaise, preview.currency)}` : ""} →`}
+            </button>
+          ) : (
+            <Link className={`${primaryButton} w-full`} href="/login?next=%2Fcheckout">
+              Sign in to continue
+            </Link>
+          )}
           {error ? (
             <p className={dangerNotice} role="alert">
               {error}

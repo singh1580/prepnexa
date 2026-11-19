@@ -33,7 +33,7 @@ export const checkoutInputSchema = z.object({
   productIds: z.array(z.uuid()).min(1).max(20).optional(),
   couponCode: z.union([couponCodeSchema, z.literal(""), z.null()]).optional().transform(value => value || null),
   idempotencyKey: z.string().trim().min(16).max(100).regex(/^[A-Za-z0-9:_-]+$/),
-  phone: z.string().trim().optional().transform((value, context) => {
+  phone: z.union([z.string().trim(), z.null()]).optional().transform((value, context) => {
     if (!value) return null;
     const normalized = normalizeIndianMobile(value);
     if (!normalized) {

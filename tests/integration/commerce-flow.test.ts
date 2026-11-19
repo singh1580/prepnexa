@@ -31,7 +31,8 @@ describe.skipIf(!run)("provider-neutral commerce flow",()=>{
     const student={userId:studentId,email,name:"QA Student",requestId:randomUUID()};const idempotencyKey=randomUUID();
     const checkout=await commerce.createCheckout({productId,productIds:[productId],couponCode:code,idempotencyKey,phone:"+919876543210"},student);orderId=checkout.id;paymentAttemptId=checkout.paymentAttemptId??undefined;
     expect(checkout).toMatchObject({subtotalPaise:20_000,discountPaise:4_000,totalPaise:16_000,paymentRequired:true,provider:"mock"});
-    const repeated=await commerce.createCheckout({productId,productIds:[productId],couponCode:code,idempotencyKey,phone:"+919876543210"},{...student,requestId:randomUUID()});expect(repeated.id).toBe(orderId);
+    const [savedProfile]=await db.select({phone:schema.users.phone}).from(schema.users).where(eq(schema.users.id,studentId));expect(savedProfile.phone).toBe("+919876543210");
+    const repeated=await commerce.createCheckout({productId,productIds:[productId],couponCode:code,idempotencyKey,phone:null},{...student,phone:"+919876543210",requestId:randomUUID()});expect(repeated.id).toBe(orderId);
     const resumed=await commerce.createCheckout({productId,productIds:[productId],couponCode:code,idempotencyKey:randomUUID(),phone:"+919876543210"},{...student,requestId:randomUUID()});expect(resumed.id).toBe(orderId);
     await expect(commerce.previewCheckout(productId,code,secondStudentId)).rejects.toMatchObject({code:"COUPON_UNAVAILABLE",status:409});
     const first=await commerce.confirmMockPayment(checkout.paymentAttemptId!,{...student,requestId:randomUUID()});const duplicate=await commerce.confirmMockPayment(checkout.paymentAttemptId!,{...student,requestId:randomUUID()});expect(first.duplicate).toBe(false);expect(duplicate.duplicate).toBe(true);
