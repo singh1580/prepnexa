@@ -451,10 +451,17 @@ describe("responsive content integrity", () => {
       "max-[560px]:auto-cols-[minmax(16.5rem,82vw)]",
     );
     expect(homePage).toContain("overflow-x-auto overflow-y-hidden");
-    expect(homePage).toContain("[scrollbar-width:none]");
-    expect(homePage).toContain("[&::-webkit-scrollbar]:hidden");
+    expect(homePage).toContain("[scrollbar-width:thin]");
+    expect(homePage).toContain("max-[560px]:[scrollbar-width:none]");
+    expect(homePage).toContain(
+      "max-[560px]:[&::-webkit-scrollbar]:hidden",
+    );
     expect(homePage).toContain("[scroll-snap-type:inline_mandatory]");
     expect(homePage).toContain("[&>*]:snap-start");
+    expect(homePage).toContain("const featured = popular;");
+    expect(homePage).toContain("const best = popular;");
+    expect(homePage).not.toContain("popular.slice(");
+    expect(homePage).not.toContain(".slice(0, 4)");
     expect(homePage.match(/data-home-shelf/g)).toHaveLength(3);
     expect(homePage.match(/tabIndex=\{0\}/g)).toHaveLength(3);
     expect(storefrontProductCard).toContain("<ProductCoverImage");
