@@ -24,4 +24,18 @@ describe("catalog search", () => {
       false,
     );
   });
+
+  it("matches normalized multi-word prefixes without becoming order-sensitive", () => {
+    const advanced = {
+      ...product,
+      slug: "advanced-aptitude-dsa-coding-mastery",
+      name: "Advanced Aptitude & DSA Coding Mastery",
+      pricePaise: 9_900,
+    };
+
+    expect(matchesCatalogQuery(advanced, "advance aptitude")).toBe(true);
+    expect(matchesCatalogQuery(advanced, "DSA & coding")).toBe(true);
+    expect(matchesCatalogQuery(advanced, "coding advanced")).toBe(true);
+    expect(matchesCatalogQuery(advanced, "advanced verbal")).toBe(false);
+  });
 });
