@@ -234,6 +234,7 @@ export default async function Page({
       </nav>
       <section className="grid grid-cols-[minmax(17rem,34%)_minmax(0,1fr)] items-start gap-8 max-[1000px]:grid-cols-[minmax(16rem,38%)_minmax(0,1fr)] max-[800px]:grid-cols-1">
         <ProductDetailCover
+          key={product.id}
           productId={product.id}
           name={productName}
           hasCover={Boolean(product.coverObjectKey)}
