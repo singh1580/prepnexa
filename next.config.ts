@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: { agentUpgrade: "security" },
   turbopack: { root: process.cwd() },
+  images: {
+    localPatterns: [{ pathname: "/media/product-covers/**" }],
+  },
   async headers() {
     return [{ source: "/(.*)", headers: [...SECURITY_HEADERS] }];
   },
